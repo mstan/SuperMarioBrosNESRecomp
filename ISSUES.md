@@ -251,47 +251,164 @@ retention fix (Issue #8) resolved this.
 
 ---
 
-## ISSUE #10 — Demo sequence may be non-deterministic in real-time mode
+## ISSUE #10 — Demo non-determinism in real-time mode
 
-**Status:** OPEN (needs further investigation)
+**Status:** OPEN (inconsistency on odd-numbered launches)
 
 ### Symptom
-User reported that the auto-play demo (title screen) sometimes plays out differently
-between runs — Mario's actions vary (sometimes misses blocks, different momentum).
-This was observed in interactive (non-turbo, real-time) play.
+The auto-play demo on the title screen has mistimings on odd-numbered launches in
+real-time (non-turbo) mode. Even-numbered launches play correctly. The divergence
+manifests at the mushroom pickup: Mario either picks it up correctly (even runs) or
+misses it (odd runs), causing the rest of the demo to play out wrong.
 
-### Investigation results
-**Turbo mode is deterministic.** Two scripted turbo-mode demo captures produced
-pixel-identical results — same frame numbers, same NMI_dbg transitions, identical
-screenshots at every 60-frame checkpoint.
+**Turbo mode is fully deterministic** — verified across multiple runs with identical
+output.
 
-**Non-turbo mode timing.** VBlank uses `clock()` in `maybe_trigger_vblank()` with
-~16ms period. The main game loop (RESET handler at $8000) only polls `$2002` in a
-tight wait loop — all game logic runs inside NMI. Theoretically this should be
-deterministic since the number of poll iterations doesn't affect game state. However,
-`clock()` on Windows has ~15ms granularity which could cause occasional double-fires
-or skipped frames.
+### Attempt 1: High-resolution timer + frame-start anchoring
+
+**Changes made** (`runtime.c`):
+- Replaced `clock()` (15ms Windows granularity) with `QueryPerformanceCounter()`
+  (microsecond precision) via `get_time_us()` helper
+- Changed VBlank period from `CLOCKS_PER_SEC/60` to exact `16667us` (1/60s)
+- Removed "SET #2" — the `s_last = clock()` after the NMI callback that anchored
+  to frame END instead of frame START. Now anchors only to frame start.
+- Turbo mode bypasses timing entirely (previously was still gated by `clock()`)
+
+**Result:** Changed the pattern from random jitter to a **deterministic alternation**:
+odd-numbered launches wrong, even-numbered launches correct. Reproducible.
+
+### Attempt 2: First-call timer initialization
+
+**Changes made** (`runtime.c`):
+- Added `if (s_last_us == 0) s_last_us = now_us` to anchor the first VBlank to
+  process start time instead of time-since-boot
+
+**Result:** Did not fix the alternating pattern.
+
+### Attempt 3: Operation-counting VBlank model
+
+**Changes made** (`runtime.c`):
+- Replaced wall-clock timing entirely with a deterministic operation counter
+- VBlank fires every 7000 `nes_read`/`nes_write` calls (`OPS_PER_VBLANK`)
+- Display pacing handled by existing SDL_Delay + VSync in the callback
+- Turbo mode unchanged (fires on every call)
+
+**Result:** Did not fix the alternating pattern. The non-determinism source is
+not in `maybe_trigger_vblank()` timing — it persists even with fully deterministic
+VBlank triggering.
+
+### Current understanding
+- The alternating odd/even pattern survives all three timing approaches, including
+  fully deterministic operation counting. This rules out VBlank timing as the cause.
+- The source of non-determinism must be elsewhere: possibly SDL initialization order,
+  VSync phase alignment, `SDL_GetTicks()` residual in the callback's pacing loop,
+  or some other external state that alternates between process launches.
+- The mushroom pickup requires frame-precise positioning — one frame off means
+  Mario's jump arc misses the mushroom.
 
 ### SMB demo mechanism
-SMB stores pre-recorded controller inputs in ROM at $D6FE+. The demo replays these
+SMB stores pre-recorded controller inputs in ROM at `$D6FE+`. The demo replays these
 inputs frame-by-frame during OperMode=0 (title/demo). The demo is perfectly
-deterministic on real hardware and in emulators. Any non-determinism in our recomp
-must come from timing differences between frames.
+deterministic on real hardware and in emulators.
 
-### Possible causes
-1. **Wall-clock jitter:** `clock()` granularity (~15ms) vs 16.67ms frame period
-   means some frames may be ~15ms and others ~30ms, causing VBlank to fire at
-   inconsistent intervals
-2. **SDL event processing latency:** `SDL_PollEvent()` and `SDL_RenderPresent()`
-   take variable time, affecting the `clock()` delta between VBlanks
-3. **Audio queue backpressure:** `SDL_GetQueuedAudioSize()` check may cause
-   variable callback duration
+### Next steps (if revisited)
+- Investigate SDL_Delay / VSync interaction in `nes_vblank_callback()` — the callback
+  has its own wall-clock pacing (`SDL_GetTicks` + `SDL_Delay(16)`) that could cause
+  frame-count drift even with deterministic VBlank triggering
+- Try removing the callback's SDL_Delay entirely (rely only on VSync for pacing)
+- Log `g_frame_count` at demo divergence point to confirm off-by-one theory
+- Check if `SDL_RENDERER_PRESENTVSYNC` phase alignment varies between launches
 
-### Next steps
-- Add `g_frame_count` delta logging to detect skipped/doubled frames
-- Try replacing `clock()` with `QueryPerformanceCounter()` for microsecond timing
-- Consider operation-counting VBlank model (count nes_read/nes_write calls) as
-  an alternative to wall-clock timing for deterministic replay
+---
+
+---
+
+# Feature Enhancements
+
+---
+
+## FEATURE #1 — Widescreen support (Phase 1: viewport extension)
+
+**Status:** DONE
+
+### What it does
+Configurable widescreen rendering that extends the visible area horizontally beyond the
+NES-native 256px. Supports 16:9 (427px) and 21:9 (560px) aspect ratios. The extra
+pixels are filled by reading existing nametable data that wraps in the 512px nametable
+space. Asymmetric split: ~1/3 extra on left, ~2/3 on right (look-ahead direction).
+
+### Implementation
+- **`nes_runtime.h`**: `AspectRatio` enum, `g_render_width`, `g_widescreen_left/right` globals
+- **`runtime.c`**: `widescreen_set()` configures width/margins per aspect ratio
+- **`ppu_renderer.c`**: BG loop widened (`wx = 0..g_render_width`), sprites offset by
+  `g_widescreen_left`, HUD margins blanked, edge vignette (outermost 24px)
+- **`main_runner.c`**: `--widescreen 16:9|21:9` CLI arg, F8 hotkey to cycle aspect
+  ratios at runtime, SDL window/texture resized dynamically, screenshot code updated
+
+### Usage
+```
+SuperMarioBrosRecomp.exe <rom> --widescreen 16:9
+SuperMarioBrosRecomp.exe <rom> --widescreen 21:9
+# Or press F8 at runtime to cycle: 4:3 → 16:9 → 21:9 → 4:3
+```
+
+### Known limitations (Phase 1)
+1. **Stale tiles at far margins.** SMB writes nametable columns ~1 column ahead of the
+   camera. The far right margin reads old data that hasn't been overwritten yet, so
+   tiles from earlier in the level (or the title screen) may appear at the rightmost
+   edge. Phase 2 will fix this.
+2. **Enemies don't spawn in the extended area.** SMB's object activation window is tied
+   to a narrow horizontal range around the camera position. Enemies only appear within
+   the original 256px viewport. Phase 3 will fix this.
+3. **Sprites limited to 256px range.** NES OAM X coordinates are 8-bit (0-255), so game
+   entities can only be drawn in the center 256px. Phase 4 will add extended sprites.
+
+---
+
+## FEATURE #2 — Widescreen Phase 2: Tile lookahead
+
+**Status:** OPEN
+
+### Goal
+Hook SMB's column-writing routine from `extras.c` `game_post_nmi()` to write additional
+nametable columns ahead of the camera, reducing/eliminating stale tiles in the right
+margin.
+
+### Approach
+Identify SMB's column render routine (writes one 30-tile column to the nametable) and
+call it repeatedly to fill columns ahead of the current scroll position. This requires
+understanding SMB's `ColumnPos` / `CurrentNTAddr` variables and safely calling the
+column renderer outside its normal NMI context.
+
+---
+
+## FEATURE #3 — Widescreen Phase 3: Extended object activation
+
+**Status:** OPEN
+
+### Goal
+Widen SMB's enemy/object spawn threshold so entities activate when they enter the wider
+viewport rather than only the 256px window.
+
+### Approach
+SMB checks if an enemy's X position is within a range of the camera's X coordinate
+before activating it. Hook this check in `extras.c` to extend the activation range by
+`g_widescreen_right` pixels.
+
+---
+
+## FEATURE #4 — Widescreen Phase 4: Extended sprites
+
+**Status:** OPEN
+
+### Goal
+Render game entities (enemies, items, projectiles) in the widescreen margins beyond the
+NES OAM 8-bit X coordinate limit (0-255).
+
+### Approach
+Create an auxiliary sprite rendering system that reads entity positions from SMB's RAM
+tables (which store 16-bit positions) and renders them directly into the widescreen
+framebuffer, bypassing the 256px OAM limitation.
 
 ---
 
