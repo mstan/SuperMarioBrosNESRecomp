@@ -35,7 +35,7 @@ so the universal background color stayed `$0F` (black).
 
 ## ISSUE #3 — HUD flickers
 
-**Status:** FIXED
+**Status:** PARTIALLY FIXED — major flicker eliminated, residual issues remain (see #8, #9)
 
 ### Symptom
 The score/lives/coins HUD at the top of the screen flickered heavily during gameplay.
@@ -182,6 +182,76 @@ causing an immediate game over.
 - Check for `[Dispatch] MISS` or `[Dispatch] INLINE MISS` when entering the warp pipes
 - Ghidra the pipe-entry and world-transition routines
 - Verify `g_miss_count_any` is zero through a clean 1-2 run
+
+---
+
+## ISSUE #8 — Residual HUD flicker / occasional missing HUD frame
+
+**Status:** OPEN
+
+### Symptom
+Despite the three-part fix in Issue #3, the HUD still occasionally flickers or
+disappears for a frame during gameplay. Much less frequent than before (was every
+few frames, now rare) but still noticeable.
+
+### Likely cause
+The sprite-0 counter-based simulation still has timing edge cases:
+- The counter threshold (3 reads) may not align with the game's actual spin-wait
+  pattern on every frame — interruptions from subroutine calls between Phase 1 and
+  Phase 2 of the sprite-0 wait (`JSR $8223`, `JSR $81C6`) may read `$2002` and
+  disrupt the counter cycle
+- The renderer fallback uses OAM[0] Y to decide the split; if OAM[0] is briefly
+  hidden (`Y=$EF`) during a transition frame, the fallback doesn't activate
+- The pre-captured `g_ppuctrl_hud` value is set at VBlank start (before NMI writes
+  `$2000` for the HUD nametable), so it may have stale nametable bits from the
+  previous frame's gameplay PPUCTRL
+
+### Next steps
+- Add per-frame debug logging of `g_spr0_split_active`, `g_ppuctrl_hud`, OAM[0] Y,
+  and `g_ppuscroll_x_hud` to identify which value is wrong on flicker frames
+- Consider replacing the counter-based sim entirely with a scanline-timing model:
+  set sprite-0 hit flag after a fixed number of memory accesses post-VBlank
+  (approximating the real scanline at which sprite 0 overlaps BG)
+- Compare PPU trace CSV against Mesen's PPU register writes frame-by-frame
+
+---
+
+## ISSUE #9 — Title screen artifacts and split-line glitch
+
+**Status:** OPEN
+
+### Symptom
+1. A horizontal line artifact (single scanline, wrong color/tile data) appears at the
+   sprite-0 split boundary — visible as a thin line just below the HUD during gameplay
+   and just below the HUD on the title screen
+2. On the title screen, the top portion of the "SUPER MARIO BROS." brown curtain area
+   shows a brief artifact/corruption that persists for several frames before clearing
+3. A stray `?` block sprite appears on the right side of the title screen (it shouldn't
+   be visible during the title screen)
+
+### Likely cause
+**Split-line artifact:** The split boundary at `split_y = OAM[0].Y + 9` may be off by
+one scanline. The renderer switches from HUD scroll to gameplay scroll at exactly that
+row — if the boundary is wrong, one row gets rendered with the wrong scroll source,
+producing a visible seam.
+
+**Title screen corruption:** During the title-to-gameplay or gameplay-to-title
+transition, nametable data is being updated over multiple frames. The renderer may
+capture a partially-updated nametable, showing stale tiles from the previous screen
+state mixed with new ones.
+
+**Stray ? block sprite:** Sprite OAM may not be fully cleared during transitions. If
+the game expects OAM to be DMA'd fresh each frame but a transition frame skips the
+DMA, stale sprite data from the previous state (gameplay ? blocks) remains visible.
+
+### Next steps
+- Check the exact `split_y` value: compare OAM[0] Y against Mesen to see if +9 is
+  the right offset for SMB (Faxanadu uses +9, SMB may differ)
+- Check if the artifact line is always at the same Y position or varies
+- For the stray ? block: dump OAM slot data on the title screen and compare against
+  Mesen — check if OAM should be blanked during the transition
+- For the title corruption: check if the nametable content at the artifact location
+  matches expected tiles or contains stale data from the gameplay screen
 
 ---
 
