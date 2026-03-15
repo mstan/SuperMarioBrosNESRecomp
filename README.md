@@ -7,8 +7,6 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 
 ## Known Issues
 
-- **HUD flicker** — sprite-0 split timing is approximate; score/lives area may flicker occasionally
-- **Enemy hit detection unreliable** — walking into Goombas may not deal damage consistently; jumping on them can phase through
 - **World 1-2 warp pipe crash** — entering the warp zone causes a game over; world transitions not fully implemented
 - **Luigi frozen after Mario dies** — controller 2 input not yet bound; 2-player mode non-functional
 

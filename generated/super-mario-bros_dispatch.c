@@ -5804,6 +5804,8 @@ void call_by_address(uint16_t addr) {
             func_FAB4(); break;
         case 0x90D2:
             func_90D2_b0(); break;
+        case 0xD969:
+            func_D969(); break;
         default:
             nes_log_dispatch_miss(addr);
             break;

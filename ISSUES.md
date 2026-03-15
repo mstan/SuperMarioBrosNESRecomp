@@ -35,47 +35,68 @@ so the universal background color stayed `$0F` (black).
 
 ## ISSUE #3 — HUD flickers
 
-**Status:** OPEN
+**Status:** FIXED
 
 ### Symptom
-The score/lives/coins HUD at the top of the screen flickers heavily during gameplay.
+The score/lives/coins HUD at the top of the screen flickered heavily during gameplay.
 
-### Likely cause
-SMB uses a sprite-0 hit split-screen technique: it spins on `$2002` bit 6 to detect
-when the raster crosses the HUD boundary, then updates the scroll register to lock the
-HUD in place while the play-field scrolls independently. Our sprite-0 hit simulation
-(pulse after 3 consecutive reads) is approximate and has no scanline timing, so the
-HUD scroll state is captured at the wrong time or jitters frame-to-frame.
+### Root cause
+Three problems in the sprite-0 hit simulation combined to cause the flicker:
 
-### Next steps
-- Compare `g_ppuscroll_x_hud` values per-frame against Mesen to see if they match
-- May need to tune the sprite-0 hit counter threshold or tie it to the NMI cycle
+1. **Stale scroll at VBlank start.** The NMI handler writes `$2000` (PPUCTRL) early for
+   the HUD nametable but does NOT write `$2005` (PPUSCROLL) until after the sprite-0
+   wait. `g_ppuscroll_x/y` retained the previous frame's gameplay scroll, so when
+   sprite-0 captured HUD values, it got gameplay scroll instead of (0,0).
+
+2. **Counter contaminated by PPU upload reads.** The NMI handler reads `$2002` to reset
+   the address latch before `$2006`/`$2007` writes (standard PPU upload pattern). Each
+   read incremented `g_spr0_reads_ctr`, causing premature sprite-0 triggers during PPU
+   uploads — before the game had written the correct PPUCTRL for the HUD.
+
+3. **No fallback when counter missed.** If the counter-based sprite-0 sim failed to
+   trigger, `g_spr0_split_active` stayed 0 and the entire screen rendered with gameplay
+   scroll, making the HUD invisible.
+
+### Fix (three changes in `runtime.c` + `ppu_renderer.c`)
+- **VBlank reset:** Reset `g_ppuscroll_x/y` to 0 and pre-capture HUD scroll values as
+  (0,0) in `maybe_trigger_vblank()` before calling NMI.
+- **Counter reset on PPU write:** Reset `g_spr0_reads_ctr = 0` in `ppu_write_reg()` so
+  that only consecutive `$2002` reads (genuine spin-wait polls) accumulate the counter.
+- **Renderer fallback:** When `g_spr0_split_active == 0` but OAM sprite 0 is on-screen
+  and rendering is enabled, apply the split using the pre-captured HUD values.
 
 ---
 
 ## ISSUE #4 — Enemy hit detection unreliable
 
-**Status:** OPEN
+**Status:** FIXED
 
 ### Symptom
-- Walking into Goombas usually deals no damage to Mario
-- Occasionally takes damage when standing still near an enemy
-- Jumping on enemies phases through (no stomp kill)
+- Jumping on Goombas did not kill them (stomp phased through)
+- Walking into enemies did not reliably deal damage to Mario
+- The auto-play demo diverged: Mario missed the mushroom power-up because the first
+  Goomba wasn't killed, causing Mario to go too far right
 
-### Likely cause
-Hit detection in SMB is performed during the main game loop (not NMI), comparing
-Mario's bounding box against enemy bounding boxes each frame. Our VBlank simulation
-fires NMI based on wall-clock time rather than CPU-cycle count. If the game loop runs
-many iterations between NMI callbacks, hit detection may be running at the wrong
-cadence, or enemy positions may be updated at a different rate than Mario's position.
+### Root cause
+The enemy state determination function at `$D969` was missing from the dispatch table.
+This function is reached exclusively via cross-function branches (`BNE`/`BEQ` from
+`$D8FD`, `$D90C`, `$D911`, etc. — approximately 50 call sites). No `JSR` or `JMP`
+targets `$D969` directly, so the recompiler's function finder never discovered it.
 
-Alternatively, this could be a dispatch miss — if an enemy-state or collision function
-is not recompiled correctly, it silently returns without processing the hit.
+When the generated code hit `call_by_address(0xD969)`, the dispatch table had no entry,
+causing `nes_log_dispatch_miss()` and a silent no-op return. The function loads entity
+state from `($16,X)` and compares against values `$12, $14, $08, $33, $0C, $05, $11,
+$07` — this is the core enemy behavior state machine. Without it, enemies were
+effectively frozen in their initial state and collision responses were never processed.
 
-### Next steps
-- Check `C:/temp/smb_stdout.txt` for `[Dispatch] MISS` lines during gameplay
-- Ghidra the collision check routine to confirm it's being called
-- Check `g_miss_unique_addrs` for any missed function calls
+### Fix
+Added `extra_func -1 D969` to `game.cfg`. This tells the recompiler to treat `$D969`
+as a function entry point in the fixed bank. After regeneration, the dispatch table
+includes the function and all ~50 cross-function branch call sites resolve correctly.
+
+Verified: zero dispatch misses in 30-second gameplay runs. Auto-play demo now shows
+Mario stomping the Goomba, collecting the mushroom power-up (Big Mario), and
+progressing further through World 1-1.
 
 ---
 
