@@ -36,6 +36,15 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 | F6  | Save state → `C:\temp\quicksave.sav` |
 | F7  | Load state ← `C:\temp\quicksave.sav` |
 
+## ROM
+
+| Field | Value |
+|-------|-------|
+| Title | Super Mario Bros. (World) |
+| CRC32 | `3337EC46` |
+| MD5   | `811b027eaf99c2def7b933c5208636de` |
+| SHA-1 | `ea343f4e445a9050d4b4fbac2c77d0693b1d0922` |
+
 ## Building from Source
 
 Prerequisites: Windows 10+, Visual Studio 2022, CMake 3.20+ (SDL2 is bundled)
