@@ -1,0 +1,4 @@
+IDEL:/smb_bank1.bin
+IDEL:/smb_bank0.bin
+IADD:00000002:/smb_bank0.bin
+IDSET:/smb_bank0.bin:647fff78dcaf3286188193755100
