@@ -26,12 +26,12 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force release | Out-Null
-          Copy-Item "build\Release\SuperMarioBrosNESRecomp.exe" release\
-          Copy-Item "build\Release\SDL2.dll"                    release\
+          Copy-Item "build\Release\SuperMarioBrosRecomp.exe" release\
+          Copy-Item "build\Release\SDL2.dll"               release\
           @"
           Super Mario Bros. — Static Recompilation
           =========================================
-          1. Run SuperMarioBrosNESRecomp.exe
+          1. Run SuperMarioBrosRecomp.exe
           2. When prompted, select your Super Mario Bros. (World) ROM file (.nes)
           3. The ROM path is remembered for future launches
 
@@ -41,17 +41,17 @@ jobs:
 
           ROM not included — provide your own dump of the original cartridge.
           "@ | Out-File -FilePath release\README.txt -Encoding utf8
-          Compress-Archive -Path release\* -DestinationPath SuperMarioBrosNESRecomp-windows-x64.zip
+          Compress-Archive -Path release\* -DestinationPath SuperMarioBrosRecomp-windows-x64.zip
 
       - name: Upload artifact (all builds)
         uses: actions/upload-artifact@v4
         with:
-          name: SuperMarioBrosNESRecomp-windows-x64
+          name: SuperMarioBrosRecomp-windows-x64
           path: release/
 
       - name: Create GitHub Release (tag builds only)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: SuperMarioBrosNESRecomp-windows-x64.zip
+          files: SuperMarioBrosRecomp-windows-x64.zip
           generate_release_notes: true
