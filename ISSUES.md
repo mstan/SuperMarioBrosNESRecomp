@@ -138,87 +138,79 @@ Mushroom now spawns and rises from `?` block correctly (verified by screenshot).
 
 ## ISSUE #6 — Luigi unable to move (2-player mode) *(lowest priority)*
 
-**Status:** OPEN
+**Status:** OPEN (by design — controller 2 not wired)
 
 ### Symptom
 When Mario dies and play switches to Luigi, Luigi cannot move.
 
-### Likely causes (two candidates — check the simple one first)
+### Cause
+Controller 2 (`$4017`) always returns `$40` (no buttons pressed) in `runtime.c`.
+SMB reads controller 2 for Luigi's input in 2-player alternating mode. This is not
+a bug — controller 2 simply hasn't been implemented yet.
 
-**Candidate A — No player 2 controller bound (likely):**
-The runner currently only implements controller 1 (`$4016`). Controller 2 (`$4017`)
-always returns `$40` (no buttons pressed). In 2-player alternating mode SMB reads
-controller 2 for Luigi's input. If that's the case this is a one-liner fix: map
-keyboard or a second button layout to `g_controller2_buttons` and wire it into the
-`$4017` read in `runtime.c`.
-
-**Candidate B — Player 2 init bug:**
-If the game's player-2 initialization routine has a dispatch miss or uninitialized
-state, Luigi may be stuck regardless of controller input.
-
-### Next steps
-1. Check `runtime.c` `$4017` handler — confirm it always returns `$40` (no buttons)
-2. Add a temporary second controller binding (e.g. WASD + numpad) and test
-3. Only if Luigi still can't move after binding → Ghidra the player-switch routine
+### Fix (when needed)
+Add `g_controller2_buttons` with a second keyboard mapping (e.g. WASD + numpad)
+and wire it into the `$4017` read path in `runtime.c`, mirroring the controller 1
+strobe/shift logic.
 
 ---
 
 ## ISSUE #7 — World 1-2 causes random game over / warp pipe crash
 
-**Status:** OPEN
-
-### Symptom
-Entering world 1-2 sometimes causes an immediate game over or a crash. Suspected to
-be related to the underground secret warp pipes (world 1-2 contains pipes that warp
-to worlds 2, 3, 4).
-
-### Likely cause
-The warp pipe mechanic likely triggers a different code path for pipe-entry vs. normal
-pipe traversal. If the warp zone entity or the screen-transition routine has a dispatch
-miss, the game may jump to an invalid address or corrupt Mario's world/level state,
-causing an immediate game over.
-
-### Next steps
-- Check for `[Dispatch] MISS` or `[Dispatch] INLINE MISS` when entering the warp pipes
-- Ghidra the pipe-entry and world-transition routines
-- Verify `g_miss_count_any` is zero through a clean 1-2 run
+**Status:** FIXED (resolved by earlier dispatch/function-finder fixes)
 
 ---
 
 ## ISSUE #8 — Residual HUD flicker / occasional missing HUD frame
 
-**Status:** OPEN
+**Status:** FIXED (four-part fix across three sessions)
 
 ### Symptom
-Despite the three-part fix in Issue #3, the HUD still occasionally flickers or
-disappears for a frame during gameplay. Much less frequent than before (was every
-few frames, now rare) but still noticeable.
+Despite the three-part fix in Issue #3, the HUD still flickered during gameplay.
+The flicker began once the screen started scrolling (e.g., when Mario hits the
+first ? block in the demo and the camera follows) and persisted throughout.
 
-### Likely cause
-The sprite-0 counter-based simulation still has timing edge cases:
-- The counter threshold (3 reads) may not align with the game's actual spin-wait
-  pattern on every frame — interruptions from subroutine calls between Phase 1 and
-  Phase 2 of the sprite-0 wait (`JSR $8223`, `JSR $81C6`) may read `$2002` and
-  disrupt the counter cycle
-- The renderer fallback uses OAM[0] Y to decide the split; if OAM[0] is briefly
-  hidden (`Y=$EF`) during a transition frame, the fallback doesn't activate
-- The pre-captured `g_ppuctrl_hud` value is set at VBlank start (before NMI writes
-  `$2000` for the HUD nametable), so it may have stale nametable bits from the
-  previous frame's gameplay PPUCTRL
+### Root cause (final, after Ghidra investigation)
+Four separate problems combined:
 
-### Next steps
-- Add per-frame debug logging of `g_spr0_split_active`, `g_ppuctrl_hud`, OAM[0] Y,
-  and `g_ppuscroll_x_hud` to identify which value is wrong on flicker frames
-- Consider replacing the counter-based sim entirely with a scanline-timing model:
-  set sprite-0 hit flag after a fixed number of memory accesses post-VBlank
-  (approximating the real scanline at which sprite 0 overlaps BG)
-- Compare PPU trace CSV against Mesen's PPU register writes frame-by-frame
+**1. Blank frames during screen transitions.**
+SMB temporarily disables rendering (ppumask=$06) for 6-16 frames during nametable
+loads. Our renderer painted the background color on those frames, visible as
+flashes on LCD. CRT persistence makes them invisible on real hardware.
+
+**2. Split-line seam artifact.** (See Issue #9.)
+
+**3. Sprite-0 capture picked up gameplay nametable bits (PRIMARY CAUSE).**
+The NMI's upload routine at `$8EA9` calls `FUN_8eed` (`STA $2000, STA $0778`)
+which writes PPUCTRL with the **gameplay** nametable select bits (bit 0-1 from
+`$0778`). This happens BEFORE the sprite-0 wait. When the counter-based sim
+triggered, it captured `g_ppuctrl & 0x3B` — preserving nametable bits 0-1 from
+the upload context. Once scrolling began, bit 0 alternated between 0 and 1 at
+256-pixel boundaries, causing the HUD to render from the wrong nametable on
+alternating scroll regions.
+
+**4. Fallback split activated when game didn't want one.**
+The renderer fallback condition `(spr0_y > 0 && spr0_y < 200)` triggered even
+when `$0722` (ScrollFlag) was 0, meaning the game had skipped its sprite-0 wait
+entirely. During mode transitions (title→gameplay, death, etc.), OAM[0].Y was
+still on-screen from the previous frame, creating unwanted splits.
+
+### Fix (four changes across `runtime.c` + `ppu_renderer.c`)
+1. **Frame retention**: Skip rendering when ppumask bits 3-4 both clear; keep
+   previous framebuffer content (CRT persistence emulation).
+2. **Tile-aligned split_y**: `(spr0_y + 15) & ~7` for 8px tile boundary.
+3. **Capture mask fix** (`runtime.c`): Changed sprite-0 counter capture from
+   `g_ppuctrl & 0x3B` to `g_ppuctrl & 0x38` — clears nametable bits 0-1,
+   forcing HUD to always use nametable 0. Matches VBlank pre-capture mask.
+4. **ScrollFlag guard** (`ppu_renderer.c`): Fallback split only activates when
+   `g_ram[0x0722]` (ScrollFlag) is non-zero, matching the NMI's own gate at
+   `$8138: LDA $0722; BEQ skip_sprite0_wait`.
 
 ---
 
 ## ISSUE #9 — Title screen artifacts and split-line glitch
 
-**Status:** OPEN
+**Status:** FIXED
 
 ### Symptom
 1. A horizontal line artifact (single scanline, wrong color/tile data) appears at the
@@ -229,29 +221,77 @@ The sprite-0 counter-based simulation still has timing edge cases:
 3. A stray `?` block sprite appears on the right side of the title screen (it shouldn't
    be visible during the title screen)
 
-### Likely cause
-**Split-line artifact:** The split boundary at `split_y = OAM[0].Y + 9` may be off by
-one scanline. The renderer switches from HUD scroll to gameplay scroll at exactly that
-row — if the boundary is wrong, one row gets rendered with the wrong scroll source,
-producing a visible seam.
+### Root cause
+**Split-line artifact:** The split boundary at `split_y = OAM[0].Y + 9` was not
+tile-aligned. The renderer switched from HUD scroll to gameplay scroll at a non-tile
+boundary, rendering a partial tile row with the wrong scroll source. The seam was
+visible as a single scanline of wrong-colored pixels.
 
-**Title screen corruption:** During the title-to-gameplay or gameplay-to-title
-transition, nametable data is being updated over multiple frames. The renderer may
-capture a partially-updated nametable, showing stale tiles from the previous screen
-state mixed with new ones.
+**Title screen artifacts (2 & 3):** These were caused by the same rendering-off
+blank frame issue described in Issue #8 — during title-to-gameplay and gameplay-to-title
+transitions, the game disables rendering for several frames while loading nametable data.
+Our renderer was painting the background color during these frames, which was briefly
+visible as a flash of stale/wrong content before the correct screen appeared. The frame
+retention fix (Issue #8) resolved this.
 
-**Stray ? block sprite:** Sprite OAM may not be fully cleared during transitions. If
-the game expects OAM to be DMA'd fresh each frame but a transition frame skips the
-DMA, stale sprite data from the previous state (gameplay ? blocks) remains visible.
+### Fix (two changes in `ppu_renderer.c`)
+1. **Tile-aligned split boundary:** Changed `split_y` from `spr0_y + 9` to
+   `(spr0_y + 15) & ~7`. This rounds up to the next 8-pixel tile boundary, ensuring
+   the HUD/gameplay boundary always lands on a tile row edge. For SMB (OAM[0].Y=24)
+   this gives split_y=32 (4 tile rows), matching the actual 4-row HUD area.
+
+2. **Frame retention when rendering disabled:** See Issue #8 fix — prevents
+   blank frames during nametable loading transitions.
+
+3. **PPUCTRL HUD mask cleanup:** Pre-capture mask changed from `g_ppuctrl & ~0x03`
+   to `g_ppuctrl & 0x38` (only rendering-relevant bits 3-5). Counter-triggered
+   capture mask changed from `g_ppuctrl` to `g_ppuctrl & 0x3B` (rendering bits
+   0-1,3-5). This prevents stale VRAM increment (bit 2) and NMI enable (bit 7)
+   values from affecting HUD rendering.
+
+---
+
+## ISSUE #10 — Demo sequence may be non-deterministic in real-time mode
+
+**Status:** OPEN (needs further investigation)
+
+### Symptom
+User reported that the auto-play demo (title screen) sometimes plays out differently
+between runs — Mario's actions vary (sometimes misses blocks, different momentum).
+This was observed in interactive (non-turbo, real-time) play.
+
+### Investigation results
+**Turbo mode is deterministic.** Two scripted turbo-mode demo captures produced
+pixel-identical results — same frame numbers, same NMI_dbg transitions, identical
+screenshots at every 60-frame checkpoint.
+
+**Non-turbo mode timing.** VBlank uses `clock()` in `maybe_trigger_vblank()` with
+~16ms period. The main game loop (RESET handler at $8000) only polls `$2002` in a
+tight wait loop — all game logic runs inside NMI. Theoretically this should be
+deterministic since the number of poll iterations doesn't affect game state. However,
+`clock()` on Windows has ~15ms granularity which could cause occasional double-fires
+or skipped frames.
+
+### SMB demo mechanism
+SMB stores pre-recorded controller inputs in ROM at $D6FE+. The demo replays these
+inputs frame-by-frame during OperMode=0 (title/demo). The demo is perfectly
+deterministic on real hardware and in emulators. Any non-determinism in our recomp
+must come from timing differences between frames.
+
+### Possible causes
+1. **Wall-clock jitter:** `clock()` granularity (~15ms) vs 16.67ms frame period
+   means some frames may be ~15ms and others ~30ms, causing VBlank to fire at
+   inconsistent intervals
+2. **SDL event processing latency:** `SDL_PollEvent()` and `SDL_RenderPresent()`
+   take variable time, affecting the `clock()` delta between VBlanks
+3. **Audio queue backpressure:** `SDL_GetQueuedAudioSize()` check may cause
+   variable callback duration
 
 ### Next steps
-- Check the exact `split_y` value: compare OAM[0] Y against Mesen to see if +9 is
-  the right offset for SMB (Faxanadu uses +9, SMB may differ)
-- Check if the artifact line is always at the same Y position or varies
-- For the stray ? block: dump OAM slot data on the title screen and compare against
-  Mesen — check if OAM should be blanked during the transition
-- For the title corruption: check if the nametable content at the artifact location
-  matches expected tiles or contains stale data from the gameplay screen
+- Add `g_frame_count` delta logging to detect skipped/doubled frames
+- Try replacing `clock()` with `QueryPerformanceCounter()` for microsecond timing
+- Consider operation-counting VBlank model (count nes_read/nes_write calls) as
+  an alternative to wall-clock timing for deterministic replay
 
 ---
 
