@@ -19,11 +19,11 @@ signed-int wrapping bugs when player_sx is near 255/0.
 
 ---
 
-## OPEN: Piranha plant half-renders / despawns in widescreen margin
+## RESOLVED: Piranha plant half-renders / despawns in widescreen margin
 
 **Location:** World 1-2 warp zone area (and likely all piranha plant pipes)
 
-**Symptoms:**
+**Symptoms (before fix):**
 1. From far away, piranha plant is fully visible in the 16:9 right margin
    via sprite runahead (see `piranha_15_far_visible.png`)
 2. As Mario approaches, the piranha plant HALF disappears — partially
@@ -33,45 +33,32 @@ signed-int wrapping bugs when player_sx is near 255/0.
    SECOND piranha plant further out is visible at the margin edge
    (see `piranha_18_closer_still_gone.png`)
 
-**Analysis:**
-There appears to be a de-rendering boundary between the 4:3 viewport edge
-(X=256 from ScreenLeft) and the 16:9 right margin.  The game's own
-off-screen enemy management code (likely `CheckRightBounds` at $C164 or
-the 72px activation check at $D69A/$D6A1) deactivates/despawns enemies
-when they cross certain screen X thresholds.
+**Root cause:**
+The sprite runahead shifts the camera +256px (one page) by incrementing
+ScreenLeft_PageLoc ($071A) and ScreenRight_PageLoc ($071B).  The enemy
+bounds check at $D67A-$D6D5 computes a keep-alive zone from
+ScreenLeft-72px to ScreenRight+72px.  During runahead, the shifted left
+boundary is 256px further right than the real frame's — so enemies in
+the real frame's 4:3 viewport fall outside the shifted left boundary and
+get deactivated via JSR $C998 (zeros 8 enemy fields: $0F+X, $16+X,
+$1E+X, $0110+X, $0796+X, $0125+X, $03C5+X, $078A+X).
 
-In 4:3 this is invisible — the enemy is already off-screen.  But in 16:9
-widescreen, these entities are visible in the right margin.  Once the game
-deactivates an enemy, it stays deactivated — the runahead also won't render
-it because the runahead starts from the real frame's RAM (where the enemy
-is already marked inactive).
+The deactivated enemies have no OAM sprites, so the extended OAM capture
+captures nothing for them.  Although RAM is restored after the runahead,
+the damage is done — the extended OAM already missed the sprites.
 
-**Key code locations to investigate:**
-- `CheckRightBounds` at ~$C164: spawn threshold (ScreenRight + 48px)
-  - Currently hooked in game_ram_read_hook but DISABLED (see comment in extras.c)
-  - Was disabled because extending it causes 8-bit OAM X wrapping for enemies
-    past X=255 from ScreenLeft
-- $D69A/$D6A1: 72px activation/rendering check — used for enemy behavior,
-  NOT just spawning.  Extending this caused reversed movement and X wrapping.
-- Enemy state arrays: $001E-$0023 (Enemy_Flag), $0016-$001B (Enemy_ID)
+**Fix:** PC-gated `ram_read_hook` at $D693 (LDA $071A in bounds check
+left boundary computation).  During `g_runahead_mode`, returns
+`(val > 0) ? val - 1 : val`, restoring the real frame's left boundary.
 
-**The fundamental problem:**
-The game uses 8-bit sprite X coordinates (0-255).  Enemies beyond X=255
-from ScreenLeft cannot be placed correctly in NES OAM.  The sprite runahead
-works by shifting the camera +256px, which lets the NES engine render
-enemies that would be at X=0-255 in that shifted view.  But the REAL
-frame's game logic still deactivates enemies based on 4:3 bounds.
+**Files changed:**
+- `game.cfg`: added `ram_read_hook 071A` (plus 071B/071C/071D for future)
+- `extras.c`: `game_ram_read_hook()` with PC=$D693 check during runahead
+- `nesrecomp` submodule: merged ram_read_hook feature from origin/master
 
-**Possible approaches:**
-1. **Suppress enemy deactivation in the widescreen margin zone** — hook the
-   off-screen check to extend the "active" zone by g_widescreen_right pixels.
-   Risk: enemies might behave incorrectly if activated beyond 8-bit X range.
-2. **Freeze enemy state for margin-zone entities** — prevent the real frame
-   from deactivating enemies that are visible in the widescreen margin, while
-   still letting the runahead render them.
-3. **Use the runahead to also preserve enemy activation state** — after the
-   runahead captures extended OAM, also note which enemies were active, and
-   prevent the real frame from deactivating those specific slots.
+**Verified:** World 1-2 piranha plants remain visible in the widescreen
+right margin as Mario approaches.  The hook fires correctly (confirmed
+via debug logging: "page 1 -> 0" during runahead frames).
 
 ---
 

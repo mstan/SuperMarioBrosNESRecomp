@@ -263,33 +263,45 @@ int         game_handle_arg(const char *key, const char *val) { (void)key; (void
 const char *game_arg_usage(void)                         { return NULL; }
 
 /*
- * RAM read hook — extend ScreenRight reads at CheckRightBounds so
- * enemies spawn earlier for the wider viewport.
+ * RAM read hook — modify screen boundary reads for widescreen support.
  *
  * Only applied when widescreen is active (g_widescreen_right > 0).
- * PC-gated to the spawn-threshold computation ONLY ($C164/$C16E).
  *
- * CheckRightBounds flow:
- *   $C164: LDA $071D   (ScreenRight X)
- *   $C167: CLC
- *   $C168: ADC #$30    (48px lookahead)
- *   $C16E: LDA $071B   (ScreenRight Page)
- *   $C171: ADC #$00    (carry from ADC #$30)
+ * Problem: The sprite runahead shifts the camera +256px (one page) by
+ * incrementing ScreenLeft_PageLoc and ScreenRight_PageLoc.  This also
+ * shifts the enemy bounds check ($D69A) left boundary by +256px.
+ * Enemies in the real frame's 4:3 viewport are now "behind" the
+ * runahead's shifted camera, so the bounds check deactivates them
+ * via $C998.  Once deactivated during the runahead, those enemy slots
+ * lose their OAM rendering — even though the runahead restores RAM
+ * afterward, the OAM capture already missed them.
  *
- * We add g_widescreen_right to the X read at $C164, and the carry
- * from that addition to the page read at $C16E.
+ * Fix: During runahead mode (g_runahead_mode == 1), return the
+ * UN-shifted ScreenLeft_PageLoc at the specific PC where the bounds
+ * check computes its left boundary ($D693: LDA $071A).  This restores
+ * the left boundary to match the real frame, preventing spurious
+ * deactivation of enemies that are alive in the real frame.
  *
- * NOT hooked: $D69A/$D6A1 (72px activation check) — that check is
- * used for enemy behavior/rendering, not just spawning.  Extending it
- * causes off-screen enemies to be treated as "on screen", leading to
- * sprite X wrapping (8-bit) and reversed movement.
+ * Bounds check left boundary computation ($D67A-$D698):
+ *   $D680: LDA $071C   (ScreenLeft X)
+ *   $D68D: ADC #$38    (optional +56 for enemy types 5/13)
+ *   $D68F: SBC #$48    (-72px)
+ *   $D691: STA $01     (left boundary X)
+ *   $D693: LDA $071A   (ScreenLeft Page)  ← HOOKED
+ *   $D696: SBC #$00    (subtract borrow)
+ *   $D698: STA $00     (left boundary Page)
  */
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
-    (void)pc; (void)addr;
-    /* Spawn extension disabled — NES sprites use 8-bit X coordinates,
-     * so enemies activated beyond X=255 from ScreenLeft have their
-     * positions wrap around, causing wrong placement and reversed
-     * movement.  Proper fix requires an extended sprite renderer
-     * that can place sprites at X > 255 in the widescreen margin. */
+    if (g_widescreen_right <= 0) return val;
+
+    /* During sprite runahead: prevent the shifted camera from
+     * deactivating enemies via the left boundary of the bounds check.
+     * Subtract 1 page to restore the real frame's left boundary. */
+    if (g_runahead_mode) {
+        if (pc == 0xD693 && addr == 0x071A) {
+            return (val > 0) ? val - 1 : val;
+        }
+    }
+
     return val;
 }
