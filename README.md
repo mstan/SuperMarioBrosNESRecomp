@@ -3,12 +3,17 @@
 Static recompilation of Super Mario Bros. (NES) for native PC.
 Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 
-> **Status: Work in progress.** World 1-1 is fully playable and the title screen renders correctly. Known issues exist (see below) — this is an early release intended for testing and development.
+> **Status:** The game is fully playable. All worlds and levels are believed to be completable, though not every path has been exhaustively tested. If you find a game-breaking bug, please [open an issue](../../issues).
 
 ## Known Issues
 
-- **World 1-2 warp pipe crash** — entering the warp zone causes a game over; world transitions not fully implemented
-- **Luigi frozen after Mario dies** — controller 2 input not yet bound; 2-player mode non-functional
+- **Demo sequence non-determinism** — the title screen auto-play demo may behave
+  differently between launches. On some runs Mario misses the mushroom from the
+  first `?` block; on others he collects it normally. This is a minor frame-timing
+  inconsistency in real-time mode (turbo/fast-forward mode is fully deterministic).
+  Gameplay is unaffected.
+- **2-player mode non-functional** — controller 2 input is not bound; Luigi cannot
+  move when play switches to him after Mario dies.
 
 ## Quick Start
 
@@ -26,13 +31,13 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 | Start      | Enter |
 | Select     | Right Shift |
 
-## Save States
+## Hotkeys
 
 | Key | Action |
 |-----|--------|
 | F5  | Toggle turbo (fast-forward) |
-| F6  | Save state → `C:\temp\quicksave.sav` |
-| F7  | Load state ← `C:\temp\quicksave.sav` |
+| F6  | Save state |
+| F7  | Load state |
 
 ## ROM
 
@@ -64,4 +69,4 @@ has been translated to C by [NESRecomp](nesrecomp/) and compiled to native x64.
 | `game.cfg` | Recompiler config (inline dispatch, NROM-256 layout) |
 | `generated/super-mario-bros_full.c` | Recompiled 6502 code (committed) |
 | `generated/super-mario-bros_dispatch.c` | Dispatch table (committed) |
-| `ISSUES.md` | Detailed open issue tracker |
+| `ISSUES.md` | Detailed issue tracker with root-cause analysis |
