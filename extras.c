@@ -7,11 +7,12 @@
 #include "game_extras.h"
 #include "nes_runtime.h"
 #include <string.h>
-#include <stdio.h>
 
 /* Generated functions we call for runahead */
 extern void func_86E6_b0(void);  /* State 8: column-write loop (area parser) */
 extern void func_8EDD_b0(void);  /* NMI VRAM upload routine */
+extern void func_8220_b0(void);  /* OAM clear (fills $0200+Y with $F8) */
+extern void func_8212_b0(void);  /* OperMode dispatcher (full game engine) */
 
 uint32_t    game_get_expected_crc32(void)                { return 0x3337EC46u; }
 const char *game_get_name(void)                          { return "Super Mario Bros."; }
@@ -113,6 +114,105 @@ static void runahead_widescreen(void) {
     g_controller1_buttons = ctrl_save;
 }
 
+/*
+ * Sprite runahead: run the game engine with a camera shifted right by 256px
+ * so that entities in the widescreen right margin (screen_x 256+) get
+ * rendered into the 0-255 OAM X range.  The renderer draws g_ppu_oam_ext
+ * sprites at (OAM_X + 256 + g_widescreen_left).
+ *
+ * By shifting exactly 256px, there's no overlap with normal OAM:
+ * - Normal: game's off-screen check hides entities at screen_x >= 256
+ * - Extended: shifted camera makes screen_x < 256 off-screen to the left
+ *
+ * g_suppress_vblank prevents NMI re-entry during the runahead frame.
+ * g_runahead_mode redirects nametable writes to g_shadow_nt (harmless).
+ * All state (RAM, CPU, PPU, OAM, nametables) is saved and restored.
+ */
+static void runahead_sprites(void) {
+    if (g_widescreen_right <= 0) return;
+
+    /* Only during gameplay (OperMode == 1) */
+    if (g_ram[0x0770] != 1) {
+        g_ext_oam_valid = 0;
+        return;
+    }
+
+    /* ---- Save ALL mutable state ---- */
+    uint8_t ram_save[0x0800];
+    memcpy(ram_save, g_ram, sizeof(ram_save));
+
+    CPU6502State cpu_save = g_cpu;
+
+    uint8_t oam_save[0x100];
+    memcpy(oam_save, g_ppu_oam, sizeof(oam_save));
+
+    uint8_t nt_save[0x1000];
+    memcpy(nt_save, g_ppu_nt, sizeof(nt_save));
+
+    uint8_t shadow_save[0x1000];
+    memcpy(shadow_save, g_shadow_nt, sizeof(shadow_save));
+
+    uint8_t pal_save[0x20];
+    memcpy(pal_save, g_ppu_pal, sizeof(pal_save));
+
+    uint8_t ppuctrl_save   = g_ppuctrl;
+    uint8_t ppumask_save   = g_ppumask;
+    uint8_t ppustatus_save = g_ppustatus;
+    uint16_t ppuaddr_save  = g_ppuaddr;
+    uint8_t scrollx_save   = g_ppuscroll_x;
+    uint8_t scrolly_save   = g_ppuscroll_y;
+
+    uint8_t latch_ppu, latch_scroll;
+    runtime_get_latch_state(&latch_ppu, &latch_scroll);
+
+    uint8_t ctrl_save = g_controller1_buttons;
+    int shadow_valid_save = g_shadow_nt_valid;
+
+    /* ---- Shift camera right by 256 pixels ---- */
+    g_ram[0x071A]++;  /* ScreenLeft_PageLoc += 1 */
+    g_ram[0x071B]++;  /* ScreenRight_PageLoc += 1 */
+
+    /* ---- Set up runahead ---- */
+    g_controller1_buttons = 0;   /* no input during runahead */
+    g_suppress_vblank = 1;       /* prevent NMI re-entry */
+    g_runahead_mode = 1;         /* redirect NT writes to shadow (don't corrupt real NT) */
+
+    /* ---- Clear OAM and run full game engine ---- */
+    func_8220_b0();   /* Clear OAM (fills $0200+Y with $F8) */
+    func_8212_b0();   /* OperMode dispatch → game logic + sprite rendering */
+
+    /* ---- Capture extended OAM from RAM ---- */
+    memcpy(g_ppu_oam_ext, &g_ram[0x0200], 256);
+
+    /* DIAGNOSTIC: blank ALL extended OAM to confirm ghost source */
+    memset(g_ppu_oam_ext, 0xFF, 256);
+
+    g_ext_oam_valid = 1;
+
+    /* ---- Clean up ---- */
+    g_runahead_mode = 0;
+    g_suppress_vblank = 0;
+
+    /* ---- Restore ALL state ---- */
+    memcpy(g_ram, ram_save, sizeof(ram_save));
+    g_cpu = cpu_save;
+    memcpy(g_ppu_oam, oam_save, sizeof(oam_save));
+    memcpy(g_ppu_nt, nt_save, sizeof(nt_save));
+    memcpy(g_shadow_nt, shadow_save, sizeof(shadow_save));
+    memcpy(g_ppu_pal, pal_save, sizeof(pal_save));
+
+    g_ppuctrl     = ppuctrl_save;
+    g_ppumask     = ppumask_save;
+    g_ppustatus   = ppustatus_save;
+    g_ppuaddr     = ppuaddr_save;
+    g_ppuscroll_x = scrollx_save;
+    g_ppuscroll_y = scrolly_save;
+
+    runtime_set_latch_state(latch_ppu, latch_scroll);
+    g_controller1_buttons = ctrl_save;
+    g_shadow_nt_valid = shadow_valid_save;
+}
+
 void game_post_nmi(uint64_t frame_count) {
     (void)frame_count;
     /* Update absolute world scroll for widescreen margin clamping.
@@ -130,32 +230,11 @@ void game_post_nmi(uint64_t frame_count) {
         s_prev_opermode = opermode;
     }
 
-    /* Debug: log alignment between scroll, game write cursor, and right margin */
-    if (opermode == 1 && g_widescreen_right > 0) {
-        static int s_dbg_count = 0;
-        if (s_dbg_count < 20 || (s_dbg_count % 60 == 0 && s_dbg_count < 600)) {
-            int origin_x = (g_ppuctrl & 1) * 256 + g_ppuscroll_x;
-            int viewport_right_col = ((origin_x + 256) / 8) & 63;
-            /* $0726/$0725 = CurrentNTAddr hi/lo (area parser write position) */
-            uint16_t nt_addr = ((uint16_t)g_ram[0x0726] << 8) | g_ram[0x0725];
-            int write_col = (nt_addr & 0x1F);  /* low 5 bits = column within NT */
-            int write_nt  = (nt_addr >> 10) & 1; /* which nametable */
-            int write_col_abs = write_nt * 32 + write_col; /* absolute 0-63 */
-            int margin_end_col = ((origin_x + g_render_width) / 8) & 63;
-            int delta = (write_col_abs - viewport_right_col) & 63;
-            fprintf(stderr, "[ALIGN] f=%d origin=%d vp_right_col=%d write_col=%d(nt%d+%d) "
-                    "margin_end=%d delta=%d extra_cols=%d\n",
-                    (int)frame_count, origin_x, viewport_right_col,
-                    write_col_abs, write_nt, write_col,
-                    margin_end_col, delta,
-                    (g_widescreen_right + 7) / 8 + 2);
-            s_dbg_count++;
-        }
-        s_dbg_count++;
-    }
-
     /* Run column-write pipeline ahead for right-margin tiles */
     runahead_widescreen();
+
+    /* Run sprite runahead for right-margin enemies */
+    runahead_sprites();
 }
 
 int         game_handle_arg(const char *key, const char *val) { (void)key; (void)val; return 0; }
@@ -166,8 +245,7 @@ const char *game_arg_usage(void)                         { return NULL; }
  * enemies spawn earlier for the wider viewport.
  *
  * Only applied when widescreen is active (g_widescreen_right > 0).
- * Only at the spawn-threshold computation ($C164/$C16E) — all other
- * game logic reads the raw ScreenRight unchanged.
+ * PC-gated to the spawn-threshold computation ONLY ($C164/$C16E).
  *
  * CheckRightBounds flow:
  *   $C164: LDA $071D   (ScreenRight X)
@@ -177,12 +255,19 @@ const char *game_arg_usage(void)                         { return NULL; }
  *   $C171: ADC #$00    (carry from ADC #$30)
  *
  * We add g_widescreen_right to the X read at $C164, and the carry
- * from that addition to the page read at $C16E.  No global state —
- * the page hook re-reads $071D to compute carry independently.
+ * from that addition to the page read at $C16E.
+ *
+ * NOT hooked: $D69A/$D6A1 (72px activation check) — that check is
+ * used for enemy behavior/rendering, not just spawning.  Extending it
+ * causes off-screen enemies to be treated as "on screen", leading to
+ * sprite X wrapping (8-bit) and reversed movement.
  */
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     (void)pc; (void)addr;
-    /* TODO: Phase C — extend spawn/despawn thresholds for widescreen.
-     * Disabled for now while getting 16:9 visuals stable. */
+    /* Spawn extension disabled — NES sprites use 8-bit X coordinates,
+     * so enemies activated beyond X=255 from ScreenLeft have their
+     * positions wrap around, causing wrong placement and reversed
+     * movement.  Proper fix requires an extended sprite renderer
+     * that can place sprites at X > 255 in the widescreen margin. */
     return val;
 }
