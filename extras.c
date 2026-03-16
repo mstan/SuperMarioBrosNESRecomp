@@ -184,8 +184,25 @@ static void runahead_sprites(void) {
     /* ---- Capture extended OAM from RAM ---- */
     memcpy(g_ppu_oam_ext, &g_ram[0x0200], 256);
 
-    /* DIAGNOSTIC: blank ALL extended OAM to confirm ghost source */
-    memset(g_ppu_oam_ext, 0xFF, 256);
+    /* ---- Remove ghost player from extended OAM ----
+     * The player rendering at $F176 uses pure 8-bit subtraction:
+     *   screen_x = SprObject_X - ScreenLeft_X
+     * During the runahead, the camera tracking code scrolls ScreenLeft_X
+     * to follow the player, so the ghost's OAM X differs from the real
+     * frame's OAM X.  Compute the player's screen X from the RUNAHEAD
+     * state (g_ram, not ram_save) and blank sprites near that X.
+     * The player is 16px wide (two 8x8 tiles), so blank [-4, +20]. */
+    {
+        uint8_t player_sx = g_ram[0x86] - g_ram[0x071C];
+        for (int s = 0; s < 64; s++) {
+            int eo = s * 4;
+            if (g_ppu_oam_ext[eo] >= 0xEF) continue;
+            int dx = (int)g_ppu_oam_ext[eo + 3] - (int)player_sx;
+            if (dx >= -4 && dx <= 20) {
+                g_ppu_oam_ext[eo] = 0xFF;  /* hide */
+            }
+        }
+    }
 
     g_ext_oam_valid = 1;
 
