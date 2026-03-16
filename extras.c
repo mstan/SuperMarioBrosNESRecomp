@@ -191,14 +191,19 @@ static void runahead_sprites(void) {
      * to follow the player, so the ghost's OAM X differs from the real
      * frame's OAM X.  Compute the player's screen X from the RUNAHEAD
      * state (g_ram, not ram_save) and blank sprites near that X.
-     * The player is 16px wide (two 8x8 tiles), so blank [-4, +20]. */
+     * The player is 16px wide (two 8x8 tiles), so blank [-4, +20].
+     *
+     * IMPORTANT: use uint8_t subtraction for the X delta — this mirrors
+     * the NES's 8-bit wrapping.  When player_sx is near 255/0, the
+     * second tile column wraps (e.g. 254+8 = 6 mod 256).  Signed int
+     * subtraction would give -248 instead of 8, letting tiles escape. */
     {
         uint8_t player_sx = g_ram[0x86] - g_ram[0x071C];
         for (int s = 0; s < 64; s++) {
             int eo = s * 4;
             if (g_ppu_oam_ext[eo] >= 0xEF) continue;
-            int dx = (int)g_ppu_oam_ext[eo + 3] - (int)player_sx;
-            if (dx >= -4 && dx <= 20) {
+            uint8_t dx = (uint8_t)(g_ppu_oam_ext[eo + 3] - player_sx);
+            if (dx <= 20 || dx >= 252) {  /* [-4, +20] circular */
                 g_ppu_oam_ext[eo] = 0xFF;  /* hide */
             }
         }
