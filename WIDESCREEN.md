@@ -159,26 +159,33 @@ When 0, behavior is identical to authentic. No code paths change for vanilla bui
 
 ---
 
-## Current Status
+## Current Status (16:9 only — 21:9 removed)
 
-- [x] Phase A partially done: BG renderer widens, framebuffer resizes, F8 toggle
-- [x] Phase A partially done: world scroll clamping (left margin)
-- [x] ram_read_hook infrastructure in recompiler (Phase B/C ready)
+### Done
+- [x] Phase A: BG renderer widens, framebuffer resizes, F8 toggle (4:3 / 16:9)
+- [x] Phase A: world scroll clamping (left margin blanked before level start)
+- [x] ram_read_hook infrastructure in recompiler
 - [x] 16:9 look-back working (left margin shows passed tiles correctly)
-- [x] World-column tracking (Attempt 3): PPU $2007 writes stamped with world column,
-      renderer validates margin tiles against expected world column, scroll discontinuity
-      detection clears tracking on area transitions. Right vignette covers full margin.
-- [x] Sprite runahead: runs full game engine with camera shifted +256px, captures
-      extended OAM for right-margin sprites. Ghost player removal via X-range blanking.
-- [x] Runahead enemy despawn fix (Attempt 4): ram_read_hook at PC=$D693 restores
-      ScreenLeft_PageLoc during runahead to prevent bounds check from deactivating
-      enemies in the real frame's viewport. Piranha plants now survive in margin.
-- [ ] Phase A: sprite X unwrapping
+- [x] World-column tracking: PPU $2007 writes stamped with world column,
+      renderer validates margin tiles, scroll discontinuity detection on area transitions
+- [x] Sprite runahead: full game engine runs with camera shifted +256px, captures
+      extended OAM for right-margin sprites. Ghost player removal via Y-position blanking.
+- [x] Enemy despawn fix: ram_read_hook at PC=$D693/$D6A1 restores boundary pages
+      during runahead — piranha plants and enemies survive in the right margin
+- [x] Default to 16:9 on startup (game_on_init sets ASPECT_16_9)
+
+### Remaining
+- [ ] Phase A: sprite X unwrapping (for left-margin sprites)
 - [ ] Phase A: unify widescreen state under extra_left/right API
-- [ ] Phase B: right-margin tile lookahead (need game to write more columns ahead)
+- [ ] Phase B: right-margin tile lookahead (game needs to write more columns ahead)
 - [ ] Phase C: re-enable spawn hooks with correct PC set
 - [ ] Phase D: sprite world-X computation
-- [ ] Phase E: dynamic per-frame control
+- [ ] Phase E: dynamic per-frame control (reduce margins during transitions)
+
+### Known Limitations
+- Occasional sprite flickering at the 4:3/widescreen boundary (cosmetic only)
+- Right margin tiles limited to ~16px look-ahead until Phase B is implemented
+- Flagpole flag not visible in the widescreen margin (entity management issue)
 
 ---
 

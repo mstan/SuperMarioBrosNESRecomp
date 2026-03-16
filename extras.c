@@ -16,7 +16,11 @@ extern void func_8212_b0(void);  /* OperMode dispatcher (full game engine) */
 
 uint32_t    game_get_expected_crc32(void)                { return 0x3337EC46u; }
 const char *game_get_name(void)                          { return "Super Mario Bros."; }
-void        game_on_init(void)                           {}
+void        game_on_init(void) {
+    /* Default to 16:9 widescreen unless --widescreen was explicitly passed */
+    if (g_aspect_ratio == ASPECT_4_3)
+        widescreen_set(ASPECT_16_9);
+}
 void        game_on_frame(uint64_t frame_count) {
     (void)frame_count;
 }
@@ -172,6 +176,14 @@ static void runahead_sprites(void) {
     g_ram[0x071A]++;  /* ScreenLeft_PageLoc += 1 */
     g_ram[0x071B]++;  /* ScreenRight_PageLoc += 1 */
 
+    /* ---- Hide player so it doesn't appear as a ghost ----
+     * The sprite renderer at $F171 reads Player_Y from $00CE+X.
+     * Setting it to $FF puts the player below the visible screen
+     * (Y=255 > 240 scanlines), so no player sprites appear in OAM.
+     * This is much more robust than post-hoc ghost removal, which
+     * fails when animation frames differ between real and runahead. */
+    g_ram[0x00CE] = 0xFF;  /* Player_Y_Position = off-screen */
+
     /* ---- Set up runahead ---- */
     g_controller1_buttons = 0;   /* no input during runahead */
     g_suppress_vblank = 1;       /* prevent NMI re-entry */
@@ -184,27 +196,34 @@ static void runahead_sprites(void) {
     /* ---- Capture extended OAM from RAM ---- */
     memcpy(g_ppu_oam_ext, &g_ram[0x0200], 256);
 
-    /* ---- Remove ghost player from extended OAM ----
-     * The player rendering at $F176 uses pure 8-bit subtraction:
-     *   screen_x = SprObject_X - ScreenLeft_X
-     * During the runahead, the camera tracking code scrolls ScreenLeft_X
-     * to follow the player, so the ghost's OAM X differs from the real
-     * frame's OAM X.  Compute the player's screen X from the RUNAHEAD
-     * state (g_ram, not ram_save) and blank sprites near that X.
-     * The player is 16px wide (two 8x8 tiles), so blank [-4, +20].
+    /* ---- Deduplicate: blank sprites that already exist in real OAM ----
+     * HUD sprites (coin icon, etc.) would appear as ghosts in the right
+     * margin if not deduped.  Match by (Y, tile, attr).
      *
-     * IMPORTANT: use uint8_t subtraction for the X delta — this mirrors
-     * the NES's 8-bit wrapping.  When player_sx is near 255/0, the
-     * second tile column wraps (e.g. 254+8 = 6 mod 256).  Signed int
-     * subtraction would give -248 instead of 8, letting tiles escape. */
-    {
-        uint8_t player_sx = g_ram[0x86] - g_ram[0x071C];
-        for (int s = 0; s < 64; s++) {
-            int eo = s * 4;
-            if (g_ppu_oam_ext[eo] >= 0xEF) continue;
-            uint8_t dx = (uint8_t)(g_ppu_oam_ext[eo + 3] - player_sx);
-            if (dx <= 20 || dx >= 252) {  /* [-4, +20] circular */
-                g_ppu_oam_ext[eo] = 0xFF;  /* hide */
+     * IMPORTANT: only dedup when the real OAM sprite is well inside the
+     * 4:3 viewport (X < 232).  Sprites near the right edge (X >= 232)
+     * straddle the 4:3/widescreen boundary — their sub-sprites split
+     * across real and extended OAM.  If we dedup the extended half, the
+     * sprite visibly splits in two and flickers during the transition.
+     * Keeping both copies is safe: the extended version at X+256 lands
+     * off-screen in the framebuffer when X >= 232. */
+    for (int s = 0; s < 64; s++) {
+        int eo = s * 4;
+        if (g_ppu_oam_ext[eo] >= 0xEF) continue;
+
+        uint8_t ey = g_ppu_oam_ext[eo];
+        uint8_t et = g_ppu_oam_ext[eo + 1];
+        uint8_t ea = g_ppu_oam_ext[eo + 2];
+
+        for (int r = 0; r < 64; r++) {
+            int ro = r * 4;
+            if (oam_save[ro] >= 0xEF) continue;
+            if (oam_save[ro + 3] >= 232) continue;  /* skip boundary sprites */
+            if (oam_save[ro] == ey &&
+                oam_save[ro + 1] == et &&
+                oam_save[ro + 2] == ea) {
+                g_ppu_oam_ext[eo] = 0xFF;  /* blank duplicate */
+                break;
             }
         }
     }
@@ -267,36 +286,58 @@ const char *game_arg_usage(void)                         { return NULL; }
  *
  * Only applied when widescreen is active (g_widescreen_right > 0).
  *
- * Problem: The sprite runahead shifts the camera +256px (one page) by
- * incrementing ScreenLeft_PageLoc and ScreenRight_PageLoc.  This also
- * shifts the enemy bounds check ($D69A) left boundary by +256px.
- * Enemies in the real frame's 4:3 viewport are now "behind" the
- * runahead's shifted camera, so the bounds check deactivates them
- * via $C998.  Once deactivated during the runahead, those enemy slots
- * lose their OAM rendering — even though the runahead restores RAM
- * afterward, the OAM capture already missed them.
+ * Enemy bounds check at $D67A-$D6D5 creates a keep-alive zone from
+ * (ScreenLeft - 72) to (ScreenRight + 72).  Enemies outside this zone
+ * get deactivated via JSR $C998.
  *
- * Fix: During runahead mode (g_runahead_mode == 1), return the
- * UN-shifted ScreenLeft_PageLoc at the specific PC where the bounds
- * check computes its left boundary ($D693: LDA $071A).  This restores
- * the left boundary to match the real frame, preventing spurious
- * deactivation of enemies that are alive in the real frame.
+ * For widescreen, we need two adjustments to the bounds check:
  *
- * Bounds check left boundary computation ($D67A-$D698):
- *   $D680: LDA $071C   (ScreenLeft X)
- *   $D68D: ADC #$38    (optional +56 for enemy types 5/13)
- *   $D68F: SBC #$48    (-72px)
- *   $D691: STA $01     (left boundary X)
- *   $D693: LDA $071A   (ScreenLeft Page)  ← HOOKED
- *   $D696: SBC #$00    (subtract borrow)
- *   $D698: STA $00     (left boundary Page)
+ * 1. REAL FRAME — extend right boundary (+1 page):
+ *    The real frame's right boundary would deactivate enemies that are
+ *    visible in the widescreen right margin.  Hook $D6A1 (LDA $071B)
+ *    to add 1 page, extending the keep-alive zone rightward by 256px.
+ *
+ * 2. RUNAHEAD FRAME — restore left boundary (-1 page):
+ *    The runahead shifts the camera +256px, which shifts the left
+ *    boundary +256px.  Hook $D693 (LDA $071A) to subtract 1 page,
+ *    restoring the left boundary to match the real frame.
+ *
+ * Combined effect: enemies stay alive from the real camera's left edge
+ * all the way to the runahead camera's right edge.
+ *
+ * Bounds check disassembly ($D67A-$D6D5):
+ *   Left boundary:
+ *     $D680: LDA $071C   (ScreenLeft X)
+ *     $D68F: SBC #$48    (-72px)
+ *     $D691: STA $01     (left boundary X)
+ *     $D693: LDA $071A   (ScreenLeft Page)  ← HOOKED (runahead: -1)
+ *     $D696: SBC #$00    (subtract borrow)
+ *     $D698: STA $00     (left boundary Page)
+ *   Right boundary:
+ *     $D69A: LDA $071D   (ScreenRight X)
+ *     $D69D: ADC #$48    (+72px)
+ *     $D69F: STA $03     (right boundary X)
+ *     $D6A1: LDA $071B   (ScreenRight Page)  ← HOOKED (real: +1)
+ *     $D6A4: ADC #$00    (add carry)
+ *     $D6A6: STA $02     (right boundary Page)
  */
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     if (g_widescreen_right <= 0) return val;
 
-    /* During sprite runahead: prevent the shifted camera from
-     * deactivating enemies via the left boundary of the bounds check.
-     * Subtract 1 page to restore the real frame's left boundary. */
+    /* REAL FRAME: extend right boundary so enemies in the widescreen
+     * margin are not deactivated before the runahead can render them.
+     * Round up to whole pages — better to keep enemies alive slightly
+     * too long off-screen than to despawn them while still visible. */
+    if (!g_runahead_mode) {
+        if (pc == 0xD6A1 && addr == 0x071B) {
+            int extra_pages = (g_widescreen_right + 255) / 256;
+            return val + extra_pages;
+        }
+    }
+
+    /* RUNAHEAD FRAME: restore left boundary to match the real frame.
+     * The runahead shifted ScreenLeft_PageLoc +1; undo that here so
+     * enemies in the real viewport aren't deactivated. */
     if (g_runahead_mode) {
         if (pc == 0xD693 && addr == 0x071A) {
             return (val > 0) ? val - 1 : val;

@@ -16,6 +16,21 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 2. Extract and run `SuperMarioBrosRecomp.exe`
 3. Select your Super Mario Bros. (World) ROM when prompted — the path is saved for future launches
 
+## Widescreen (16:9)
+
+The game launches in 16:9 widescreen by default. The extended viewport shows
+upcoming terrain and enemies in the right margin using a runahead technique --
+the game engine runs a second pass each frame with the camera shifted forward
+to capture what's ahead.
+
+![Widescreen 16:9 — World 1-2 with enemies visible in the right margin](docs/widescreen_16_9.png)
+
+Press **F8** to toggle between 4:3 (authentic) and 16:9 at any time.
+
+**Known limitation**: Occasional sprite flickering may occur at the boundary
+between the 4:3 viewport and the widescreen margin. This is cosmetic and does
+not affect gameplay.
+
 ## Controls
 
 | NES Button | Keyboard |
@@ -26,13 +41,14 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 | Start      | Enter |
 | Select     | Right Shift |
 
-## Save States
+## Hotkeys
 
 | Key | Action |
 |-----|--------|
 | F5  | Toggle turbo (fast-forward) |
 | F6  | Save state → `C:\temp\quicksave.sav` |
 | F7  | Load state ← `C:\temp\quicksave.sav` |
+| F8  | Toggle widescreen (4:3 / 16:9) |
 
 ## ROM
 

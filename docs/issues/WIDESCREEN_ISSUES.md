@@ -62,10 +62,13 @@ via debug logging: "page 1 -> 0" during runahead frames).
 
 ---
 
-## NOTED: 21:9 rolling wrap-around bug
+## KNOWN LIMITATION: Boundary sprite flickering
 
-21:9 ultrawide mode (560px, 152px margins) has a visual rolling/wrapping
-artifact.  Not yet investigated.  Lower priority than 16:9 issues.
+Sprites that straddle the 4:3/widescreen boundary (OAM X near 232-255) may
+occasionally flicker.  The deduplication logic in `extras.c` skips boundary
+sprites (X >= 232) to avoid splitting multi-tile sprites, which means both
+the real and extended copies briefly coexist.  This is cosmetic only and does
+not affect gameplay.
 
 ---
 
