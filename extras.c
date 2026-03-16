@@ -7,6 +7,7 @@
 #include "game_extras.h"
 #include "nes_runtime.h"
 #include <string.h>
+#include <stdio.h>
 
 /* Generated functions we call for runahead */
 extern void func_86E6_b0(void);  /* State 8: column-write loop (area parser) */
@@ -127,6 +128,30 @@ void game_post_nmi(uint64_t frame_count) {
         memset(g_nt_col_gen, 0, sizeof(g_nt_col_gen));
         g_nt_generation++;
         s_prev_opermode = opermode;
+    }
+
+    /* Debug: log alignment between scroll, game write cursor, and right margin */
+    if (opermode == 1 && g_widescreen_right > 0) {
+        static int s_dbg_count = 0;
+        if (s_dbg_count < 20 || (s_dbg_count % 60 == 0 && s_dbg_count < 600)) {
+            int origin_x = (g_ppuctrl & 1) * 256 + g_ppuscroll_x;
+            int viewport_right_col = ((origin_x + 256) / 8) & 63;
+            /* $0726/$0725 = CurrentNTAddr hi/lo (area parser write position) */
+            uint16_t nt_addr = ((uint16_t)g_ram[0x0726] << 8) | g_ram[0x0725];
+            int write_col = (nt_addr & 0x1F);  /* low 5 bits = column within NT */
+            int write_nt  = (nt_addr >> 10) & 1; /* which nametable */
+            int write_col_abs = write_nt * 32 + write_col; /* absolute 0-63 */
+            int margin_end_col = ((origin_x + g_render_width) / 8) & 63;
+            int delta = (write_col_abs - viewport_right_col) & 63;
+            fprintf(stderr, "[ALIGN] f=%d origin=%d vp_right_col=%d write_col=%d(nt%d+%d) "
+                    "margin_end=%d delta=%d extra_cols=%d\n",
+                    (int)frame_count, origin_x, viewport_right_col,
+                    write_col_abs, write_nt, write_col,
+                    margin_end_col, delta,
+                    (g_widescreen_right + 7) / 8 + 2);
+            s_dbg_count++;
+        }
+        s_dbg_count++;
     }
 
     /* Run column-write pipeline ahead for right-margin tiles */
