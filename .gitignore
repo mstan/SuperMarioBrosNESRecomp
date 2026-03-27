@@ -3,3 +3,9 @@ build/
 *.bin
 *.sav
 *.log
+*.zip
+.mcp.json
+debug.ini
+*.cdl
+*.mlbl
+*.cht
