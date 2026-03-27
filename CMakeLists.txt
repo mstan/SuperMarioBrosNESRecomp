@@ -21,7 +21,6 @@ endif()
 add_executable(SuperMarioBrosRecomp
     ${NESRECOMP_RUNNER_SOURCES}
     extras.c
-    debug_server.c
     recomp_stack.c
     nes_snapshot.c
     verify_mode.c

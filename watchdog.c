@@ -9,11 +9,17 @@
 #include "nes_runtime.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #ifdef RECOMP_STACK_TRACKING
 #include "recomp_stack.h"
 #endif
+
+/* Watchdog globals (defined in extras.c, read by debug server) */
+extern int g_watchdog_triggered;
+extern uint64_t g_watchdog_frame;
+extern char g_watchdog_stack_dump[1024];
 
 jmp_buf g_watchdog_jmp;
 static clock_t s_frame_start = 0;
@@ -52,6 +58,22 @@ void watchdog_check(void) {
         fprintf(stderr, "CPU: A=%02X X=%02X Y=%02X S=%02X bank=%d\n",
                 g_cpu.A, g_cpu.X, g_cpu.Y, g_cpu.S, g_current_bank);
         fprintf(stderr, "=== Continuing (forced VBlank trigger) ===\n\n");
+
+        /* Set watchdog globals for debug server query */
+        g_watchdog_triggered = 1;
+        g_watchdog_frame = g_frame_count;
+        g_watchdog_stack_dump[0] = '\0';
+#ifdef RECOMP_STACK_TRACKING
+        {
+            int pos = 0;
+            for (int i = g_recomp_stack_top - 1; i >= 0 && pos < 1000; i--) {
+                pos += snprintf(g_watchdog_stack_dump + pos,
+                                sizeof(g_watchdog_stack_dump) - pos,
+                                "[%d] %s\n", i,
+                                g_recomp_stack[i] ? g_recomp_stack[i] : "(null)");
+            }
+        }
+#endif
 
         /* Reset the timer so we don't spam */
         s_frame_start = clock();

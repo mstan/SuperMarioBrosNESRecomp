@@ -207,3 +207,82 @@ int game_dispatch_override(uint16_t addr) { (void)addr; return 0; }
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     (void)pc; (void)addr; return val;
 }
+
+/* ---- Watchdog globals (set by watchdog.c, read by debug server) ---- */
+int g_watchdog_triggered = 0;
+uint64_t g_watchdog_frame = 0;
+char g_watchdog_stack_dump[1024] = "";
+
+/* ---- Debug frame record (SMB-specific) ---- */
+
+void game_fill_frame_record(void *record) {
+    NESFrameRecord *r = (NESFrameRecord *)record;
+    r->game_data[0] = g_ram[0x0770];  /* OperMode */
+    r->game_data[1] = g_ram[0x0772];  /* OperMode_Task */
+    r->game_data[2] = g_ram[0x0086];  /* Player_X_Position */
+    r->game_data[3] = g_ram[0x00CE];  /* Player_Y_Position */
+    r->game_data[4] = g_ram[0x001D];  /* PlayerSize (0=big, 1=small) */
+    r->game_data[5] = g_ram[0x0009];  /* FrameCounter */
+    r->game_data[6] = g_ram[0x0756];  /* Player_State */
+    r->game_data[7] = g_ram[0x075A];  /* WorldNumber */
+    r->game_data[8] = g_ram[0x075C];  /* LevelNumber */
+    r->game_data[9] = g_ram[0x0776];  /* DemoActionTimer */
+}
+
+/* ---- Debug command handler (SMB-specific) ---- */
+
+int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
+    (void)json;
+
+    if (strcmp(cmd, "smb_state") == 0) {
+        uint8_t oper_mode   = g_ram[0x0770];
+        uint8_t oper_task   = g_ram[0x0772];
+        uint8_t world       = g_ram[0x075A];
+        uint8_t level       = g_ram[0x075C];
+        uint8_t player_x    = g_ram[0x0086];
+        uint8_t player_y    = g_ram[0x00CE];
+        uint8_t player_size = g_ram[0x001D];
+        uint8_t player_state = g_ram[0x0756];
+        uint8_t area_type   = g_ram[0x075E];
+        uint8_t score_hi    = g_ram[0x07FC];
+        uint8_t score_mid   = g_ram[0x07FD];
+        uint8_t score_lo    = g_ram[0x07FE];
+        uint8_t lives       = g_ram[0x075A];
+        uint8_t frame_ctr   = g_ram[0x0009];
+
+        debug_server_send_fmt(
+            "{\"id\":%d,\"cmd\":\"smb_state\","
+            "\"oper_mode\":%d,\"oper_task\":%d,"
+            "\"world\":%d,\"level\":%d,"
+            "\"player_x\":%d,\"player_y\":%d,"
+            "\"player_size\":%d,\"player_state\":%d,"
+            "\"area_type\":%d,"
+            "\"score_hi\":%d,\"score_mid\":%d,\"score_lo\":%d,"
+            "\"lives\":%d,\"frame_counter\":%d}\n",
+            id, oper_mode, oper_task,
+            world, level,
+            player_x, player_y,
+            player_size, player_state,
+            area_type,
+            score_hi, score_mid, score_lo,
+            lives, frame_ctr);
+        return 1;
+    }
+
+    if (strcmp(cmd, "smb_demo_state") == 0) {
+        uint8_t demo_timer  = g_ram[0x0776];
+        uint8_t frame_ctr   = g_ram[0x0009];
+        uint8_t oper_mode   = g_ram[0x0770];
+        uint8_t oper_task   = g_ram[0x0772];
+
+        debug_server_send_fmt(
+            "{\"id\":%d,\"cmd\":\"smb_demo_state\","
+            "\"demo_timer\":%d,\"frame_counter\":%d,"
+            "\"oper_mode\":%d,\"oper_task\":%d}\n",
+            id, demo_timer, frame_ctr,
+            oper_mode, oper_task);
+        return 1;
+    }
+
+    return 0;
+}
