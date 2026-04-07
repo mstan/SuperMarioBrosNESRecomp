@@ -1,7 +1,3 @@
-[submodule "nesrecomp"]
-	path = nesrecomp
-	url = https://github.com/mstan/nesrecomp
-	# Pinned to v0.1.0 — update deliberately, not automatically
 [submodule "nestopia-core"]
 	path = nestopia-core
 	url = https://github.com/libretro/nestopia.git
