@@ -14,13 +14,25 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout (with submodules)
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
-      - name: Configure CMake
-        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+      - name: Read pinned nesrecomp SHA
+        id: pin
+        shell: bash
+        run: |
+          sha=$(grep -E '^[[:space:]]*sha[[:space:]]*=' nesrecomp.pin | sed -E 's/.*=[[:space:]]*//')
+          if [ -z "$sha" ]; then echo "nesrecomp.pin missing sha line"; exit 1; fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Clone nesrecomp at pinned SHA
+        shell: bash
+        run: |
+          git clone https://github.com/mstan/nesrecomp.git nesrecomp
+          git -C nesrecomp checkout ${{ steps.pin.outputs.sha }}
+
+      - name: Configure CMake (release build, no Nestopia oracle)
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DENABLE_NESTOPIA_ORACLE=OFF
 
       - name: Build
         run: cmake --build build --config Release
