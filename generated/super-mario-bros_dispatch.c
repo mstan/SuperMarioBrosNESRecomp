@@ -7,60 +7,12 @@ int call_by_address(uint16_t addr) {
     switch (addr) {
         case 0x8000:
             func_8000_b0(); break;
-        case 0x8009:
-            func_8009_b0(); break;
-        case 0x8049:
-            func_8049_b0(); break;
-        case 0x8029:
-            func_8029_b0(); break;
-        case 0x8016:
-            func_8016_b0(); break;
-        case 0x8014:
-            func_8014_b0(); break;
-        case 0x8002:
-            func_8002_b0(); break;
         case 0x8082:
             func_8082_b0(); break;
-        case 0x80A9:
-            func_80A9_b0(); break;
-        case 0x8129:
-            func_8129_b0(); break;
-        case 0x817B:
-            func_817B_b0(); break;
-        case 0x812B:
-            func_812B_b0(); break;
-        case 0x8134:
-            func_8134_b0(); break;
-        case 0x8130:
-            func_8130_b0(); break;
-        case 0x8136:
-            func_8136_b0(); break;
-        case 0x8122:
-            func_8122_b0(); break;
-        case 0x8116:
-            func_8116_b0(); break;
-        case 0x8131:
-            func_8131_b0(); break;
-        case 0x810E:
-            func_810E_b0(); break;
         case 0xFFF0:
             func_FFF0(); break;
         case 0x90CC:
             func_90CC_b0(); break;
-        case 0x90CE:
-            func_90CE_b0(); break;
-        case 0x90DC:
-            func_90DC_b0(); break;
-        case 0x90DF:
-            func_90DF_b0(); break;
-        case 0x90DE:
-            func_90DE_b0(); break;
-        case 0x90E1:
-            func_90E1_b0(); break;
-        case 0x90D4:
-            func_90D4_b0(); break;
-        case 0x90D2:
-            func_90D2_b0(); break;
         case 0x8220:
             func_8220_b0(); break;
         case 0x8E19:
@@ -77,6 +29,8 @@ int call_by_address(uint16_t addr) {
             func_F2D0(); break;
         case 0xF2D3:
             func_F2D3(); break;
+        case 0xF2EA:
+            func_F2EA(); break;
         case 0xF2F3:
             func_F2F3(); break;
         case 0xF329:
@@ -89,56 +43,26 @@ int call_by_address(uint16_t addr) {
             func_F377(); break;
         case 0x8E5C:
             func_8E5C_b0(); break;
-        case 0x8E8E:
-            func_8E8E_b0(); break;
-        case 0x8E7F:
-            func_8E7F_b0(); break;
         case 0x8182:
             func_8182_b0(); break;
-        case 0x81AD:
-            func_81AD_b0(); break;
-        case 0x818D:
-            func_818D_b0(); break;
-        case 0x8187:
-            func_8187_b0(); break;
         case 0x8F97:
             func_8F97_b0(); break;
-        case 0x8FAD:
-            func_8FAD_b0(); break;
-        case 0x8FAE:
-            func_8FAE_b0(); break;
-        case 0x8FAB:
-            func_8FAB_b0(); break;
         case 0x8223:
             func_8223_b0(); break;
         case 0x81C6:
             func_81C6_b0(); break;
-        case 0x81D9:
-            func_81D9_b0(); break;
         case 0x8200:
             func_8200_b0(); break;
-        case 0x820C:
-            func_820C_b0(); break;
-        case 0x81CF:
-            func_81CF_b0(); break;
         case 0x81F9:
             func_81F9_b0(); break;
         case 0x8212:
             func_8212_b0(); break;
-        case 0x822C:
-            func_822C_b0(); break;
-        case 0x822A:
-            func_822A_b0(); break;
         case 0x8222:
             func_8222_b0(); break;
-        case 0x8227:
-            func_8227_b0(); break;
         case 0x8E2D:
             func_8E2D_b0(); break;
         case 0x8E92:
             func_8E92_b0(); break;
-        case 0x8EC5:
-            func_8EC5_b0(); break;
         case 0xF388:
             func_F388(); break;
         case 0xF38E:
@@ -165,16 +89,24 @@ int call_by_address(uint16_t addr) {
             func_F860(); break;
         case 0xF8A9:
             func_F8A9(); break;
+        case 0xF6F1:
+            func_F6F1(); break;
+        case 0xF80D:
+            func_F80D(); break;
         case 0xF720:
             func_F720(); break;
         case 0xF710:
             func_F710(); break;
+        case 0xF6A1:
+            func_F6A1(); break;
         case 0xF8AD:
             func_F8AD(); break;
         case 0xF829:
             func_F829(); break;
         case 0xF750:
             func_F750(); break;
+        case 0xF6FC:
+            func_F6FC(); break;
         case 0xF7A9:
             func_F7A9(); break;
         case 0xF810:
@@ -183,12 +115,24 @@ int call_by_address(uint16_t addr) {
             func_F784(); break;
         case 0xF885:
             func_F885(); break;
+        case 0xF786:
+            func_F786(); break;
+        case 0xF7A5:
+            func_F7A5(); break;
         case 0xF7E6:
             func_F7E6(); break;
+        case 0xF7E7:
+            func_F7E7(); break;
+        case 0xF8A5:
+            func_F8A5(); break;
+        case 0xF7E4:
+            func_F7E4(); break;
         case 0xF7F7:
             func_F7F7(); break;
         case 0xF7F1:
             func_F7F1(); break;
+        case 0xF6F5:
+            func_F6F5(); break;
         case 0xF878:
             func_F878(); break;
         case 0xF7FB:
@@ -221,12 +165,6 @@ int call_by_address(uint16_t addr) {
             func_8231_b0(); break;
         case 0xAEDC:
             func_AEDC_b0(); break;
-        case 0xAF20:
-            func_AF20_b0(); break;
-        case 0xAEED:
-            func_AEED_b0(); break;
-        case 0xAEF3:
-            func_AEF3_b0(); break;
         case 0x838B:
             func_838B_b0(); break;
         case 0x9218:
@@ -253,24 +191,38 @@ int call_by_address(uint16_t addr) {
             func_F4A2(); break;
         case 0xF518:
             func_F518(); break;
+        case 0xF5D1:
+            func_F5D1(); break;
         case 0xF602:
             func_F602(); break;
         case 0xF538:
             func_F538(); break;
         case 0xF607:
             func_F607(); break;
+        case 0xF621:
+            func_F621(); break;
+        case 0xF5F6:
+            func_F5F6(); break;
         case 0xF5FC:
             func_F5FC(); break;
         case 0xF624:
             func_F624(); break;
+        case 0xF586:
+            func_F586(); break;
+        case 0xF5B2:
+            func_F5B2(); break;
+        case 0xF5F8:
+            func_F5F8(); break;
         case 0xF5ED:
             func_F5ED(); break;
         case 0xF5C5:
             func_F5C5(); break;
-        case 0xF5EC:
-            func_F5EC(); break;
         case 0xF5E0:
             func_F5E0(); break;
+        case 0xF5CF:
+            func_F5CF(); break;
+        case 0xF5EC:
+            func_F5EC(); break;
         case 0xF5B9:
             func_F5B9(); break;
         case 0xF605:
@@ -325,6 +277,10 @@ int call_by_address(uint16_t addr) {
             func_F8CB(); break;
         case 0xF8D8:
             func_F8D8(); break;
+        case 0xF8F1:
+            func_F8F1(); break;
+        case 0xF8E7:
+            func_F8E7(); break;
         case 0xF39F:
             func_F39F(); break;
         case 0xF3A5:
@@ -335,16 +291,20 @@ int call_by_address(uint16_t addr) {
             func_F8FB(); break;
         case 0xF90C:
             func_F90C(); break;
-        case 0xF905:
-            func_F905(); break;
         case 0xF903:
             func_F903(); break;
+        case 0xF905:
+            func_F905(); break;
         case 0xF8C5:
             func_F8C5(); break;
         case 0xF8D0:
             func_F8D0(); break;
         case 0xF8C9:
             func_F8C9(); break;
+        case 0xF8CA:
+            func_F8CA(); break;
+        case 0xF8C6:
+            func_F8C6(); break;
         case 0xF8CE:
             func_F8CE(); break;
         case 0xF8C8:
@@ -355,73 +315,12 @@ int call_by_address(uint16_t addr) {
             func_F3AD(); break;
         case 0x8FCF:
             func_8FCF_b0(); break;
-        case 0x900A:
-            func_900A_b0(); break;
-        case 0x9037:
-            func_9037_b0(); break;
-        case 0x9007:
-            func_9007_b0(); break;
-        case 0x902C:
-            func_902C_b0(); break;
-        case 0x9040:
-            func_9040_b0(); break;
-        case 0x9060:
-            func_9060_b0(); break;
-        case 0x904A:
-            func_904A_b0(); break;
-        case 0x9015:
-            func_9015_b0(); break;
-        case 0x9058:
-            func_9058_b0(); break;
-        case 0x9010:
-            func_9010_b0(); break;
-        case 0x903C:
-            func_903C_b0(); break;
-        case 0x9021:
-            func_9021_b0(); break;
-        case 0x9024:
-            func_9024_b0(); break;
-        case 0x9001:
-            func_9001_b0(); break;
-        case 0x9004:
-            func_9004_b0(); break;
-        case 0x9051:
-            func_9051_b0(); break;
         case 0x8567:
             func_8567_b0(); break;
-        case 0x859E:
-            func_859E_b0(); break;
-        case 0x859F:
-            func_859F_b0(); break;
-        case 0x85A3:
-            func_85A3_b0(); break;
-        case 0x85AD:
-            func_85AD_b0(); break;
         case 0x9061:
             func_9061_b0(); break;
-        case 0x9080:
-            func_9080_b0(); break;
-        case 0x906E:
-            func_906E_b0(); break;
-        case 0x90A9:
-            func_90A9_b0(); break;
         case 0x8245:
             func_8245_b0(); break;
-        case 0x82A0:
-            func_82A0_b0(); break;
-        case 0x8280:
-            func_8280_b0(); break;
-        case 0x82BD:
-            switch (g_current_bank) {
-                case 0: func_82BD_b0(); break;
-                case 1: func_82BD_b1(); break;
-                default: nes_log_dispatch_miss(addr); return 0;
-            }
-            break;
-        case 0x82A9:
-            func_82A9_b0(); break;
-        case 0x82A3:
-            func_82A3_b0(); break;
         case 0x8FE4:
             func_8FE4_b0(); break;
         case 0x9071:
@@ -430,82 +329,18 @@ int call_by_address(uint16_t addr) {
             func_AEEA_b0(); break;
         case 0xB04A:
             func_B04A_b0(); break;
-        case 0xB107:
-            func_B107_b0(); break;
-        case 0xB188:
-            func_B188_b0(); break;
-        case 0xB10B:
-            func_B10B_b0(); break;
-        case 0xB1B6:
-            func_B1B6_b0(); break;
-        case 0xB16D:
-            func_B16D_b0(); break;
-        case 0xB0A0:
-            func_B0A0_b0(); break;
-        case 0xB14C:
-            func_B14C_b0(); break;
-        case 0xB0DC:
-            func_B0DC_b0(); break;
-        case 0xB0DF:
-            func_B0DF_b0(); break;
-        case 0xB0CF:
-            func_B0CF_b0(); break;
-        case 0xB199:
-            func_B199_b0(); break;
-        case 0xB0B9:
-            func_B0B9_b0(); break;
-        case 0xB1A8:
-            func_B1A8_b0(); break;
-        case 0xB0AF:
-            func_B0AF_b0(); break;
-        case 0xB0FF:
-            func_B0FF_b0(); break;
-        case 0xB0FD:
-            func_B0FD_b0(); break;
-        case 0xB18D:
-            func_B18D_b0(); break;
-        case 0xB08D:
-            func_B08D_b0(); break;
-        case 0xB0AC:
-            func_B0AC_b0(); break;
-        case 0xB090:
-            func_B090_b0(); break;
         case 0xB624:
             func_B624_b0(); break;
         case 0xC047:
             func_C047(); break;
+        case 0xC058:
+            func_C058(); break;
         case 0xC04E:
             func_C04E(); break;
+        case 0xC04D:
+            func_C04D(); break;
         case 0x84C3:
             func_84C3_b0(); break;
-        case 0x84C8:
-            func_84C8_b0(); break;
-        case 0x8500:
-            func_8500_b0(); break;
-        case 0x8503:
-            func_8503_b0(); break;
-        case 0x850F:
-            func_850F_b0(); break;
-        case 0x8507:
-            func_8507_b0(); break;
-        case 0x8513:
-            func_8513_b0(); break;
-        case 0x853C:
-            func_853C_b0(); break;
-        case 0x8505:
-            func_8505_b0(); break;
-        case 0x8548:
-            func_8548_b0(); break;
-        case 0x8545:
-            func_8545_b0(); break;
-        case 0x852B:
-            func_852B_b0(); break;
-        case 0x8546:
-            func_8546_b0(); break;
-        case 0x8530:
-            func_8530_b0(); break;
-        case 0x8532:
-            func_8532_b0(); break;
         case 0x8534:
             func_8534_b0(); break;
         case 0xF180:
@@ -518,16 +353,24 @@ int call_by_address(uint16_t addr) {
             func_F12C(); break;
         case 0xEEE9:
             func_EEE9(); break;
+        case 0xEEF7:
+            func_EEF7(); break;
         case 0xEF85:
             func_EF85(); break;
         case 0xEEFC:
             func_EEFC(); break;
+        case 0xEEFE:
+            func_EEFE(); break;
         case 0xEEEE:
             func_EEEE(); break;
         case 0xEEF0:
             func_EEF0(); break;
+        case 0xEEF1:
+            func_EEF1(); break;
         case 0xEF10:
             func_EF10(); break;
+        case 0xEF01:
+            func_EF01(); break;
         case 0xEF42:
             func_EF42(); break;
         case 0xEF7A:
@@ -536,93 +379,22 @@ int call_by_address(uint16_t addr) {
             func_EF97(); break;
         case 0xBED4:
             func_BED4_b0(); break;
-        case 0xBEFF:
-            func_BEFF_b0(); break;
-        case 0xBEEE:
-            func_BEEE_b0(); break;
-        case 0xBED6:
-            func_BED6_b0(); break;
         case 0xBE70:
             func_BE70_b0(); break;
-        case 0xBE9D:
-            func_BE9D_b0(); break;
-        case 0xBEA8:
-            func_BEA8_b0(); break;
         case 0xBB96:
             func_BB96_b0(); break;
-        case 0xBBB8:
-            func_BBB8_b0(); break;
-        case 0xBBCE:
-            func_BBCE_b0(); break;
-        case 0xBBA9:
-            func_BBA9_b0(); break;
-        case 0xBBAC:
-            func_BBAC_b0(); break;
-        case 0xBBF5:
-            func_BBF5_b0(); break;
         case 0xB9BC:
             func_B9BC_b0(); break;
-        case 0xB9F8:
-            func_B9F8_b0(); break;
-        case 0xB9F6:
-            func_B9F6_b0(); break;
-        case 0xB9DA:
-            switch (g_current_bank) {
-                case 0: func_B9DA_b0(); break;
-                case 1: func_B9DA_b1(); break;
-                default: nes_log_dispatch_miss(addr); return 0;
-            }
-            break;
-        case 0xB9F0:
-            func_B9F0_b0(); break;
         case 0xB7B8:
             func_B7B8_b0(); break;
-        case 0xB7C3:
-            func_B7C3_b0(); break;
-        case 0xB7CE:
-            func_B7CE_b0(); break;
-        case 0xB81C:
-            func_B81C_b0(); break;
-        case 0xB7C7:
-            func_B7C7_b0(); break;
         case 0xB855:
             func_B855_b0(); break;
-        case 0xB888:
-            func_B888_b0(); break;
-        case 0xB8A2:
-            func_B8A2_b0(); break;
-        case 0xB899:
-            func_B899_b0(); break;
         case 0xB74F:
             func_B74F_b0(); break;
         case 0xB7A3:
             func_B7A3_b0(); break;
-        case 0xB78D:
-            func_B78D_b0(); break;
         case 0x89E1:
             func_89E1_b0(); break;
-        case 0x8A20:
-            func_8A20_b0(); break;
-        case 0x8A06:
-            func_8A06_b0(); break;
-        case 0x8A02:
-            func_8A02_b0(); break;
-        case 0x8A12:
-            func_8A12_b0(); break;
-        case 0x8A05:
-            func_8A05_b0(); break;
-        case 0x8A17:
-            func_8A17_b0(); break;
-        case 0x8A14:
-            func_8A14_b0(); break;
-        case 0x8A00:
-            func_8A00_b0(); break;
-        case 0x8A07:
-            func_8A07_b0(); break;
-        case 0x8A1A:
-            func_8A1A_b0(); break;
-        case 0x8A08:
-            func_8A08_b0(); break;
         case 0x90ED:
             func_90ED_b0(); break;
         case 0x9100:
@@ -641,22 +413,32 @@ int call_by_address(uint16_t addr) {
             func_9224_b0(); break;
         case 0x9237:
             func_9237_b0(); break;
-        case 0x924C:
-            func_924C_b0(); break;
         case 0xF3A6:
             func_F3A6(); break;
+        case 0xF4D1:
+            func_F4D1(); break;
         case 0xF410:
             func_F410(); break;
         case 0xF4B0:
             func_F4B0(); break;
         case 0xF3F2:
             func_F3F2(); break;
+        case 0xF3F4:
+            func_F3F4(); break;
         case 0xF4BE:
             func_F4BE(); break;
+        case 0xF4BF:
+            func_F4BF(); break;
         case 0xF4A5:
             func_F4A5(); break;
         case 0xF405:
             func_F405(); break;
+        case 0xF486:
+            func_F486(); break;
+        case 0xF421:
+            func_F421(); break;
+        case 0xF3EE:
+            func_F3EE(); break;
         case 0xF490:
             func_F490(); break;
         case 0xF462:
@@ -685,83 +467,24 @@ int call_by_address(uint16_t addr) {
             func_8652_b0(); break;
         case 0x865A:
             func_865A_b0(); break;
-        case 0x8660:
-            switch (g_current_bank) {
-                case 0: func_8660_b0(); break;
-                case 1: func_8660_b1(); break;
-                default: nes_log_dispatch_miss(addr); return 0;
-            }
-            break;
-        case 0x868D:
-            func_868D_b0(); break;
-        case 0x8665:
-            func_8665_b0(); break;
-        case 0x8686:
-            func_8686_b0(); break;
         case 0x8693:
             func_8693_b0(); break;
-        case 0x86A5:
-            func_86A5_b0(); break;
         case 0x889D:
             func_889D_b0(); break;
         case 0x86A8:
             func_86A8_b0(); break;
-        case 0x86E5:
-            func_86E5_b0(); break;
         case 0x86E6:
             func_86E6_b0(); break;
         case 0x85BF:
             func_85BF_b0(); break;
         case 0x85E3:
             func_85E3_b0(); break;
-        case 0x8610:
-            func_8610_b0(); break;
-        case 0x8606:
-            func_8606_b0(); break;
-        case 0x8604:
-            func_8604_b0(); break;
-        case 0x85FD:
-            func_85FD_b0(); break;
-        case 0x85E6:
-            func_85E6_b0(); break;
-        case 0x85E8:
-            func_85E8_b0(); break;
-        case 0x85EB:
-            func_85EB_b0(); break;
-        case 0x85EE:
-            func_85EE_b0(); break;
-        case 0x8600:
-            func_8600_b0(); break;
-        case 0x85FB:
-            func_85FB_b0(); break;
-        case 0x85F9:
-            func_85F9_b0(); break;
-        case 0x8636:
-            func_8636_b0(); break;
-        case 0x8614:
-            func_8614_b0(); break;
-        case 0x8624:
-            func_8624_b0(); break;
         case 0x862E:
             func_862E_b0(); break;
-        case 0x8612:
-            func_8612_b0(); break;
-        case 0x860A:
-            func_860A_b0(); break;
-        case 0x8619:
-            func_8619_b0(); break;
         case 0x8643:
             func_8643_b0(); break;
         case 0x86FF:
             func_86FF_b0(); break;
-        case 0x8739:
-            func_8739_b0(); break;
-        case 0x8704:
-            func_8704_b0(); break;
-        case 0x871C:
-            func_871C_b0(); break;
-        case 0x8719:
-            func_8719_b0(); break;
         case 0x8732:
             func_8732_b0(); break;
         case 0x8749:
@@ -786,48 +509,24 @@ int call_by_address(uint16_t addr) {
             func_8325_b0(); break;
         case 0x8330:
             func_8330_b0(); break;
-        case 0x832D:
-            func_832D_b0(); break;
-        case 0x8327:
-            func_8327_b0(); break;
         case 0x82BB:
             func_82BB_b0(); break;
         case 0x830E:
             func_830E_b0(); break;
-        case 0x8316:
-            func_8316_b0(); break;
         case 0x9131:
             func_9131_b0(); break;
-        case 0x91AD:
-            func_91AD_b0(); break;
-        case 0x916D:
-            func_916D_b0(); break;
-        case 0x91A0:
-            func_91A0_b0(); break;
         case 0xB1C7:
             func_B1C7_b0(); break;
         case 0xB206:
             func_B206_b0(); break;
         case 0xB1E5:
             func_B1E5_b0(); break;
-        case 0xB1ED:
-            func_B1ED_b0(); break;
-        case 0xB1F8:
-            func_B1F8_b0(); break;
         case 0xB2A4:
             func_B2A4_b0(); break;
-        case 0xB2AD:
-            func_B2AD_b0(); break;
-        case 0xB2B4:
-            func_B2B4_b0(); break;
         case 0xB2CA:
             func_B2CA_b0(); break;
-        case 0xB300:
-            func_B300_b0(); break;
         case 0x91CD:
             func_91CD_b0(); break;
-        case 0x91EE:
-            func_91EE_b0(); break;
         case 0xB069:
             func_B069_b0(); break;
         case 0xB0E9:
@@ -852,26 +551,6 @@ int call_by_address(uint16_t addr) {
             func_B329_b0(); break;
         case 0xAF93:
             func_AF93_b0(); break;
-        case 0xB00A:
-            func_B00A_b0(); break;
-        case 0xB007:
-            func_B007_b0(); break;
-        case 0xB005:
-            func_B005_b0(); break;
-        case 0xB00C:
-            func_B00C_b0(); break;
-        case 0xB002:
-            func_B002_b0(); break;
-        case 0xAFB9:
-            func_AFB9_b0(); break;
-        case 0xB009:
-            func_B009_b0(); break;
-        case 0xB011:
-            func_B011_b0(); break;
-        case 0xAFAE:
-            func_AFAE_b0(); break;
-        case 0xAFB1:
-            func_AFB1_b0(); break;
         case 0xE29C:
             func_E29C(); break;
         case 0xDC64:
@@ -880,20 +559,8 @@ int call_by_address(uint16_t addr) {
             func_B1DD_b0(); break;
         case 0xB689:
             func_B689_b0(); break;
-        case 0xB695:
-            func_B695_b0(); break;
-        case 0xB699:
-            func_B699_b0(); break;
-        case 0xB6B5:
-            func_B6B5_b0(); break;
-        case 0xB6D0:
-            func_B6D0_b0(); break;
-        case 0xB68D:
-            func_B68D_b0(); break;
         case 0xB6F9:
             func_B6F9_b0(); break;
-        case 0xB6FC:
-            func_B6FC_b0(); break;
         case 0xF131:
             func_F131(); break;
         case 0xF191:
@@ -908,30 +575,48 @@ int call_by_address(uint16_t addr) {
             func_EDED(); break;
         case 0xEDE3:
             func_EDE3(); break;
+        case 0xEDE4:
+            func_EDE4(); break;
+        case 0xEDE6:
+            func_EDE6(); break;
         case 0xEE01:
             func_EE01(); break;
         case 0xC882:
             func_C882(); break;
         case 0xC8D6:
             func_C8D6(); break;
+        case 0xC888:
+            func_C888(); break;
         case 0xC88F:
             func_C88F(); break;
         case 0xC88A:
             func_C88A(); break;
         case 0xC0CC:
             func_C0CC(); break;
+        case 0xC0E9:
+            func_C0E9(); break;
         case 0xC0E1:
             func_C0E1(); break;
         case 0xC1BE:
             func_C1BE(); break;
+        case 0xC0F0:
+            func_C0F0(); break;
+        case 0xC14D:
+            func_C14D(); break;
+        case 0xC0CF:
+            func_C0CF(); break;
+        case 0xC18E:
+            func_C18E(); break;
+        case 0xC1AE:
+            func_C1AE(); break;
+        case 0xC219:
+            func_C219(); break;
         case 0xC0D8:
             func_C0D8(); break;
         case 0xC242:
             func_C242(); break;
         case 0xC141:
             func_C141(); break;
-        case 0xC0F0:
-            func_C0F0(); break;
         case 0xC124:
             func_C124(); break;
         case 0xC22E:
@@ -944,8 +629,6 @@ int call_by_address(uint16_t addr) {
             func_C213(); break;
         case 0xC115:
             func_C115(); break;
-        case 0xC0CF:
-            func_C0CF(); break;
         case 0xC102:
             func_C102(); break;
         case 0xC0D6:
@@ -966,18 +649,30 @@ int call_by_address(uint16_t addr) {
             func_EF34(); break;
         case 0xEFEC:
             func_EFEC(); break;
+        case 0xF008:
+            func_F008(); break;
+        case 0xF041:
+            func_F041(); break;
+        case 0xF004:
+            func_F004(); break;
         case 0xF006:
             func_F006(); break;
+        case 0xF012:
+            func_F012(); break;
+        case 0xF010:
+            func_F010(); break;
+        case 0xF058:
+            func_F058(); break;
         case 0xF02D:
             func_F02D(); break;
         case 0xF001:
             func_F001(); break;
+        case 0xF021:
+            func_F021(); break;
         case 0xF03C:
             func_F03C(); break;
-        case 0xF008:
-            func_F008(); break;
-        case 0xF004:
-            func_F004(); break;
+        case 0xF01F:
+            func_F01F(); break;
         case 0xEFF0:
             func_EFF0(); break;
         case 0xF046:
@@ -988,20 +683,28 @@ int call_by_address(uint16_t addr) {
             func_F00D(); break;
         case 0xF030:
             func_F030(); break;
-        case 0xF012:
-            func_F012(); break;
         case 0xF033:
             func_F033(); break;
+        case 0xF025:
+            func_F025(); break;
+        case 0xF034:
+            func_F034(); break;
         case 0xF02B:
             func_F02B(); break;
         case 0xF00B:
             func_F00B(); break;
         case 0xF01D:
             func_F01D(); break;
+        case 0xF027:
+            func_F027(); break;
         case 0xF05F:
             func_F05F(); break;
-        case 0xF010:
-            func_F010(); break;
+        case 0xF060:
+            func_F060(); break;
+        case 0xF016:
+            func_F016(); break;
+        case 0xEFFD:
+            func_EFFD(); break;
         case 0xF048:
             func_F048(); break;
         case 0xF050:
@@ -1012,16 +715,10 @@ int call_by_address(uint16_t addr) {
             func_F065(); break;
         case 0xF018:
             func_F018(); break;
-        case 0xF034:
-            func_F034(); break;
-        case 0xF058:
-            func_F058(); break;
         case 0xF05D:
             func_F05D(); break;
         case 0xF052:
             func_F052(); break;
-        case 0xF060:
-            func_F060(); break;
         case 0xF01A:
             func_F01A(); break;
         case 0xF06A:
@@ -1034,20 +731,30 @@ int call_by_address(uint16_t addr) {
             func_EF45(); break;
         case 0xF0B0:
             func_F0B0(); break;
+        case 0xF0E1:
+            func_F0E1(); break;
         case 0xF0C3:
             func_F0C3(); break;
         case 0xF0B9:
             func_F0B9(); break;
+        case 0xF0BA:
+            func_F0BA(); break;
         case 0xF0C9:
             func_F0C9(); break;
+        case 0xF0C6:
+            func_F0C6(); break;
         case 0xF0E3:
             func_F0E3(); break;
         case 0xF0DE:
             func_F0DE(); break;
-        case 0xF0E1:
-            func_F0E1(); break;
+        case 0xF0CB:
+            func_F0CB(); break;
         case 0xF0D8:
             func_F0D8(); break;
+        case 0xF0D9:
+            func_F0D9(); break;
+        case 0xF0D1:
+            func_F0D1(); break;
         case 0xF0C0:
             func_F0C0(); break;
         case 0xF0E8:
@@ -1056,6 +763,8 @@ int call_by_address(uint16_t addr) {
             func_F0BE(); break;
         case 0xEFBE:
             func_EFBE(); break;
+        case 0xEFD1:
+            func_EFD1(); break;
         case 0xEFDF:
             func_EFDF(); break;
         case 0xF0E9:
@@ -1064,22 +773,24 @@ int call_by_address(uint16_t addr) {
             func_F0F0(); break;
         case 0xF110:
             func_F110(); break;
+        case 0xF0F9:
+            func_F0F9(); break;
+        case 0xF0FD:
+            func_F0FD(); break;
         case 0xF0EE:
             func_F0EE(); break;
+        case 0xF0FB:
+            func_F0FB(); break;
         case 0xF0FF:
             func_F0FF(); break;
         case 0xF0F2:
             func_F0F2(); break;
-        case 0xF0FD:
-            func_F0FD(); break;
         case 0xF0F5:
             func_F0F5(); break;
         case 0xF11F:
             func_F11F(); break;
         case 0x8A61:
             func_8A61_b0(); break;
-        case 0x8A6A:
-            func_8A6A_b0(); break;
         case 0xBFA4:
             func_BFA4_b0(); break;
         case 0xBF0F:
@@ -1088,14 +799,20 @@ int call_by_address(uint16_t addr) {
             func_F159(); break;
         case 0xF1B6:
             func_F1B6(); break;
+        case 0xF1D1:
+            func_F1D1(); break;
         case 0xF1BD:
             func_F1BD(); break;
         case 0xF1BC:
             func_F1BC(); break;
+        case 0xF1C1:
+            func_F1C1(); break;
         case 0xF1CE:
             func_F1CE(); break;
         case 0xEC53:
             func_EC53(); break;
+        case 0xEC91:
+            func_EC91(); break;
         case 0xEC85:
             func_EC85(); break;
         case 0xECA5:
@@ -1106,6 +823,12 @@ int call_by_address(uint16_t addr) {
             func_EBD1(); break;
         case 0xEC20:
             func_EC20(); break;
+        case 0xEC21:
+            func_EC21(); break;
+        case 0xEBE7:
+            func_EBE7(); break;
+        case 0xEBEC:
+            func_EBEC(); break;
         case 0xEC23:
             func_EC23(); break;
         case 0xEBEA:
@@ -1114,18 +837,16 @@ int call_by_address(uint16_t addr) {
             func_EC35(); break;
         case 0xEC00:
             func_EC00(); break;
-        case 0xEBE7:
-            func_EBE7(); break;
         case 0xBAC3:
             func_BAC3_b0(); break;
         case 0xBBF4:
             func_BBF4_b0(); break;
         case 0xBFD7:
             func_BFD7_b0(); break;
-        case 0xBFD8:
-            func_BFD8_b0(); break;
         case 0xF148:
             func_F148(); break;
+        case 0xF14D:
+            func_F14D(); break;
         case 0xF19B:
             func_F19B(); break;
         case 0xF19D:
@@ -1142,10 +863,10 @@ int call_by_address(uint16_t addr) {
             func_D67A(); break;
         case 0xF1AF:
             func_F1AF(); break;
+        case 0xF1B1:
+            func_F1B1(); break;
         case 0xBA33:
             func_BA33_b0(); break;
-        case 0xBA4C:
-            func_BA4C_b0(); break;
         case 0xB839:
             func_B839_b0(); break;
         case 0xB8AC:
@@ -1156,12 +877,8 @@ int call_by_address(uint16_t addr) {
             func_E54B(); break;
         case 0x8F5F:
             func_8F5F_b0(); break;
-        case 0x8F8E:
-            func_8F8E_b0(); break;
         case 0x8F06:
             func_8F06_b0(); break;
-        case 0x8F20:
-            func_8F20_b0(); break;
         case 0xD931:
             func_D931(); break;
         case 0x92C8:
@@ -1174,76 +891,38 @@ int call_by_address(uint16_t addr) {
             func_83B0_b0(); break;
         case 0x83BD:
             func_83BD_b0(); break;
-        case 0x840B:
-            func_840B_b0(); break;
-        case 0x8400:
-            func_8400_b0(); break;
-        case 0x8430:
-            func_8430_b0(); break;
-        case 0x8420:
-            func_8420_b0(); break;
-        case 0x83D0:
-            func_83D0_b0(); break;
-        case 0x8407:
-            func_8407_b0(); break;
-        case 0x842C:
-            func_842C_b0(); break;
-        case 0x8436:
-            func_8436_b0(); break;
-        case 0x8414:
-            func_8414_b0(); break;
-        case 0x841E:
-            func_841E_b0(); break;
         case 0x8434:
             func_8434_b0(); break;
-        case 0x8404:
-            func_8404_b0(); break;
-        case 0x8432:
-            func_8432_b0(); break;
-        case 0x8416:
-            func_8416_b0(); break;
+        case 0x8436:
+            func_8436_b0(); break;
         case 0x83F6:
             func_83F6_b0(); break;
         case 0x8461:
             func_8461_b0(); break;
         case 0x8486:
             func_8486_b0(); break;
-        case 0x846D:
-            func_846D_b0(); break;
-        case 0x848D:
-            func_848D_b0(); break;
         case 0x874E:
             func_874E_b0(); break;
         case 0x9282:
             func_9282_b0(); break;
-        case 0x9292:
-            func_9292_b0(); break;
         case 0x9C13:
             func_9C13_b0(); break;
         case 0x9C09:
             func_9C09_b0(); break;
         case 0x8808:
             func_8808_b0(); break;
-        case 0x880B:
-            func_880B_b0(); break;
-        case 0x882B:
-            func_882B_b0(); break;
-        case 0x8846:
-            func_8846_b0(); break;
-        case 0x8820:
-            func_8820_b0(); break;
-        case 0x8833:
-            func_8833_b0(); break;
         case 0x8887:
             func_8887_b0(); break;
-        case 0x8889:
-            func_8889_b0(); break;
         case 0xBC30:
             func_BC30_b0(); break;
         case 0x86C7:
             func_86C7_b0(); break;
         case 0xEFA4:
             func_EFA4(); break;
+        case 0xEFA6:
+            func_EFA6(); break;
+        case 0xEFAC:
+            func_EFAC(); break;
         case 0x88A5:
             func_88A5_b0(); break;
         case 0x864C:
@@ -1254,20 +933,8 @@ int call_by_address(uint16_t addr) {
             func_82C9_b0(); break;
         case 0xBD84:
             func_BD84_b0(); break;
-        case 0xBD8D:
-            func_BD8D_b0(); break;
         case 0xB91E:
             func_B91E_b0(); break;
-        case 0xB948:
-            func_B948_b0(); break;
-        case 0xB922:
-            func_B922_b0(); break;
-        case 0xB93D:
-            func_B93D_b0(); break;
-        case 0xB926:
-            func_B926_b0(); break;
-        case 0xB924:
-            func_B924_b0(); break;
         case 0xB70B:
             func_B70B_b0(); break;
         case 0xB213:
@@ -1282,115 +949,14 @@ int call_by_address(uint16_t addr) {
             func_B273_b0(); break;
         case 0xB450:
             func_B450_b0(); break;
-        case 0xB504:
-            func_B504_b0(); break;
-        case 0xB534:
-            func_B534_b0(); break;
-        case 0xB500:
-            func_B500_b0(); break;
-        case 0xB52D:
-            func_B52D_b0(); break;
-        case 0xB540:
-            func_B540_b0(); break;
-        case 0xB55B:
-            func_B55B_b0(); break;
-        case 0xB4CF:
-            func_B4CF_b0(); break;
-        case 0xB50E:
-            func_B50E_b0(); break;
-        case 0xB548:
-            func_B548_b0(); break;
-        case 0xB4A0:
-            func_B4A0_b0(); break;
-        case 0xB50A:
-            func_B50A_b0(); break;
-        case 0xB506:
-            func_B506_b0(); break;
-        case 0xB508:
-            func_B508_b0(); break;
-        case 0xB531:
-            func_B531_b0(); break;
-        case 0xB538:
-            func_B538_b0(); break;
-        case 0xB518:
-            func_B518_b0(); break;
-        case 0xB502:
-            func_B502_b0(); break;
-        case 0xB520:
-            func_B520_b0(); break;
-        case 0xB52E:
-            func_B52E_b0(); break;
-        case 0xB460:
-            func_B460_b0(); break;
-        case 0xB56C:
-            func_B56C_b0(); break;
-        case 0xB56A:
-            func_B56A_b0(); break;
-        case 0xB533:
-            func_B533_b0(); break;
-        case 0xB529:
-            func_B529_b0(); break;
-        case 0xB585:
-            func_B585_b0(); break;
-        case 0xB4BE:
-            func_B4BE_b0(); break;
-        case 0xB516:
-            func_B516_b0(); break;
-        case 0xB572:
-            func_B572_b0(); break;
-        case 0xB51A:
-            func_B51A_b0(); break;
-        case 0xB51E:
-            func_B51E_b0(); break;
-        case 0xB50C:
-            func_B50C_b0(); break;
-        case 0xB53A:
-            func_B53A_b0(); break;
-        case 0xB4A2:
-            func_B4A2_b0(); break;
-        case 0xB48D:
-            func_B48D_b0(); break;
-        case 0xB48B:
-            func_B48B_b0(); break;
-        case 0xB488:
-            func_B488_b0(); break;
         case 0xB35A:
             func_B35A_b0(); break;
         case 0xB376:
             func_B376_b0(); break;
-        case 0xB3B6:
-            func_B3B6_b0(); break;
-        case 0xB38D:
-            func_B38D_b0(); break;
-        case 0xB3BD:
-            func_B3BD_b0(); break;
         case 0xB36D:
             func_B36D_b0(); break;
         case 0xB3CF:
             func_B3CF_b0(); break;
-        case 0xB40D:
-            switch (g_current_bank) {
-                case 0: func_B40D_b0(); break;
-                case 1: func_B40D_b1(); break;
-                default: nes_log_dispatch_miss(addr); return 0;
-            }
-            break;
-        case 0xB404:
-            func_B404_b0(); break;
-        case 0xB420:
-            func_B420_b0(); break;
-        case 0xB407:
-            func_B407_b0(); break;
-        case 0xB402:
-            func_B402_b0(); break;
-        case 0xB417:
-            func_B417_b0(); break;
-        case 0xB410:
-            func_B410_b0(); break;
-        case 0xB40A:
-            func_B40A_b0(); break;
-        case 0xB405:
-            func_B405_b0(); break;
         case 0xB000:
             func_B000_b0(); break;
         case 0xF1F6:
@@ -1459,16 +1025,20 @@ int call_by_address(uint16_t addr) {
             func_ED2E(); break;
         case 0xF1A8:
             func_F1A8(); break;
+        case 0xF1A9:
+            func_F1A9(); break;
         case 0xC8E0:
             func_C8E0(); break;
         case 0xC8FF:
             func_C8FF(); break;
-        case 0xC8EB:
-            func_C8EB(); break;
         case 0xC902:
             func_C902(); break;
+        case 0xC8EB:
+            func_C8EB(); break;
         case 0xC8E8:
             func_C8E8(); break;
+        case 0xC8EE:
+            func_C8EE(); break;
         case 0xC8E5:
             func_C8E5(); break;
         case 0xC8F7:
@@ -1497,6 +1067,8 @@ int call_by_address(uint16_t addr) {
             func_C97F(); break;
         case 0xC94D:
             func_C94D(); break;
+        case 0xC959:
+            func_C959(); break;
         case 0xC953:
             func_C953(); break;
         case 0xD065:
@@ -1519,6 +1091,10 @@ int call_by_address(uint16_t addr) {
             func_C0C8(); break;
         case 0xC0A0:
             func_C0A0(); break;
+        case 0xC0B7:
+            func_C0B7(); break;
+        case 0xC0C2:
+            func_C0C2(); break;
         case 0xC0A9:
             func_C0A9(); break;
         case 0xC0A8:
@@ -1557,10 +1133,14 @@ int call_by_address(uint16_t addr) {
             func_F06D(); break;
         case 0xF090:
             func_F090(); break;
+        case 0xF086:
+            func_F086(); break;
         case 0xF07D:
             func_F07D(); break;
         case 0xF074:
             func_F074(); break;
+        case 0xF075:
+            func_F075(); break;
         case 0xF080:
             func_F080(); break;
         case 0xF088:
@@ -1575,10 +1155,6 @@ int call_by_address(uint16_t addr) {
             func_8A6D_b0(); break;
         case 0x8A8F:
             func_8A8F_b0(); break;
-        case 0x8A8C:
-            func_8A8C_b0(); break;
-        case 0x8A8B:
-            func_8A8B_b0(); break;
         case 0xF165:
             func_F165(); break;
         case 0xE5BB:
@@ -1621,94 +1197,228 @@ int call_by_address(uint16_t addr) {
             func_E6BD(); break;
         case 0xDFB8:
             func_DFB8(); break;
+        case 0xE539:
+            func_E539(); break;
+        case 0xDAAE:
+            func_DAAE(); break;
         case 0xE6F0:
             func_E6F0(); break;
+        case 0xE6F1:
+            func_E6F1(); break;
         case 0xDA8D:
             func_DA8D(); break;
+        case 0xE00F:
+            func_E00F(); break;
+        case 0xE0CA:
+            func_E0CA(); break;
         case 0xDFC2:
             func_DFC2(); break;
+        case 0xE0A1:
+            func_E0A1(); break;
+        case 0xE03D:
+            func_E03D(); break;
+        case 0xE401:
+            func_E401(); break;
         case 0xDFA9:
             func_DFA9(); break;
+        case 0xDFAA:
+            func_DFAA(); break;
+        case 0xE058:
+            func_E058(); break;
+        case 0xDDAE:
+            func_DDAE(); break;
+        case 0xDD8E:
+            func_DD8E(); break;
+        case 0xDD2D:
+            func_DD2D(); break;
         case 0xDD0D:
             func_DD0D(); break;
         case 0xE0E8:
             func_E0E8(); break;
+        case 0xDB4D:
+            func_DB4D(); break;
         case 0xE08E:
             func_E08E(); break;
+        case 0xDFCA:
+            func_DFCA(); break;
+        case 0xE274:
+            func_E274(); break;
+        case 0xE800:
+            func_E800(); break;
+        case 0xDECB:
+            func_DECB(); break;
+        case 0xDF21:
+            func_DF21(); break;
         case 0xE8A9:
             func_E8A9(); break;
+        case 0xE003:
+            func_E003(); break;
         case 0xE5CF:
             func_E5CF(); break;
+        case 0xE5D0:
+            func_E5D0(); break;
         case 0xE606:
             func_E606(); break;
         case 0xE609:
             func_E609(); break;
+        case 0xE60A:
+            func_E60A(); break;
         case 0xE605:
             func_E605(); break;
+        case 0xE6CD:
+            func_E6CD(); break;
         case 0xDAB9:
             func_DAB9(); break;
+        case 0xDC8E:
+            func_DC8E(); break;
         case 0xDCCD:
             func_DCCD(); break;
-        case 0xE40D:
-            func_E40D(); break;
-        case 0xE003:
-            func_E003(); break;
-        case 0xE029:
-            func_E029(); break;
+        case 0xE131:
+            func_E131(); break;
+        case 0xE603:
+            func_E603(); break;
         case 0xE8C9:
             func_E8C9(); break;
+        case 0xE40D:
+            func_E40D(); break;
+        case 0xE029:
+            func_E029(); break;
+        case 0xDC1A:
+            func_DC1A(); break;
+        case 0xE56F:
+            func_E56F(); break;
+        case 0xE818:
+            func_E818(); break;
+        case 0xE857:
+            func_E857(); break;
+        case 0xE858:
+            func_E858(); break;
+        case 0xE1D1:
+            func_E1D1(); break;
+        case 0xDFC0:
+            func_DFC0(); break;
+        case 0xDAAB:
+            func_DAAB(); break;
+        case 0xDC55:
+            func_DC55(); break;
         case 0xE60D:
             func_E60D(); break;
+        case 0xE60E:
+            func_E60E(); break;
         case 0xDC16:
             func_DC16(); break;
+        case 0xE3AD:
+            func_E3AD(); break;
         case 0xDDCE:
             func_DDCE(); break;
         case 0xDC62:
             func_DC62(); break;
+        case 0xDF90:
+            func_DF90(); break;
+        case 0xDF9B:
+            func_DF9B(); break;
         case 0xE4C9:
             func_E4C9(); break;
+        case 0xE4CA:
+            func_E4CA(); break;
         case 0xDD20:
             func_DD20(); break;
         case 0xDE03:
             func_DE03(); break;
+        case 0xDE8E:
+            func_DE8E(); break;
         case 0xDD07:
             func_DD07(); break;
+        case 0xDE29:
+            func_DE29(); break;
+        case 0xDE25:
+            func_DE25(); break;
+        case 0xDB8E:
+            func_DB8E(); break;
+        case 0xE807:
+            func_E807(); break;
+        case 0xDFB1:
+            func_DFB1(); break;
+        case 0xDDE0:
+            func_DDE0(); break;
         case 0xDF8B:
             func_DF8B(); break;
         case 0xDF96:
             func_DF96(); break;
         case 0xE090:
             func_E090(); break;
+        case 0xDFB9:
+            func_DFB9(); break;
+        case 0xE389:
+            func_E389(); break;
+        case 0xE791:
+            func_E791(); break;
         case 0xE060:
             func_E060(); break;
+        case 0xE061:
+            func_E061(); break;
+        case 0xE27D:
+            func_E27D(); break;
+        case 0xE1FE:
+            func_E1FE(); break;
+        case 0xE1FF:
+            func_E1FF(); break;
+        case 0xE804:
+            func_E804(); break;
         case 0xDD04:
             func_DD04(); break;
         case 0xDD2A:
             func_DD2A(); break;
+        case 0xDD3B:
+            func_DD3B(); break;
         case 0xDD60:
             func_DD60(); break;
+        case 0xDD61:
+            func_DD61(); break;
         case 0xDD1A:
             func_DD1A(); break;
+        case 0xE3F1:
+            func_E3F1(); break;
+        case 0xE3B0:
+            func_E3B0(); break;
+        case 0xE121:
+            func_E121(); break;
+        case 0xE3CD:
+            func_E3CD(); break;
         case 0xE1A9:
             func_E1A9(); break;
         case 0xE0A9:
             func_E0A9(); break;
+        case 0xE4C4:
+            func_E4C4(); break;
         case 0xE4CC:
             func_E4CC(); break;
+        case 0xE4CD:
+            func_E4CD(); break;
+        case 0xE4D4:
+            func_E4D4(); break;
+        case 0xE541:
+            func_E541(); break;
         case 0xDBD6:
             func_DBD6(); break;
         case 0xDBB5:
             func_DBB5(); break;
+        case 0xE6BE:
+            func_E6BE(); break;
         case 0xE682:
             func_E682(); break;
+        case 0xE683:
+            func_E683(); break;
         case 0xE48D:
             func_E48D(); break;
         case 0xE4E4:
             func_E4E4(); break;
-        case 0xE6BE:
-            func_E6BE(); break;
+        case 0xE6C0:
+            func_E6C0(); break;
         case 0xDCFC:
             func_DCFC(); break;
+        case 0xDCDD:
+            func_DCDD(); break;
         case 0xDFDC:
             func_DFDC(); break;
         case 0xDFDF:
@@ -1717,32 +1427,68 @@ int call_by_address(uint16_t addr) {
             func_DCDF(); break;
         case 0xDDDC:
             func_DDDC(); break;
+        case 0xDDDE:
+            func_DDDE(); break;
+        case 0xDEDF:
+            func_DEDF(); break;
         case 0xDA7B:
             func_DA7B(); break;
         case 0xDBDA:
             func_DBDA(); break;
         case 0xE3D4:
             func_E3D4(); break;
+        case 0xE2E4:
+            func_E2E4(); break;
         case 0xE58A:
             func_E58A(); break;
+        case 0xE6E7:
+            func_E6E7(); break;
+        case 0xE7E9:
+            func_E7E9(); break;
         case 0xE878:
             func_E878(); break;
+        case 0xE879:
+            func_E879(); break;
+        case 0xDEA3:
+            func_DEA3(); break;
         case 0xE4A2:
             func_E4A2(); break;
+        case 0xE4A3:
+            func_E4A3(); break;
+        case 0xE0EA:
+            func_E0EA(); break;
+        case 0xE67F:
+            func_E67F(); break;
         case 0xE672:
             func_E672(); break;
+        case 0xE667:
+            func_E667(); break;
+        case 0xE01D:
+            func_E01D(); break;
         case 0xE04E:
             func_E04E(); break;
         case 0xE646:
             func_E646(); break;
         case 0xE876:
             func_E876(); break;
+        case 0xE877:
+            func_E877(); break;
+        case 0xE005:
+            func_E005(); break;
+        case 0xE041:
+            func_E041(); break;
         case 0xE007:
             func_E007(); break;
         case 0xE57D:
             func_E57D(); break;
+        case 0xE0EC:
+            func_E0EC(); break;
+        case 0xE8BE:
+            func_E8BE(); break;
         case 0xE048:
             func_E048(); break;
+        case 0xE0AB:
+            func_E0AB(); break;
         case 0xE4AD:
             func_E4AD(); break;
         case 0xDC20:
@@ -1753,30 +1499,66 @@ int call_by_address(uint16_t addr) {
             func_E8A8(); break;
         case 0xE0D0:
             func_E0D0(); break;
+        case 0xDCD1:
+            func_DCD1(); break;
         case 0xE6F7:
             func_E6F7(); break;
+        case 0xE6FA:
+            func_E6FA(); break;
+        case 0xE301:
+            func_E301(); break;
         case 0xDDD5:
             func_DDD5(); break;
+        case 0xE3DE:
+            func_E3DE(); break;
+        case 0xDFDA:
+            func_DFDA(); break;
+        case 0xE0A4:
+            func_E0A4(); break;
+        case 0xE1E4:
+            func_E1E4(); break;
+        case 0xE3E1:
+            func_E3E1(); break;
+        case 0xDE1E:
+            func_DE1E(); break;
+        case 0xE0DF:
+            func_E0DF(); break;
         case 0xDF01:
             func_DF01(); break;
         case 0xDD66:
             func_DD66(); break;
+        case 0xE7E6:
+            func_E7E6(); break;
         case 0xDE59:
             func_DE59(); break;
-        case 0xDFB1:
-            func_DFB1(); break;
-        case 0xDB8C:
-            func_DB8C(); break;
-        case 0xDF71:
-            func_DF71(); break;
+        case 0xE850:
+            func_E850(); break;
         case 0xDF77:
             func_DF77(); break;
+        case 0xDF71:
+            func_DF71(); break;
+        case 0xDDD3:
+            func_DDD3(); break;
+        case 0xDB8C:
+            func_DB8C(); break;
+        case 0xE38B:
+            func_E38B(); break;
         case 0xE10A:
             func_E10A(); break;
         case 0xE3B1:
             func_E3B1(); break;
+        case 0xE3BA:
+            func_E3BA(); break;
+        case 0xE540:
+            func_E540(); break;
+        case 0xE53B:
+            func_E53B(); break;
         case 0xE492:
             func_E492(); break;
+        case 0xDEC9:
+            func_DEC9(); break;
+        case 0xDE8A:
+            func_DE8A(); break;
         case 0xDEBF:
             func_DEBF(); break;
         case 0xE629:
@@ -1793,8 +1575,6 @@ int call_by_address(uint16_t addr) {
             func_E710(); break;
         case 0xDC82:
             func_DC82(); break;
-        case 0xE603:
-            func_E603(); break;
         case 0xE385:
             func_E385(); break;
         case 0xDC23:
@@ -1807,8 +1587,6 @@ int call_by_address(uint16_t addr) {
             func_E38D(); break;
         case 0xE28D:
             func_E28D(); break;
-        case 0xDB8E:
-            func_DB8E(); break;
         case 0xDB93:
             func_DB93(); break;
         case 0xDCB9:
@@ -1901,12 +1679,8 @@ int call_by_address(uint16_t addr) {
             func_DC67(); break;
         case 0xDC2F:
             func_DC2F(); break;
-        case 0xE301:
-            func_E301(); break;
         case 0xE1B9:
             func_E1B9(); break;
-        case 0xE401:
-            func_E401(); break;
         case 0xE407:
             func_E407(); break;
         case 0xDC73:
@@ -1915,8 +1689,6 @@ int call_by_address(uint16_t addr) {
             func_DF29(); break;
         case 0xDF0F:
             func_DF0F(); break;
-        case 0xDF21:
-            func_DF21(); break;
         case 0xE50B:
             func_E50B(); break;
         case 0xE317:
@@ -1925,48 +1697,20 @@ int call_by_address(uint16_t addr) {
             func_E884(); break;
         case 0xE6B0:
             func_E6B0(); break;
-        case 0xE60A:
-            func_E60A(); break;
         case 0xE495:
             func_E495(); break;
         case 0xE501:
             func_E501(); break;
         case 0xDBAD:
             func_DBAD(); break;
-        case 0xDB95:
-            func_DB95(); break;
-        case 0xE69D:
-            func_E69D(); break;
-        case 0xE89D:
-            func_E89D(); break;
-        case 0xE4B0:
-            func_E4B0(); break;
-        case 0xE32D:
-            func_E32D(); break;
-        case 0xE1DC:
-            func_E1DC(); break;
-        case 0xE329:
-            func_E329(); break;
-        case 0xE4E6:
-            func_E4E6(); break;
-        case 0xE094:
-            func_E094(); break;
-        case 0xE65A:
-            func_E65A(); break;
-        case 0xE7B1:
-            func_E7B1(); break;
-        case 0xDB3C:
-            func_DB3C(); break;
-        case 0xDB88:
-            func_DB88(); break;
-        case 0xDD5C:
-            func_DD5C(); break;
-        case 0xE1B2:
-            func_E1B2(); break;
-        case 0xE1BB:
-            func_E1BB(); break;
         case 0xE87D:
             func_E87D(); break;
+        case 0xE9A0:
+            func_E9A0(); break;
+        case 0xE939:
+            func_E939(); break;
+        case 0xE9B2:
+            func_E9B2(); break;
         case 0xE96D:
             func_E96D(); break;
         case 0xE900:
@@ -1975,22 +1719,42 @@ int call_by_address(uint16_t addr) {
             func_E998(); break;
         case 0xEB20:
             func_EB20(); break;
+        case 0xE96F:
+            func_E96F(); break;
         case 0xE987:
             func_E987(); break;
         case 0xE9B6:
             func_E9B6(); break;
-        case 0xE9A0:
-            func_E9A0(); break;
         case 0xE9D6:
             func_E9D6(); break;
+        case 0xE908:
+            func_E908(); break;
+        case 0xEB86:
+            func_EB86(); break;
+        case 0xE921:
+            func_E921(); break;
         case 0xEBA4:
             func_EBA4(); break;
         case 0xEB84:
             func_EB84(); break;
+        case 0xEBA6:
+            func_EBA6(); break;
+        case 0xEAAD:
+            func_EAAD(); break;
         case 0xEAE7:
             func_EAE7(); break;
+        case 0xE9EB:
+            func_E9EB(); break;
+        case 0xEA3D:
+            func_EA3D(); break;
+        case 0xEABA:
+            func_EABA(); break;
         case 0xE9D0:
             func_E9D0(); break;
+        case 0xE9E0:
+            func_E9E0(); break;
+        case 0xE919:
+            func_E919(); break;
         case 0xEA20:
             func_EA20(); break;
         case 0xE94C:
@@ -2019,8 +1783,6 @@ int call_by_address(uint16_t addr) {
             func_E9B0(); break;
         case 0xE9D4:
             func_E9D4(); break;
-        case 0xE908:
-            func_E908(); break;
         case 0xEB79:
             func_EB79(); break;
         case 0xE902:
@@ -2049,54 +1811,12 @@ int call_by_address(uint16_t addr) {
             func_92DB_b0(); break;
         case 0x88AE:
             func_88AE_b0(); break;
-        case 0x88F9:
-            func_88F9_b0(); break;
-        case 0x88BD:
-            func_88BD_b0(); break;
-        case 0x88B5:
-            func_88B5_b0(); break;
-        case 0x88E5:
-            func_88E5_b0(); break;
         case 0x93FC:
             func_93FC_b0(); break;
-        case 0x9501:
-            func_9501_b0(); break;
-        case 0x9503:
-            func_9503_b0(); break;
-        case 0x9420:
-            func_9420_b0(); break;
-        case 0x94FA:
-            func_94FA_b0(); break;
-        case 0x9404:
-            func_9404_b0(); break;
-        case 0x9458:
-            func_9458_b0(); break;
-        case 0x94C8:
-            func_94C8_b0(); break;
-        case 0x9496:
-            func_9496_b0(); break;
-        case 0x9406:
-            func_9406_b0(); break;
         case 0x9494:
             func_9494_b0(); break;
-        case 0x94A0:
-            func_94A0_b0(); break;
-        case 0x941D:
-            func_941D_b0(); break;
-        case 0x949C:
-            func_949C_b0(); break;
-        case 0x9484:
-            func_9484_b0(); break;
-        case 0x9490:
-            func_9490_b0(); break;
-        case 0x94E0:
-            func_94E0_b0(); break;
-        case 0x94AA:
-            func_94AA_b0(); break;
         case 0x9491:
             func_9491_b0(); break;
-        case 0x9416:
-            func_9416_b0(); break;
         case 0xBF8C:
             func_BF8C_b0(); break;
         case 0xD17B:
@@ -2119,51 +1839,12 @@ int call_by_address(uint16_t addr) {
             func_B55E_b0(); break;
         case 0xB58F:
             func_B58F_b0(); break;
-        case 0xB5C2:
-            func_B5C2_b0(); break;
-        case 0xB5CB:
-            func_B5CB_b0(); break;
-        case 0xB5C8:
-            switch (g_current_bank) {
-                case 0: func_B5C8_b0(); break;
-                case 1: func_B5C8_b1(); break;
-                default: nes_log_dispatch_miss(addr); return 0;
-            }
-            break;
-        case 0xB5BA:
-            func_B5BA_b0(); break;
-        case 0xB5BC:
-            func_B5BC_b0(); break;
-        case 0xB5A5:
-            func_B5A5_b0(); break;
         case 0xB5CC:
             func_B5CC_b0(); break;
-        case 0xB5CF:
-            func_B5CF_b0(); break;
-        case 0xB5FF:
-            func_B5FF_b0(); break;
-        case 0xB5F4:
-            func_B5F4_b0(); break;
-        case 0xB5D5:
-            func_B5D5_b0(); break;
-        case 0xB600:
-            func_B600_b0(); break;
-        case 0xB5D9:
-            func_B5D9_b0(); break;
-        case 0xB5DC:
-            func_B5DC_b0(); break;
-        case 0xB5E1:
-            func_B5E1_b0(); break;
-        case 0xB5DB:
-            func_B5DB_b0(); break;
         case 0xBF09:
             func_BF09_b0(); break;
         case 0xBF4C:
             func_BF4C_b0(); break;
-        case 0xBF40:
-            func_BF40_b0(); break;
-        case 0xBF29:
-            func_BF29_b0(); break;
         case 0xBF4D:
             func_BF4D_b0(); break;
         case 0xB3AC:
@@ -2190,10 +1871,6 @@ int call_by_address(uint16_t addr) {
             func_BDD2_b0(); break;
         case 0xBDDF:
             func_BDDF_b0(); break;
-        case 0xBDA0:
-            func_BDA0_b0(); break;
-        case 0xBDAD:
-            func_BDAD_b0(); break;
         case 0x8A4D:
             func_8A4D_b0(); break;
         case 0xDF66:
@@ -2212,6 +1889,8 @@ int call_by_address(uint16_t addr) {
             func_D73E(); break;
         case 0xDFC1:
             func_DFC1(); break;
+        case 0xDFC3:
+            func_DFC3(); break;
         case 0xDA33:
             func_DA33(); break;
         case 0xC905:
@@ -2232,6 +1911,8 @@ int call_by_address(uint16_t addr) {
             func_DB45(); break;
         case 0xC982:
             func_C982(); break;
+        case 0xC987:
+            func_C987(); break;
         case 0xC9AC:
             func_C9AC(); break;
         case 0xE5C8:
@@ -2242,8 +1923,16 @@ int call_by_address(uint16_t addr) {
             func_DB7B(); break;
         case 0xED66:
             func_ED66(); break;
+        case 0xEDD1:
+            func_EDD1(); break;
+        case 0xED6F:
+            func_ED6F(); break;
         case 0xEDC5:
             func_EDC5(); break;
+        case 0xED86:
+            func_ED86(); break;
+        case 0xEDA6:
+            func_EDA6(); break;
         case 0xEDB9:
             func_EDB9(); break;
         case 0xED76:
@@ -2308,10 +1997,12 @@ int call_by_address(uint16_t addr) {
             func_C375(); break;
         case 0xC2F7:
             func_C2F7(); break;
-        case 0xC301:
-            func_C301(); break;
         case 0xC304:
             func_C304(); break;
+        case 0xC302:
+            func_C302(); break;
+        case 0xC301:
+            func_C301(); break;
         case 0xC787:
             func_C787(); break;
         case 0xC78C:
@@ -2326,6 +2017,8 @@ int call_by_address(uint16_t addr) {
             func_C385(); break;
         case 0xC7A0:
             func_C7A0(); break;
+        case 0xC7C9:
+            func_C7C9(); break;
         case 0xC7B8:
             func_C7B8(); break;
         case 0xC7BA:
@@ -2338,12 +2031,16 @@ int call_by_address(uint16_t addr) {
             func_C47D(); break;
         case 0xC7DF:
             func_C7DF(); break;
+        case 0xC808:
+            func_C808(); break;
         case 0xC805:
             func_C805(); break;
         case 0xC800:
             func_C800(); break;
-        case 0xC808:
-            func_C808(); break;
+        case 0xC7EF:
+            func_C7EF(); break;
+        case 0xC7F7:
+            func_C7F7(); break;
         case 0xC7FF:
             func_C7FF(); break;
         case 0xC812:
@@ -2352,6 +2049,8 @@ int call_by_address(uint16_t addr) {
             func_C814(); break;
         case 0xC81F:
             func_C81F(); break;
+        case 0xC816:
+            func_C816(); break;
         case 0xC81B:
             func_C81B(); break;
         case 0xC824:
@@ -2378,8 +2077,14 @@ int call_by_address(uint16_t addr) {
             func_C803(); break;
         case 0xC84B:
             func_C84B(); break;
+        case 0xC84D:
+            func_C84D(); break;
         case 0xC857:
             func_C857(); break;
+        case 0xC859:
+            func_C859(); break;
+        case 0xC85C:
+            func_C85C(); break;
         case 0xC549:
             func_C549(); break;
         case 0xC56D:
@@ -2404,6 +2109,8 @@ int call_by_address(uint16_t addr) {
             func_F23D(); break;
         case 0xF282:
             func_F282(); break;
+        case 0xF2BD:
+            func_F2BD(); break;
         case 0xF285:
             func_F285(); break;
         case 0xF286:
@@ -2412,8 +2119,6 @@ int call_by_address(uint16_t addr) {
             func_F2A5(); break;
         case 0xF284:
             func_F284(); break;
-        case 0xF2BD:
-            func_F2BD(); break;
         case 0xF2C8:
             func_F2C8(); break;
         case 0xF288:
@@ -2424,16 +2129,6 @@ int call_by_address(uint16_t addr) {
             func_8ACD_b0(); break;
         case 0x8A9D:
             func_8A9D_b0(); break;
-        case 0x8AB9:
-            func_8AB9_b0(); break;
-        case 0x8AAA:
-            func_8AAA_b0(); break;
-        case 0x8AE2:
-            func_8AE2_b0(); break;
-        case 0x8ABC:
-            func_8ABC_b0(); break;
-        case 0x8AA2:
-            func_8AA2_b0(); break;
         case 0xE325:
             func_E325(); break;
         case 0xBF94:
@@ -2522,6 +2217,8 @@ int call_by_address(uint16_t addr) {
             func_EBC1(); break;
         case 0xEBC6:
             func_EBC6(); break;
+        case 0xEBC2:
+            func_EBC2(); break;
         case 0xEBB7:
             func_EBB7(); break;
         case 0xEBB8:
@@ -2538,24 +2235,6 @@ int call_by_address(uint16_t addr) {
             func_9508_b0(); break;
         case 0x9588:
             func_9588_b0(); break;
-        case 0x9511:
-            func_9511_b0(); break;
-        case 0x9520:
-            func_9520_b0(); break;
-        case 0x950E:
-            func_950E_b0(); break;
-        case 0x9516:
-            func_9516_b0(); break;
-        case 0x9568:
-            func_9568_b0(); break;
-        case 0x9558:
-            func_9558_b0(); break;
-        case 0x951F:
-            func_951F_b0(); break;
-        case 0x952D:
-            func_952D_b0(); break;
-        case 0x9518:
-            func_9518_b0(); break;
         case 0x9488:
             func_9488_b0(); break;
         case 0xBFAD:
@@ -2595,32 +2274,56 @@ int call_by_address(uint16_t addr) {
             func_D1EA(); break;
         case 0xD1BB:
             func_D1BB(); break;
+        case 0xD001:
+            func_D001(); break;
         case 0xD007:
             func_D007(); break;
         case 0xD907:
             func_D907(); break;
+        case 0xD908:
+            func_D908(); break;
         case 0xD0C0:
             func_D0C0(); break;
         case 0xCEA5:
             func_CEA5(); break;
+        case 0xD9CF:
+            func_D9CF(); break;
         case 0xD9EE:
             func_D9EE(); break;
         case 0xD003:
             func_D003(); break;
+        case 0xD9AE:
+            func_D9AE(); break;
         case 0xD98D:
             func_D98D(); break;
         case 0xCDAD:
             func_CDAD(); break;
+        case 0xCD8E:
+            func_CD8E(); break;
+        case 0xC9EA:
+            func_C9EA(); break;
+        case 0xD100:
+            func_D100(); break;
         case 0xCD87:
             func_CD87(); break;
-        case 0xD001:
-            func_D001(); break;
+        case 0xCF96:
+            func_CF96(); break;
+        case 0xCCAE:
+            func_CCAE(); break;
+        case 0xCD4B:
+            func_CD4B(); break;
         case 0xCFB5:
             func_CFB5(); break;
         case 0xD89D:
             func_D89D(); break;
+        case 0xD1C8:
+            func_D1C8(); break;
         case 0xD009:
             func_D009(); break;
+        case 0xCF76:
+            func_CF76(); break;
+        case 0xD18E:
+            func_D18E(); break;
         case 0xD94C:
             func_D94C(); break;
         case 0xD1EE:
@@ -2635,136 +2338,268 @@ int call_by_address(uint16_t addr) {
             func_CFB9(); break;
         case 0xCAC8:
             func_CAC8(); break;
+        case 0xD058:
+            func_D058(); break;
+        case 0xCF8D:
+            func_CF8D(); break;
+        case 0xCF9A:
+            func_CF9A(); break;
         case 0xD920:
             func_D920(); break;
-        case 0xCB8D:
-            func_CB8D(); break;
-        case 0xD031:
-            func_D031(); break;
-        case 0xD38C:
-            func_D38C(); break;
-        case 0xCEC2:
-            func_CEC2(); break;
-        case 0xD660:
-            func_D660(); break;
         case 0xCFD6:
             func_CFD6(); break;
+        case 0xCB8D:
+            func_CB8D(); break;
+        case 0xD7CF:
+            func_D7CF(); break;
+        case 0xD031:
+            func_D031(); break;
+        case 0xD7AE:
+            func_D7AE(); break;
+        case 0xD38C:
+            func_D38C(); break;
+        case 0xD38D:
+            func_D38D(); break;
+        case 0xCEC2:
+            func_CEC2(); break;
+        case 0xD3CF:
+            func_D3CF(); break;
+        case 0xCCD0:
+            func_CCD0(); break;
+        case 0xD012:
+            func_D012(); break;
+        case 0xD660:
+            func_D660(); break;
+        case 0xCFD7:
+            func_CFD7(); break;
+        case 0xD6D0:
+            func_D6D0(); break;
         case 0xD6D2:
             func_D6D2(); break;
         case 0xD6C8:
             func_D6C8(); break;
+        case 0xD6CA:
+            func_D6CA(); break;
+        case 0xD6BA:
+            func_D6BA(); break;
         case 0xD6B8:
             func_D6B8(); break;
+        case 0xD7B8:
+            func_D7B8(); break;
+        case 0xD8CB:
+            func_D8CB(); break;
+        case 0xCB8A:
+            func_CB8A(); break;
+        case 0xCC4B:
+            func_CC4B(); break;
+        case 0xD3D5:
+            func_D3D5(); break;
         case 0xD62D:
             func_D62D(); break;
         case 0xD00C:
             func_D00C(); break;
+        case 0xCEBA:
+            func_CEBA(); break;
         case 0xCA10:
             func_CA10(); break;
+        case 0xD041:
+            func_D041(); break;
         case 0xD079:
             func_D079(); break;
         case 0xD4B9:
             func_D4B9(); break;
+        case 0xD4BA:
+            func_D4BA(); break;
+        case 0xD005:
+            func_D005(); break;
+        case 0xCFF7:
+            func_CFF7(); break;
+        case 0xD5D0:
+            func_D5D0(); break;
         case 0xD6FA:
             func_D6FA(); break;
         case 0xD0CB:
             func_D0CB(); break;
-        case 0xD058:
-            func_D058(); break;
+        case 0xD089:
+            func_D089(); break;
+        case 0xD069:
+            func_D069(); break;
         case 0xCEC5:
             func_CEC5(); break;
         case 0xCC46:
             func_CC46(); break;
         case 0xD018:
             func_D018(); break;
+        case 0xCE8F:
+            func_CE8F(); break;
+        case 0xCFAD:
+            func_CFAD(); break;
+        case 0xCD06:
+            func_CD06(); break;
         case 0xD0F8:
             func_D0F8(); break;
         case 0xCEA4:
             func_CEA4(); break;
+        case 0xCD3B:
+            func_CD3B(); break;
+        case 0xCE33:
+            func_CE33(); break;
+        case 0xCD2E:
+            func_CD2E(); break;
+        case 0xCD2F:
+            func_CD2F(); break;
+        case 0xCCC7:
+            func_CCC7(); break;
+        case 0xCCC8:
+            func_CCC8(); break;
+        case 0xCD2A:
+            func_CD2A(); break;
         case 0xCED5:
             func_CED5(); break;
+        case 0xCED6:
+            func_CED6(); break;
+        case 0xCEDB:
+            func_CEDB(); break;
         case 0xCF25:
             func_CF25(); break;
+        case 0xD599:
+            func_D599(); break;
         case 0xD606:
             func_D606(); break;
-        case 0xD012:
-            func_D012(); break;
+        case 0xD0A1:
+            func_D0A1(); break;
+        case 0xD02E:
+            func_D02E(); break;
+        case 0xCED2:
+            func_CED2(); break;
+        case 0xCFDE:
+            func_CFDE(); break;
         case 0xD061:
             func_D061(); break;
         case 0xD609:
             func_D609(); break;
+        case 0xD721:
+            func_D721(); break;
+        case 0xD01F:
+            func_D01F(); break;
         case 0xD1D1:
             func_D1D1(); break;
-        case 0xD9CF:
-            func_D9CF(); break;
+        case 0xD991:
+            func_D991(); break;
         case 0xD78D:
             func_D78D(); break;
         case 0xCD7D:
             func_CD7D(); break;
+        case 0xD2CD:
+            func_D2CD(); break;
+        case 0xD2CE:
+            func_D2CE(); break;
         case 0xD5BD:
             func_D5BD(); break;
+        case 0xD17E:
+            func_D17E(); break;
+        case 0xD2D1:
+            func_D2D1(); break;
+        case 0xD2D2:
+            func_D2D2(); break;
         case 0xDA10:
             func_DA10(); break;
+        case 0xD5BC:
+            func_D5BC(); break;
         case 0xD52D:
             func_D52D(); break;
+        case 0xD9D6:
+            func_D9D6(); break;
         case 0xCFD9:
             func_CFD9(); break;
+        case 0xCFDA:
+            func_CFDA(); break;
         case 0xD01A:
             func_D01A(); break;
         case 0xCFF5:
             func_CFF5(); break;
         case 0xCF79:
             func_CF79(); break;
-        case 0xCCAE:
-            func_CCAE(); break;
+        case 0xD542:
+            func_D542(); break;
+        case 0xCFB7:
+            func_CFB7(); break;
+        case 0xD8BE:
+            func_D8BE(); break;
         case 0xCA01:
             func_CA01(); break;
         case 0xCE2D:
             func_CE2D(); break;
-        case 0xD005:
-            func_D005(); break;
-        case 0xD02E:
-            func_D02E(); break;
+        case 0xCE2E:
+            func_CE2E(); break;
+        case 0xD736:
+            func_D736(); break;
         case 0xD81D:
             func_D81D(); break;
         case 0xD84F:
             func_D84F(); break;
         case 0xD892:
             func_D892(); break;
+        case 0xD893:
+            func_D893(); break;
+        case 0xD966:
+            func_D966(); break;
         case 0xD851:
             func_D851(); break;
+        case 0xD852:
+            func_D852(); break;
         case 0xD2B9:
             func_D2B9(); break;
         case 0xD9D2:
             func_D9D2(); break;
+        case 0xCADD:
+            func_CADD(); break;
+        case 0xD081:
+            func_D081(); break;
         case 0xD024:
             func_D024(); break;
-        case 0xD5D0:
-            func_D5D0(); break;
         case 0xCE85:
             func_CE85(); break;
+        case 0xCE86:
+            func_CE86(); break;
+        case 0xD0AE:
+            func_D0AE(); break;
         case 0xCFC9:
             func_CFC9(); break;
         case 0xC9DC:
             func_C9DC(); break;
         case 0xD0C5:
             func_D0C5(); break;
+        case 0xCE26:
+            func_CE26(); break;
         case 0xD0E3:
             func_D0E3(); break;
+        case 0xD0E4:
+            func_D0E4(); break;
         case 0xCBD0:
             func_CBD0(); break;
-        case 0xD01F:
-            func_D01F(); break;
+        case 0xCBD1:
+            func_CBD1(); break;
         case 0xCA03:
             func_CA03(); break;
         case 0xC9DE:
             func_C9DE(); break;
+        case 0xD027:
+            func_D027(); break;
+        case 0xD6AE:
+            func_D6AE(); break;
         case 0xD0E1:
             func_D0E1(); break;
-        case 0xC9DA:
-            func_C9DA(); break;
         case 0xC9F9:
             func_C9F9(); break;
+        case 0xC9DA:
+            func_C9DA(); break;
+        case 0xD61F:
+            func_D61F(); break;
+        case 0xD047:
+            func_D047(); break;
+        case 0xD5EC:
+            func_D5EC(); break;
         case 0xC9E3:
             func_C9E3(); break;
         case 0xD595:
@@ -2773,6 +2608,8 @@ int call_by_address(uint16_t addr) {
             func_D12D(); break;
         case 0xCAF1:
             func_CAF1(); break;
+        case 0xD905:
+            func_D905(); break;
         case 0xD913:
             func_D913(); break;
         case 0xCEB5:
@@ -2781,48 +2618,98 @@ int call_by_address(uint16_t addr) {
             func_CC79(); break;
         case 0xCC7D:
             func_CC7D(); break;
+        case 0xD0BE:
+            func_D0BE(); break;
         case 0xD4BD:
             func_D4BD(); break;
+        case 0xD603:
+            func_D603(); break;
         case 0xD679:
             func_D679(); break;
-        case 0xD9D6:
-            func_D9D6(); break;
+        case 0xCEBE:
+            func_CEBE(); break;
         case 0xCA0D:
             func_CA0D(); break;
         case 0xD8DB:
             func_D8DB(); break;
+        case 0xD8D9:
+            func_D8D9(); break;
+        case 0xCDD9:
+            func_CDD9(); break;
         case 0xCECD:
             func_CECD(); break;
         case 0xCECE:
             func_CECE(); break;
+        case 0xCECF:
+            func_CECF(); break;
         case 0xCFCF:
             func_CFCF(); break;
+        case 0xD2D3:
+            func_D2D3(); break;
+        case 0xD2D4:
+            func_D2D4(); break;
         case 0xD58A:
             func_D58A(); break;
+        case 0xD4D6:
+            func_D4D6(); break;
+        case 0xD3E3:
+            func_D3E3(); break;
         case 0xD5D2:
             func_D5D2(); break;
+        case 0xD0D1:
+            func_D0D1(); break;
+        case 0xD7D1:
+            func_D7D1(); break;
         case 0xD7D7:
             func_D7D7(); break;
+        case 0xD7D8:
+            func_D7D8(); break;
+        case 0xCABF:
+            func_CABF(); break;
+        case 0xCCC6:
+            func_CCC6(); break;
+        case 0xCBCD:
+            func_CBCD(); break;
+        case 0xD29D:
+            func_D29D(); break;
+        case 0xD8D3:
+            func_D8D3(); break;
+        case 0xD036:
+            func_D036(); break;
         case 0xD033:
             func_D033(); break;
+        case 0xD091:
+            func_D091(); break;
         case 0xC9EC:
             func_C9EC(); break;
+        case 0xD0B5:
+            func_D0B5(); break;
         case 0xD03C:
             func_D03C(); break;
         case 0xD015:
             func_D015(); break;
         case 0xD0EC:
             func_D0EC(); break;
+        case 0xD0ED:
+            func_D0ED(); break;
         case 0xCDBD:
             func_CDBD(); break;
         case 0xCA07:
             func_CA07(); break;
         case 0xD4AD:
             func_D4AD(); break;
+        case 0xD4AE:
+            func_D4AE(); break;
+        case 0xD903:
+            func_D903(); break;
         case 0xD3AD:
             func_D3AD(); break;
         case 0xD58D:
             func_D58D(); break;
+        case 0xCAA9:
+            func_CAA9(); break;
+        case 0xD5AF:
+            func_D5AF(); break;
         case 0xD04C:
             func_D04C(); break;
         case 0xD0F0:
@@ -2835,10 +2722,20 @@ int call_by_address(uint16_t addr) {
             func_D099(); break;
         case 0xC9F1:
             func_C9F1(); break;
+        case 0xC9F3:
+            func_C9F3(); break;
+        case 0xD045:
+            func_D045(); break;
+        case 0xCEF4:
+            func_CEF4(); break;
         case 0xCE03:
             func_CE03(); break;
         case 0xD0F6:
             func_D0F6(); break;
+        case 0xD0F4:
+            func_D0F4(); break;
+        case 0xD4B1:
+            func_D4B1(); break;
         case 0xCBA0:
             func_CBA0(); break;
         case 0xCE40:
@@ -2849,6 +2746,8 @@ int call_by_address(uint16_t addr) {
             func_D9B9(); break;
         case 0xD6B0:
             func_D6B0(); break;
+        case 0xCAD7:
+            func_CAD7(); break;
         case 0xD3B9:
             func_D3B9(); break;
         case 0xD07F:
@@ -2857,246 +2756,26 @@ int call_by_address(uint16_t addr) {
             func_CCA8(); break;
         case 0xD0FB:
             func_D0FB(); break;
-        case 0xD0F4:
-            func_D0F4(); break;
+        case 0xCA8E:
+            func_CA8E(); break;
+        case 0xD03E:
+            func_D03E(); break;
+        case 0xD44D:
+            func_D44D(); break;
         case 0xD0F2:
             func_D0F2(); break;
-        case 0xD091:
-            func_D091(); break;
         case 0xCE5A:
             func_CE5A(); break;
         case 0xCAAD:
             func_CAAD(); break;
+        case 0xCEFA:
+            func_CEFA(); break;
+        case 0xD06F:
+            func_D06F(); break;
         case 0xCE51:
             func_CE51(); break;
-        case 0xD515:
-            func_D515(); break;
-        case 0xD5CD:
-            func_D5CD(); break;
-        case 0xD1B3:
-            func_D1B3(); break;
-        case 0xD29F:
-            func_D29F(); break;
-        case 0xCF02:
-            func_CF02(); break;
-        case 0xCD9C:
-            func_CD9C(); break;
-        case 0xD36D:
-            func_D36D(); break;
-        case 0xD6EE:
-            func_D6EE(); break;
-        case 0xD136:
-            func_D136(); break;
-        case 0xCA18:
-            func_CA18(); break;
-        case 0xD878:
-            func_D878(); break;
-        case 0xCF8E:
-            func_CF8E(); break;
-        case 0xCE83:
-            func_CE83(); break;
-        case 0xCE06:
-            func_CE06(); break;
-        case 0xD0A8:
-            func_D0A8(); break;
-        case 0xD02B:
-            func_D02B(); break;
-        case 0xD927:
-            func_D927(); break;
-        case 0xCDCB:
-            func_CDCB(); break;
-        case 0xCA20:
-            func_CA20(); break;
-        case 0xD779:
-            func_D779(); break;
-        case 0xD799:
-            func_D799(); break;
-        case 0xCA88:
-            func_CA88(); break;
-        case 0xD8C0:
-            func_D8C0(); break;
-        case 0xCBB9:
-            func_CBB9(); break;
-        case 0xD785:
-            func_D785(); break;
-        case 0xCEFC:
-            func_CEFC(); break;
-        case 0xD8B9:
-            func_D8B9(); break;
-        case 0xC9E7:
-            func_C9E7(); break;
-        case 0xD68D:
-            func_D68D(); break;
-        case 0xD210:
-            func_D210(); break;
-        case 0xD8B3:
-            func_D8B3(); break;
-        case 0xD835:
-            func_D835(); break;
-        case 0xCC1B:
-            func_CC1B(); break;
-        case 0xCA2C:
-            func_CA2C(); break;
-        case 0xCA8E:
-            func_CA8E(); break;
-        case 0xD783:
-            func_D783(); break;
-        case 0xCDFF:
-            func_CDFF(); break;
-        case 0xCC28:
-            func_CC28(); break;
-        case 0xD7A4:
-            func_D7A4(); break;
-        case 0xCB86:
-            func_CB86(); break;
-        case 0xCB0E:
-            func_CB0E(); break;
-        case 0xCEAB:
-            func_CEAB(); break;
-        case 0xCBC0:
-            func_CBC0(); break;
-        case 0xCECB:
-            func_CECB(); break;
-        case 0xCB9B:
-            func_CB9B(); break;
-        case 0xD702:
-            func_D702(); break;
-        case 0xCE64:
-            func_CE64(); break;
-        case 0xCD3F:
-            func_CD3F(); break;
-        case 0xD70A:
-            func_D70A(); break;
-        case 0xCD44:
-            func_CD44(); break;
-        case 0xD901:
-            func_D901(); break;
-        case 0xCB3D:
-            func_CB3D(); break;
-        case 0xD440:
-            func_D440(); break;
-        case 0xCF42:
-            func_CF42(); break;
-        case 0xCC04:
-            func_CC04(); break;
-        case 0xD371:
-            func_D371(); break;
-        case 0xD465:
-            func_D465(); break;
-        case 0xCFC1:
-            func_CFC1(); break;
-        case 0xD7F2:
-            func_D7F2(); break;
-        case 0xD301:
-            func_D301(); break;
-        case 0xD700:
-            func_D700(); break;
-        case 0xD2C1:
-            func_D2C1(); break;
-        case 0xD565:
-            func_D565(); break;
-        case 0xD431:
-            func_D431(); break;
-        case 0xCC23:
-            func_CC23(); break;
-        case 0xD3B4:
-            func_D3B4(); break;
-        case 0xCC41:
-            func_CC41(); break;
-        case 0xD327:
-            func_D327(); break;
-        case 0xD9E2:
-            func_D9E2(); break;
-        case 0xD923:
-            func_D923(); break;
-        case 0xCC64:
-            func_CC64(); break;
-        case 0xD803:
-            func_D803(); break;
-        case 0xD546:
-            func_D546(); break;
-        case 0xD706:
-            func_D706(); break;
-        case 0xD652:
-            func_D652(); break;
-        case 0xD7FA:
-            func_D7FA(); break;
-        case 0xD208:
-            func_D208(); break;
-        case 0xD752:
-            func_D752(); break;
-        case 0xD347:
-            func_D347(); break;
-        case 0xCC01:
-            func_CC01(); break;
-        case 0xCA7D:
-            func_CA7D(); break;
-        case 0xD416:
-            func_D416(); break;
-        case 0xD761:
-            func_D761(); break;
-        case 0xD50B:
-            func_D50B(); break;
-        case 0xD90C:
-            func_D90C(); break;
-        case 0xCAB2:
-            func_CAB2(); break;
-        case 0xCDB2:
-            func_CDB2(); break;
-        case 0xD0B5:
-            func_D0B5(); break;
-        case 0xD0B0:
-            func_D0B0(); break;
-        case 0xCFB3:
-            func_CFB3(); break;
-        case 0xCEE5:
-            func_CEE5(); break;
-        case 0xD045:
-            func_D045(); break;
-        case 0xCD57:
-            func_CD57(); break;
-        case 0xCEAD:
-            func_CEAD(); break;
-        case 0xCAED:
-            func_CAED(); break;
-        case 0xCC29:
-            func_CC29(); break;
-        case 0xCB95:
-            func_CB95(); break;
-        case 0xD74C:
-            func_D74C(); break;
-        case 0xD903:
-            func_D903(); break;
-        case 0xCABA:
-            func_CABA(); break;
-        case 0xD664:
-            func_D664(); break;
-        case 0xD220:
-            func_D220(); break;
-        case 0xD8BB:
-            func_D8BB(); break;
-        case 0xD2BD:
-            func_D2BD(); break;
-        case 0xD120:
-            func_D120(); break;
-        case 0xD510:
-            func_D510(); break;
-        case 0xD14C:
-            func_D14C(); break;
-        case 0xD029:
-            func_D029(); break;
-        case 0xCE75:
-            func_CE75(); break;
-        case 0xCE95:
-            func_CE95(); break;
-        case 0xD45F:
-            func_D45F(); break;
-        case 0xCC21:
-            func_CC21(); break;
-        case 0xCAA7:
-            func_CAA7(); break;
-        case 0xCA4A:
-            func_CA4A(); break;
+        case 0xD022:
+            func_D022(); break;
         case 0xCB89:
             func_CB89(); break;
         case 0xCC36:
@@ -3107,8 +2786,14 @@ int call_by_address(uint16_t addr) {
             func_CC4C(); break;
         case 0xC9B0:
             func_C9B0(); break;
+        case 0xC9C0:
+            func_C9C0(); break;
+        case 0xC9C9:
+            func_C9C9(); break;
         case 0xC9B5:
             func_C9B5(); break;
+        case 0xC9CB:
+            func_C9CB(); break;
         case 0xC9C7:
             func_C9C7(); break;
         case 0xD3B0:
@@ -3173,12 +2858,20 @@ int call_by_address(uint16_t addr) {
             func_C44E(); break;
         case 0xC40A:
             func_C40A(); break;
+        case 0xC3D1:
+            func_C3D1(); break;
         case 0xC40F:
             func_C40F(); break;
         case 0xC420:
             func_C420(); break;
+        case 0xC3CA:
+            func_C3CA(); break;
         case 0xC3C4:
             func_C3C4(); break;
+        case 0xC424:
+            func_C424(); break;
+        case 0xC402:
+            func_C402(); break;
         case 0xC3B9:
             func_C3B9(); break;
         case 0xC416:
@@ -3199,6 +2892,8 @@ int call_by_address(uint16_t addr) {
             func_C7B7(); break;
         case 0xC4A8:
             func_C4A8(); break;
+        case 0xC511:
+            func_C511(); break;
         case 0xC500:
             func_C500(); break;
         case 0xC504:
@@ -3207,16 +2902,24 @@ int call_by_address(uint16_t addr) {
             func_C4AD(); break;
         case 0xC4FC:
             func_C4FC(); break;
-        case 0xC4B0:
-            func_C4B0(); break;
-        case 0xC506:
-            func_C506(); break;
-        case 0xC508:
-            func_C508(); break;
+        case 0xC4FD:
+            func_C4FD(); break;
+        case 0xC4CA:
+            func_C4CA(); break;
         case 0xC502:
             func_C502(); break;
+        case 0xC508:
+            func_C508(); break;
+        case 0xC4B0:
+            func_C4B0(); break;
         case 0xC521:
             func_C521(); break;
+        case 0xC4D1:
+            func_C4D1(); break;
+        case 0xC51F:
+            func_C51F(); break;
+        case 0xC506:
+            func_C506(); break;
         case 0xC50C:
             func_C50C(); break;
         case 0xC533:
@@ -3233,32 +2936,44 @@ int call_by_address(uint16_t addr) {
             func_C604(); break;
         case 0xC5C9:
             func_C5C9(); break;
+        case 0xC606:
+            func_C606(); break;
+        case 0xC609:
+            func_C609(); break;
         case 0xC5C6:
             func_C5C6(); break;
+        case 0xC5C7:
+            func_C5C7(); break;
+        case 0xC5BE:
+            func_C5BE(); break;
         case 0xC613:
             func_C613(); break;
+        case 0xC614:
+            func_C614(); break;
         case 0xC5AD:
             func_C5AD(); break;
         case 0xC624:
             func_C624(); break;
-        case 0xC606:
-            func_C606(); break;
         case 0xC63D:
             func_C63D(); break;
         case 0xC69C:
             func_C69C(); break;
+        case 0xC6D7:
+            func_C6D7(); break;
         case 0xC6C8:
             func_C6C8(); break;
+        case 0xC6B1:
+            func_C6B1(); break;
+        case 0xC6EC:
+            func_C6EC(); break;
         case 0xC6C3:
             func_C6C3(); break;
-        case 0xC700:
-            func_C700(); break;
-        case 0xC6FF:
-            func_C6FF(); break;
         case 0xC74C:
             func_C74C(); break;
         case 0xC75D:
             func_C75D(); break;
+        case 0xC700:
+            func_C700(); break;
         case 0xC725:
             func_C725(); break;
         case 0xC741:
@@ -3277,6 +2992,8 @@ int call_by_address(uint16_t addr) {
             func_C734(); break;
         case 0xC6CE:
             func_C6CE(); break;
+        case 0xC6FF:
+            func_C6FF(); break;
         case 0xC750:
             func_C750(); break;
         case 0xA060:
@@ -3287,10 +3004,14 @@ int call_by_address(uint16_t addr) {
             func_C575(); break;
         case 0xC59C:
             func_C59C(); break;
+        case 0xC588:
+            func_C588(); break;
         case 0xC586:
             func_C586(); break;
         case 0xC871:
             func_C871(); break;
+        case 0xC87E:
+            func_C87E(); break;
         case 0xC880:
             func_C880(); break;
         case 0xC828:
@@ -3317,38 +3038,10 @@ int call_by_address(uint16_t addr) {
             func_9595_b0(); break;
         case 0x9645:
             func_9645_b0(); break;
-        case 0x95C3:
-            func_95C3_b0(); break;
-        case 0x95F8:
-            func_95F8_b0(); break;
-        case 0x95C5:
-            func_95C5_b0(); break;
-        case 0x95C9:
-            func_95C9_b0(); break;
-        case 0x9598:
-            func_9598_b0(); break;
-        case 0x9620:
-            func_9620_b0(); break;
-        case 0x95FE:
-            func_95FE_b0(); break;
-        case 0x95D8:
-            func_95D8_b0(); break;
-        case 0x96DD:
-            func_96DD_b0(); break;
-        case 0x95DF:
-            func_95DF_b0(); break;
-        case 0x95BF:
-            func_95BF_b0(); break;
-        case 0x95FC:
-            func_95FC_b0(); break;
-        case 0x95EF:
-            func_95EF_b0(); break;
         case 0x9571:
             func_9571_b0(); break;
         case 0x9589:
             func_9589_b0(); break;
-        case 0x9594:
-            func_9594_b0(); break;
         case 0xBB51:
             func_BB51_b0(); break;
         case 0xBB84:
@@ -3433,128 +3126,6 @@ int call_by_address(uint16_t addr) {
             func_98E5_b0(); break;
         case 0x9740:
             func_9740_b0(); break;
-        case 0x9D00:
-            func_9D00_b0(); break;
-        case 0x9D01:
-            func_9D01_b0(); break;
-        case 0x98AD:
-            func_98AD_b0(); break;
-        case 0x9D03:
-            func_9D03_b0(); break;
-        case 0x9A9D:
-            func_9A9D_b0(); break;
-        case 0xA7BD:
-            func_A7BD_b0(); break;
-        case 0x98C8:
-            func_98C8_b0(); break;
-        case 0xA546:
-            func_A546_b0(); break;
-        case 0x996E:
-            func_996E_b0(); break;
-        case 0x9987:
-            func_9987_b0(); break;
-        case 0x990F:
-            func_990F_b0(); break;
-        case 0x99CF:
-            func_99CF_b0(); break;
-        case 0xA516:
-            func_A516_b0(); break;
-        case 0xA503:
-            func_A503_b0(); break;
-        case 0xA2BD:
-            func_A2BD_b0(); break;
-        case 0x9860:
-            func_9860_b0(); break;
-        case 0xA500:
-            func_A500_b0(); break;
-        case 0x98EC:
-            func_98EC_b0(); break;
-        case 0x9812:
-            func_9812_b0(); break;
-        case 0x9858:
-            func_9858_b0(); break;
-        case 0x98F0:
-            func_98F0_b0(); break;
-        case 0x9908:
-            func_9908_b0(); break;
-        case 0x991E:
-            func_991E_b0(); break;
-        case 0x9946:
-            func_9946_b0(); break;
-        case 0x99F8:
-            func_99F8_b0(); break;
-        case 0x99D2:
-            func_99D2_b0(); break;
-        case 0x9922:
-            func_9922_b0(); break;
-        case 0x9902:
-            func_9902_b0(); break;
-        case 0xA5D5:
-            func_A5D5_b0(); break;
-        case 0x98CE:
-            func_98CE_b0(); break;
-        case 0x9904:
-            func_9904_b0(); break;
-        case 0x9ABE:
-            func_9ABE_b0(); break;
-        case 0x99E4:
-            func_99E4_b0(); break;
-        case 0x997E:
-            func_997E_b0(); break;
-        case 0x9815:
-            func_9815_b0(); break;
-        case 0x99DB:
-            func_99DB_b0(); break;
-        case 0x9982:
-            func_9982_b0(); break;
-        case 0x9942:
-            func_9942_b0(); break;
-        case 0x99A3:
-            func_99A3_b0(); break;
-        case 0x9981:
-            func_9981_b0(); break;
-        case 0x9941:
-            func_9941_b0(); break;
-        case 0x9930:
-            func_9930_b0(); break;
-        case 0x9986:
-            func_9986_b0(); break;
-        case 0x99C0:
-            func_99C0_b0(); break;
-        case 0x99C2:
-            func_99C2_b0(); break;
-        case 0xA0EF:
-            func_A0EF_b0(); break;
-        case 0x9907:
-            func_9907_b0(); break;
-        case 0x990C:
-            func_990C_b0(); break;
-        case 0x990A:
-            func_990A_b0(); break;
-        case 0x989B:
-            func_989B_b0(); break;
-        case 0x99A0:
-            func_99A0_b0(); break;
-        case 0x989E:
-            func_989E_b0(); break;
-        case 0x9C94:
-            func_9C94_b0(); break;
-        case 0x9C1D:
-            func_9C1D_b0(); break;
-        case 0x9C00:
-            func_9C00_b0(); break;
-        case 0x9C1E:
-            func_9C1E_b0(); break;
-        case 0x9D5E:
-            func_9D5E_b0(); break;
-        case 0x9F82:
-            func_9F82_b0(); break;
-        case 0x981B:
-            func_981B_b0(); break;
-        case 0xA245:
-            func_A245_b0(); break;
-        case 0x9F51:
-            func_9F51_b0(); break;
         case 0x9792:
             func_9792_b0(); break;
         case 0x9989:
@@ -3623,8 +3194,6 @@ int call_by_address(uint16_t addr) {
             func_9A01_b0(); break;
         case 0x96F2:
             func_96F2_b0(); break;
-        case 0x9700:
-            func_9700_b0(); break;
         case 0x970D:
             func_970D_b0(); break;
         case 0x972B:
@@ -3681,8 +3250,16 @@ int call_by_address(uint16_t addr) {
             func_9A48_b0(); break;
         case 0xD881:
             func_D881(); break;
+        case 0xE8E3:
+            func_E8E3(); break;
         case 0xE8E5:
             func_E8E5(); break;
+        case 0xE8FD:
+            func_E8FD(); break;
+        case 0xE8F2:
+            func_E8F2(); break;
+        case 0xE8E9:
+            func_E8E9(); break;
         case 0xE8FB:
             func_E8FB(); break;
         case 0xE8D9:
@@ -3691,997 +3268,1978 @@ int call_by_address(uint16_t addr) {
             func_C907(); break;
         case 0xF139:
             func_F139(); break;
-        case 0x9500:
-            func_9500_b0(); break;
-        case 0xBD10:
-            func_BD10_b0(); break;
-        case 0xA52B:
-            func_A52B_b0(); break;
-        case 0xBD07:
-            func_BD07_b0(); break;
+        case 0xC59F:
+            func_C59F(); break;
+        case 0xC5A0:
+            func_C5A0(); break;
+        case 0xC904:
+            func_C904(); break;
+        case 0xFF4A:
+            func_FF4A(); break;
+        case 0xC8A9:
+            func_C8A9(); break;
+        case 0xE538:
+            func_E538(); break;
         case 0xFFA9:
             func_FFA9(); break;
-        case 0xB560:
-            func_B560_b0(); break;
-        case 0xADC8:
-            func_ADC8_b0(); break;
-        case 0xB0B0:
-            func_B0B0_b0(); break;
-        case 0x80B0:
-            func_80B0_b0(); break;
-        case 0x8040:
-            func_8040_b0(); break;
+        case 0xC883:
+            func_C883(); break;
+        case 0xF007:
+            func_F007(); break;
+        case 0xCC4D:
+            func_CC4D(); break;
+        case 0xC0CD:
+            func_C0CD(); break;
         case 0xF040:
             func_F040(); break;
-        case 0xB907:
-            func_B907_b0(); break;
+        case 0xF8BA:
+            func_F8BA(); break;
+        case 0xD0C1:
+            func_D0C1(); break;
         case 0xF5D0:
             func_F5D0(); break;
+        case 0xC076:
+            func_C076(); break;
+        case 0xC077:
+            func_C077(); break;
         case 0xD9CE:
             func_D9CE(); break;
         case 0xC081:
             func_C081(); break;
+        case 0xC082:
+            func_C082(); break;
         case 0xC91D:
             func_C91D(); break;
-        case 0xDAEE:
-            func_DAEE(); break;
-        case 0xDAAD:
-            func_DAAD(); break;
-        case 0xD9AD:
-            func_D9AD(); break;
-        case 0xA9D0:
-            func_A9D0_b0(); break;
-        case 0xC80A:
-            func_C80A(); break;
-        case 0xB1C8:
-            func_B1C8_b0(); break;
-        case 0xF029:
-            func_F029(); break;
-        case 0xAC06:
-            func_AC06_b0(); break;
+        case 0xC91E:
+            func_C91E(); break;
+        case 0xEE24:
+            func_EE24(); break;
+        case 0xD9EF:
+            func_D9EF(); break;
         case 0xEE07:
             func_EE07(); break;
-        case 0x8807:
-            func_8807_b0(); break;
-        case 0xADC0:
-            func_ADC0_b0(); break;
+        case 0xDAEE:
+            func_DAEE(); break;
+        case 0xDAEF:
+            func_DAEF(); break;
+        case 0xDAAD:
+            func_DAAD(); break;
+        case 0xC906:
+            func_C906(); break;
+        case 0xD004:
+            func_D004(); break;
+        case 0xD9AD:
+            func_D9AD(); break;
+        case 0xD010:
+            func_D010(); break;
+        case 0xC08D:
+            func_C08D(); break;
+        case 0xDA8E:
+            func_DA8E(); break;
+        case 0xD98E:
+            func_D98E(); break;
+        case 0xCDAE:
+            func_CDAE(); break;
+        case 0xCD8D:
+            func_CD8D(); break;
+        case 0xC227:
+            func_C227(); break;
+        case 0xC90F:
+            func_C90F(); break;
+        case 0xC80A:
+            func_C80A(); break;
+        case 0xF02E:
+            func_F02E(); break;
+        case 0xF029:
+            func_F029(); break;
+        case 0xF02A:
+            func_F02A(); break;
+        case 0xEE08:
+            func_EE08(); break;
+        case 0xCD88:
+            func_CD88(); break;
         case 0xED6E:
             func_ED6E(); break;
+        case 0xC251:
+            func_C251(); break;
         case 0xD507:
             func_D507(); break;
+        case 0xD508:
+            func_D508(); break;
+        case 0xF506:
+            func_F506(); break;
         case 0xCF95:
             func_CF95(); break;
+        case 0xC9D0:
+            func_C9D0(); break;
+        case 0xF0E0:
+            func_F0E0(); break;
+        case 0xC84C:
+            func_C84C(); break;
         case 0xCCAD:
             func_CCAD(); break;
+        case 0xC931:
+            func_C931(); break;
+        case 0xD002:
+            func_D002(); break;
+        case 0xC26D:
+            func_C26D(); break;
+        case 0xC71C:
+            func_C71C(); break;
         case 0xC8C7:
             func_C8C7(); break;
+        case 0xC8C9:
+            func_C8C9(); break;
         case 0xCD4A:
             func_CD4A(); break;
-        case 0x8DE9:
-            func_8DE9_b0(); break;
-        case 0xB5A8:
-            func_B5A8_b0(); break;
-        case 0x8E04:
-            func_8E04_b0(); break;
-        case 0x87C2:
-            func_87C2_b0(); break;
+        case 0xC25C:
+            func_C25C(); break;
+        case 0xD00E:
+            func_D00E(); break;
+        case 0xC917:
+            func_C917(); break;
+        case 0xCFB6:
+            func_CFB6(); break;
+        case 0xD89E:
+            func_D89E(); break;
+        case 0xC30F:
+            func_C30F(); break;
+        case 0xC31F:
+            func_C31F(); break;
+        case 0xF0C4:
+            func_F0C4(); break;
+        case 0xC329:
+            func_C329(); break;
+        case 0xF1C4:
+            func_F1C4(); break;
+        case 0xC2F2:
+            func_C2F2(); break;
+        case 0xC343:
+            func_C343(); break;
+        case 0xC376:
+            func_C376(); break;
+        case 0xC788:
+            func_C788(); break;
         case 0xD1C7:
             func_D1C7(); break;
-        case 0xB8C7:
-            func_B8C7_b0(); break;
-        case 0x81C3:
-            func_81C3_b0(); break;
-        case 0x95B6:
-            func_95B6_b0(); break;
-        case 0x95B8:
-            func_95B8_b0(); break;
-        case 0xB988:
-            func_B988_b0(); break;
-        case 0x8060:
-            func_8060_b0(); break;
+        case 0xC34B:
+            func_C34B(); break;
+        case 0xC33E:
+            func_C33E(); break;
+        case 0xC7A1:
+            func_C7A1(); break;
+        case 0xC7B9:
+            func_C7B9(); break;
+        case 0xC45D:
+            func_C45D(); break;
+        case 0xC45A:
+            func_C45A(); break;
+        case 0xC813:
+            func_C813(); break;
+        case 0xC80C:
+            func_C80C(); break;
+        case 0xC858:
+            func_C858(); break;
+        case 0xC54A:
+            func_C54A(); break;
+        case 0xC308:
+            func_C308(); break;
+        case 0xC347:
+            func_C347(); break;
+        case 0xC30C:
+            func_C30C(); break;
+        case 0xC327:
+            func_C327(); break;
+        case 0xC35D:
+            func_C35D(); break;
+        case 0xC31A:
+            func_C31A(); break;
         case 0xE0A0:
             func_E0A0(); break;
-        case 0x95CF:
-            func_95CF_b0(); break;
-        case 0xB558:
-            func_B558_b0(); break;
+        case 0xCF75:
+            func_CF75(); break;
+        case 0xD18D:
+            func_D18D(); break;
+        case 0xC999:
+            func_C999(); break;
+        case 0xE03C:
+            func_E03C(); break;
         case 0xC900:
             func_C900(); break;
+        case 0xC901:
+            func_C901(); break;
+        case 0xF011:
+            func_F011(); break;
         case 0xF610:
             func_F610(); break;
+        case 0xD1EF:
+            func_D1EF(); break;
+        case 0xD1AE:
+            func_D1AE(); break;
+        case 0xCA06:
+            func_CA06(); break;
+        case 0xC38B:
+            func_C38B(); break;
+        case 0xD821:
+            func_D821(); break;
         case 0xC9CE:
             func_C9CE(); break;
-        case 0xB9F9:
-            func_B9F9_b0(); break;
-        case 0xB96E:
-            func_B96E_b0(); break;
-        case 0xB9B6:
-            func_B9B6_b0(); break;
-        case 0xB902:
-            func_B902_b0(); break;
+        case 0xCFBA:
+            func_CFBA(); break;
+        case 0xC398:
+            func_C398(); break;
+        case 0xC399:
+            func_C399(); break;
         case 0xC801:
             func_C801(); break;
-        case 0xA8BD:
-            func_A8BD_b0(); break;
-        case 0x95FD:
-            func_95FD_b0(); break;
+        case 0xC802:
+            func_C802(); break;
+        case 0xCAC9:
+            func_CAC9(); break;
+        case 0xF411:
+            func_F411(); break;
+        case 0xCF6D:
+            func_CF6D(); break;
+        case 0xFDA9:
+            func_FDA9(); break;
         case 0xC44F:
             func_C44F(); break;
-        case 0x95C4:
-            func_95C4_b0(); break;
+        case 0xC450:
+            func_C450(); break;
+        case 0xC454:
+            func_C454(); break;
+        case 0xC455:
+            func_C455(); break;
+        case 0xC4A4:
+            func_C4A4(); break;
+        case 0xC4A5:
+            func_C4A5(); break;
         case 0xE400:
             func_E400(); break;
-        case 0x95FB:
-            func_95FB_b0(); break;
         case 0xC004:
             func_C004(); break;
-        case 0xA9BD:
-            func_A9BD_b0(); break;
         case 0xC498:
             func_C498(); break;
+        case 0xC499:
+            func_C499(); break;
         case 0xD057:
             func_D057(); break;
-        case 0x950F:
-            func_950F_b0(); break;
-        case 0x9980:
-            func_9980_b0(); break;
+        case 0xF659:
+            func_F659(); break;
+        case 0xC489:
+            func_C489(); break;
+        case 0xC53D:
+            func_C53D(); break;
+        case 0xF939:
+            func_F939(); break;
+        case 0xE96E:
+            func_E96E(); break;
+        case 0xFFA1:
+            func_FFA1(); break;
         case 0xCF99:
             func_CF99(); break;
-        case 0xB987:
-            func_B987_b0(); break;
+        case 0xFD85:
+            func_FD85(); break;
+        case 0xFD86:
+            func_FD86(); break;
+        case 0xD921:
+            func_D921(); break;
+        case 0xC59D:
+            func_C59D(); break;
+        case 0xC620:
+            func_C620(); break;
         case 0xD500:
             func_D500(); break;
-        case 0x8806:
-            func_8806_b0(); break;
+        case 0xD501:
+            func_D501(); break;
+        case 0xCFD5:
+            func_CFD5(); break;
+        case 0xC5A2:
+            func_C5A2(); break;
+        case 0xCB8E:
+            func_CB8E(); break;
+        case 0xF8D1:
+            func_F8D1(); break;
+        case 0xC631:
+            func_C631(); break;
+        case 0xC632:
+            func_C632(); break;
         case 0xC637:
             func_C637(); break;
-        case 0xB003:
-            func_B003_b0(); break;
+        case 0xC638:
+            func_C638(); break;
+        case 0xC69A:
+            func_C69A(); break;
         case 0xDD8D:
             func_DD8D(); break;
+        case 0xC68A:
+            func_C68A(); break;
         case 0xDD2C:
             func_DD2C(); break;
+        case 0xD64D:
+            func_D64D(); break;
+        case 0xDD0E:
+            func_DD0E(); break;
         case 0xC692:
             func_C692(); break;
+        case 0xC693:
+            func_C693(); break;
+        case 0xC0C9:
+            func_C0C9(); break;
+        case 0xF000:
+            func_F000(); break;
         case 0xFE85:
             func_FE85(); break;
-        case 0xB004:
-            func_B004_b0(); break;
-        case 0x8470:
-            func_8470_b0(); break;
-        case 0x951E:
-            func_951E_b0(); break;
-        case 0x9901:
-            func_9901_b0(); break;
-        case 0xA9C8:
-            func_A9C8_b0(); break;
+        case 0xFE86:
+            func_FE86(); break;
+        case 0xC949:
+            func_C949(); break;
+        case 0xFFA3:
+            func_FFA3(); break;
+        case 0xE0E9:
+            func_E0E9(); break;
+        case 0xF7D0:
+            func_F7D0(); break;
+        case 0xF7D1:
+            func_F7D1(); break;
+        case 0xD3CE:
+            func_D3CE(); break;
+        case 0xC25F:
+            func_C25F(); break;
+        case 0xC7DC:
+            func_C7DC(); break;
+        case 0xD011:
+            func_D011(); break;
+        case 0xC364:
+            func_C364(); break;
+        case 0xC007:
+            func_C007(); break;
+        case 0xC008:
+            func_C008(); break;
+        case 0xC82C:
+            func_C82C(); break;
+        case 0xC861:
+            func_C861(); break;
+        case 0xF0A9:
+            func_F0A9(); break;
         case 0xF80C:
             func_F80C(); break;
+        case 0xFF00:
+            func_FF00(); break;
+        case 0xC86B:
+            func_C86B(); break;
+        case 0xC86E:
+            func_C86E(); break;
+        case 0xC86F:
+            func_C86F(); break;
+        case 0xE08F:
+            func_E08F(); break;
+        case 0xD296:
+            func_D296(); break;
+        case 0xD6D3:
+            func_D6D3(); break;
+        case 0xC966:
+            func_C966(); break;
+        case 0xC94E:
+            func_C94E(); break;
+        case 0xD066:
+            func_D066(); break;
         case 0xD9C8:
             func_D9C8(); break;
-        case 0xBAD2:
-            func_BAD2_b0(); break;
-        case 0xB0CC:
-            func_B0CC_b0(); break;
+        case 0xD2DA:
+            func_D2DA(); break;
+        case 0xD7B7:
+            func_D7B7(); break;
+        case 0xC8D8:
+            func_C8D8(); break;
+        case 0xF1B0:
+            func_F1B0(); break;
+        case 0xF153:
+            func_F153(); break;
+        case 0xC121:
+            func_C121(); break;
+        case 0xDA34:
+            func_DA34(); break;
+        case 0xD854:
+            func_D854(); break;
+        case 0xD67B:
+            func_D67B(); break;
+        case 0xCA78:
+            func_CA78(); break;
+        case 0xC9D9:
+            func_C9D9(); break;
+        case 0xCC37:
+            func_CC37(); break;
+        case 0xC9B1:
+            func_C9B1(); break;
+        case 0xD3B1:
+            func_D3B1(); break;
+        case 0xFFCB:
+            func_FFCB(); break;
+        case 0xCB00:
+            func_CB00(); break;
+        case 0xCB26:
+            func_CB26(); break;
+        case 0xCF29:
+            func_CF29(); break;
         case 0xDFC9:
             func_DFC9(); break;
+        case 0xCEE0:
+            func_CEE0(); break;
+        case 0xEB21:
+            func_EB21(); break;
+        case 0xCD3D:
+            func_CD3D(); break;
+        case 0xE24D:
+            func_E24D(); break;
+        case 0xED67:
+            func_ED67(); break;
+        case 0xC983:
+            func_C983(); break;
         case 0xC820:
             func_C820(); break;
-        case 0xBD60:
-            func_BD60_b0(); break;
+        case 0xE5C9:
+            func_E5C9(); break;
+        case 0xD433:
+            func_D433(); break;
+        case 0xD5D4:
+            func_D5D4(); break;
+        case 0xD608:
+            func_D608(); break;
+        case 0xD632:
+            func_D632(); break;
+        case 0xF721:
+            func_F721(); break;
+        case 0xE801:
+            func_E801(); break;
         case 0xF808:
             func_F808(); break;
         case 0xE54C:
             func_E54C(); break;
-        case 0xBD6A:
-            func_BD6A_b0(); break;
-        case 0xAC17:
-            func_AC17_b0(); break;
+        case 0xE54D:
+            func_E54D(); break;
+        case 0xD62E:
+            func_D62E(); break;
+        case 0xD00D:
+            func_D00D(); break;
+        case 0xCEB9:
+            func_CEB9(); break;
         case 0xDECA:
             func_DECA(); break;
-        case 0xB5FA:
-            func_B5FA_b0(); break;
+        case 0xFDA1:
+            func_FDA1(); break;
         case 0xC9FD:
             func_C9FD(); break;
+        case 0xC9FE:
+            func_C9FE(); break;
         case 0xC60B:
             func_C60B(); break;
-        case 0xADA8:
-            func_ADA8_b0(); break;
-        case 0x95C0:
-            func_95C0_b0(); break;
+        case 0xC60C:
+            func_C60C(); break;
+        case 0xFCA0:
+            func_FCA0(); break;
         case 0xD040:
             func_D040(); break;
         case 0xC924:
             func_C924(); break;
-        case 0xC91E:
-            func_C91E(); break;
-        case 0xC802:
-            func_C802(); break;
-        case 0x9820:
-            func_9820_b0(); break;
-        case 0xD004:
-            func_D004(); break;
+        case 0xC91F:
+            func_C91F(); break;
+        case 0xC9D1:
+            func_C9D1(); break;
+        case 0xC9D4:
+            func_C9D4(); break;
+        case 0xC9D5:
+            func_C9D5(); break;
         case 0xDDCF:
             func_DDCF(); break;
+        case 0xF603:
+            func_F603(); break;
         case 0xCFF6:
             func_CFF6(); break;
-        case 0xD002:
-            func_D002(); break;
+        case 0xCB67:
+            func_CB67(); break;
+        case 0xF661:
+            func_F661(); break;
+        case 0xF099:
+            func_F099(); break;
+        case 0xFAF0:
+            func_FAF0(); break;
+        case 0xD6FB:
+            func_D6FB(); break;
         case 0xDF20:
             func_DF20(); break;
-        case 0x9020:
-            func_9020_b0(); break;
+        case 0xCBE0:
+            func_CBE0(); break;
+        case 0xFD39:
+            func_FD39(); break;
+        case 0xF539:
+            func_F539(); break;
         case 0xD068:
             func_D068(); break;
-        case 0xBD11:
-            func_BD11_b0(); break;
-        case 0xBD14:
-            func_BD14_b0(); break;
-        case 0xBD02:
-            func_BD02_b0(); break;
-        case 0x9002:
-            func_9002_b0(); break;
-        case 0xBD0A:
-            func_BD0A_b0(); break;
-        case 0x901F:
-            func_901F_b0(); break;
-        case 0x85A0:
-            func_85A0_b0(); break;
-        case 0x8E20:
-            func_8E20_b0(); break;
-        case 0xB9AD:
-            func_B9AD_b0(); break;
-        case 0x8501:
-            func_8501_b0(); break;
-        case 0xB505:
-            func_B505_b0(); break;
+        case 0xD059:
+            func_D059(); break;
+        case 0xF608:
+            func_F608(); break;
+        case 0xE8AA:
+            func_E8AA(); break;
+        case 0xE988:
+            func_E988(); break;
+        case 0xE9B7:
+            func_E9B7(); break;
+        case 0xC90D:
+            func_C90D(); break;
+        case 0xF009:
+            func_F009(); break;
+        case 0xEF86:
+            func_EF86(); break;
+        case 0xCE09:
+            func_CE09(); break;
+        case 0xEFA5:
+            func_EFA5(); break;
         case 0xCFAC:
             func_CFAC(); break;
         case 0xE5B9:
             func_E5B9(); break;
+        case 0xE607:
+            func_E607(); break;
+        case 0xC501:
+            func_C501(); break;
         case 0xE290:
             func_E290(); break;
         case 0xE64C:
             func_E64C(); break;
+        case 0xCDE7:
+            func_CDE7(); break;
         case 0xED38:
             func_ED38(); break;
         case 0xF0F8:
             func_F0F8(); break;
-        case 0xB96D:
-            func_B96D_b0(); break;
-        case 0x8570:
-            func_8570_b0(); break;
-        case 0xB5A4:
-            func_B5A4_b0(); break;
-        case 0xB0F0:
-            func_B0F0_b0(); break;
-        case 0x9008:
-            func_9008_b0(); break;
-        case 0xA246:
-            func_A246_b0(); break;
-        case 0x9009:
-            func_9009_b0(); break;
-        case 0xC7B9:
-            func_C7B9(); break;
-        case 0xBD70:
-            func_BD70_b0(); break;
+        case 0xED21:
+            func_ED21(); break;
+        case 0xECEE:
+            func_ECEE(); break;
+        case 0xC505:
+            func_C505(); break;
         case 0xD5F9:
             func_D5F9(); break;
-        case 0xBD0E:
-            func_BD0E_b0(); break;
+        case 0xD5FA:
+            func_D5FA(); break;
+        case 0xDABA:
+            func_DABA(); break;
         case 0xCEDA:
             func_CEDA(); break;
-        case 0x9092:
-            func_9092_b0(); break;
+        case 0xF01E:
+            func_F01E(); break;
+        case 0xCF26:
+            func_CF26(); break;
+        case 0xF711:
+            func_F711(); break;
+        case 0xF0A0:
+            func_F0A0(); break;
+        case 0xF0A1:
+            func_F0A1(); break;
+        case 0xFA11:
+            func_FA11(); break;
         case 0xFC85:
             func_FC85(); break;
+        case 0xD17C:
+            func_D17C(); break;
         case 0xCED1:
             func_CED1(); break;
-        case 0x8522:
-            func_8522_b0(); break;
+        case 0xDDBA:
+            func_DDBA(); break;
         case 0xCD20:
             func_CD20(); break;
-        case 0xCAC9:
-            func_CAC9(); break;
-        case 0xBD46:
-            func_BD46_b0(); break;
-        case 0xC8C9:
-            func_C8C9(); break;
-        case 0xB0C8:
-            func_B0C8_b0(); break;
+        case 0xCD21:
+            func_CD21(); break;
+        case 0xD13A:
+            func_D13A(); break;
+        case 0xD110:
+            func_D110(); break;
+        case 0xC8CA:
+            func_C8CA(); break;
+        case 0xD062:
+            func_D062(); break;
         case 0xC046:
             func_C046(); break;
-        case 0xADBF:
-            func_ADBF_b0(); break;
-        case 0xBD1C:
-            func_BD1C_b0(); break;
-        case 0xC9D1:
-            func_C9D1(); break;
-        case 0xBC20:
-            func_BC20_b0(); break;
+        case 0xCD02:
+            func_CD02(); break;
+        case 0xC9D2:
+            func_C9D2(); break;
+        case 0xFEAA:
+            func_FEAA(); break;
+        case 0xD1BD:
+            func_D1BD(); break;
         case 0xCFAE:
             func_CFAE(); break;
+        case 0xEE60:
+            func_EE60(); break;
         case 0xD720:
             func_D720(); break;
-        case 0xBFBF:
-            func_BFBF_b0(); break;
-        case 0x8560:
-            func_8560_b0(); break;
+        case 0xD1B9:
+            func_D1B9(); break;
+        case 0xD1D2:
+            func_D1D2(); break;
+        case 0xD9D0:
+            func_D9D0(); break;
         case 0xC3D0:
             func_C3D0(); break;
-        case 0x8551:
-            func_8551_b0(); break;
-        case 0x8482:
-            func_8482_b0(); break;
-        case 0x9900:
-            func_9900_b0(); break;
+        case 0xE602:
+            func_E602(); break;
         case 0xD990:
             func_D990(); break;
-        case 0xAF8D:
-            func_AF8D_b0(); break;
-        case 0xBC03:
-            func_BC03_b0(); break;
+        case 0xD2F3:
+            func_D2F3(); break;
+        case 0xD313:
+            func_D313(); break;
+        case 0xD3A3:
+            func_D3A3(); break;
+        case 0xFAAE:
+            func_FAAE(); break;
+        case 0xEE1F:
+            func_EE1F(); break;
+        case 0xF8AE:
+            func_F8AE(); break;
+        case 0xF90E:
+            func_F90E(); break;
+        case 0xF1F1:
+            func_F1F1(); break;
+        case 0xCD7E:
+            func_CD7E(); break;
+        case 0xD2D6:
+            func_D2D6(); break;
         case 0xD17D:
             func_D17D(); break;
-        case 0xB551:
-            func_B551_b0(); break;
-        case 0xBD18:
-            func_BD18_b0(); break;
-        case 0x900B:
-            func_900B_b0(); break;
-        case 0xB720:
-            func_B720_b0(); break;
-        case 0xB120:
-            func_B120_b0(); break;
-        case 0xB4BF:
-            func_B4BF_b0(); break;
-        case 0xAA04:
-            func_AA04_b0(); break;
-        case 0xB908:
-            func_B908_b0(); break;
-        case 0xCFB6:
-            func_CFB6(); break;
-        case 0xAE8A:
-            func_AE8A_b0(); break;
-        case 0x90E8:
-            func_90E8_b0(); break;
-        case 0xBD08:
-            func_BD08_b0(); break;
-        case 0x8C6D:
-            func_8C6D_b0(); break;
-        case 0xBD19:
-            func_BD19_b0(); break;
-        case 0xD00D:
-            func_D00D(); break;
+        case 0xD034:
+            func_D034(); break;
+        case 0xD52E:
+            func_D52E(); break;
+        case 0xC410:
+            func_C410(); break;
+        case 0xE40E:
+            func_E40E(); break;
+        case 0xD4A8:
+            func_D4A8(); break;
+        case 0xCF7A:
+            func_CF7A(); break;
+        case 0xD531:
+            func_D531(); break;
+        case 0xCCAF:
+            func_CCAF(); break;
+        case 0xDA12:
+            func_DA12(); break;
+        case 0xFE4C:
+            func_FE4C(); break;
+        case 0xD5FF:
+            func_D5FF(); break;
+        case 0xCB48:
+            func_CB48(); break;
+        case 0xD629:
+            func_D629(); break;
+        case 0xE9D7:
+            func_E9D7(); break;
+        case 0xD615:
+            func_D615(); break;
+        case 0xD672:
+            func_D672(); break;
         case 0xE907:
             func_E907(); break;
         case 0xC587:
             func_C587(); break;
+        case 0xE56E:
+            func_E56E(); break;
         case 0xC013:
             func_C013(); break;
+        case 0xC014:
+            func_C014(); break;
         case 0xC00F:
             func_C00F(); break;
         case 0xC00B:
             func_C00B(); break;
+        case 0xF032:
+            func_F032(); break;
         case 0xC926:
             func_C926(); break;
-        case 0xA868:
-            func_A868_b0(); break;
-        case 0xAA0F:
-            func_AA0F_b0(); break;
-        case 0xB5AA:
-            func_B5AA_b0(); break;
-        case 0x83CE:
-            func_83CE_b0(); break;
+        case 0xE328:
+            func_E328(); break;
+        case 0xCA02:
+            func_CA02(); break;
+        case 0xD737:
+            func_D737(); break;
         case 0xC020:
             func_C020(); break;
+        case 0xC021:
+            func_C021(); break;
+        case 0xC933:
+            func_C933(); break;
+        case 0xC937:
+            func_C937(); break;
+        case 0xF00C:
+            func_F00C(); break;
+        case 0xE01C:
+            func_E01C(); break;
         case 0xC006:
             func_C006(); break;
         case 0xD60D:
             func_D60D(); break;
-        case 0x8A2E:
-            func_8A2E_b0(); break;
-        case 0xBD1B:
-            func_BD1B_b0(); break;
-        case 0xBEBD:
-            func_BEBD_b0(); break;
-        case 0xA9C9:
-            func_A9C9_b0(); break;
+        case 0xE326:
+            func_E326(); break;
+        case 0xC939:
+            func_C939(); break;
+        case 0xC93A:
+            func_C93A(); break;
+        case 0xFB85:
+            func_FB85(); break;
+        case 0xFB86:
+            func_FB86(); break;
         case 0xC91B:
             func_C91B(); break;
-        case 0xBD09:
-            func_BD09_b0(); break;
-        case 0x91BD:
-            func_91BD_b0(); break;
-        case 0xBD04:
-            func_BD04_b0(); break;
-        case 0x911D:
-            func_911D_b0(); break;
+        case 0xF120:
+            func_F120(); break;
+        case 0xD848:
+            func_D848(); break;
+        case 0xD949:
+            func_D949(); break;
+        case 0xE819:
+            func_E819(); break;
+        case 0xDC42:
+            func_DC42(); break;
+        case 0xDC53:
+            func_DC53(); break;
+        case 0xD02F:
+            func_D02F(); break;
+        case 0xD801:
+            func_D801(); break;
+        case 0xD796:
+            func_D796(); break;
         case 0xC07D:
             func_C07D(); break;
+        case 0xC07E:
+            func_C07E(); break;
         case 0xC079:
             func_C079(); break;
-        case 0xB52C:
-            func_B52C_b0(); break;
+        case 0xC07A:
+            func_C07A(); break;
+        case 0xC043:
+            func_C043(); break;
+        case 0xDA06:
+            func_DA06(); break;
+        case 0xD850:
+            func_D850(); break;
         case 0xD50C:
             func_D50C(); break;
-        case 0x850A:
-            func_850A_b0(); break;
+        case 0xD9F7:
+            func_D9F7(); break;
+        case 0xC946:
+            func_C946(); break;
+        case 0xFC87:
+            func_FC87(); break;
+        case 0xFCAA:
+            func_FCAA(); break;
         case 0xC913:
             func_C913(); break;
+        case 0xC914:
+            func_C914(); break;
+        case 0xC810:
+            func_C810(); break;
         case 0xC9C8:
             func_C9C8(); break;
-        case 0xB91D:
-            func_B91D_b0(); break;
+        case 0xC806:
+            func_C806(); break;
+        case 0xE030:
+            func_E030(); break;
         case 0xC960:
             func_C960(); break;
-        case 0x84EE:
-            func_84EE_b0(); break;
+        case 0xC961:
+            func_C961(); break;
+        case 0xF14C:
+            func_F14C(); break;
         case 0xEEDA:
             func_EEDA(); break;
-        case 0x9D60:
-            func_9D60_b0(); break;
+        case 0xEEDB:
+            func_EEDB(); break;
+        case 0xDB1D:
+            func_DB1D(); break;
         case 0xDFBF:
             func_DFBF(); break;
+        case 0xEFE0:
+            func_EFE0(); break;
         case 0xF7EF:
             func_F7EF(); break;
-        case 0x865B:
-            func_865B_b0(); break;
-        case 0xBD3E:
-            func_BD3E_b0(); break;
-        case 0xB911:
-            func_B911_b0(); break;
+        case 0xF7F0:
+            func_F7F0(); break;
+        case 0xEC90:
+            func_EC90(); break;
+        case 0xE7F1:
+            func_E7F1(); break;
+        case 0xC96F:
+            func_C96F(); break;
+        case 0xC96A:
+            func_C96A(); break;
+        case 0xC943:
+            func_C943(); break;
+        case 0xD080:
+            func_D080(); break;
+        case 0xDA26:
+            func_DA26(); break;
         case 0xD0DA:
             func_D0DA(); break;
-        case 0xB918:
-            func_B918_b0(); break;
-        case 0xB927:
-            func_B927_b0(); break;
-        case 0xA4D7:
-            func_A4D7_b0(); break;
+        case 0xDAB5:
+            func_DAB5(); break;
+        case 0xDA2D:
+            func_DA2D(); break;
         case 0xC922:
             func_C922(); break;
-        case 0xAFAD:
-            func_AFAD_b0(); break;
-        case 0xADF9:
-            func_ADF9_b0(); break;
-        case 0xA6DF:
-            func_A6DF_b0(); break;
+        case 0xC923:
+            func_C923(); break;
+        case 0xC927:
+            func_C927(); break;
+        case 0xC91A:
+            func_C91A(); break;
+        case 0xC909:
+            func_C909(); break;
+        case 0xDB60:
+            func_DB60(); break;
+        case 0xDBBD:
+            func_DBBD(); break;
+        case 0xD5D1:
+            func_D5D1(); break;
+        case 0xF02C:
+            func_F02C(); break;
+        case 0xED19:
+            func_ED19(); break;
+        case 0xDF4C:
+            func_DF4C(); break;
+        case 0xC00E:
+            func_C00E(); break;
+        case 0xC929:
+            func_C929(); break;
+        case 0xCFCA:
+            func_CFCA(); break;
         case 0xEB85:
             func_EB85(); break;
+        case 0xDC63:
+            func_DC63(); break;
+        case 0xE3EA:
+            func_E3EA(); break;
+        case 0xF0E4:
+            func_F0E4(); break;
         case 0xF026:
             func_F026(); break;
-        case 0xBD20:
-            func_BD20_b0(); break;
-        case 0xB0D0:
-            func_B0D0_b0(); break;
+        case 0xD0C6:
+            func_D0C6(); break;
+        case 0xDE0F:
+            func_DE0F(); break;
+        case 0xDEC5:
+            func_DEC5(); break;
+        case 0xC8EC:
+            func_C8EC(); break;
+        case 0xE3ED:
+            func_E3ED(); break;
+        case 0xF06C:
+            func_F06C(); break;
         case 0xC01D:
             func_C01D(); break;
+        case 0xC4AE:
+            func_C4AE(); break;
+        case 0xFF84:
+            func_FF84(); break;
         case 0xC48D:
             func_C48D(); break;
+        case 0xC48E:
+            func_C48E(); break;
+        case 0xDE8D:
+            func_DE8D(); break;
         case 0xEEDE:
             func_EEDE(); break;
-        case 0xB010:
-            func_B010_b0(); break;
+        case 0xEEDF:
+            func_EEDF(); break;
+        case 0xF98B:
+            func_F98B(); break;
+        case 0xEE34:
+            func_EE34(); break;
+        case 0xDD08:
+            func_DD08(); break;
+        case 0xCA04:
+            func_CA04(); break;
+        case 0xC9DF:
+            func_C9DF(); break;
         case 0xDE24:
             func_DE24(); break;
         case 0xDB8D:
             func_DB8D(); break;
+        case 0xF067:
+            func_F067(); break;
         case 0xD6AD:
             func_D6AD(); break;
+        case 0xC986:
+            func_C986(); break;
+        case 0xE806:
+            func_E806(); break;
         case 0xC9E8:
             func_C9E8(); break;
-        case 0x90A0:
-            func_90A0_b0(); break;
-        case 0xBE07:
-            func_BE07_b0(); break;
-        case 0xBCBD:
-            func_BCBD_b0(); break;
-        case 0x9CBC:
-            func_9CBC_b0(); break;
         case 0xCA00:
             func_CA00(); break;
         case 0xC0E8:
             func_C0E8(); break;
+        case 0xDF67:
+            func_DF67(); break;
         case 0xC002:
             func_C002(); break;
-        case 0x858C:
-            func_858C_b0(); break;
+        case 0xDF8C:
+            func_DF8C(); break;
+        case 0xDF97:
+            func_DF97(); break;
         case 0xC029:
             func_C029(); break;
-        case 0xB5F0:
-            func_B5F0_b0(); break;
-        case 0x9025:
-            func_9025_b0(); break;
+        case 0xF1D0:
+            func_F1D0(); break;
+        case 0xE091:
+            func_E091(); break;
         case 0xC0E0:
             func_C0E0(); break;
-        case 0xC008:
-            func_C008(); break;
-        case 0xAE20:
-            func_AE20_b0(); break;
+        case 0xC0E2:
+            func_C0E2(); break;
+        case 0xE186:
+            func_E186(); break;
+        case 0xE0E3:
+            func_E0E3(); break;
+        case 0xE1B6:
+            func_E1B6(); break;
         case 0xC9F8:
             func_C9F8(); break;
-        case 0xBFB9:
-            func_BFB9_b0(); break;
-        case 0xB557:
-            func_B557_b0(); break;
-        case 0xC91F:
-            func_C91F(); break;
-        case 0xB9E0:
-            func_B9E0_b0(); break;
-        case 0xB9B9:
-            func_B9B9_b0(); break;
-        case 0x9018:
-            func_9018_b0(); break;
-        case 0xB5C3:
-            func_B5C3_b0(); break;
+        case 0xD023:
+            func_D023(); break;
+        case 0xE18F:
+            func_E18F(); break;
+        case 0xC9DB:
+            func_C9DB(); break;
+        case 0xC911:
+            func_C911(); break;
+        case 0xD61E:
+            func_D61E(); break;
+        case 0xF9F1:
+            func_F9F1(); break;
+        case 0xC920:
+            func_C920(); break;
+        case 0xD046:
+            func_D046(); break;
+        case 0xE125:
+            func_E125(); break;
+        case 0xE0FD:
+            func_E0FD(); break;
+        case 0xDFBA:
+            func_DFBA(); break;
+        case 0xEBC7:
+            func_EBC7(); break;
+        case 0xE790:
+            func_E790(); break;
+        case 0xCA38:
+            func_CA38(); break;
+        case 0xDB37:
+            func_DB37(); break;
+        case 0xC9E4:
+            func_C9E4(); break;
+        case 0xC90B:
+            func_C90B(); break;
         case 0xD5B5:
             func_D5B5(); break;
+        case 0xD5B6:
+            func_D5B6(); break;
         case 0xD03A:
             func_D03A(); break;
+        case 0xD03B:
+            func_D03B(); break;
+        case 0xD596:
+            func_D596(); break;
+        case 0xE29D:
+            func_E29D(); break;
+        case 0xD12E:
+            func_D12E(); break;
         case 0xF620:
             func_F620(); break;
-        case 0xB0FE:
-            func_B0FE_b0(); break;
-        case 0xB099:
-            func_B099_b0(); break;
-        case 0x86B5:
-            func_86B5_b0(); break;
-        case 0xB915:
-            func_B915_b0(); break;
-        case 0xBE00:
-            func_BE00_b0(); break;
-        case 0xB92A:
-            func_B92A_b0(); break;
-        case 0x8AE3:
-            func_8AE3_b0(); break;
-        case 0xC810:
-            func_C810(); break;
+        case 0xCAF2:
+            func_CAF2(); break;
+        case 0xC9CA:
+            func_C9CA(); break;
+        case 0xFECA:
+            func_FECA(); break;
+        case 0xFD7E:
+            func_FD7E(); break;
+        case 0xFF7D:
+            func_FF7D(); break;
+        case 0xE200:
+            func_E200(); break;
+        case 0xE805:
+            func_E805(); break;
+        case 0xE56D:
+            func_E56D(); break;
+        case 0xDD2B:
+            func_DD2B(); break;
+        case 0xD904:
+            func_D904(); break;
+        case 0xDD3A:
+            func_DD3A(); break;
+        case 0xDD1B:
+            func_DD1B(); break;
+        case 0xF00A:
+            func_F00A(); break;
+        case 0xE860:
+            func_E860(); break;
+        case 0xE3A6:
+            func_E3A6(); break;
+        case 0xE3A4:
+            func_E3A4(); break;
+        case 0xC811:
+            func_C811(); break;
         case 0xE120:
             func_E120(); break;
-        case 0x99E0:
-            func_99E0_b0(); break;
-        case 0x8183:
-            func_8183_b0(); break;
-        case 0xBCC3:
-            func_BCC3_b0(); break;
-        case 0xADAA:
-            func_ADAA_b0(); break;
-        case 0xBEAD:
-            func_BEAD_b0(); break;
+        case 0xE433:
+            func_E433(); break;
+        case 0xE434:
+            func_E434(); break;
+        case 0xE4AF:
+            func_E4AF(); break;
+        case 0xE1AA:
+            func_E1AA(); break;
+        case 0xC809:
+            func_C809(); break;
+        case 0xC303:
+            func_C303(); break;
+        case 0xC3C3:
+            func_C3C3(); break;
+        case 0xF3BC:
+            func_F3BC(); break;
+        case 0xCC7E:
+            func_CC7E(); break;
+        case 0xE4C1:
+            func_E4C1(); break;
         case 0xC87D:
             func_C87D(); break;
+        case 0xE4C8:
+            func_E4C8(); break;
+        case 0xD0BD:
+            func_D0BD(); break;
+        case 0xD4BE:
+            func_D4BE(); break;
+        case 0xF751:
+            func_F751(); break;
+        case 0xFBFB:
+            func_FBFB(); break;
+        case 0xF8FC:
+            func_F8FC(); break;
         case 0xF6FB:
             func_F6FB(); break;
-        case 0x850C:
-            func_850C_b0(); break;
-        case 0xB220:
-            func_B220_b0(); break;
-        case 0xBCF8:
-            func_BCF8_b0(); break;
-        case 0xBD4C:
-            func_BD4C_b0(); break;
+        case 0xFBF6:
+            func_FBF6(); break;
+        case 0xE542:
+            func_E542(); break;
+        case 0xEBB3:
+            func_EBB3(); break;
+        case 0xE8E6:
+            func_E8E6(); break;
+        case 0xE5B4:
+            func_E5B4(); break;
+        case 0xDBD7:
+            func_DBD7(); break;
+        case 0xDBB6:
+            func_DBB6(); break;
+        case 0xF7AA:
+            func_F7AA(); break;
+        case 0xC92A:
+            func_C92A(); break;
         case 0xC6B0:
             func_C6B0(); break;
+        case 0xC8E6:
+            func_C8E6(); break;
+        case 0xC8E7:
+            func_C8E7(); break;
+        case 0xD9D7:
+            func_D9D7(); break;
         case 0xD9D9:
             func_D9D9(); break;
-        case 0xBD39:
-            func_BD39_b0(); break;
-        case 0xBFBD:
-            func_BFBD_b0(); break;
-        case 0xAEFC:
-            func_AEFC_b0(); break;
-        case 0xB1B0:
-            func_B1B0_b0(); break;
-        case 0xA569:
-            func_A569_b0(); break;
-        case 0x9897:
-            func_9897_b0(); break;
-        case 0x9AFC:
-            func_9AFC_b0(); break;
-        case 0x8FFC:
-            func_8FFC_b0(); break;
-        case 0xB3B2:
-            func_B3B2_b0(); break;
-        case 0xB7B3:
-            func_B7B3_b0(); break;
-        case 0xBABB:
-            func_BABB_b0(); break;
+        case 0xE48E:
+            func_E48E(); break;
+        case 0xE4E5:
+            func_E4E5(); break;
+        case 0xCEBD:
+            func_CEBD(); break;
+        case 0xE6CF:
+            func_E6CF(); break;
+        case 0xCA0E:
+            func_CA0E(); break;
+        case 0xC6EB:
+            func_C6EB(); break;
+        case 0xC92F:
+            func_C92F(); break;
+        case 0xEB65:
+            func_EB65(); break;
+        case 0xFCEC:
+            func_FCEC(); break;
+        case 0xFCAE:
+            func_FCAE(); break;
+        case 0xFC9A:
+            func_FC9A(); break;
+        case 0xFC90:
+            func_FC90(); break;
+        case 0xDCFD:
+            func_DCFD(); break;
+        case 0xDFE0:
+            func_DFE0(); break;
+        case 0xDCE0:
+            func_DCE0(); break;
+        case 0xDDDD:
+            func_DDDD(); break;
+        case 0xFCDF:
+            func_FCDF(); break;
+        case 0xFC6F:
+            func_FC6F(); break;
+        case 0xFC6D:
+            func_FC6D(); break;
+        case 0xF4FC:
+            func_F4FC(); break;
+        case 0xFCF5:
+            func_FCF5(); break;
+        case 0xF5FD:
+            func_F5FD(); break;
+        case 0xDA7C:
+            func_DA7C(); break;
+        case 0xD8DC:
+            func_D8DC(); break;
         case 0xD8D8:
             func_D8D8(); break;
         case 0xCDD8:
             func_CDD8(); break;
-        case 0xD17C:
-            func_D17C(); break;
+        case 0xCDCD:
+            func_CDCD(); break;
+        case 0xCFD0:
+            func_CFD0(); break;
         case 0xD4D5:
             func_D4D5(); break;
+        case 0xE3D5:
+            func_E3D5(); break;
+        case 0xE58B:
+            func_E58B(); break;
+        case 0xE5E5:
+            func_E5E5(); break;
+        case 0xE5E6:
+            func_E5E6(); break;
+        case 0xE6E5:
+            func_E6E5(); break;
+        case 0xE6E6:
+            func_E6E6(); break;
+        case 0xEBE6:
+            func_EBE6(); break;
+        case 0xEBEB:
+            func_EBEB(); break;
         case 0xEDEC:
             func_EDEC(); break;
+        case 0xEDEE:
+            func_EDEE(); break;
         case 0xEEED:
             func_EEED(); break;
+        case 0xEEEF:
+            func_EEEF(); break;
         case 0xD0FC:
             func_D0FC(); break;
         case 0xD0D0:
             func_D0D0(); break;
         case 0xD7D0:
             func_D7D0(); break;
-        case 0xBEBF:
-            func_BEBF_b0(); break;
+        case 0xC2C0:
+            func_C2C0(); break;
+        case 0xC2C1:
+            func_C2C1(); break;
+        case 0xFCC3:
+            func_FCC3(); break;
+        case 0xC6C4:
+            func_C6C4(); break;
         case 0xC8C5:
             func_C8C5(); break;
+        case 0xC8C6:
+            func_C8C6(); break;
         case 0xC7C8:
             func_C7C8(); break;
-        case 0xBFC7:
-            func_BFC7_b0(); break;
         case 0xCABE:
             func_CABE(); break;
         case 0xCCC5:
             func_CCC5(); break;
+        case 0xCBCC:
+            func_CBCC(); break;
+        case 0xFCCB:
+            func_FCCB(); break;
         case 0xE8FC:
             func_E8FC(); break;
+        case 0xE7E8:
+            func_E7E8(); break;
+        case 0xF3F3:
+            func_F3F3(); break;
         case 0xEA3C:
             func_EA3C(); break;
+        case 0xFF25:
+            func_FF25(); break;
         case 0xD29C:
             func_D29C(); break;
         case 0xD8D2:
             func_D8D2(); break;
         case 0xC5BD:
             func_C5BD(); break;
-        case 0xBC06:
-            func_BC06_b0(); break;
-        case 0x851E:
-            func_851E_b0(); break;
-        case 0x84EF:
-            func_84EF_b0(); break;
-        case 0xA4EF:
-            func_A4EF_b0(); break;
+        case 0xC915:
+            func_C915(); break;
+        case 0xC0EF:
+            func_C0EF(); break;
+        case 0xE85B:
+            func_E85B(); break;
         case 0xEDA5:
             func_EDA5(); break;
-        case 0xE0E9:
-            func_E0E9(); break;
+        case 0xE947:
+            func_E947(); break;
         case 0xC011:
             func_C011(); break;
         case 0xCA4C:
             func_CA4C(); break;
+        case 0xCA4D:
+            func_CA4D(); break;
+        case 0xE9CB:
+            func_E9CB(); break;
+        case 0xEA38:
+            func_EA38(); break;
         case 0xC9EF:
             func_C9EF(); break;
+        case 0xC9ED:
+            func_C9ED(); break;
+        case 0xE673:
+            func_E673(); break;
         case 0xF0ED:
             func_F0ED(); break;
-        case 0x9888:
-            func_9888_b0(); break;
-        case 0xB913:
-            func_B913_b0(); break;
-        case 0xB5EB:
-            func_B5EB_b0(); break;
-        case 0xBCAD:
-            func_BCAD_b0(); break;
+        case 0xF049:
+            func_F049(); break;
+        case 0xD03D:
+            func_D03D(); break;
+        case 0xE647:
+            func_E647(); break;
+        case 0xEA2A:
+            func_EA2A(); break;
+        case 0xD0E9:
+            func_D0E9(); break;
+        case 0xEBAB:
+            func_EBAB(); break;
+        case 0xE008:
+            func_E008(); break;
+        case 0xE740:
+            func_E740(); break;
+        case 0xE57E:
+            func_E57E(); break;
+        case 0xEC4B:
+            func_EC4B(); break;
         case 0xECBC:
             func_ECBC(); break;
+        case 0xECBD:
+            func_ECBD(); break;
+        case 0xCDBE:
+            func_CDBE(); break;
         case 0xEBCD:
             func_EBCD(); break;
+        case 0xEBCE:
+            func_EBCE(); break;
+        case 0xEBCF:
+            func_EBCF(); break;
         case 0xE0EB:
             func_E0EB(); break;
-        case 0x86A9:
-            func_86A9_b0(); break;
+        case 0xE8BD:
+            func_E8BD(); break;
         case 0xC4C9:
             func_C4C9(); break;
-        case 0x9983:
-            func_9983_b0(); break;
-        case 0xBC84:
-            func_BC84_b0(); break;
-        case 0xC806:
-            func_C806(); break;
-        case 0xB910:
-            func_B910_b0(); break;
-        case 0xBAAD:
-            func_BAAD_b0(); break;
-        case 0xBC66:
-            func_BC66_b0(); break;
+        case 0xD0C4:
+            func_D0C4(); break;
+        case 0xC887:
+            func_C887(); break;
+        case 0xCA08:
+            func_CA08(); break;
+        case 0xF1BE:
+            func_F1BE(); break;
+        case 0xEC47:
+            func_EC47(); break;
+        case 0xF625:
+            func_F625(); break;
+        case 0xED06:
+            func_ED06(); break;
         case 0xC8ED:
             func_C8ED(); break;
-        case 0xB0AD:
-            func_B0AD_b0(); break;
-        case 0xBBAD:
-            func_BBAD_b0(); break;
-        case 0x9974:
-            func_9974_b0(); break;
+        case 0xC2AA:
+            func_C2AA(); break;
+        case 0xE5BF:
+            func_E5BF(); break;
+        case 0xEEBD:
+            func_EEBD(); break;
+        case 0xFC5F:
+            func_FC5F(); break;
+        case 0xFC10:
+            func_FC10(); break;
+        case 0xFC3A:
+            func_FC3A(); break;
+        case 0xFC3C:
+            func_FC3C(); break;
+        case 0xFC3D:
+            func_FC3D(); break;
+        case 0xFC46:
+            func_FC46(); break;
+        case 0xFC92:
+            func_FC92(); break;
         case 0xFC4F:
             func_FC4F(); break;
-        case 0xB5CD:
-            func_B5CD_b0(); break;
+        case 0xEF35:
+            func_EF35(); break;
+        case 0xE4AC:
+            func_E4AC(); break;
+        case 0xEEB5:
+            func_EEB5(); break;
+        case 0xE808:
+            func_E808(); break;
+        case 0xE7BE:
+            func_E7BE(); break;
         case 0xEEE7:
             func_EEE7(); break;
-        case 0xB90E:
-            func_B90E_b0(); break;
+        case 0xEEE8:
+            func_EEE8(); break;
+        case 0xEFED:
+            func_EFED(); break;
+        case 0xEF46:
+            func_EF46(); break;
+        case 0xF0B1:
+            func_F0B1(); break;
+        case 0xD58E:
+            func_D58E(); break;
+        case 0xF0EA:
+            func_F0EA(); break;
+        case 0xCD08:
+            func_CD08(); break;
         case 0xCAA8:
             func_CAA8(); break;
-        case 0xBD05:
-            func_BD05_b0(); break;
+        case 0xEF11:
+            func_EF11(); break;
         case 0xEF9E:
             func_EF9E(); break;
-        case 0xCA02:
-            func_CA02(); break;
-        case 0x8533:
-            func_8533_b0(); break;
+        case 0xEF9F:
+            func_EF9F(); break;
+        case 0xF811:
+            func_F811(); break;
+        case 0xD5AE:
+            func_D5AE(); break;
+        case 0xEE17:
+            func_EE17(); break;
+        case 0xEE18:
+            func_EE18(); break;
         case 0xC952:
             func_C952(); break;
+        case 0xF063:
+            func_F063(); break;
         case 0xF09F:
             func_F09F(); break;
-        case 0xC501:
-            func_C501(); break;
-        case 0x8C00:
-            func_8C00_b0(); break;
-        case 0xAC60:
-            func_AC60_b0(); break;
-        case 0xB8C9:
-            func_B8C9_b0(); break;
+        case 0xDEF1:
+            func_DEF1(); break;
+        case 0xD04D:
+            func_D04D(); break;
+        case 0xF070:
+            func_F070(); break;
+        case 0xC80E:
+            func_C80E(); break;
+        case 0xF09C:
+            func_F09C(); break;
+        case 0xF09D:
+            func_F09D(); break;
+        case 0xF051:
+            func_F051(); break;
         case 0xF0B8:
             func_F0B8(); break;
-        case 0xC0C9:
-            func_C0C9(); break;
-        case 0xC809:
-            func_C809(); break;
-        case 0x86C8:
-            func_86C8_b0(); break;
-        case 0xBE6D:
-            func_BE6D_b0(); break;
-        case 0xBE10:
-            func_BE10_b0(); break;
-        case 0x8538:
-            func_8538_b0(); break;
-        case 0x8803:
-            func_8803_b0(); break;
+        case 0xF143:
+            func_F143(); break;
+        case 0xF172:
+            func_F172(); break;
+        case 0xF166:
+            func_F166(); break;
+        case 0xE8F1:
+            func_E8F1(); break;
+        case 0xF1A6:
+            func_F1A6(); break;
+        case 0xF1BB:
+            func_F1BB(); break;
+        case 0xF1D8:
+            func_F1D8(); break;
+        case 0xD09A:
+            func_D09A(); break;
+        case 0xC080:
+            func_C080(); break;
+        case 0xE0C1:
+            func_E0C1(); break;
+        case 0xF26E:
+            func_F26E(); break;
+        case 0xE3BD:
+            func_E3BD(); break;
+        case 0xE3BE:
+            func_E3BE(); break;
+        case 0xFF04:
+            func_FF04(); break;
+        case 0xFF05:
+            func_FF05(); break;
+        case 0xF238:
+            func_F238(); break;
         case 0xCEF5:
             func_CEF5(); break;
-        case 0xB5F5:
-            func_B5F5_b0(); break;
-        case 0xBEB5:
-            func_BEB5_b0(); break;
-        case 0xA54A:
-            func_A54A_b0(); break;
+        case 0xCEF6:
+            func_CEF6(); break;
+        case 0xF502:
+            func_F502(); break;
+        case 0xF235:
+            func_F235(); break;
+        case 0xF22B:
+            func_F22B(); break;
+        case 0xF22C:
+            func_F22C(); break;
         case 0xC6AD:
             func_C6AD(); break;
+        case 0xFAA6:
+            func_FAA6(); break;
         case 0xF0FA:
             func_F0FA(); break;
-        case 0xB28D:
-            func_B28D_b0(); break;
         case 0xC68D:
             func_C68D(); break;
+        case 0xC68E:
+            func_C68E(); break;
         case 0xF185:
             func_F185(); break;
-        case 0xBB8D:
-            func_BB8D_b0(); break;
-        case 0xD044:
-            func_D044(); break;
-        case 0xCEF3:
-            func_CEF3(); break;
-        case 0x85FE:
-            func_85FE_b0(); break;
-        case 0xC0EE:
-            func_C0EE(); break;
-        case 0x8120:
-            func_8120_b0(); break;
-        case 0x8E60:
-            func_8E60_b0(); break;
-        case 0x8C40:
-            func_8C40_b0(); break;
-        case 0x9B9F:
-            func_9B9F_b0(); break;
-        case 0x9596:
-            switch (g_current_bank) {
-                case 0: func_9596_b0(); break;
-                case 1: func_9596_b1(); break;
-                default: nes_log_dispatch_miss(addr); return 0;
-            }
-            break;
-        case 0x99A2:
-            func_99A2_b0(); break;
-        case 0x93A0:
-            func_93A0_b0(); break;
-        case 0xBEB0:
-            func_BEB0_b0(); break;
-        case 0xB6B0:
-            func_B6B0_b0(); break;
         case 0xF186:
             func_F186(); break;
-        case 0x8E0F:
-            func_8E0F_b0(); break;
-        case 0x8E0D:
-            func_8E0D_b0(); break;
-        case 0xF0FE:
-            func_F0FE(); break;
-        case 0xA53C:
-            func_A53C_b0(); break;
-        case 0x8ED0:
-            func_8ED0_b0(); break;
-        case 0xCAD6:
-            func_CAD6(); break;
-        case 0xBE8D:
-            func_BE8D_b0(); break;
-        case 0xEAB9:
-            func_EAB9(); break;
-        case 0xF0F3:
-            func_F0F3(); break;
-        case 0xBCD0:
-            func_BCD0_b0(); break;
+        case 0xF385:
+            func_F385(); break;
+        case 0xF386:
+            func_F386(); break;
+        case 0xD044:
+            func_D044(); break;
+        case 0xF389:
+            func_F389(); break;
+        case 0xCEF3:
+            func_CEF3(); break;
+        case 0xF668:
+            func_F668(); break;
+        case 0xFA86:
+            func_FA86(); break;
         case 0xF4A6:
             func_F4A6(); break;
+        case 0xC0EE:
+            func_C0EE(); break;
+        case 0xCE04:
+            func_CE04(); break;
+        case 0xF382:
+            func_F382(); break;
+        case 0xF100:
+            func_F100(); break;
+        case 0xE0D1:
+            func_E0D1(); break;
+        case 0xF38C:
+            func_F38C(); break;
+        case 0xD0F3:
+            func_D0F3(); break;
+        case 0xFF46:
+            func_FF46(); break;
+        case 0xD4B0:
+            func_D4B0(); break;
+        case 0xC2B0:
+            func_C2B0(); break;
+        case 0xC041:
+            func_C041(); break;
+        case 0xCBA1:
+            func_CBA1(); break;
+        case 0xCE41:
+            func_CE41(); break;
+        case 0xD9BA:
+            func_D9BA(); break;
+        case 0xF4DA:
+            func_F4DA(); break;
+        case 0xF287:
+            func_F287(); break;
+        case 0xF2A6:
+            func_F2A6(); break;
+        case 0xFEA4:
+            func_FEA4(); break;
+        case 0xF0FE:
+            func_F0FE(); break;
+        case 0xF0F3:
+            func_F0F3(); break;
+        case 0xF52D:
+            func_F52D(); break;
+        case 0xF569:
+            func_F569(); break;
+        case 0xC4A0:
+            func_C4A0(); break;
+        case 0xD6B1:
+            func_D6B1(); break;
+        case 0xCAD6:
+            func_CAD6(); break;
+        case 0xD3BA:
+            func_D3BA(); break;
+        case 0xCCA9:
+            func_CCA9(); break;
+        case 0xF56E:
+            func_F56E(); break;
+        case 0xF62C:
+            func_F62C(); break;
+        case 0xEAB9:
+            func_EAB9(); break;
+        case 0xFFEB:
+            func_FFEB(); break;
+        case 0xCAB1:
+            func_CAB1(); break;
+        case 0xF0F4:
+            func_F0F4(); break;
+        case 0xC4B1:
+            func_C4B1(); break;
+        case 0xC9B9:
+            func_C9B9(); break;
+        case 0xF73B:
+            func_F73B(); break;
+        case 0xFCA6:
+            func_FCA6(); break;
+        case 0xD0F5:
+            func_D0F5(); break;
+        case 0xF4A8:
+            func_F4A8(); break;
+        case 0xF572:
+            func_F572(); break;
+        case 0xC58F:
+            func_C58F(); break;
         case 0xC48C:
             func_C48C(); break;
-        case 0xC48E:
-            func_C48E(); break;
-        case 0xFC90:
-            func_FC90(); break;
+        case 0xC9F5:
+            func_C9F5(); break;
+        case 0xC48F:
+            func_C48F(); break;
+        case 0xC78D:
+            func_C78D(); break;
+        case 0xEE0E:
+            func_EE0E(); break;
+        case 0xC7AD:
+            func_C7AD(); break;
+        case 0xF785:
+            func_F785(); break;
         case 0xF085:
             func_F085(); break;
         case 0xF585:
             func_F585(); break;
-        case 0xB98D:
-            func_B98D_b0(); break;
-        case 0xD03D:
-            func_D03D(); break;
-        case 0xD44C:
-            func_D44C(); break;
-        case 0xCB20:
-            func_CB20(); break;
-        case 0xF2A6:
-            func_F2A6(); break;
-        case 0xF420:
-            func_F420(); break;
+        case 0xF686:
+            func_F686(); break;
+        case 0xF986:
+            func_F986(); break;
+        case 0xF886:
+            func_F886(); break;
+        case 0xF913:
+            func_F913(); break;
         case 0xE6F8:
             func_E6F8(); break;
+        case 0xF5B1:
+            func_F5B1(); break;
+        case 0xF0F6:
+            func_F0F6(); break;
+        case 0xD060:
+            func_D060(); break;
+        case 0xD44C:
+            func_D44C(); break;
+        case 0xF6D5:
+            func_F6D5(); break;
+        case 0xF6A5:
+            func_F6A5(); break;
+        case 0xCB20:
+            func_CB20(); break;
+        case 0xCB21:
+            func_CB21(); break;
+        case 0xF8D9:
+            func_F8D9(); break;
+        case 0xF420:
+            func_F420(); break;
+        case 0xF8F5:
+            func_F8F5(); break;
+        case 0xE6F9:
+            func_E6F9(); break;
         case 0xF8E6:
             func_F8E6(); break;
         case 0xF1A4:
             func_F1A4(); break;
-        case 0xB9CE:
-            func_B9CE_b0(); break;
-        case 0xE6F9:
-            func_E6F9(); break;
-        case 0x8E07:
-            func_8E07_b0(); break;
-        case 0xB98E:
-            func_B98E_b0(); break;
+        case 0xF9E7:
+            func_F9E7(); break;
+        case 0xF3AE:
+            func_F3AE(); break;
+        case 0xD06E:
+            func_D06E(); break;
+        case 0xCE52:
+            func_CE52(); break;
+        case 0xF03F:
+            func_F03F(); break;
+        case 0xF066:
+            func_F066(); break;
+        case 0xC46E:
+            func_C46E(); break;
+        case 0xFF67:
+            func_FF67(); break;
+        case 0xF07E:
+            func_F07E(); break;
         case 0xFF96:
             func_FF96(); break;
-        case 0xB820:
-            func_B820_b0(); break;
-        case 0x842A:
-            func_842A_b0(); break;
-        case 0x981F:
-            func_981F_b0(); break;
-        case 0x9619:
-            func_9619_b0(); break;
+        case 0xFF9B:
+            func_FF9B(); break;
+        case 0xF9B8:
+            func_F9B8(); break;
+        case 0xF9B9:
+            func_F9B9(); break;
+        case 0xFD53:
+            func_FD53(); break;
+        case 0xFE52:
+            func_FE52(); break;
+        case 0xFA02:
+            func_FA02(); break;
+        case 0xFA75:
+            func_FA75(); break;
+        case 0xC218:
+            func_C218(); break;
+        case 0xFAC3:
+            func_FAC3(); break;
+        case 0xFADC:
+            func_FADC(); break;
+        case 0xFB4C:
+            func_FB4C(); break;
+        case 0xFB75:
+            func_FB75(); break;
+        case 0xD516:
+            func_D516(); break;
+        case 0xE3D6:
+            func_E3D6(); break;
         case 0xEBE3:
             func_EBE3(); break;
-        case 0x852A:
-            func_852A_b0(); break;
-        case 0x8422:
-            func_8422_b0(); break;
-        case 0x8204:
-            func_8204_b0(); break;
-        case 0x852C:
-            func_852C_b0(); break;
-        case 0xB637:
-            func_B637_b0(); break;
-        case 0x841A:
-            func_841A_b0(); break;
-        case 0x8524:
-            func_8524_b0(); break;
-        case 0xB031:
-            func_B031_b0(); break;
-        case 0xF1B0:
-            func_F1B0(); break;
+        case 0xEBE4:
+            func_EBE4(); break;
+        case 0xF7E3:
+            func_F7E3(); break;
+        case 0xF7F8:
+            func_F7F8(); break;
         case 0xEDF1:
             func_EDF1(); break;
-        case 0x989C:
-            func_989C_b0(); break;
-        case 0x8030:
-            func_8030_b0(); break;
+        case 0xEBED:
+            func_EBED(); break;
+        case 0xD5CE:
+            func_D5CE(); break;
         case 0xE3DD:
             func_E3DD(); break;
+        case 0xF5EE:
+            func_F5EE(); break;
+        case 0xE5DC:
+            func_E5DC(); break;
+        case 0xEDE5:
+            func_EDE5(); break;
         case 0xF3ED:
             func_F3ED(); break;
+        case 0xD1B4:
+            func_D1B4(); break;
         case 0xD9D1:
             func_D9D1(); break;
         case 0xDFD9:
             func_DFD9(); break;
         case 0xE9DF:
             func_E9DF(); break;
+        case 0xF1E9:
+            func_F1E9(); break;
+        case 0xF1EA:
+            func_F1EA(); break;
+        case 0xF7F2:
+            func_F7F2(); break;
         case 0xFFBF:
             func_FFBF(); break;
-        case 0x8334:
-            func_8334_b0(); break;
-        case 0x8240:
-            func_8240_b0(); break;
-        case 0x862A:
-            func_862A_b0(); break;
         case 0xE0A3:
             func_E0A3(); break;
-        case 0xA6E0:
-            func_A6E0_b0(); break;
         case 0xC423:
             func_C423(); break;
-        case 0x85AF:
-            func_85AF_b0(); break;
-        case 0x851C:
-            func_851C_b0(); break;
-        case 0x8312:
-            func_8312_b0(); break;
+        case 0xD2A0:
+            func_D2A0(); break;
+        case 0xE1E3:
+            func_E1E3(); break;
         case 0xE0DE:
             func_E0DE(); break;
         case 0xEAF6:
             func_EAF6(); break;
+        case 0xFF15:
+            func_FF15(); break;
+        case 0xDF02:
+            func_DF02(); break;
+        case 0xC401:
+            func_C401(); break;
         case 0xF902:
             func_F902(); break;
-        case 0x909B:
-            func_909B_b0(); break;
-        case 0x9098:
-            func_9098_b0(); break;
-        case 0xAD7D:
-            func_AD7D_b0(); break;
-        case 0xEFE5:
-            func_EFE5(); break;
-        case 0xF9B8:
-            func_F9B8(); break;
-        case 0xFCB0:
-            func_FCB0(); break;
-        case 0xC8F9:
-            func_C8F9(); break;
-        case 0xB912:
-            func_B912_b0(); break;
-        case 0x95CD:
-            func_95CD_b0(); break;
-        case 0xAD48:
-            func_AD48_b0(); break;
-        case 0xFE4C:
-            func_FE4C(); break;
-        case 0xB073:
-            func_B073_b0(); break;
-        case 0xAC0C:
-            func_AC0C_b0(); break;
-        case 0xADB6:
-            func_ADB6_b0(); break;
-        case 0xB308:
-            func_B308_b0(); break;
-        case 0xC705:
-            func_C705(); break;
-        case 0xF400:
-            func_F400(); break;
-        case 0xA5FF:
-            func_A5FF_b0(); break;
-        case 0xC034:
-            func_C034(); break;
-        case 0xC07B:
-            func_C07B(); break;
-        case 0xC032:
-            func_C032(); break;
-        case 0xD821:
-            func_D821(); break;
-        case 0x9D4B:
-            func_9D4B_b0(); break;
+        case 0xCF03:
+            func_CF03(); break;
+        case 0xFC01:
+            func_FC01(); break;
+        case 0xFC02:
+            func_FC02(); break;
+        case 0xF081:
+            func_F081(); break;
+        case 0xC531:
+            func_C531(); break;
         case 0x8F8D:
             func_8F8D_b0(); break;
-        case 0xDF7C:
-            func_DF7C(); break;
-        case 0xBCDD:
-            func_BCDD_b0(); break;
-        case 0xC84C:
-            func_C84C(); break;
-        case 0xC625:
-            func_C625(); break;
-        case 0xB98A:
-            func_B98A_b0(); break;
-        case 0xFF30:
-            func_FF30(); break;
+        case 0xC8F9:
+            func_C8F9(); break;
+        case 0xEFE5:
+            func_EFE5(); break;
+        case 0xFCB0:
+            func_FCB0(); break;
+        case 0xF849:
+            func_F849(); break;
+        case 0xC034:
+            func_C034(); break;
+        case 0xC032:
+            func_C032(); break;
+        case 0xEFD5:
+            func_EFD5(); break;
+        case 0xF0B2:
+            func_F0B2(); break;
+        case 0xC7EB:
+            func_C7EB(); break;
+        case 0xC2D2:
+            func_C2D2(); break;
+        case 0xD19A:
+            func_D19A(); break;
+        case 0xF970:
+            func_F970(); break;
+        case 0xF976:
+            func_F976(); break;
+        case 0xFFAA:
+            func_FFAA(); break;
+        case 0xFFCA:
+            func_FFCA(); break;
+        case 0xF991:
+            func_F991(); break;
+        case 0xFDAA:
+            func_FDAA(); break;
+        case 0xFBAA:
+            func_FBAA(); break;
+        case 0xFAD1:
+            func_FAD1(); break;
+        case 0xFFA2:
+            func_FFA2(); break;
+        case 0xFF01:
+            func_FF01(); break;
+        case 0xF9A9:
+            func_F9A9(); break;
+        case 0xFAA1:
+            func_FAA1(); break;
+        case 0xFDA0:
+            func_FDA0(); break;
+        case 0xFD38:
+            func_FD38(); break;
+        case 0xFEA9:
+            func_FEA9(); break;
+        case 0xFAAD:
+            func_FAAD(); break;
+        case 0xFF4C:
+            func_FF4C(); break;
+        case 0xFF4D:
+            func_FF4D(); break;
+        case 0xFE4D:
+            func_FE4D(); break;
+        case 0xFF86:
+            func_FF86(); break;
+        case 0xFE29:
+            func_FE29(); break;
+        case 0xFCA9:
+            func_FCA9(); break;
+        case 0xFBF7:
+            func_FBF7(); break;
+        case 0xFDFC:
+            func_FDFC(); break;
+        case 0xFE08:
+            func_FE08(); break;
+        case 0xFE02:
+            func_FE02(); break;
+        case 0xFF07:
+            func_FF07(); break;
+        case 0xFC4C:
+            func_FC4C(); break;
+        case 0xFD7D:
+            func_FD7D(); break;
+        case 0xFF7E:
+            func_FF7E(); break;
+        case 0xFC29:
+            func_FC29(); break;
+        case 0xFBFA:
+            func_FBFA(); break;
+        case 0xFBF9:
+            func_FBF9(); break;
+        case 0xFCFD:
+            func_FCFD(); break;
+        case 0xFCB2:
+            func_FCB2(); break;
+        case 0xFC99:
+            func_FC99(); break;
+        case 0xFC8F:
+            func_FC8F(); break;
+        case 0xFC95:
+            func_FC95(); break;
+        case 0xFC96:
+            func_FC96(); break;
+        case 0xFC74:
+            func_FC74(); break;
+        case 0xFCF6:
+            func_FCF6(); break;
+        case 0xFCBC:
+            func_FCBC(); break;
+        case 0xFCBD:
+            func_FCBD(); break;
+        case 0xFCC2:
+            func_FCC2(); break;
+        case 0xFCCC:
+            func_FCCC(); break;
+        case 0xFF24:
+            func_FF24(); break;
+        case 0xFF02:
+            func_FF02(); break;
+        case 0xFC0F:
+            func_FC0F(); break;
+        case 0xFC40:
+            func_FC40(); break;
+        case 0xFC41:
+            func_FC41(); break;
+        case 0xFC91:
+            func_FC91(); break;
+        case 0xFC93:
+            func_FC93(); break;
+        case 0xFC94:
+            func_FC94(); break;
+        case 0xFC50:
+            func_FC50(); break;
+        case 0xFA85:
+            func_FA85(); break;
+        case 0xFFEA:
+            func_FFEA(); break;
+        case 0xFDA4:
+            func_FDA4(); break;
+        case 0xFD46:
+            func_FD46(); break;
+        case 0xFBA6:
+            func_FBA6(); break;
+        case 0xF9A6:
+            func_F9A6(); break;
+        case 0xF9A4:
+            func_F9A4(); break;
+        case 0xF9E6:
+            func_F9E6(); break;
+        case 0xFF66:
+            func_FF66(); break;
+        case 0xFF97:
+            func_FF97(); break;
+        case 0xFF9A:
+            func_FF9A(); break;
+        case 0xFC72:
+            func_FC72(); break;
+        case 0xFA1C:
+            func_FA1C(); break;
+        case 0xFA1D:
+            func_FA1D(); break;
+        case 0xFE51:
+            func_FE51(); break;
+        case 0xFA01:
+            func_FA01(); break;
+        case 0xFA49:
+            func_FA49(); break;
+        case 0xFA9D:
+            func_FA9D(); break;
+        case 0xFB72:
+            func_FB72(); break;
+        case 0xFFC0:
+            func_FFC0(); break;
+        case 0xFF14:
+            func_FF14(); break;
+        case 0xFF35:
+            func_FF35(); break;
+        case 0xFE54:
+            func_FE54(); break;
         case 0xFA80:
             func_FA80(); break;
         case 0xFA84:
             func_FA84(); break;
+        case 0xFD0C:
+            func_FD0C(); break;
+        case 0xFFBA:
+            func_FFBA(); break;
+        case 0xFF18:
+            func_FF18(); break;
+        case 0xFB82:
+            func_FB82(); break;
+        case 0xFFBC:
+            func_FFBC(); break;
+        case 0xFFB4:
+            func_FFB4(); break;
+        case 0xFC00:
+            func_FC00(); break;
+        case 0xFC15:
+            func_FC15(); break;
+        case 0xFC21:
+            func_FC21(); break;
+        case 0xFC26:
+            func_FC26(); break;
+        case 0xFFAC:
+            func_FFAC(); break;
+        case 0xFC04:
+            func_FC04(); break;
+        case 0xFC09:
+            func_FC09(); break;
+        case 0xFBFC:
+            func_FBFC(); break;
+        case 0xF99E:
+            func_F99E(); break;
+        case 0xF9DF:
+            func_F9DF(); break;
+        case 0xFB2B:
+            func_FB2B(); break;
+        case 0xAD48:
+            func_AD48_b0(); break;
+        case 0xC5EB:
+            func_C5EB(); break;
+        case 0xC625:
+            func_C625(); break;
+        case 0xE047:
+            func_E047(); break;
         case 0xFA69:
             func_FA69(); break;
-        case 0xC7EB:
-            func_C7EB(); break;
+        case 0xFAB4:
+            func_FAB4(); break;
+        case 0xE93A:
+            func_E93A(); break;
+        case 0xDFE9:
+            func_DFE9(); break;
+        case 0xFF30:
+            func_FF30(); break;
+        case 0xFB7B:
+            func_FB7B(); break;
+        case 0xC07B:
+            func_C07B(); break;
+        case 0xDC12:
+            func_DC12(); break;
+        case 0xDF7C:
+            func_DF7C(); break;
+        case 0xF017:
+            func_F017(); break;
+        case 0x8040:
+            func_8040_b0(); break;
+        case 0xDEF5:
+            func_DEF5(); break;
+        case 0xFD01:
+            func_FD01(); break;
+        case 0xEE50:
+            func_EE50(); break;
+        case 0xDEA4:
+            func_DEA4(); break;
+        case 0x87B5:
+            func_87B5_b0(); break;
+        case 0xFB04:
+            func_FB04(); break;
         case 0xD7BD:
             func_D7BD(); break;
         case 0xFFAD:
@@ -4698,10 +5256,6 @@ int call_by_address(uint16_t addr) {
             func_E620(); break;
         case 0xCE14:
             func_CE14(); break;
-        case 0xC620:
-            func_C620(); break;
-        case 0xCA06:
-            func_CA06(); break;
         case 0xE0AE:
             func_E0AE(); break;
         case 0xF39D:
@@ -4714,8 +5268,6 @@ int call_by_address(uint16_t addr) {
             func_F683(); break;
         case 0xE6AF:
             func_E6AF(); break;
-        case 0xC811:
-            func_C811(); break;
         case 0xC088:
             func_C088(); break;
         case 0xC026:
@@ -4724,22 +5276,16 @@ int call_by_address(uint16_t addr) {
             func_E905(); break;
         case 0xE688:
             func_E688(); break;
-        case 0xCA04:
-            func_CA04(); break;
         case 0xC023:
             func_C023(); break;
         case 0xEA01:
             func_EA01(); break;
         case 0xC9AA:
             func_C9AA(); break;
-        case 0xF051:
-            func_F051(); break;
         case 0xC4C2:
             func_C4C2(); break;
         case 0xE88E:
             func_E88E(); break;
-        case 0xCF29:
-            func_CF29(); break;
         case 0xD7F9:
             func_D7F9(); break;
         case 0xE8D8:
@@ -4780,8 +5326,6 @@ int call_by_address(uint16_t addr) {
             func_FFB5(); break;
         case 0xEB5F:
             func_EB5F(); break;
-        case 0xDBBD:
-            func_DBBD(); break;
         case 0xE53E:
             func_E53E(); break;
         case 0xE5FE:
@@ -4802,8 +5346,6 @@ int call_by_address(uint16_t addr) {
             func_DB06(); break;
         case 0xC2DE:
             func_C2DE(); break;
-        case 0xE947:
-            func_E947(); break;
         case 0xC7D6:
             func_C7D6(); break;
         case 0xDC03:
@@ -4854,8 +5396,6 @@ int call_by_address(uint16_t addr) {
             func_DC7B(); break;
         case 0xDC33:
             func_DC33(); break;
-        case 0xF721:
-            func_F721(); break;
         case 0xC701:
             func_C701(); break;
         case 0xD300:
@@ -4882,6 +5422,8 @@ int call_by_address(uint16_t addr) {
             func_C703(); break;
         case 0xF426:
             func_F426(); break;
+        case 0xF400:
+            func_F400(); break;
         case 0xDEC2:
             func_DEC2(); break;
         case 0xC13D:
@@ -4898,26 +5440,18 @@ int call_by_address(uint16_t addr) {
             func_EC73(); break;
         case 0xC7C0:
             func_C7C0(); break;
-        case 0xE740:
-            func_E740(); break;
         case 0xD27B:
             func_D27B(); break;
-        case 0xCF26:
-            func_CF26(); break;
         case 0xD624:
             func_D624(); break;
         case 0xE307:
             func_E307(); break;
         case 0xD400:
             func_D400(); break;
-        case 0xC920:
-            func_C920(); break;
         case 0xD811:
             func_D811(); break;
         case 0xF834:
             func_F834(); break;
-        case 0xFA11:
-            func_FA11(); break;
         case 0xD326:
             func_D326(); break;
         case 0xD620:
@@ -4944,40 +5478,26 @@ int call_by_address(uint16_t addr) {
             func_D134(); break;
         case 0xED0F:
             func_ED0F(); break;
-        case 0xE48E:
-            func_E48E(); break;
         case 0xC847:
             func_C847(); break;
-        case 0xD060:
-            func_D060(); break;
         case 0xC77D:
             func_C77D(); break;
-        case 0xFBFB:
-            func_FBFB(); break;
         case 0xD098:
             func_D098(); break;
         case 0xD604:
             func_D604(); break;
         case 0xE4B5:
             func_E4B5(); break;
-        case 0xC9E4:
-            func_C9E4(); break;
-        case 0xE607:
-            func_E607(); break;
         case 0xC6B8:
             func_C6B8(); break;
         case 0xD4A5:
             func_D4A5(); break;
         case 0xCA46:
             func_CA46(); break;
-        case 0xE9D7:
-            func_E9D7(); break;
         case 0xDB99:
             func_DB99(); break;
         case 0xEABD:
             func_EABD(); break;
-        case 0xF02A:
-            func_F02A(); break;
         case 0xF61D:
             func_F61D(); break;
         case 0xD064:
@@ -4994,8 +5514,12 @@ int call_by_address(uint16_t addr) {
             func_F0BD(); break;
         case 0xCD9B:
             func_CD9B(); break;
-        case 0xEFD5:
-            func_EFD5(); break;
+        case 0x8E04:
+            func_8E04_b0(); break;
+        case 0x852C:
+            func_852C_b0(); break;
+        case 0x8422:
+            func_8422_b0(); break;
         case 0xD969:
             func_D969(); break;
         case 0x8233:
@@ -5018,6 +5542,8 @@ int call_by_address(uint16_t addr) {
             func_85D9_b1(); break;
         case 0x8653:
             func_8653_b1(); break;
+        case 0x8660:
+            func_8660_b1(); break;
         case 0x86DB:
             func_86DB_b1(); break;
         case 0x8762:
@@ -5032,6 +5558,8 @@ int call_by_address(uint16_t addr) {
             func_94AC_b1(); break;
         case 0x9593:
             func_9593_b1(); break;
+        case 0x9596:
+            func_9596_b1(); break;
         case 0x9639:
             func_9639_b1(); break;
         case 0x963D:
@@ -5064,6 +5592,8 @@ int call_by_address(uint16_t addr) {
             func_B2CE_b1(); break;
         case 0xB396:
             func_B396_b1(); break;
+        case 0xB5C8:
+            func_B5C8_b1(); break;
         case 0xB67C:
             func_B67C_b1(); break;
         case 0xB43A:
@@ -5074,16 +5604,42 @@ int call_by_address(uint16_t addr) {
             func_B6DE_b1(); break;
         case 0xB92C:
             func_B92C_b1(); break;
+        case 0xB9DA:
+            func_B9DA_b1(); break;
         case 0xE1AC:
             func_E1AC(); break;
+        case 0xE1AF:
+            func_E1AF(); break;
         case 0xE23E:
             func_E23E(); break;
+        case 0xE244:
+            func_E244(); break;
         case 0xF477:
             func_F477(); break;
         case 0xF4B9:
             func_F4B9(); break;
         case 0xF4C0:
             func_F4C0(); break;
+        case 0xF507:
+            func_F507(); break;
+        case 0xF911:
+            func_F911(); break;
+        case 0xF938:
+            func_F938(); break;
+        case 0xF90D:
+            func_F90D(); break;
+        case 0xF961:
+            func_F961(); break;
+        case 0xF4F4:
+            func_F4F4(); break;
+        case 0xF4D4:
+            func_F4D4(); break;
+        case 0xF62B:
+            func_F62B(); break;
+        case 0xF919:
+            func_F919(); break;
+        case 0xF92B:
+            func_F92B(); break;
         case 0xF96D:
             func_F96D(); break;
         case 0xF914:
@@ -5110,8 +5666,8 @@ int call_by_address(uint16_t addr) {
             func_C40B(); break;
         case 0xC4CE:
             func_C4CE(); break;
-        case 0xC923:
-            func_C923(); break;
+        case 0xC4D0:
+            func_C4D0(); break;
         case 0xDE19:
             func_DE19(); break;
         case 0xDEAE:
@@ -5122,6 +5678,10 @@ int call_by_address(uint16_t addr) {
             func_EDFA(); break;
         case 0xEE5B:
             func_EE5B(); break;
+        case 0xEE61:
+            func_EE61(); break;
+        case 0xEEB6:
+            func_EEB6(); break;
         case 0xEE69:
             func_EE69(); break;
         case 0xEE7D:
@@ -5130,6 +5690,8 @@ int call_by_address(uint16_t addr) {
             func_C724(); break;
         case 0xC8DC:
             func_C8DC(); break;
+        case 0xC8E1:
+            func_C8E1(); break;
         case 0xC9F0:
             func_C9F0(); break;
         case 0xC9FA:
@@ -5160,20 +5722,20 @@ int call_by_address(uint16_t addr) {
             func_D90F(); break;
         case 0xD93C:
             func_D93C(); break;
-        case 0xE57E:
-            func_E57E(); break;
         case 0xE6E8:
             func_E6E8(); break;
         case 0xE7B3:
             func_E7B3(); break;
+        case 0xE7D1:
+            func_E7D1(); break;
+        case 0xE7DE:
+            func_E7DE(); break;
         case 0xE83F:
             func_E83F(); break;
         case 0xF118:
             func_F118(); break;
         case 0xF144:
             func_F144(); break;
-        case 0xF38C:
-            func_F38C(); break;
         case 0xD61A:
             func_D61A(); break;
         case 0xD7A9:
@@ -5184,8 +5746,6 @@ int call_by_address(uint16_t addr) {
             func_D8C4(); break;
         case 0xDD56:
             func_DD56(); break;
-        case 0xE4C8:
-            func_E4C8(); break;
         case 0xF611:
             func_F611(); break;
         case 0xF693:
@@ -5196,8 +5756,12 @@ int call_by_address(uint16_t addr) {
             func_FB5D(); break;
         case 0xFBCB:
             func_FBCB(); break;
+        case 0xB308:
+            func_B308_b0(); break;
         case 0x8286:
             func_8286_b1(); break;
+        case 0x82BD:
+            func_82BD_b1(); break;
         case 0x8288:
             func_8288_b1(); break;
         case 0x828A:
@@ -5222,6 +5786,8 @@ int call_by_address(uint16_t addr) {
             func_B3BF_b1(); break;
         case 0xB3DF:
             func_B3DF_b1(); break;
+        case 0xB40D:
+            func_B40D_b1(); break;
         case 0xB568:
             func_B568_b1(); break;
         case 0xB565:
@@ -5234,6 +5800,8 @@ int call_by_address(uint16_t addr) {
             func_B970_b1(); break;
         case 0xB976:
             func_B976_b1(); break;
+        case 0xBFC6:
+            func_BFC6_b1(); break;
         case 0xB9A9:
             func_B9A9_b1(); break;
         case 0xBB33:
@@ -5254,72 +5822,6 @@ int call_by_address(uint16_t addr) {
             func_BD0C_b1(); break;
         case 0xEF8C:
             func_EF8C(); break;
-        case 0xF970:
-            func_F970(); break;
-        case 0xF976:
-            func_F976(); break;
-        case 0xFBFA:
-            func_FBFA(); break;
-        case 0xFC8F:
-            func_FC8F(); break;
-        case 0xFCBC:
-            func_FCBC(); break;
-        case 0xFF24:
-            func_FF24(); break;
-        case 0xFC0F:
-            func_FC0F(); break;
-        case 0xFC91:
-            func_FC91(); break;
-        case 0xFC93:
-            func_FC93(); break;
-        case 0xFA9D:
-            func_FA9D(); break;
-        case 0xFF14:
-            func_FF14(); break;
-        case 0xFE54:
-            func_FE54(); break;
-        case 0xFF35:
-            func_FF35(); break;
-        case 0xFBF9:
-            func_FBF9(); break;
-        case 0xFFBA:
-            func_FFBA(); break;
-        case 0xFFAA:
-            func_FFAA(); break;
-        case 0xFF18:
-            func_FF18(); break;
-        case 0xFFC0:
-            func_FFC0(); break;
-        case 0xFB82:
-            func_FB82(); break;
-        case 0xFFBC:
-            func_FFBC(); break;
-        case 0xFFB4:
-            func_FFB4(); break;
-        case 0xFC00:
-            func_FC00(); break;
-        case 0xFC15:
-            func_FC15(); break;
-        case 0xFC21:
-            func_FC21(); break;
-        case 0xFC26:
-            func_FC26(); break;
-        case 0xFFAC:
-            func_FFAC(); break;
-        case 0xFC04:
-            func_FC04(); break;
-        case 0xFC09:
-            func_FC09(); break;
-        case 0xFBFC:
-            func_FBFC(); break;
-        case 0xF99E:
-            func_F99E(); break;
-        case 0xF9DF:
-            func_F9DF(); break;
-        case 0xFB2B:
-            func_FB2B(); break;
-        case 0xFB04:
-            func_FB04(); break;
         case 0x824E:
             func_824E_b1(); break;
         case 0xB3CD:
@@ -5332,8 +5834,6 @@ int call_by_address(uint16_t addr) {
             func_B3F9_b1(); break;
         case 0xBC90:
             func_BC90_b1(); break;
-        case 0xFAB4:
-            func_FAB4(); break;
         default:
             nes_log_dispatch_miss(addr);
             return 0;
