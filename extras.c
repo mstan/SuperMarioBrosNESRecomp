@@ -229,6 +229,8 @@ void game_fill_frame_record(void *record) {
     r->game_data[9] = g_ram[0x0776];  /* DemoActionTimer */
 }
 
+void game_post_render(uint32_t *framebuf) { (void)framebuf; }
+
 /* ---- Debug command handler (SMB-specific) ---- */
 
 int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
