@@ -65,6 +65,17 @@ uint32_t game_get_expected_crc32(void) { return 0xD445F698u; }
 const char *game_get_name(void) { return "Super Mario Bros."; }
 
 void game_on_init(void) {
+    /* ---- Widescreen: expand BG render to 480px ---- */
+    /* SMB uses vertical mirroring (two side-by-side nametables = 512px).
+     * The game writes new nametable columns 98-117px ahead of the 256px
+     * right edge. We set g_widescreen_right = 96 to stay within this
+     * proven write-ahead distance, eliminating the stale tile band.
+     * Left extension is 128px (behind content is recently valid).
+     * Total: 480px (128 + 256 + 96). See WIDESCREEN.md for analysis. */
+    g_widescreen_left  = 128;
+    g_widescreen_right = 96;
+    g_render_width     = 256 + g_widescreen_left + g_widescreen_right;
+
     s_debug_enabled = check_debug_ini();
 
     if (s_debug_enabled) {
@@ -92,6 +103,7 @@ void game_on_frame(uint64_t frame_count) {
         if (ovr >= 0)
             g_controller1_buttons = (uint8_t)ovr;
     }
+
 }
 
 void game_post_nmi(uint64_t frame_count) {
