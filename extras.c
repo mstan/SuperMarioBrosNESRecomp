@@ -68,10 +68,12 @@ void game_on_init(void) {
     /* ---- Widescreen: expand BG render to 480px ---- */
     /* SMB uses vertical mirroring (two side-by-side nametables = 512px).
      * The game writes new nametable columns 98-117px ahead of the 256px
-     * right edge. We set g_widescreen_right = 96 to stay within this
-     * proven write-ahead distance, eliminating the stale tile band.
-     * Left extension is 128px (behind content is recently valid).
-     * Total: 480px (128 + 256 + 96). See WIDESCREEN.md for analysis. */
+     * right edge. Right extension capped at 96px to stay within this
+     * proven write-ahead distance. Left extension is 128px.
+     * Total: 480px (128 + 256 + 96). See WIDESCREEN.md for analysis.
+     *
+     * TODO: shadow area parser execution to support arbitrary width.
+     * Requires correct VRAM buffer format parsing. See WIDESCREEN.md. */
     g_widescreen_left  = 128;
     g_widescreen_right = 96;
     g_render_width     = 256 + g_widescreen_left + g_widescreen_right;
