@@ -169,39 +169,10 @@ void game_on_frame(uint64_t frame_count) {
  *   $071C    ScreenLeft_X_Pos
  *   Player uses similar addresses at fixed offsets (slot index implicit).
  */
+/* DISABLED — OAM slot mapping is unreliable, causes flickering/ghosts.
+ * See session handoff for analysis of what went wrong and what to try next. */
 static void compute_widescreen_sprite_x(void) {
-    if (!g_widescreen_left && !g_widescreen_right) return;
-
-    /* Camera world position (16-bit) */
-    int cam_x = (int)g_ram[0x071A] * 256 + (int)g_ram[0x071C];
-
-    /* Enemy slots 0-4 */
-    for (int i = 0; i < 5; i++) {
-        if (g_ram[0x0F + i] == 0) continue; /* slot inactive */
-
-        int world_x = (int)g_ram[0x6E + i] * 256 + (int)g_ram[0x87 + i];
-        int screen_x = world_x - cam_x;
-
-        /* Only intervene for sprites OUTSIDE the normal 0-255 viewport.
-         * Sprites inside the viewport use the game's own OAM X (authentic). */
-        if (screen_x >= -8 && screen_x < 256) continue;
-
-        /* OAM offset for this enemy's sprite data */
-        uint8_t oam_offset = g_ram[0x06E5 + i];
-        int oam_slot = oam_offset / 4;
-
-        /* SMB 8x16 mode: most enemies use 2 OAM slots (two 8x16 tiles). */
-        uint8_t base_oam_x = g_ppu_oam[oam_offset + 3];
-        for (int j = 0; j < 2 && (oam_slot + j) < 64; j++) {
-            int slot = oam_slot + j;
-            uint8_t sy = g_ppu_oam[slot * 4 + 0];
-            if (sy >= 0xEF) continue;
-
-            int8_t dx = (int8_t)(g_ppu_oam[slot * 4 + 3] - base_oam_x);
-            g_oam_wide_x[slot] = (int16_t)(screen_x + dx);
-        }
-    }
-    /* Player is always in the base viewport — no override needed. */
+    (void)0; /* no-op for now */
 }
 
 void game_post_nmi(uint64_t frame_count) {
