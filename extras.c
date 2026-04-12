@@ -169,10 +169,62 @@ void game_on_frame(uint64_t frame_count) {
  *   $071C    ScreenLeft_X_Pos
  *   Player uses similar addresses at fixed offsets (slot index implicit).
  */
-/* DISABLED — OAM slot mapping is unreliable, causes flickering/ghosts.
- * See session handoff for analysis of what went wrong and what to try next. */
+/*
+ * Compute true widescreen screen X for enemy sprites.
+ *
+ * Proven via TCP ring buffer trace (frame-by-frame OAM inspection):
+ *   - Enemy_SprDataOffset ($06E5+i) reliably points to the first OAM
+ *     entry for enemy i, even across sprite priority rotation.
+ *   - SMB Goombas use 3 OAM entries (2 upper + 1 lower in 8x16 mode).
+ *   - OAM X == screen_x & 0xFF (pure 8-bit truncation).
+ *   - For screen_x in [256, 352]: oam_x = screen_x - 256 → add 256 back.
+ *   - For screen_x in [-128, -1]: oam_x = screen_x + 256 → subtract 256.
+ *
+ * Only sets g_oam_wide_x for sprites OUTSIDE the normal 0-255 viewport.
+ * Sprites inside the viewport keep g_oam_wide_x = -1 (authentic OAM X).
+ */
 static void compute_widescreen_sprite_x(void) {
-    (void)0; /* no-op for now */
+    if (!g_widescreen_left && !g_widescreen_right) return;
+
+    int cam_x = (int)g_ram[0x071A] * 256 + (int)g_ram[0x071C];
+
+    for (int i = 0; i < 5; i++) {
+        if (g_ram[0x0F + i] == 0) continue;
+
+        int world_x = (int)g_ram[0x6E + i] * 256 + (int)g_ram[0x87 + i];
+        int screen_x = world_x - cam_x;
+
+        uint8_t oam_off = g_ram[0x06E5 + i];
+
+        /* Only override sprites outside the normal viewport */
+        if (screen_x >= 0 && screen_x < 256) continue;
+        int oam_slot = oam_off / 4;
+
+        /* Tag 3 consecutive OAM entries (proven: Goombas use 3).
+         * For each, read its raw OAM X and apply the 256 correction. */
+        for (int j = 0; j < 3 && (oam_slot + j) < 64; j++) {
+            int slot = oam_slot + j;
+            uint8_t sy = g_ppu_oam[slot * 4 + 0];
+            if (sy >= 0xEF) continue;
+
+            uint8_t raw_x = g_ppu_oam[slot * 4 + 3];
+            if (screen_x >= 256) {
+                g_oam_wide_x[slot] = (int16_t)((int)raw_x + 256);
+                /* The game sets OAM Y=0xF8 (hidden) for off-screen sprites.
+                 * Restore the correct Y from the enemy's world position.
+                 * SMB doesn't scroll vertically, so Enemy_Y_Position is
+                 * already screen-relative. Subtract 1 for OAM Y offset. */
+                uint8_t enemy_y = g_ram[0xCF + i];
+                g_ppu_oam[slot * 4 + 0] = enemy_y - 1;
+            } else {
+                g_oam_wide_x[slot] = (int16_t)((int)raw_x - 256);
+                uint8_t enemy_y = g_ram[0xCF + i];
+                g_ppu_oam[slot * 4 + 0] = enemy_y - 1;
+            }
+        }
+    }
+
+    /* Player: always in base viewport, no override needed. */
 }
 
 void game_post_nmi(uint64_t frame_count) {
