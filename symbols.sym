@@ -1,0 +1,102 @@
+# symbols.sym — Super Mario Bros. symbol names
+# Source: SMBDIS.ASM (doppelganger) + Ghidra MCP verification
+# Format: HEXADDR SymbolName
+
+# ---- RAM addresses (zero page + work RAM) ----
+0F Enemy_Flag
+16 Enemy_ID
+1E Enemy_State
+1D PlayerSize
+58 Enemy_X_Speed
+6D Player_PageLoc
+6E Enemy_PageLoc
+86 Player_X_Position
+87 Enemy_X_Position
+A0 Enemy_Y_Speed
+B6 Enemy_Y_HighPos
+CE Player_Y_Position
+CF Enemy_Y_Position
+
+# ---- Work RAM ($0700+) ----
+0739 EnemyDataOffset
+073A EnemyObjectPageLoc
+073B EnemyObjectPageSel
+073C ObjectOffset
+071A ScreenLeft_PageLoc
+071B ScreenRight_PageLoc
+071C ScreenLeft_X_Pos
+071D ScreenRight_X_Pos
+071F AreaParserTaskNum
+0725 CurrentPageLoc
+0726 CurrentColumnPos
+0744 TimerControl
+0747 StompChainCounter
+0756 Player_State
+0759 GamePauseStatus
+075A WorldNumber
+075C LevelNumber
+075E AreaType
+075F AreaStyle
+0770 OperMode
+0772 OperMode_Task
+0776 DemoActionTimer
+
+# ---- Relative position / offscreen ----
+03AE Enemy_Rel_XPos
+03B9 Enemy_Rel_YPos
+03D1 Enemy_OffscreenBits
+03D8 EnemyOffscrBitsMasked
+
+# ---- Enemy misc ----
+046B FirebarSpinDirection
+049A Enemy_BoundBoxCtrl
+06E5 Enemy_SprDataOffset
+03C5 Enemy_SprAttrib
+
+# ---- Functions (fixed bank, $C000+) ----
+C047 EnemiesAndLoopsCore
+C058 EnemiesAndLoopsCore_entry2
+C04E EnemiesAndLoopsCore_entry3
+C0CC AreaParserCore
+C138 SetEnemyFlag
+C144 CheckForEnemyObjects
+C164 CalcSpawnLookahead
+C1AB SetEnemyPosition
+C1B6 CheckSpawnRange
+C1CB CheckSpawnLookahead
+C1D5 SpawnEnemy
+C216 SkipEnemyData
+C226 AdvanceEnemyDataOffset
+C250 AdvanceThreeBytes
+C998 EraseEnemyObject
+C947 RunGoomba
+C94A RunGoomba_entry2
+C965 RunKoopa
+D295 RunPodoboo
+D67A OffscreenBoundsCheck
+D680 OffscreenCalcLeftBound
+D69A OffscreenCalcRightBound
+D6D2 OffscreenDeactivate
+
+# ---- Functions (fixed bank, misc) ----
+F152 GetEnemyScreenPosition
+F1AF RelativeEnemyPosition
+F1B1 RelativeEnemyPosition_entry2
+F1BA GetScreenPosition
+
+# ---- Functions (switchable bank) ----
+8220 ClearSprites
+8245 GameCoreRoutine
+8567 EnemyObjectHandler
+858B EnemyObjectHandler_case0
+85BF EnemyObjectHandler_case9
+85F1 DrawEnemyObjects
+8E04 InlineDispatch
+
+# ---- Screen/scroll update ----
+B038 GetScreenPosition_Update
+9061 InitializeArea
+
+# ---- Player/collision ----
+BA33 FirebarCollisionCheck
+BA09 SpawnFirebar

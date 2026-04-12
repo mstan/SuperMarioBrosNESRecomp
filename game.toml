@@ -2,9 +2,21 @@
 
 [game]
 output_prefix = "super-mario-bros"
+symbol_file = "symbols.sym"
 
 # SMB inline indexed dispatch: JSR $8E04 pops return address to find a
 # 2-byte LE address table immediately after the JSR. Dispatches via A register.
+# Widescreen: hook screen-edge reads so extras.c can widen spawn/despawn
+# thresholds at specific PCs without affecting global positioning.
+[[ram_read_hook]]
+addr = 0x071A  # ScreenLeft_PageLoc
+[[ram_read_hook]]
+addr = 0x071B  # ScreenRight_PageLoc
+[[ram_read_hook]]
+addr = 0x071C  # ScreenLeft_X_Pos
+[[ram_read_hook]]
+addr = 0x071D  # ScreenRight_X_Pos
+
 [[inline_dispatch]]
 addr = 0x8E04
 

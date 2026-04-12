@@ -64,6 +64,45 @@ uint32_t game_get_expected_crc32(void) { return 0xD445F698u; }
 
 const char *game_get_name(void) { return "Super Mario Bros."; }
 
+/*
+ * Widescreen offscreen-bits hook: intercept writes to Enemy_OffscreenBits
+ * ($03D1) and clear bits for enemies in the widescreen extension region.
+ * This makes the game's own sprite drawing code include these enemies in OAM,
+ * even though they're beyond the original 256px viewport. The g_oam_wide_x
+ * override in the renderer then positions them correctly.
+ */
+static void offscreen_bits_hook(uint16_t addr, uint8_t old_val, uint8_t new_val) {
+    (void)addr; (void)old_val;
+    if (!g_widescreen_left && !g_widescreen_right) {
+        g_ram[0x03D1] = new_val;
+        return;
+    }
+
+    int cam_x = (int)g_ram[0x071A] * 256 + (int)g_ram[0x071C];
+
+    /* For each enemy slot (bits 0-4 in the offscreen byte), check if the
+     * enemy is within the widescreen region. If so, clear its offscreen bits.
+     * The bit layout: each slot uses bits in the upper/lower nibble pattern. */
+    uint8_t cleared = new_val;
+    for (int i = 0; i < 5; i++) {
+        if (g_ram[0x0F + i] == 0) continue; /* slot inactive */
+        int world_x = (int)g_ram[0x6E + i] * 256 + (int)g_ram[0x87 + i];
+        int screen_x = world_x - cam_x;
+
+        /* If enemy is in the widescreen extension (either side), clear its bits */
+        if ((screen_x >= -g_widescreen_left && screen_x < 0) ||
+            (screen_x >= 256 && screen_x < 256 + g_widescreen_right + 16)) {
+            /* SMB offscreen bits: bit (i) set = slot i is off-screen.
+             * The actual bit layout uses both nibbles, but the key bits
+             * for the 5 enemy slots are spread across the byte.
+             * For simplicity, clear ALL bits — the game recomputes each frame. */
+            cleared = 0x00;
+            break;
+        }
+    }
+    g_ram[0x03D1] = cleared;
+}
+
 void game_on_init(void) {
     /* ---- Widescreen: expand BG render to 480px ---- */
     /* SMB uses vertical mirroring (two side-by-side nametables = 512px).
@@ -77,6 +116,11 @@ void game_on_init(void) {
     g_widescreen_left  = 128;
     g_widescreen_right = 96;
     g_render_width     = 256 + g_widescreen_left + g_widescreen_right;
+
+    /* Hook Enemy_OffscreenBits writes to extend visibility into widescreen */
+    g_write_bp_addr = 0x03D1;
+    g_write_bp_callback = offscreen_bits_hook;
+    g_write_bp_block = 1;  /* we write the value ourselves */
 
     s_debug_enabled = check_debug_ini();
 
@@ -108,12 +152,65 @@ void game_on_frame(uint64_t frame_count) {
 
 }
 
+/*
+ * Widescreen sprite positioning — compute true screen X for enemy sprites.
+ *
+ * The game calculates sprite X with 8-bit math, truncating positions beyond
+ * 0-255. We recompute the true screen X from enemy world coordinates and
+ * store it in g_oam_wide_x[] so the renderer can place sprites correctly
+ * in the widescreen extension regions.
+ *
+ * SMB RAM layout used:
+ *   $000F+i  Enemy_Flag (5 enemy slots, i=0..4)
+ *   $006E+i  Enemy_PageLoc
+ *   $0087+i  Enemy_X_Position
+ *   $06E5+i  Enemy_SprDataOffset (OAM byte offset for this enemy's sprites)
+ *   $071A    ScreenLeft_PageLoc
+ *   $071C    ScreenLeft_X_Pos
+ *   Player uses similar addresses at fixed offsets (slot index implicit).
+ */
+static void compute_widescreen_sprite_x(void) {
+    if (!g_widescreen_left && !g_widescreen_right) return;
+
+    /* Camera world position (16-bit) */
+    int cam_x = (int)g_ram[0x071A] * 256 + (int)g_ram[0x071C];
+
+    /* Enemy slots 0-4 */
+    for (int i = 0; i < 5; i++) {
+        if (g_ram[0x0F + i] == 0) continue; /* slot inactive */
+
+        int world_x = (int)g_ram[0x6E + i] * 256 + (int)g_ram[0x87 + i];
+        int screen_x = world_x - cam_x;
+
+        /* Only intervene for sprites OUTSIDE the normal 0-255 viewport.
+         * Sprites inside the viewport use the game's own OAM X (authentic). */
+        if (screen_x >= -8 && screen_x < 256) continue;
+
+        /* OAM offset for this enemy's sprite data */
+        uint8_t oam_offset = g_ram[0x06E5 + i];
+        int oam_slot = oam_offset / 4;
+
+        /* SMB 8x16 mode: most enemies use 2 OAM slots (two 8x16 tiles). */
+        uint8_t base_oam_x = g_ppu_oam[oam_offset + 3];
+        for (int j = 0; j < 2 && (oam_slot + j) < 64; j++) {
+            int slot = oam_slot + j;
+            uint8_t sy = g_ppu_oam[slot * 4 + 0];
+            if (sy >= 0xEF) continue;
+
+            int8_t dx = (int8_t)(g_ppu_oam[slot * 4 + 3] - base_oam_x);
+            g_oam_wide_x[slot] = (int16_t)(screen_x + dx);
+        }
+    }
+    /* Player is always in the base viewport — no override needed. */
+}
+
 void game_post_nmi(uint64_t frame_count) {
     (void)frame_count;
     if (s_debug_enabled) {
         debug_server_record_frame();
         debug_server_check_watchpoints();
     }
+    compute_widescreen_sprite_x();
 }
 
 int game_handle_arg(const char *key, const char *val) {
@@ -218,8 +315,75 @@ void game_run_main(void) {
 
 int game_dispatch_override(uint16_t addr) { (void)addr; return 0; }
 
+/*
+ * Widescreen enemy lifecycle hooks.
+ *
+ * Problem: the game's spawn lookahead and offscreen bounds are sized for a
+ * 256px viewport.  With widescreen (128L + 256C + 96R = 480px), enemies
+ * pop in/out visibly at the extended edges.
+ *
+ * Solution: at the SPECIFIC PCs that compute spawn/despawn boundaries,
+ * shift the screen-edge values so the 6502 math produces wider thresholds.
+ * All other reads of these addresses return the original value unchanged.
+ *
+ * The 16-bit screen position is read in two parts (X low, Page high).
+ * When we shift X, overflow/underflow must carry to the subsequent Page read.
+ * We pass this via s_ws_extra_carry (set by X hook, consumed by Page hook).
+ *
+ * Decision PCs (from lifecycle analysis):
+ *   Spawn lookahead:   $C164 reads $071D, $C16E reads $071B
+ *   Despawn left:      $D680 reads $071C, $D693 reads $071A
+ *   Despawn right:     $D69A reads $071D, $D6A1 reads $071B
+ */
+static int8_t s_ws_extra_carry = 0;  /* +1 carry or -1 borrow from X hook */
+
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
-    (void)pc; (void)addr; return val;
+    if (!g_widescreen_right && !g_widescreen_left)
+        return val;
+
+    switch (addr) {
+    case 0x071D: /* ScreenRight_X_Pos */
+        /* NOTE: spawn lookahead ($C164) intentionally NOT hooked.
+         * Widening the spawn lookahead causes enemies to start their AI
+         * too early — they walk into pipes and wrong positions before
+         * the screen reaches them. Spawn timing must stay original. */
+        if (pc == 0xD69A) {
+            /* Despawn right bound: keep enemies alive further right */
+            uint16_t wide = (uint16_t)val + g_widescreen_right;
+            s_ws_extra_carry = (wide > 0xFF) ? 1 : 0;
+            return (uint8_t)(wide & 0xFF);
+        }
+        break;
+
+    case 0x071B: /* ScreenRight_PageLoc */
+        if (pc == 0xD6A1) {
+            /* Page follow-up for despawn right bound */
+            uint8_t ret = val + s_ws_extra_carry;
+            s_ws_extra_carry = 0;
+            return ret;
+        }
+        break;
+
+    case 0x071C: /* ScreenLeft_X_Pos */
+        if (pc == 0xD680) {
+            /* Despawn left bound: shift left edge further left */
+            int16_t wide = (int16_t)val - g_widescreen_left;
+            s_ws_extra_carry = (wide < 0) ? -1 : 0;
+            return (uint8_t)(wide & 0xFF);
+        }
+        break;
+
+    case 0x071A: /* ScreenLeft_PageLoc */
+        if (pc == 0xD693) {
+            /* Page follow-up for despawn left bound */
+            uint8_t ret = val + s_ws_extra_carry;  /* -1 borrow or 0 */
+            s_ws_extra_carry = 0;
+            return ret;
+        }
+        break;
+    }
+
+    return val;
 }
 
 /* ---- Watchdog globals (set by watchdog.c, read by debug server) ---- */
