@@ -4,6 +4,7 @@ extern int g_current_bank;
 
 int call_by_address(uint16_t addr) {
     if (addr < 0x8000) { nes_log_dispatch_miss(addr); return 0; }
+_dispatch_retry:
     switch (addr) {
         case 0x8000:
             func_8000_b0(); break;
