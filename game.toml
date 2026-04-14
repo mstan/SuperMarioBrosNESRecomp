@@ -2,6 +2,7 @@
 
 [game]
 output_prefix = "super-mario-bros"
+symbol_file = "symbols.sym"
 
 # SMB inline indexed dispatch: JSR $8E04 pops return address to find a
 # 2-byte LE address table immediately after the JSR. Dispatches via A register.
