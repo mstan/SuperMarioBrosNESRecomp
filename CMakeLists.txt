@@ -82,6 +82,14 @@ if(ENABLE_NESTOPIA_ORACLE)
     set(NESTOPIA_DIR ${CMAKE_SOURCE_DIR}/nestopia-core)
 endif()
 
+# ---- Reverse debugger (Tier 1+, optional) ----
+# When ON, runner.cmake adds reverse_debug.c and this file sets
+# NESRECOMP_REVERSE_DEBUG=1 on the target. You MUST regenerate the
+# recompiled C with `NESRecomp.exe <rom> --game game.toml --reverse-debug`
+# before building, or the generated stores will still call nes_write
+# directly and the ring will remain empty. See REVERSE_DEBUGGER.md.
+option(NESRECOMP_REVERSE_DEBUG "Build Tier-1+ reverse debugger hooks (requires regen with --reverse-debug)" OFF)
+
 include(${NESRECOMP_ROOT}/runner/runner.cmake)
 
 list(APPEND CMAKE_PREFIX_PATH "${NESRECOMP_ROOT}/runner/external/SDL2/cmake")
@@ -100,6 +108,11 @@ add_executable(SuperMarioBrosRecomp
 )
 
 target_compile_definitions(SuperMarioBrosRecomp PRIVATE RECOMP_STACK_TRACKING WATCHDOG_ENABLED)
+
+if(NESRECOMP_REVERSE_DEBUG)
+    target_compile_definitions(SuperMarioBrosRecomp PRIVATE NESRECOMP_REVERSE_DEBUG=1)
+    message(STATUS "Reverse debugger: ON (must have regenerated with --reverse-debug)")
+endif()
 
 target_include_directories(SuperMarioBrosRecomp PRIVATE
     ${NESRECOMP_RUNNER_INCLUDE_DIRS}

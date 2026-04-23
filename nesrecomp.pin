@@ -23,5 +23,8 @@
 #   2. re-run the setup script (or manually: git -C nesrecomp checkout <sha>)
 #   3. commit this file change
 
-branch = origin/master
-sha    = 615d23b7d01e3e1b25256722037ebd1128d4ef90
+# Tracking local feat/reverse-debugger branch while Tiers 1-4 land.
+# Pinned SHA (not branch tip) so the build is reproducible even as the
+# branch advances. Restore to origin/master once merged upstream.
+branch = feat/reverse-debugger
+sha    = 204740f8f0949cba906bf5f14e7a1ebe23026ca6
