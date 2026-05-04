@@ -64,18 +64,40 @@ int verify_mode_run_nmi(void) {
         return 1;
     }
 
-    /* VERIFY mode: native runs the game, Nestopia runs in background.
-     * Compare RAM after each frame. Log all divergences. */
+    /* VERIFY mode — lockstep comparison.
+     *
+     * Problem: calling func_NMI() advances the recomp by ONE NMI handler,
+     * but its surrounding main-loop coroutine has already executed the
+     * entire RESET init chain before the first NMI ever fires.  A single
+     * retro_run() on Nestopia advances only ONE frame of emulation —
+     * nowhere near enough to catch up at first verify tick.
+     *
+     * Solution: sync by the ROM's own deterministic frame counter $0009
+     * (ticked by every NMI handler on both sides).  After func_NMI(),
+     * keep running Nestopia frames until its $0009 matches the recomp's.
+     * On the first verify call this catches Nestopia up by dozens of
+     * frames; on every later call it's exactly one retro_run (1:1). */
 
     /* 1. Run native NMI */
     func_NMI();
 
-    /* 2. Run Nestopia for one frame (same input) */
-    nestopia_bridge_run_frame(g_controller1_buttons);
-
-    /* 3. Get Nestopia's RAM */
+    /* 2. Drive Nestopia forward until its $0009 matches recomp's $0009. */
     static uint8_t emu_ram[0x800];
+    uint8_t  rec_fc      = g_ram[0x0009];
+    int      catchup     = 0;
+    const int CATCHUP_MAX = 600;   /* ~10 s of wall time */
+    nestopia_bridge_run_frame(g_controller1_buttons);
     nestopia_bridge_get_ram(emu_ram);
+    while (emu_ram[0x0009] != rec_fc && catchup < CATCHUP_MAX) {
+        nestopia_bridge_run_frame(0);
+        nestopia_bridge_get_ram(emu_ram);
+        catchup++;
+    }
+    if (catchup > 0) {
+        fprintf(stderr, "[verify] sync: catchup=%d frames "
+                "(recomp $0009=%u, nestopia now %u)\n",
+                catchup, rec_fc, emu_ram[0x0009]);
+    }
 
     /* 4. Compare work RAM */
     int diff_count = 0;
@@ -100,6 +122,20 @@ int verify_mode_run_nmi(void) {
         fprintf(stderr, "[verify] DIVERGE frame %llu: %d bytes differ | first: $%04X native=0x%02X emu=0x%02X\n",
                 (unsigned long long)g_frame_count, diff_count,
                 first_diff_addr, first_native, first_emu);
+        /* Full dump on frame 100 (both sides settled), and on frames 0-4
+         * for boot-state context. Later frames stay as summary-only. */
+        if (g_frame_count < 5 || g_frame_count == 100 || g_frame_count == 500) {
+            fprintf(stderr, "  [full dump of diffs at frame %llu]\n",
+                    (unsigned long long)g_frame_count);
+            int shown = 0;
+            for (int i = 0; i < 0x0800 && shown < 128; i++) {
+                if (g_ram[i] != emu_ram[i]) {
+                    fprintf(stderr, "    $%04X  native=0x%02X  emu=0x%02X\n",
+                            i, g_ram[i], emu_ram[i]);
+                    shown++;
+                }
+            }
+        }
     }
 
     return passed;
