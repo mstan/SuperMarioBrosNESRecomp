@@ -411,11 +411,37 @@ class SlotRow:
         ttk.Button(parent, text="Thaw",   width=5, command=self.on_thaw).grid(
             row=row_index, column=7, padx=2, pady=3)
 
-        # Frozen indicator + per-slot warning (wide so warnings render).
+        # Raw bypass checkbox. When checked, Set / Freeze / Thaw bypass
+        # the semantic setter (semcomp_set_*) and any coupled-byte
+        # logic, writing only the primary address via trainer_set /
+        # trainer_freeze.  Useful for verification work — set the same
+        # value semantic vs raw and observe whether the outcomes differ
+        # (they should, for any slot with coupling or clamping).
+        self.raw_var = tk.BooleanVar(value=False)
+        # Only show the checkbox when there's actually a difference
+        # between semantic and raw (a semantic_set_cmd or freeze_couples
+        # is defined). Otherwise raw and semantic are identical and the
+        # toggle is noise.
+        if slot.semantic_set_cmd or slot.freeze_couples:
+            raw_cb = ttk.Checkbutton(parent, text="Raw", variable=self.raw_var)
+            raw_cb.grid(row=row_index, column=8, padx=(8, 2), pady=3, sticky="w")
+            Tooltip(raw_cb,
+                    "Bypass the semcomp semantic setter and any coupled-byte\n"
+                    "freezes for this row.  Writes only the primary address\n"
+                    "via trainer_set / trainer_freeze.  Useful for verifying\n"
+                    "what the semantic setter actually changes (e.g. checking\n"
+                    "that semantic Power=Fire produces a different outcome\n"
+                    "than raw $0756=2 alone).")
+            warning_column = 9
+        else:
+            warning_column = 8
+
+        # Frozen indicator + per-slot warning.
         self.frozen_var = tk.StringVar(value="")
         ttk.Label(parent, textvariable=self.frozen_var, width=40,
-                  foreground="#c84", anchor="w").grid(row=row_index, column=8,
-                                                       padx=2, pady=3, sticky="w")
+                  foreground="#c84", anchor="w").grid(
+            row=row_index, column=warning_column,
+            padx=2, pady=3, sticky="w")
 
     def _parse_input(self) -> Optional[int]:
         s = self.input_var.get().strip()
@@ -434,21 +460,25 @@ class SlotRow:
         if val is None:
             self.status_setter(f"set ${self.slot.addr:04X}: invalid value")
             return
-        # Route through semantic setter when available so coupled-byte
-        # / clamping logic fires (e.g. set_power couples size; set_lives
-        # clamps to 99).
-        if self.slot.semantic_set_cmd:
-            self.client.call_named(self.slot.semantic_set_cmd, val=val & 0xFF)
-        else:
+        # Raw bypass: write the byte directly with no semantic / coupling.
+        if self.raw_var.get() or not self.slot.semantic_set_cmd:
             self.client.trainer_set(self.slot.addr, val & 0xFF)
+            return
+        # Semantic path: routes through C++ Mario::set_*, PlayerSession::set_*
+        # which handles coupling and clamping.
+        self.client.call_named(self.slot.semantic_set_cmd, val=val & 0xFF)
+
     def on_freeze(self):
         val = self._parse_input()
         if val is None:
             self.status_setter(f"freeze ${self.slot.addr:04X}: invalid value")
             return
-        # Primary byte.
+        # Primary byte is always frozen.
         self.client.trainer_freeze(self.slot.addr, val & 0xFF)
-        # Coupled bytes (e.g. PlayerSize when freezing Power).
+        # Coupled bytes (e.g. PlayerSize when freezing Power) — skipped
+        # when Raw bypass is on.
+        if self.raw_var.get():
+            return
         for coupled_addr, value_fn in (self.slot.freeze_couples or []):
             try:
                 cval = value_fn(val) & 0xFF
@@ -456,8 +486,12 @@ class SlotRow:
                 self.status_setter(f"freeze couple failed: {e}")
                 continue
             self.client.trainer_freeze(coupled_addr, cval)
+
     def on_thaw(self):
         self.client.trainer_thaw(self.slot.addr)
+        # Skip coupled thaws when Raw is on (caller wanted a raw-only op).
+        if self.raw_var.get():
+            return
         for coupled_addr, _ in (self.slot.freeze_couples or []):
             self.client.trainer_thaw(coupled_addr)
 
