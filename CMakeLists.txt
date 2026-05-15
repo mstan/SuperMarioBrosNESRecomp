@@ -90,6 +90,13 @@ endif()
 # directly and the ring will remain empty. See REVERSE_DEBUGGER.md.
 option(NESRECOMP_REVERSE_DEBUG "Build Tier-1+ reverse debugger hooks (requires regen with --reverse-debug)" OFF)
 
+# ---- Semcomp (semantic-recompilation facade, optional) ----
+# When ON, builds the C++ facade layer in semcomp/ into the executable. The
+# layer is compile-checked but does NOT alter runtime behavior in Phase 0 —
+# no semcomp code is invoked from the frame path yet. See docs/SEMCOMP.md.
+# Default ON because the layer has zero runtime cost when not invoked.
+option(ENABLE_SEMCOMP "Build semantic-recompilation facade layer (semcomp/)" ON)
+
 include(${NESRECOMP_ROOT}/runner/runner.cmake)
 
 list(APPEND CMAKE_PREFIX_PATH "${NESRECOMP_ROOT}/runner/external/SDL2/cmake")
@@ -112,6 +119,21 @@ target_compile_definitions(SuperMarioBrosRecomp PRIVATE RECOMP_STACK_TRACKING WA
 if(NESRECOMP_REVERSE_DEBUG)
     target_compile_definitions(SuperMarioBrosRecomp PRIVATE NESRECOMP_REVERSE_DEBUG=1)
     message(STATUS "Reverse debugger: ON (must have regenerated with --reverse-debug)")
+endif()
+
+# ---- Semcomp facade sources ----
+if(ENABLE_SEMCOMP)
+    target_sources(SuperMarioBrosRecomp PRIVATE
+        semcomp/GameState.cpp
+        semcomp/Mario.cpp
+        semcomp/Level.cpp
+        semcomp/Camera.cpp
+        semcomp/ModApi.cpp
+        semcomp/SemcompGame.cpp
+        semcomp/Selftest.cpp
+    )
+    target_compile_definitions(SuperMarioBrosRecomp PRIVATE ENABLE_SEMCOMP=1)
+    message(STATUS "Semcomp facade: ON (Phase 0 — compile-only, no behavior change)")
 endif()
 
 target_include_directories(SuperMarioBrosRecomp PRIVATE
