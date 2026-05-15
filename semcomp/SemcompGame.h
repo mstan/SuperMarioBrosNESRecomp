@@ -36,15 +36,15 @@ public:
     const GameState&     state()   const { return state_;   }
     const Level&         level()   const { return level_;   }
     const Camera&        camera()  const { return camera_;  }
-    const PlayerSession& session() const { return session_; }
 
-    // ---- Mutable Mario / Trainer accessors (Phase 2 write paths) --------
-    // Both read- and write-side validation needs a mutable Mario; const
-    // overload provided for read-only callers.
-    Mario&         mario()       { return mario_; }
-    const Mario&   mario() const { return mario_; }
-    Trainer&       trainer()       { return trainer_; }
-    const Trainer& trainer() const { return trainer_; }
+    // ---- Mutable Mario / PlayerSession / Trainer accessors --------------
+    // Phase 2: PlayerSession gained write methods; needs mutable form.
+    Mario&               mario()         { return mario_;   }
+    const Mario&         mario()   const { return mario_;   }
+    PlayerSession&       session()       { return session_; }
+    const PlayerSession& session() const { return session_; }
+    Trainer&             trainer()       { return trainer_; }
+    const Trainer&       trainer() const { return trainer_; }
 
     TrainerUI&       trainer_ui()       { return trainer_ui_; }
     const TrainerUI& trainer_ui() const { return trainer_ui_; }

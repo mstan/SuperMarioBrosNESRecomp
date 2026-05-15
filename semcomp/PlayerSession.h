@@ -17,7 +17,8 @@ class GameState;
 
 class PlayerSession {
 public:
-    explicit PlayerSession(const GameState& state) : state_(state) {}
+    // Phase 2: ctor takes mutable GameState so set_* can write.
+    explicit PlayerSession(GameState& state) : state_(state) {}
 
     // Raw life count. SMB displays this value plus 1 on the HUD (so a
     // value of 2 in RAM renders as "x3" on screen because Mario himself
@@ -28,13 +29,30 @@ public:
     // grants a 1-up at 100.
     std::uint8_t coins() const;
 
+    // ---- Writes (Phase 2) ------------------------------------------------
+    // IMPORTANT — HUD does not auto-refresh from these writes.  SMB's
+    // HUD digits live in PPU VRAM, fed by the VRAM update queue at
+    // $0301-$0344; that queue is built by the game's own coin-grant /
+    // life-grant routines, not by writes to $075E / $075A.  These
+    // setters update the *internal* counter, and the HUD reflects the
+    // new value only after the next game-driven event for that field.
+    // See memory/project_smb_hud_in_ppu.md for the full story and the
+    // Phase 3 plan to dispatch into the coin-grant routine for proper
+    // HUD refresh.
+    //
+    // Values are clamped to 0..99 because the HUD font only renders two
+    // decimal digits; values >= 100 produce garbled glyphs (the byte is
+    // used as a tile index in some render paths).
+    void set_lives(std::uint8_t v);
+    void set_coins(std::uint8_t v);
+
     // TODO(phase1.5): score (BCD triplet at $07FC..$07FE — addresses
     // present in extras.c's smb_state but not yet independently
     // verified by trace), game timer, and the 2P-mode/player-select
     // byte.
 
 private:
-    const GameState& state_;
+    GameState& state_;
 };
 
 }  // namespace smb::semcomp

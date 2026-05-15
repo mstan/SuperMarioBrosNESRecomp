@@ -80,6 +80,22 @@ uint16_t semcomp_runtime_level_world_level_packed(void);
 uint8_t  semcomp_runtime_session_lives(void);
 uint8_t  semcomp_runtime_session_coins(void);
 
+// ---- Semantic setters (Phase 2) ------------------------------------------
+// Route through the C++ facade setters so coupled-byte and clamping
+// logic actually fires. The Trainer's trainer_set/freeze write the
+// raw byte and bypass these. The GUI defaults to semantic for fields
+// where it matters (Power: couples Status+Size; Lives/Coins: clamps
+// 0-99); each row has a "Raw bypass" checkbox to opt out for
+// verification work.
+void semcomp_runtime_set_mario_x(uint8_t v);
+void semcomp_runtime_set_mario_y(uint8_t v);
+void semcomp_runtime_set_mario_page(uint8_t v);
+void semcomp_runtime_set_mario_power(uint8_t v);
+void semcomp_runtime_set_mario_physics_state(uint8_t v);
+void semcomp_runtime_set_mario_facing(uint8_t v);
+void semcomp_runtime_set_session_lives(uint8_t v);
+void semcomp_runtime_set_session_coins(uint8_t v);
+
 #ifdef __cplusplus
 }
 #endif

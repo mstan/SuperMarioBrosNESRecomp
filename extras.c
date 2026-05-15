@@ -473,6 +473,41 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
             semcomp_runtime_session_coins());
         return 1;
     }
+
+    /* ---- Semantic setter TCP commands ---- */
+    /* Each routes through the C++ facade setter so coupled-byte logic
+     * fires (e.g. Mario::set_power couples PlayerStatus + PlayerSize).
+     * The trainer's trainer_set/freeze remain pure raw writes; these
+     * are the explicit semantic alternative the GUI uses by default. */
+    if (strncmp(cmd, "semcomp_set_", 12) == 0) {
+        int val = extras_json_get_int(json, "val", -1);
+        if (val < 0 || val > 255) {
+            debug_server_send_fmt(
+                "{\"id\":%d,\"ok\":false,\"error\":\"semcomp_set_*: val 0-255 required\"}\n", id);
+            return 1;
+        }
+        const char *field = cmd + 12;
+        int handled = 1;
+        if      (strcmp(field, "mario_x")             == 0) semcomp_runtime_set_mario_x((uint8_t)val);
+        else if (strcmp(field, "mario_y")             == 0) semcomp_runtime_set_mario_y((uint8_t)val);
+        else if (strcmp(field, "mario_page")          == 0) semcomp_runtime_set_mario_page((uint8_t)val);
+        else if (strcmp(field, "mario_power")         == 0) semcomp_runtime_set_mario_power((uint8_t)val);
+        else if (strcmp(field, "mario_physics_state") == 0) semcomp_runtime_set_mario_physics_state((uint8_t)val);
+        else if (strcmp(field, "mario_facing")        == 0) semcomp_runtime_set_mario_facing((uint8_t)val);
+        else if (strcmp(field, "session_lives")       == 0) semcomp_runtime_set_session_lives((uint8_t)val);
+        else if (strcmp(field, "session_coins")       == 0) semcomp_runtime_set_session_coins((uint8_t)val);
+        else handled = 0;
+        if (handled) {
+            debug_server_send_fmt(
+                "{\"id\":%d,\"ok\":true,\"cmd\":\"%s\",\"val\":%d}\n",
+                id, cmd, val);
+        } else {
+            debug_server_send_fmt(
+                "{\"id\":%d,\"ok\":false,\"error\":\"unknown semantic field '%s'\"}\n",
+                id, field);
+        }
+        return 1;
+    }
 #endif  /* ENABLE_SEMCOMP */
 
     return 0;

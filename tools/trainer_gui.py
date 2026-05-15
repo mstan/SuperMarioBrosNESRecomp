@@ -90,14 +90,25 @@ class Tooltip:
 
 @dataclass
 class SlotDef:
-    name:           str
-    addr:           int
-    sem_cmd:        str                          # e.g. "semcomp_mario"
-    sem_field:      Optional[str]                # e.g. "x"; None = no semcomp validation
-    tooltip:        str
-    enum_values:    Optional[Dict[int, str]] = None
-    enum_readonly:  bool = False
-    formatter:      Optional[Callable[[int], str]] = None  # extra display formatter
+    name:               str
+    addr:               int
+    sem_cmd:            str                          # e.g. "semcomp_mario"
+    sem_field:          Optional[str]                # e.g. "x"; None = no semcomp validation
+    tooltip:            str
+    enum_values:        Optional[Dict[int, str]] = None
+    enum_readonly:      bool = False
+    formatter:          Optional[Callable[[int], str]] = None
+    # When set, "Set" routes through this semantic-setter TCP command
+    # (e.g. "semcomp_set_mario_power") so coupled-byte logic fires.
+    # When None, falls back to raw trainer_set against this addr.
+    semantic_set_cmd:   Optional[str] = None
+    # Additional byte(s) to also freeze/thaw alongside this one (for
+    # coupled-byte slots like Power, where PlayerStatus needs to be
+    # frozen together with PlayerSize). Each entry is
+    # (addr, value_fn) where value_fn(primary_value) -> coupled_value.
+    freeze_couples:     Optional[list] = None
+    # Optional warning to surface in the GUI row.
+    warning:            Optional[str] = None
 
 
 def _fmt_enum(v: int, mapping: Dict[int, str]) -> str:
@@ -114,6 +125,7 @@ def _fmt_plain(v: Optional[int]) -> str:
 MARIO_SLOTS = [
     SlotDef(
         name="X Position", addr=0x0086, sem_cmd="semcomp_mario", sem_field="x",
+        semantic_set_cmd="semcomp_set_mario_x",
         tooltip=(
             "Mario's horizontal pixel position WITHIN the current 256-pixel page.\n"
             "World X = (Page Loc * 256) + X Position.  Range 0–255.\n"
@@ -124,6 +136,7 @@ MARIO_SLOTS = [
     ),
     SlotDef(
         name="Y Position", addr=0x00CE, sem_cmd="semcomp_mario", sem_field="y",
+        semantic_set_cmd="semcomp_set_mario_y",
         tooltip=(
             "Mario's vertical pixel position. 0 = top of screen; ~176 = ground "
             "level in 1-1.  Decreases when Mario jumps (smaller values are "
@@ -133,6 +146,7 @@ MARIO_SLOTS = [
     ),
     SlotDef(
         name="Page Loc", addr=0x006D, sem_cmd="semcomp_mario", sem_field="page",
+        semantic_set_cmd="semcomp_set_mario_page",
         tooltip=(
             "Which 256-pixel-wide horizontal segment of the level Mario is "
             "currently in.\nWorld X = (Page Loc * 256) + X Position.\n"
@@ -144,20 +158,28 @@ MARIO_SLOTS = [
     ),
     SlotDef(
         name="Power Status", addr=0x0756, sem_cmd="semcomp_mario", sem_field="power",
+        semantic_set_cmd="semcomp_set_mario_power",
+        # When freezing power, also freeze PlayerSize ($0754) — otherwise
+        # the game shrinks Mario on hit and we get "Fire but visually Small".
+        # Size encoding: 1 = short (Small Mario), 0 = tall (Big/Fire).
+        freeze_couples=[(0x0754, lambda v: 1 if v == 0 else 0)],
         tooltip=(
             "Mario's power-up tier.\n"
             "  0 = Small  (default Mario; one hit = dead)\n"
             "  1 = Big    (after Super Mushroom; one hit shrinks to Small)\n"
             "  2 = Fire   (after Fire Flower; B button shoots fireballs)\n\n"
-            "Setting this directly skips the powerup animation and tile-change "
-            "sequence; expect a brief visual flicker on the next frame.\n\n"
-            "RAM: $0756 — smbdis: PlayerStatus"
+            "Set via semantic setter Mario::set_power, which couples\n"
+            "PlayerStatus ($0756) and PlayerSize ($0754) — necessary\n"
+            "because the sprite/collision routines read Size, not Status.\n"
+            "Freeze locks both bytes; Raw bypass would leave Size unfrozen.\n\n"
+            "RAM: $0756 — smbdis: PlayerStatus  (coupled: $0754 PlayerSize)"
         ),
         enum_values={0: "Small", 1: "Big", 2: "Fire"},
         enum_readonly=True,
     ),
     SlotDef(
         name="Physics State", addr=0x001D, sem_cmd="semcomp_mario", sem_field="physics_state",
+        semantic_set_cmd="semcomp_set_mario_physics_state",
         tooltip=(
             "Mario's movement-physics state.\n"
             "  0 = On Ground (standing/walking/running)\n"
@@ -173,6 +195,7 @@ MARIO_SLOTS = [
     ),
     SlotDef(
         name="Facing Direction", addr=0x0033, sem_cmd="semcomp_mario", sem_field="facing",
+        semantic_set_cmd="semcomp_set_mario_facing",
         tooltip=(
             "Direction Mario's sprite is currently facing.  Independent of "
             "Mario's actual movement direction — Mario can slide right while "
@@ -220,20 +243,44 @@ LEVEL_SLOTS = [
 PLAYER_SLOTS = [
     SlotDef(
         name="Lives", addr=0x075A, sem_cmd="semcomp_session", sem_field="lives",
+        semantic_set_cmd="semcomp_set_session_lives",
+        warning="HUD doesn't auto-refresh — see tooltip",
         tooltip=(
             "Lives remaining BEYOND the current Mario (so '0' here = the Mario "
             "you're playing is the last one; one more death = Game Over).\n"
             "The HUD displays Lives+1 (a value of 2 shows as 'x3').\n\n"
             "Decrements on Mario's death; +1 when a 1-Up Mushroom is collected "
             "or every 100 Coins.\n\n"
+            "⚠ HUD limitation: SMB's lives/coins display digits live in PPU\n"
+            "VRAM and are only refreshed when the game's own life-grant /\n"
+            "level-intro code runs.  Setting this byte updates the internal\n"
+            "counter; the visible HUD won't reflect the new value until the\n"
+            "next time the game itself rewrites it (death/respawn, 1-Up\n"
+            "pickup, level transition).\n\n"
+            "Semantic setter clamps value to 0–99 to avoid garbled tile\n"
+            "glyphs (the byte gets used as a CHR tile index in some render\n"
+            "paths — e.g. 25 was rendering as 'F').\n\n"
             "RAM: $075A — smbdis: NumberofLives"
         ),
     ),
     SlotDef(
         name="Coins", addr=0x075E, sem_cmd="semcomp_session", sem_field="coins",
+        semantic_set_cmd="semcomp_set_session_coins",
+        warning="HUD doesn't auto-refresh — see tooltip",
         tooltip=(
             "Coins collected in the current run, 0–99.\nRolls over to 0 at "
             "100 and grants a 1-Up (Lives += 1).\n\n"
+            "⚠ HUD limitation: same as Lives — the displayed coin digits\n"
+            "live in PPU VRAM, populated by SMB's coin-grant routine which\n"
+            "writes BOTH the counter AND the VRAM update queue.  Setting\n"
+            "the counter alone leaves the HUD showing the old value until\n"
+            "the next natural coin pickup, which then increments from the\n"
+            "stale HUD value (so freezing at 66 with HUD=17 plus one\n"
+            "pickup gives HUD=18, not 67).\n\n"
+            "Phase 3 plan: dispatch into the coin-grant routine via\n"
+            "game_dispatch_override so the HUD refreshes correctly.  Until\n"
+            "then this setter only updates the counter.\n\n"
+            "Semantic setter clamps value to 0–99.\n\n"
             "RAM: $075E — smbdis: CoinTally"
         ),
     ),
@@ -302,6 +349,10 @@ class TrainerClient:
         return self._call("trainer_thaw", addr=f"0x{addr:04X}")
     def trainer_list(self):
         return self._call("trainer_list")
+    def call_named(self, cmd, **kw):
+        """Send an arbitrary semantic-setter command, e.g.
+        client.call_named("semcomp_set_mario_power", val=2)."""
+        return self._call(cmd, **kw)
 
 
 # ---------------------------------------------------------------------------
@@ -360,11 +411,11 @@ class SlotRow:
         ttk.Button(parent, text="Thaw",   width=5, command=self.on_thaw).grid(
             row=row_index, column=7, padx=2, pady=3)
 
-        # Frozen indicator.
+        # Frozen indicator + per-slot warning (wide so warnings render).
         self.frozen_var = tk.StringVar(value="")
-        ttk.Label(parent, textvariable=self.frozen_var, width=12,
-                  foreground="#c84").grid(row=row_index, column=8,
-                                           padx=2, pady=3, sticky="w")
+        ttk.Label(parent, textvariable=self.frozen_var, width=40,
+                  foreground="#c84", anchor="w").grid(row=row_index, column=8,
+                                                       padx=2, pady=3, sticky="w")
 
     def _parse_input(self) -> Optional[int]:
         s = self.input_var.get().strip()
@@ -383,15 +434,32 @@ class SlotRow:
         if val is None:
             self.status_setter(f"set ${self.slot.addr:04X}: invalid value")
             return
-        self.client.trainer_set(self.slot.addr, val & 0xFF)
+        # Route through semantic setter when available so coupled-byte
+        # / clamping logic fires (e.g. set_power couples size; set_lives
+        # clamps to 99).
+        if self.slot.semantic_set_cmd:
+            self.client.call_named(self.slot.semantic_set_cmd, val=val & 0xFF)
+        else:
+            self.client.trainer_set(self.slot.addr, val & 0xFF)
     def on_freeze(self):
         val = self._parse_input()
         if val is None:
             self.status_setter(f"freeze ${self.slot.addr:04X}: invalid value")
             return
+        # Primary byte.
         self.client.trainer_freeze(self.slot.addr, val & 0xFF)
+        # Coupled bytes (e.g. PlayerSize when freezing Power).
+        for coupled_addr, value_fn in (self.slot.freeze_couples or []):
+            try:
+                cval = value_fn(val) & 0xFF
+            except Exception as e:  # noqa: BLE001
+                self.status_setter(f"freeze couple failed: {e}")
+                continue
+            self.client.trainer_freeze(coupled_addr, cval)
     def on_thaw(self):
         self.client.trainer_thaw(self.slot.addr)
+        for coupled_addr, _ in (self.slot.freeze_couples or []):
+            self.client.trainer_thaw(coupled_addr)
 
     def update(self, raw_val: Optional[int], sem_val: Optional[int],
                frozen_value: Optional[int]):
@@ -412,11 +480,12 @@ class SlotRow:
             self.sem_lbl.configure(
                 foreground=("#888" if self.slot.sem_field is None else "#000"))
 
-        # Frozen indicator.
+        # Frozen indicator.  Append a per-slot warning if defined.
+        warn = f"  ⚠ {self.slot.warning}" if self.slot.warning else ""
         if frozen_value is not None:
-            self.frozen_var.set(f"frozen={frozen_value}")
+            self.frozen_var.set(f"frozen={frozen_value}{warn}")
         else:
-            self.frozen_var.set("")
+            self.frozen_var.set(warn.lstrip("  ") if warn else "")
 
 
 class TrainerTab(ttk.Frame):
@@ -576,8 +645,8 @@ class TrainerGUI:
 
     def build_ui(self):
         self.root.title("Semcomp Trainer")
-        self.root.geometry("820x440")
-        self.root.minsize(760, 380)
+        self.root.geometry("1000x460")
+        self.root.minsize(900, 400)
 
         nb = ttk.Notebook(self.root)
         nb.pack(fill="both", expand=True, padx=8, pady=(8, 0))

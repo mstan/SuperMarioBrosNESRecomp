@@ -102,4 +102,25 @@ uint16_t semcomp_runtime_level_world_level_packed(void) { return runtime().level
 uint8_t  semcomp_runtime_session_lives(void)            { return runtime().session().lives(); }
 uint8_t  semcomp_runtime_session_coins(void)            { return runtime().session().coins(); }
 
+// ---- Semantic setters ----------------------------------------------------
+
+void semcomp_runtime_set_mario_x(uint8_t v)    { runtime().mario().set_x(v); }
+void semcomp_runtime_set_mario_y(uint8_t v)    { runtime().mario().set_y(v); }
+void semcomp_runtime_set_mario_page(uint8_t v) { runtime().mario().set_page(v); }
+void semcomp_runtime_set_mario_power(uint8_t v) {
+    runtime().mario().set_power(static_cast<smb::semcomp::PowerStatus>(v));
+}
+void semcomp_runtime_set_mario_physics_state(uint8_t v) {
+    runtime().mario().set_physics_state_raw(v);
+}
+void semcomp_runtime_set_mario_facing(uint8_t v) {
+    runtime().mario().set_facing(static_cast<smb::semcomp::Direction>(v));
+}
+void semcomp_runtime_set_session_lives(uint8_t v) {
+    runtime().session().set_lives(v);
+}
+void semcomp_runtime_set_session_coins(uint8_t v) {
+    runtime().session().set_coins(v);
+}
+
 }  // extern "C"

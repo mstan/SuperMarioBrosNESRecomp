@@ -43,6 +43,10 @@ bool selftest() {
     volatile std::uint8_t  sl  = game.session().lives();
     volatile std::uint8_t  sc  = game.session().coins();
 
+    // PlayerSession writes (Phase 2).
+    game.session().set_lives(0);
+    game.session().set_coins(0);
+
     // CPU state.
     volatile std::uint8_t  ca  = game.state().cpu_a();
 
