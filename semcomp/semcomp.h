@@ -4,8 +4,8 @@
 #pragma once
 
 #define SMB_SEMCOMP_VERSION_MAJOR 0
-#define SMB_SEMCOMP_VERSION_MINOR 2
-#define SMB_SEMCOMP_PHASE         1  // 1 = Mario-as-object reads
+#define SMB_SEMCOMP_VERSION_MINOR 3
+#define SMB_SEMCOMP_PHASE         2  // 2 = writes + trainer + runtime wire-in
 
 #include "semcomp/Camera.h"
 #include "semcomp/GameState.h"
@@ -14,6 +14,7 @@
 #include "semcomp/ModApi.h"
 #include "semcomp/PlayerSession.h"
 #include "semcomp/SemcompGame.h"
+#include "semcomp/Trainer.h"
 
 namespace smb::semcomp {
 

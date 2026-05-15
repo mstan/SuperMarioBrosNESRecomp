@@ -50,6 +50,28 @@ bool selftest() {
     auto noop = +[](SemcompGame*, void*) {};
     volatile std::size_t   slot = game.mod_api().register_frame_hook(noop, nullptr);
 
+    // Mario writes (Phase 2). These touch g_ram, so they're cheap and
+    // safe in a selftest harness only because selftest() is never
+    // invoked from the runner. Do not call selftest() at runtime.
+    game.mario().set_x(0);
+    game.mario().set_y(0);
+    game.mario().set_page(0);
+    game.mario().set_power(PowerStatus::Small);
+    game.mario().set_physics_state_raw(0);
+    game.mario().set_facing(Direction::Right);
+
+    // Trainer surface.
+    volatile bool tf1 = game.trainer().freeze(0x0086, 0);
+    volatile bool tf2 = game.trainer().is_frozen(0x0086);
+    volatile std::uint8_t tv = game.trainer().frozen_value(0x0086);
+    volatile std::size_t tc = game.trainer().count();
+    volatile std::uint16_t ea = game.trainer().entry_addr(0);
+    volatile std::uint8_t  ev = game.trainer().entry_value(0);
+    volatile bool tt = game.trainer().thaw(0x0086);
+    game.trainer().set(0x0086, 0);
+    game.trainer().set_enabled(false);
+    game.trainer().apply();
+
     (void)mx; (void)my; (void)mp; (void)mwx;
     (void)mvx; (void)mvy; (void)msa;
     (void)mpw; (void)msb; (void)mps; (void)mog;
@@ -58,6 +80,7 @@ bool selftest() {
     (void)cl; (void)cr; (void)cw;
     (void)sl; (void)sc;
     (void)ca; (void)slot;
+    (void)tf1; (void)tf2; (void)tv; (void)tc; (void)ea; (void)ev; (void)tt;
     return true;
 }
 

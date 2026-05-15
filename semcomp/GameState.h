@@ -24,6 +24,13 @@ public:
     std::uint16_t read_page_offset(std::uint16_t page_addr,
                                     std::uint16_t offset_addr) const;
 
+    // Raw 8-bit write into work RAM. Phase 2: only the Trainer and Mario
+    // setters write through here. Ordinary game logic writes via
+    // nes_write() inside the recompiled code path; this is a back-door
+    // intended for mod-style overrides applied AFTER the game's frame
+    // update.
+    void write8(std::uint16_t addr, std::uint8_t val);
+
     // CPU register snapshot. Read-only.
     std::uint8_t cpu_a() const;
     std::uint8_t cpu_x() const;

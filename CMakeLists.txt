@@ -131,10 +131,13 @@ if(ENABLE_SEMCOMP)
         semcomp/ModApi.cpp
         semcomp/PlayerSession.cpp
         semcomp/SemcompGame.cpp
+        semcomp/Trainer.cpp
+        semcomp/TrainerUI.cpp
+        semcomp/Runtime.cpp
         semcomp/Selftest.cpp
     )
     target_compile_definitions(SuperMarioBrosRecomp PRIVATE ENABLE_SEMCOMP=1)
-    message(STATUS "Semcomp facade: ON (compile-only, not invoked from frame path)")
+    message(STATUS "Semcomp facade: ON (Phase 2 — Trainer wired into post-NMI)")
 endif()
 
 target_include_directories(SuperMarioBrosRecomp PRIVATE

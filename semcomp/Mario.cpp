@@ -55,4 +55,36 @@ std::uint8_t Mario::spr_data_offset() const {
     return state_.read8(ram::Player_SprDataOffset);
 }
 
+// ---- Writes (Phase 2) -------------------------------------------------------
+
+void Mario::set_x(std::uint8_t v) {
+    state_.write8(ram::Player_X_Position, v);
+}
+void Mario::set_y(std::uint8_t v) {
+    state_.write8(ram::Player_Y_Position, v);
+}
+void Mario::set_page(std::uint8_t v) {
+    state_.write8(ram::Player_PageLoc, v);
+}
+void Mario::set_power(PowerStatus v) {
+    // Power-up is two coupled bytes in SMB: PlayerStatus (which power
+    // tier) and PlayerSize (the sprite/collision size used by the
+    // render and physics routines). Setting Status alone produces
+    // inconsistent state — e.g. "Fire" power but visually Small
+    // because the sprite routine reads Size, not Status. The fireball
+    // throw animation briefly reads Status, hence the one-frame
+    // big-Mario flicker before reverting on the next sprite update.
+    //
+    // Size encoding: 0 = tall (Big or Fire Mario), 1 = short (Small).
+    state_.write8(ram::PlayerStatus, static_cast<std::uint8_t>(v));
+    state_.write8(ram::PlayerSize,
+                  (v == PowerStatus::Small) ? std::uint8_t{1} : std::uint8_t{0});
+}
+void Mario::set_physics_state_raw(std::uint8_t v) {
+    state_.write8(ram::Player_State, v);
+}
+void Mario::set_facing(Direction v) {
+    state_.write8(ram::PlayerFacingDir, static_cast<std::uint8_t>(v));
+}
+
 }  // namespace smb::semcomp

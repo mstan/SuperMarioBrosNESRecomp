@@ -15,6 +15,9 @@
 #ifdef ENABLE_NESTOPIA_ORACLE
 #include "nestopia_bridge.h"
 #endif
+#ifdef ENABLE_SEMCOMP
+#include "semcomp/Runtime.h"
+#endif
 #include <SDL.h>
 #include <stdio.h>
 #include <string.h>
@@ -39,9 +42,44 @@ static int check_debug_ini(void) {
 
 /* ---- Debug server state ---- */
 static int s_tcp_port = 4370;
+static int s_trainer_enabled = 0;
 
 /* ROM path exposed by runner for verify mode init */
 const char *g_rom_path_for_extras = NULL;
+
+/* ---- Minimal JSON arg helpers (mirrors debug_server.c) ---- */
+
+static const char *extras_json_get_str(const char *json, const char *key,
+                                       char *out, int out_sz) {
+    char pat[128];
+    snprintf(pat, sizeof(pat), "\"%s\"", key);
+    const char *p = strstr(json, pat);
+    if (!p) return NULL;
+    p += strlen(pat);
+    while (*p == ' ' || *p == ':') p++;
+    if (*p == '"') {
+        p++;
+        int i = 0;
+        while (*p && *p != '"' && i < out_sz - 1) out[i++] = *p++;
+        out[i] = '\0';
+        return out;
+    }
+    int i = 0;
+    while (*p && *p != ',' && *p != '}' && *p != ' ' && i < out_sz - 1)
+        out[i++] = *p++;
+    out[i] = '\0';
+    return out;
+}
+
+static int extras_json_get_int(const char *json, const char *key, int def) {
+    char buf[64];
+    if (!extras_json_get_str(json, key, buf, sizeof(buf))) return def;
+    /* Accept decimal, 0xNN, or $NN. */
+    if (buf[0] == '$') return (int)strtoul(buf + 1, NULL, 16);
+    if (buf[0] == '0' && (buf[1] == 'x' || buf[1] == 'X'))
+        return (int)strtoul(buf + 2, NULL, 16);
+    return atoi(buf);
+}
 
 /* ---- Path helper ---- */
 
@@ -67,6 +105,13 @@ const char *game_get_name(void) { return "Super Mario Bros."; }
 void game_on_init(void) {
     s_debug_enabled = check_debug_ini();
 
+    /* --trainer implies debug too (the trainer rides on top of the TCP
+     * command surface). */
+    if (s_trainer_enabled && !s_debug_enabled) {
+        s_debug_enabled = 1;
+        printf("[Trainer] --trainer implied --debug; TCP server enabled\n");
+    }
+
     if (s_debug_enabled) {
         printf("[Debug] debug.ini found — TCP server and verify mode enabled\n");
         debug_server_init(s_tcp_port);
@@ -81,6 +126,14 @@ void game_on_init(void) {
         if (g_rom_path_for_extras)
             verify_mode_init(g_rom_path_for_extras);
     }
+
+#ifdef ENABLE_SEMCOMP
+    semcomp_runtime_init();
+    semcomp_runtime_set_trainer_enabled(s_trainer_enabled);
+    if (s_trainer_enabled) {
+        printf("[Trainer] active — freeze table will be applied post-NMI\n");
+    }
+#endif
 }
 
 void game_on_frame(uint64_t frame_count) {
@@ -92,6 +145,15 @@ void game_on_frame(uint64_t frame_count) {
         if (ovr >= 0)
             g_controller1_buttons = (uint8_t)ovr;
     }
+#ifdef ENABLE_SEMCOMP
+    /* Trainer overlay polls keyboard (F8, arrows, etc.). When the
+     * overlay is visible we zero the controller bytes so arrow-key
+     * navigation doesn't also move Mario. */
+    semcomp_runtime_trainer_ui_tick();
+    if (semcomp_runtime_trainer_ui_grabbing_input()) {
+        g_controller1_buttons = 0;
+    }
+#endif
 }
 
 void game_post_nmi(uint64_t frame_count) {
@@ -99,6 +161,12 @@ void game_post_nmi(uint64_t frame_count) {
     if (s_debug_enabled) {
         debug_server_record_frame();
     }
+#ifdef ENABLE_SEMCOMP
+    /* Apply trainer freezes AFTER the game's frame update so the
+     * trainer's writes are not stomped by the game's own writes within
+     * the same frame. No-op when --trainer was not passed. */
+    semcomp_runtime_apply_trainer();
+#endif
 }
 
 int game_handle_arg(const char *key, const char *val) {
@@ -117,13 +185,19 @@ int game_handle_arg(const char *key, const char *val) {
         printf("[Verify] Nestopia emulated mode enabled\n");
         return 1;
     }
+    if (strcmp(key, "--trainer") == 0) {
+        s_trainer_enabled = 1;
+        return 1;
+    }
     return 0;
 }
 
 const char *game_arg_usage(void) {
     return "  --tcp-port PORT     TCP debug server port (default 4370)\n"
            "  --verify            Enable dual-execution verify mode (Nestopia oracle)\n"
-           "  --emulated          Run purely via Nestopia emulator (no recompiled code)\n";
+           "  --emulated          Run purely via Nestopia emulator (no recompiled code)\n"
+           "  --trainer           Enable semcomp trainer (freeze/set RAM via TCP;\n"
+           "                      tools/trainer.py is the companion REPL)\n";
 }
 
 void game_run_nmi(void) {
@@ -230,7 +304,18 @@ void game_fill_frame_record(void *record) {
     /* slots 6..15 left at their zero-initialized state */
 }
 
-void game_post_render(uint32_t *framebuf) { (void)framebuf; }
+void game_post_render(uint32_t *framebuf) {
+#ifdef ENABLE_SEMCOMP
+    if (framebuf) {
+        /* Framebuf is g_render_width * 240 ARGB8888 (game_extras.h:79).
+         * The overlay positions itself within the left 256px so it stays
+         * inside the 4:3 viewport even in widescreen builds. */
+        semcomp_runtime_trainer_ui_render(framebuf, g_render_width, 240);
+    }
+#else
+    (void)framebuf;
+#endif
+}
 
 /* ---- Debug command handler (SMB-specific) ---- */
 
@@ -283,6 +368,112 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
             oper_mode, oper_task);
         return 1;
     }
+
+#ifdef ENABLE_SEMCOMP
+    /* ---- Trainer commands (require --trainer) ---- */
+    if (strcmp(cmd, "trainer_set") == 0) {
+        int addr = extras_json_get_int(json, "addr", -1);
+        int val  = extras_json_get_int(json, "val",  -1);
+        if (addr < 0 || val < 0) {
+            debug_server_send_fmt(
+                "{\"id\":%d,\"ok\":false,\"error\":\"trainer_set requires addr,val\"}\n", id);
+            return 1;
+        }
+        int ok = semcomp_runtime_trainer_set((uint16_t)addr, (uint8_t)val);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":%s,\"cmd\":\"trainer_set\",\"addr\":\"0x%04X\",\"val\":%d}\n",
+            id, ok ? "true" : "false", addr & 0xFFFF, val & 0xFF);
+        return 1;
+    }
+    if (strcmp(cmd, "trainer_freeze") == 0) {
+        int addr = extras_json_get_int(json, "addr", -1);
+        int val  = extras_json_get_int(json, "val",  -1);
+        if (addr < 0 || val < 0) {
+            debug_server_send_fmt(
+                "{\"id\":%d,\"ok\":false,\"error\":\"trainer_freeze requires addr,val\"}\n", id);
+            return 1;
+        }
+        int ok = semcomp_runtime_trainer_freeze((uint16_t)addr, (uint8_t)val);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":%s,\"cmd\":\"trainer_freeze\",\"addr\":\"0x%04X\",\"val\":%d,"
+            "\"enabled\":%s}\n",
+            id, ok ? "true" : "false", addr & 0xFFFF, val & 0xFF,
+            semcomp_runtime_trainer_enabled() ? "true" : "false");
+        return 1;
+    }
+    if (strcmp(cmd, "trainer_thaw") == 0) {
+        int addr = extras_json_get_int(json, "addr", -1);
+        if (addr < 0) {
+            debug_server_send_fmt(
+                "{\"id\":%d,\"ok\":false,\"error\":\"trainer_thaw requires addr\"}\n", id);
+            return 1;
+        }
+        int ok = semcomp_runtime_trainer_thaw((uint16_t)addr);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":%s,\"cmd\":\"trainer_thaw\",\"addr\":\"0x%04X\"}\n",
+            id, ok ? "true" : "false", addr & 0xFFFF);
+        return 1;
+    }
+    if (strcmp(cmd, "trainer_list") == 0) {
+        size_t n = semcomp_runtime_trainer_count();
+        /* Send a streaming JSON array. Bounded to kMaxFreezeEntries=32. */
+        char buf[1024];
+        int off = snprintf(buf, sizeof(buf),
+            "{\"id\":%d,\"cmd\":\"trainer_list\",\"enabled\":%s,\"count\":%zu,\"entries\":[",
+            id, semcomp_runtime_trainer_enabled() ? "true" : "false", n);
+        for (size_t i = 0; i < n && off < (int)sizeof(buf) - 64; ++i) {
+            off += snprintf(buf + off, sizeof(buf) - off,
+                "%s{\"addr\":\"0x%04X\",\"val\":%u}",
+                i ? "," : "",
+                semcomp_runtime_trainer_entry_addr(i),
+                semcomp_runtime_trainer_entry_value(i));
+        }
+        snprintf(buf + off, sizeof(buf) - off, "]}\n");
+        debug_server_send_fmt("%s", buf);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_mario") == 0) {
+        /* The "via semcomp facade" read path. Compare against read_ram
+         * of the same addresses to validate Mario's accessors. */
+        debug_server_send_fmt(
+            "{\"id\":%d,\"cmd\":\"semcomp_mario\","
+            "\"x\":%u,\"y\":%u,\"page\":%u,\"world_x\":%u,"
+            "\"x_velocity\":%d,\"y_velocity\":%d,\"x_speed_absolute\":%u,"
+            "\"power\":%u,\"physics_state\":%u,\"on_ground\":%s,\"facing\":%u}\n",
+            id,
+            semcomp_runtime_mario_x(),
+            semcomp_runtime_mario_y(),
+            semcomp_runtime_mario_page(),
+            semcomp_runtime_mario_world_x(),
+            (int)semcomp_runtime_mario_x_velocity(),
+            (int)semcomp_runtime_mario_y_velocity(),
+            semcomp_runtime_mario_x_speed_absolute(),
+            semcomp_runtime_mario_power(),
+            semcomp_runtime_mario_physics_state(),
+            semcomp_runtime_mario_on_ground() ? "true" : "false",
+            semcomp_runtime_mario_facing());
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_level") == 0) {
+        debug_server_send_fmt(
+            "{\"id\":%d,\"cmd\":\"semcomp_level\","
+            "\"world\":%u,\"level\":%u,\"world_level_packed\":%u}\n",
+            id,
+            semcomp_runtime_level_world(),
+            semcomp_runtime_level_level(),
+            semcomp_runtime_level_world_level_packed());
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_session") == 0) {
+        debug_server_send_fmt(
+            "{\"id\":%d,\"cmd\":\"semcomp_session\","
+            "\"lives\":%u,\"coins\":%u}\n",
+            id,
+            semcomp_runtime_session_lives(),
+            semcomp_runtime_session_coins());
+        return 1;
+    }
+#endif  /* ENABLE_SEMCOMP */
 
     return 0;
 }

@@ -28,7 +28,9 @@ enum class Direction : std::uint8_t {
 
 class Mario {
 public:
-    explicit Mario(const GameState& state) : state_(state) {}
+    // Phase 2: ctor takes a mutable GameState reference so set_* can call
+    // write8. Read-only callers are unaffected.
+    explicit Mario(GameState& state) : state_(state) {}
 
     // ---- Position --------------------------------------------------------
     std::uint8_t  x() const;
@@ -63,8 +65,19 @@ public:
     // ---- OAM ------------------------------------------------------------
     std::uint8_t spr_data_offset() const;
 
+    // ---- Writes (Phase 2) ------------------------------------------------
+    // Direct writes through the canonical RAM byte. Writes are stomped on
+    // the next game-logic frame unless the Trainer is freezing them
+    // post-NMI. Useful for the trainer and any mod-style overrides.
+    void set_x(std::uint8_t v);
+    void set_y(std::uint8_t v);
+    void set_page(std::uint8_t v);
+    void set_power(PowerStatus v);
+    void set_physics_state_raw(std::uint8_t v);
+    void set_facing(Direction v);
+
 private:
-    const GameState& state_;
+    GameState& state_;
 };
 
 }  // namespace smb::semcomp

@@ -20,6 +20,10 @@ std::uint16_t GameState::read_page_offset(std::uint16_t page_addr,
     return static_cast<std::uint16_t>((page << 8) | offset);
 }
 
+void GameState::write8(std::uint16_t addr, std::uint8_t val) {
+    g_ram[addr & 0x07FFu] = val;
+}
+
 std::uint8_t GameState::cpu_a() const { return g_cpu.A; }
 std::uint8_t GameState::cpu_x() const { return g_cpu.X; }
 std::uint8_t GameState::cpu_y() const { return g_cpu.Y; }
