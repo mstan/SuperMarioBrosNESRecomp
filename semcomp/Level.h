@@ -1,8 +1,7 @@
-// semcomp/Level.h — semantic facade over the current world/area state.
+// semcomp/Level.h — semantic facade over the current stage identity.
 //
-// Phase 0 is intentionally thin: WorldNumber/LevelNumber/AreaNumber addresses
-// are not yet verified against this repo's traces, so the class compiles but
-// exposes only documented entry points and a phase marker.
+// Phase 1: world/level accessors verified. Camera bounds remain on the
+// separate Camera class; Level is for stage identity, not viewport.
 #pragma once
 
 #include <cstdint>
@@ -15,15 +14,17 @@ class Level {
 public:
     explicit Level(const GameState& state) : state_(state) {}
 
-    // TODO(phase1): world(), level(), area() once $075F/$0760/$0750 (or the
-    // verified equivalents) are confirmed against a recorded trace. Returning
-    // unverified RAM here in Phase 0 would violate the "no invented mappings"
-    // rule from the handoff.
+    // 0-indexed. World 1-1 reads as world()=0, level()=0. Add 1 for HUD
+    // display per the original SMB render routine.
+    std::uint8_t world() const;
+    std::uint8_t level() const;
 
-    // True when phase-1 RAM-label work has not yet landed for the level
-    // subsystem. Callers can use this as a feature gate while migration is
-    // in flight.
-    bool labels_pending() const { return true; }
+    // Convenience: e.g. "1-1" → 0x11 (world 0 in high nibble, level 0
+    // in low nibble, each plus 1). Useful for switch-statement
+    // dispatch on stage identity.
+    std::uint16_t world_level_packed() const {
+        return static_cast<std::uint16_t>(((world() + 1) << 4) | (level() + 1));
+    }
 
 private:
     const GameState& state_;

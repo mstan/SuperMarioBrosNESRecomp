@@ -129,11 +129,12 @@ if(ENABLE_SEMCOMP)
         semcomp/Level.cpp
         semcomp/Camera.cpp
         semcomp/ModApi.cpp
+        semcomp/PlayerSession.cpp
         semcomp/SemcompGame.cpp
         semcomp/Selftest.cpp
     )
     target_compile_definitions(SuperMarioBrosRecomp PRIVATE ENABLE_SEMCOMP=1)
-    message(STATUS "Semcomp facade: ON (Phase 0 — compile-only, no behavior change)")
+    message(STATUS "Semcomp facade: ON (compile-only, not invoked from frame path)")
 endif()
 
 target_include_directories(SuperMarioBrosRecomp PRIVATE
