@@ -45,28 +45,29 @@ Requires one of:
 ## Game-Specific Commands
 
 ### `smb_state`
-Returns current gameplay state.
+Returns current gameplay state. Only trace-verified fields are exposed.
 
 ```json
 {
   "id": 1,
   "cmd": "smb_state",
-  "oper_mode": 0,        // 0=title/demo, 1=gameplay, 2=victory, 3=game over
-  "oper_task": 0,
-  "world": 0,            // 0-indexed world number (RAM 0x075A)
-  "level": 0,            // 0-indexed level number (RAM 0x075C)
+  "oper_mode": 0,        // 0=title/demo, 1=gameplay, 2=victory, 3=game over (RAM 0x0770)
+  "oper_task": 0,        // Sub-task within mode (RAM 0x0772)
   "player_x": 40,        // Mario X position (RAM 0x0086)
   "player_y": 176,       // Mario Y position (RAM 0x00CE)
-  "player_size": 0,      // 0=big, 1=small (RAM 0x001D)
-  "player_state": 0,     // (RAM 0x0756)
-  "area_type": 0,        // (RAM 0x075E)
   "score_hi": 0,         // (RAM 0x07FC)
   "score_mid": 0,        // (RAM 0x07FD)
   "score_lo": 0,         // (RAM 0x07FE)
-  "lives": 2,            // (RAM 0x075A — note: same as world, bug in extras.c)
+  "lives": 2,            // NumberofLives (RAM 0x075A)
   "frame_counter": 42    // (RAM 0x0009)
 }
 ```
+
+Fields previously exposed but removed (they were mislabeled or read the
+wrong RAM byte): `world`, `level`, `player_size`, `player_state`,
+`area_type`. Use `read_ram` against the canonical addresses below if
+you need them; the semcomp facade (`semcomp/SmbRamMap.h`) documents
+the authoritative labels.
 
 ### `smb_demo_state`
 Returns demo/attract mode timing.
@@ -86,20 +87,35 @@ Returns demo/attract mode timing.
 
 ## Key SMB RAM Addresses
 
+Canonical smbdis labels, trace-verified 2026-05-14. See
+`semcomp/SmbRamMap.h` for the full enumerated set.
+
 | Address | Name | Notes |
 |---------|------|-------|
 | 0x0009 | FrameCounter | Increments every frame |
-| 0x001D | PlayerSize | 0=big, 1=small |
-| 0x0086 | Player_X_Position | Pixel X within screen |
+| 0x001D | Player_State | Physics state (0=on ground, nonzero=airborne) |
+| 0x0033 | PlayerFacingDir | 0=none, 1=right, 2=left |
+| 0x0045 | Player_MovingDir | 0=none, 1=right, 2=left |
+| 0x0057 | Player_X_Speed | Signed velocity (integer part of 8.8 fixed-point) |
+| 0x006D | Player_PageLoc | Player 256px page |
+| 0x0086 | Player_X_Position | Pixel X within page |
+| 0x009F | Player_Y_Speed | Signed Y velocity |
 | 0x00CE | Player_Y_Position | Pixel Y |
-| 0x006D | ScrollAmount (lo) | Horizontal scroll amount |
-| 0x0756 | Player_State | Player state flags |
-| 0x075A | WorldNumber | 0-indexed |
-| 0x075C | LevelNumber | 0-indexed |
-| 0x075E | AreaType | Area type code |
+| 0x0700 | Player_XSpeedAbsolute | Unsigned speed magnitude (cap 40 = running) |
+| 0x0754 | PlayerSize | 0=tall, 1=short |
+| 0x0756 | PlayerStatus | Powerup: 0=Small, 1=Big, 2=Fire |
+| 0x075A | NumberofLives | Plus 1 for HUD display |
+| 0x075E | CoinTally | 0..99 |
+| 0x075F | WorldNumber | 0-indexed |
+| 0x0760 | LevelNumber | 0-indexed |
 | 0x0770 | OperMode | 0=title, 1=game, 2=victory, 3=game over |
 | 0x0772 | OperMode_Task | Sub-task within mode |
 | 0x0776 | DemoActionTimer | Demo playback timer |
+
+**Historical note:** earlier versions of this file documented `$001D`
+and `$0756` with swapped labels, and `$075A`/`$075C`/`$075E` as
+world/level/area_type. Those were wrong; the table above reflects
+verification against a recorded attract-demo trace.
 
 ---
 

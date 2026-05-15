@@ -215,16 +215,19 @@ char g_watchdog_stack_dump[1024] = "";
 
 void game_fill_frame_record(void *record) {
     NESFrameRecord *r = (NESFrameRecord *)record;
+    /* Only fields whose smbdis label has been trace-verified for this
+     * repo. Previous slots 4/6/7/8 were mislabeled ($001D and $0756
+     * were name-swapped, and $075A/$075C/$075E were the wrong bytes
+     * for world/level/area_type entirely). Consumers needing physics
+     * state, power status, or true world/level should use read_ram
+     * against the canonical addresses (see semcomp/SmbRamMap.h). */
     r->game_data[0] = g_ram[0x0770];  /* OperMode */
     r->game_data[1] = g_ram[0x0772];  /* OperMode_Task */
     r->game_data[2] = g_ram[0x0086];  /* Player_X_Position */
     r->game_data[3] = g_ram[0x00CE];  /* Player_Y_Position */
-    r->game_data[4] = g_ram[0x001D];  /* PlayerSize (0=big, 1=small) */
-    r->game_data[5] = g_ram[0x0009];  /* FrameCounter */
-    r->game_data[6] = g_ram[0x0756];  /* Player_State */
-    r->game_data[7] = g_ram[0x075A];  /* WorldNumber */
-    r->game_data[8] = g_ram[0x075C];  /* LevelNumber */
-    r->game_data[9] = g_ram[0x0776];  /* DemoActionTimer */
+    r->game_data[4] = g_ram[0x0009];  /* FrameCounter */
+    r->game_data[5] = g_ram[0x0776];  /* DemoActionTimer */
+    /* slots 6..15 left at their zero-initialized state */
 }
 
 void game_post_render(uint32_t *framebuf) { (void)framebuf; }
@@ -235,15 +238,18 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
     (void)json;
 
     if (strcmp(cmd, "smb_state") == 0) {
+        /* Trace-verified fields only. The previous version of this
+         * command exposed player_size/player_state/world/level/area_type
+         * which were either name-swapped ($001D, $0756) or reading the
+         * wrong byte entirely ($075A as world, $075C as level, $075E
+         * as area_type). Consumers that need physics state, power
+         * status, or actual world/level should use the read_ram
+         * command against the canonical addresses; the semcomp facade
+         * (semcomp/SmbRamMap.h) is the authoritative label source. */
         uint8_t oper_mode   = g_ram[0x0770];
         uint8_t oper_task   = g_ram[0x0772];
-        uint8_t world       = g_ram[0x075A];
-        uint8_t level       = g_ram[0x075C];
         uint8_t player_x    = g_ram[0x0086];
         uint8_t player_y    = g_ram[0x00CE];
-        uint8_t player_size = g_ram[0x001D];
-        uint8_t player_state = g_ram[0x0756];
-        uint8_t area_type   = g_ram[0x075E];
         uint8_t score_hi    = g_ram[0x07FC];
         uint8_t score_mid   = g_ram[0x07FD];
         uint8_t score_lo    = g_ram[0x07FE];
@@ -253,17 +259,11 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
         debug_server_send_fmt(
             "{\"id\":%d,\"cmd\":\"smb_state\","
             "\"oper_mode\":%d,\"oper_task\":%d,"
-            "\"world\":%d,\"level\":%d,"
             "\"player_x\":%d,\"player_y\":%d,"
-            "\"player_size\":%d,\"player_state\":%d,"
-            "\"area_type\":%d,"
             "\"score_hi\":%d,\"score_mid\":%d,\"score_lo\":%d,"
             "\"lives\":%d,\"frame_counter\":%d}\n",
             id, oper_mode, oper_task,
-            world, level,
             player_x, player_y,
-            player_size, player_state,
-            area_type,
             score_hi, score_mid, score_lo,
             lives, frame_ctr);
         return 1;
