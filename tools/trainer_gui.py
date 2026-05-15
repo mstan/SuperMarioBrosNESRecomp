@@ -101,14 +101,20 @@ class SlotDef:
     # When set, "Set" routes through this semantic-setter TCP command
     # (e.g. "semcomp_set_mario_power") so coupled-byte logic fires.
     # When None, falls back to raw trainer_set against this addr.
-    semantic_set_cmd:   Optional[str] = None
-    # Additional byte(s) to also freeze/thaw alongside this one (for
-    # coupled-byte slots like Power, where PlayerStatus needs to be
-    # frozen together with PlayerSize). Each entry is
-    # (addr, value_fn) where value_fn(primary_value) -> coupled_value.
-    freeze_couples:     Optional[list] = None
+    semantic_set_cmd:    Optional[str] = None
+    # When set, "Freeze" / "Thaw" route through C++ semantic freeze
+    # methods (e.g. "semcomp_freeze_mario_power" → Mario::freeze_power).
+    # The C++ class owns all the coupling knowledge; this GUI just names
+    # the field.  When None, falls back to raw trainer_freeze/thaw
+    # against this addr.
+    semantic_freeze_cmd: Optional[str] = None
+    semantic_thaw_cmd:   Optional[str] = None
+    # The "name" string the trainer_list TCP command uses to report this
+    # semantic freeze (e.g. "mario.power"). Used by polling to display
+    # the frozen state.
+    semantic_name:       Optional[str] = None
     # Optional warning to surface in the GUI row.
-    warning:            Optional[str] = None
+    warning:             Optional[str] = None
 
 
 def _fmt_enum(v: int, mapping: Dict[int, str]) -> str:
@@ -159,20 +165,26 @@ MARIO_SLOTS = [
     SlotDef(
         name="Power Status", addr=0x0756, sem_cmd="semcomp_mario", sem_field="power",
         semantic_set_cmd="semcomp_set_mario_power",
-        # When freezing power, also freeze PlayerSize ($0754) — otherwise
-        # the game shrinks Mario on hit and we get "Fire but visually Small".
-        # Size encoding: 1 = short (Small Mario), 0 = tall (Big/Fire).
-        freeze_couples=[(0x0754, lambda v: 1 if v == 0 else 0)],
+        semantic_freeze_cmd="semcomp_freeze_mario_power",
+        semantic_thaw_cmd="semcomp_thaw_mario_power",
+        semantic_name="mario.power",
         tooltip=(
             "Mario's power-up tier.\n"
             "  0 = Small  (default Mario; one hit = dead)\n"
             "  1 = Big    (after Super Mushroom; one hit shrinks to Small)\n"
             "  2 = Fire   (after Fire Flower; B button shoots fireballs)\n\n"
-            "Set via semantic setter Mario::set_power, which couples\n"
-            "PlayerStatus ($0756) and PlayerSize ($0754) — necessary\n"
-            "because the sprite/collision routines read Size, not Status.\n"
-            "Freeze locks both bytes; Raw bypass would leave Size unfrozen.\n\n"
-            "RAM: $0756 — smbdis: PlayerStatus  (coupled: $0754 PlayerSize)"
+            "Set / Freeze route through Mario::set_power, which owns the\n"
+            "full \"what does 'Power = Fire' mean\" coupling internally:\n"
+            "  $0756 PlayerStatus         — the tier itself\n"
+            "  $0754 PlayerSize           — 0=tall/1=short for the renderer\n"
+            "  $070B PlayerChangeSizeFlag — cleared so damage doesn't trigger\n"
+            "                               the visible shrink animation\n\n"
+            "The GUI is intentionally dumb about which bytes those are —\n"
+            "if SMB grows another power-related byte, the fix goes in the\n"
+            "C++ class, not here.  Raw bypass falls back to a single-byte\n"
+            "trainer_freeze of $0756 for verification (you'll see the old\n"
+            "Fire-but-Small-on-damage artifact).\n\n"
+            "RAM: $0756 — smbdis: PlayerStatus"
         ),
         enum_values={0: "Small", 1: "Big", 2: "Fire"},
         enum_readonly=True,
@@ -244,6 +256,9 @@ PLAYER_SLOTS = [
     SlotDef(
         name="Lives", addr=0x075A, sem_cmd="semcomp_session", sem_field="lives",
         semantic_set_cmd="semcomp_set_session_lives",
+        semantic_freeze_cmd="semcomp_freeze_session_lives",
+        semantic_thaw_cmd="semcomp_thaw_session_lives",
+        semantic_name="session.lives",
         warning="HUD doesn't auto-refresh — see tooltip",
         tooltip=(
             "Lives remaining BEYOND the current Mario (so '0' here = the Mario "
@@ -266,6 +281,9 @@ PLAYER_SLOTS = [
     SlotDef(
         name="Coins", addr=0x075E, sem_cmd="semcomp_session", sem_field="coins",
         semantic_set_cmd="semcomp_set_session_coins",
+        semantic_freeze_cmd="semcomp_freeze_session_coins",
+        semantic_thaw_cmd="semcomp_thaw_session_coins",
+        semantic_name="session.coins",
         warning="HUD doesn't auto-refresh — see tooltip",
         tooltip=(
             "Coins collected in the current run, 0–99.\nRolls over to 0 at "
@@ -412,26 +430,23 @@ class SlotRow:
             row=row_index, column=7, padx=2, pady=3)
 
         # Raw bypass checkbox. When checked, Set / Freeze / Thaw bypass
-        # the semantic setter (semcomp_set_*) and any coupled-byte
-        # logic, writing only the primary address via trainer_set /
-        # trainer_freeze.  Useful for verification work — set the same
-        # value semantic vs raw and observe whether the outcomes differ
-        # (they should, for any slot with coupling or clamping).
+        # the semantic methods and write only the primary address via
+        # trainer_set / trainer_freeze.  Useful for verification work —
+        # toggle on, set the same value, see whether the outcome
+        # differs from semantic.  Should differ for any slot with
+        # semantic_set_cmd or semantic_freeze_cmd defined.
         self.raw_var = tk.BooleanVar(value=False)
-        # Only show the checkbox when there's actually a difference
-        # between semantic and raw (a semantic_set_cmd or freeze_couples
-        # is defined). Otherwise raw and semantic are identical and the
-        # toggle is noise.
-        if slot.semantic_set_cmd or slot.freeze_couples:
+        if slot.semantic_set_cmd or slot.semantic_freeze_cmd:
             raw_cb = ttk.Checkbutton(parent, text="Raw", variable=self.raw_var)
             raw_cb.grid(row=row_index, column=8, padx=(8, 2), pady=3, sticky="w")
             Tooltip(raw_cb,
-                    "Bypass the semcomp semantic setter and any coupled-byte\n"
-                    "freezes for this row.  Writes only the primary address\n"
-                    "via trainer_set / trainer_freeze.  Useful for verifying\n"
-                    "what the semantic setter actually changes (e.g. checking\n"
-                    "that semantic Power=Fire produces a different outcome\n"
-                    "than raw $0756=2 alone).")
+                    "Bypass the semcomp semantic methods for this row.\n"
+                    "Set / Freeze / Thaw operate on the primary address\n"
+                    "only via trainer_set / trainer_freeze / trainer_thaw\n"
+                    "— no coupled bytes, no C++ class involvement.\n"
+                    "Useful for demonstrating what the semantic methods\n"
+                    "actually do differently (e.g. raw Power=Fire shows\n"
+                    "Fire-but-Small-on-damage; semantic doesn't).")
             warning_column = 9
         else:
             warning_column = 8
@@ -473,27 +488,18 @@ class SlotRow:
         if val is None:
             self.status_setter(f"freeze ${self.slot.addr:04X}: invalid value")
             return
-        # Primary byte is always frozen.
-        self.client.trainer_freeze(self.slot.addr, val & 0xFF)
-        # Coupled bytes (e.g. PlayerSize when freezing Power) — skipped
-        # when Raw bypass is on.
-        if self.raw_var.get():
-            return
-        for coupled_addr, value_fn in (self.slot.freeze_couples or []):
-            try:
-                cval = value_fn(val) & 0xFF
-            except Exception as e:  # noqa: BLE001
-                self.status_setter(f"freeze couple failed: {e}")
-                continue
-            self.client.trainer_freeze(coupled_addr, cval)
+        # Semantic path: C++ class owns the coupling, GUI just names the
+        # field. Raw path: single-byte trainer_freeze.
+        if self.raw_var.get() or not self.slot.semantic_freeze_cmd:
+            self.client.trainer_freeze(self.slot.addr, val & 0xFF)
+        else:
+            self.client.call_named(self.slot.semantic_freeze_cmd, val=val & 0xFF)
 
     def on_thaw(self):
-        self.client.trainer_thaw(self.slot.addr)
-        # Skip coupled thaws when Raw is on (caller wanted a raw-only op).
-        if self.raw_var.get():
-            return
-        for coupled_addr, _ in (self.slot.freeze_couples or []):
-            self.client.trainer_thaw(coupled_addr)
+        if self.raw_var.get() or not self.slot.semantic_thaw_cmd:
+            self.client.trainer_thaw(self.slot.addr)
+        else:
+            self.client.call_named(self.slot.semantic_thaw_cmd)
 
     def update(self, raw_val: Optional[int], sem_val: Optional[int],
                frozen_value: Optional[int]):
@@ -559,7 +565,9 @@ class TrainerTab(ttk.Frame):
         ttk.Label(self, text=note_text, foreground="#666",
                   wraplength=720, justify="left").grid(row=3, column=0, sticky="w")
 
-    def refresh(self, frozen_addrs: Dict[int, int], sem_responses: Dict[str, dict]):
+    def refresh(self, frozen_addrs: Dict[int, int],
+                semantic_freezes: Dict[str, int],
+                sem_responses: Dict[str, dict]):
         for row in self.rows:
             raw = self.client.read_ram(row.slot.addr)
             sem = None
@@ -567,7 +575,13 @@ class TrainerTab(ttk.Frame):
                 sem_resp = sem_responses.get(row.slot.sem_cmd)
                 if sem_resp:
                     sem = sem_resp.get(row.slot.sem_field)
-            row.update(raw, sem, frozen_addrs.get(row.slot.addr))
+            # Semantic freeze takes precedence in the display since the
+            # GUI ought to think in semantic terms.
+            if row.slot.semantic_name and row.slot.semantic_name in semantic_freezes:
+                fv = semantic_freezes[row.slot.semantic_name]
+            else:
+                fv = frozen_addrs.get(row.slot.addr)
+            row.update(raw, sem, fv)
 
 
 # ---------------------------------------------------------------------------
@@ -712,14 +726,15 @@ class TrainerGUI:
         try:
             tl = self.client.trainer_list()
             frozen = {int(e["addr"], 16): e["val"] for e in tl.get("entries", [])}
+            sem_freezes = {e["name"]: e["val"] for e in tl.get("semantic", [])}
             sem = {
                 "semcomp_mario":   self.client.semcomp("semcomp_mario"),
                 "semcomp_level":   self.client.semcomp("semcomp_level"),
                 "semcomp_session": self.client.semcomp("semcomp_session"),
             }
-            self.mario_tab.refresh(frozen, sem)
-            self.level_tab.refresh(frozen, sem)
-            self.player_tab.refresh(frozen, sem)
+            self.mario_tab.refresh(frozen, sem_freezes, sem)
+            self.level_tab.refresh(frozen, sem_freezes, sem)
+            self.player_tab.refresh(frozen, sem_freezes, sem)
             self.raw_tab.refresh(frozen, sem)
             self.error_count = 0
             world  = sem["semcomp_level"].get("world", "?")

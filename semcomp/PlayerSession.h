@@ -46,13 +46,32 @@ public:
     void set_lives(std::uint8_t v);
     void set_coins(std::uint8_t v);
 
+    // ---- Semantic freezes (Phase 2.5) ------------------------------------
+    // Same shape as Mario's freezes: record value, set immediately,
+    // re-assert each frame via apply_freezes().
+    void freeze_lives(std::uint8_t v);
+    void thaw_lives();
+    bool is_lives_frozen() const { return frozen_lives_active_; }
+    std::uint8_t frozen_lives_value() const { return frozen_lives_; }
+
+    void freeze_coins(std::uint8_t v);
+    void thaw_coins();
+    bool is_coins_frozen() const { return frozen_coins_active_; }
+    std::uint8_t frozen_coins_value() const { return frozen_coins_; }
+
+    void apply_freezes();
+
     // TODO(phase1.5): score (BCD triplet at $07FC..$07FE — addresses
     // present in extras.c's smb_state but not yet independently
     // verified by trace), game timer, and the 2P-mode/player-select
     // byte.
 
 private:
-    GameState& state_;
+    GameState&    state_;
+    bool          frozen_lives_active_ = false;
+    std::uint8_t  frozen_lives_        = 0;
+    bool          frozen_coins_active_ = false;
+    std::uint8_t  frozen_coins_        = 0;
 };
 
 }  // namespace smb::semcomp

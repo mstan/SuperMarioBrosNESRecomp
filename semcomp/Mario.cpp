@@ -67,24 +67,48 @@ void Mario::set_page(std::uint8_t v) {
     state_.write8(ram::Player_PageLoc, v);
 }
 void Mario::set_power(PowerStatus v) {
-    // Power-up is two coupled bytes in SMB: PlayerStatus (which power
-    // tier) and PlayerSize (the sprite/collision size used by the
-    // render and physics routines). Setting Status alone produces
-    // inconsistent state — e.g. "Fire" power but visually Small
-    // because the sprite routine reads Size, not Status. The fireball
-    // throw animation briefly reads Status, hence the one-frame
-    // big-Mario flicker before reverting on the next sprite update.
+    // "Mario's power" is a semantic concept that maps to multiple
+    // RAM bytes in SMB.  All bytes that contribute to the concept
+    // belong here; the trainer / mod API / GUI shouldn't have to know
+    // about any of them.
     //
-    // Size encoding: 0 = tall (Big or Fire Mario), 1 = short (Small).
+    //  $0756 PlayerStatus         — the tier itself (Small/Big/Fire)
+    //  $0754 PlayerSize           — sprite/collision size; 0=tall, 1=short.
+    //                               Without this Mario reads as Fire (so
+    //                               throws fireballs) but renders Small.
+    //  $070B PlayerChangeSizeFlag — set by damage routine to trigger the
+    //                               shrink animation. Cleared here so any
+    //                               in-progress damage transition is
+    //                               cancelled (the freeze path re-clears
+    //                               it every frame, which is why frozen
+    //                               Fire-Mario stops visually shrinking
+    //                               on damage).
     state_.write8(ram::PlayerStatus, static_cast<std::uint8_t>(v));
     state_.write8(ram::PlayerSize,
                   (v == PowerStatus::Small) ? std::uint8_t{1} : std::uint8_t{0});
+    state_.write8(ram::PlayerChangeSizeFlag, 0);
 }
 void Mario::set_physics_state_raw(std::uint8_t v) {
     state_.write8(ram::Player_State, v);
 }
 void Mario::set_facing(Direction v) {
     state_.write8(ram::PlayerFacingDir, static_cast<std::uint8_t>(v));
+}
+
+// ---- Semantic freezes -------------------------------------------------------
+
+void Mario::freeze_power(PowerStatus v) {
+    frozen_power_active_ = true;
+    frozen_power_        = v;
+    set_power(v);  // immediate
+}
+
+void Mario::thaw_power() {
+    frozen_power_active_ = false;
+}
+
+void Mario::apply_freezes() {
+    if (frozen_power_active_) set_power(frozen_power_);
 }
 
 }  // namespace smb::semcomp

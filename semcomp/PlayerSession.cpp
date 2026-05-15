@@ -37,4 +37,25 @@ void PlayerSession::set_coins(std::uint8_t v) {
     state_.write8(ram::CoinTally, clamp99(v));
 }
 
+// ---- Semantic freezes -------------------------------------------------------
+
+void PlayerSession::freeze_lives(std::uint8_t v) {
+    frozen_lives_active_ = true;
+    frozen_lives_        = clamp99(v);
+    set_lives(v);
+}
+void PlayerSession::thaw_lives() { frozen_lives_active_ = false; }
+
+void PlayerSession::freeze_coins(std::uint8_t v) {
+    frozen_coins_active_ = true;
+    frozen_coins_        = clamp99(v);
+    set_coins(v);
+}
+void PlayerSession::thaw_coins() { frozen_coins_active_ = false; }
+
+void PlayerSession::apply_freezes() {
+    if (frozen_lives_active_) set_lives(frozen_lives_);
+    if (frozen_coins_active_) set_coins(frozen_coins_);
+}
+
 }  // namespace smb::semcomp

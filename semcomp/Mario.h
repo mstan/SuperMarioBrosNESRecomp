@@ -67,8 +67,11 @@ public:
 
     // ---- Writes (Phase 2) ------------------------------------------------
     // Direct writes through the canonical RAM byte. Writes are stomped on
-    // the next game-logic frame unless the Trainer is freezing them
-    // post-NMI. Useful for the trainer and any mod-style overrides.
+    // the next game-logic frame unless apply_freezes() is re-asserting
+    // them post-NMI.  These setters carry the "what bytes does the
+    // semantic concept actually own" knowledge — for example
+    // set_power couples PlayerStatus + PlayerSize + PlayerChangeSizeFlag
+    // because all three contribute to "Mario is Fire".
     void set_x(std::uint8_t v);
     void set_y(std::uint8_t v);
     void set_page(std::uint8_t v);
@@ -76,8 +79,27 @@ public:
     void set_physics_state_raw(std::uint8_t v);
     void set_facing(Direction v);
 
+    // ---- Semantic freezes (Phase 2.5) ------------------------------------
+    // freeze_* records the desired value AND immediately asserts it.
+    // apply_freezes() — called once per frame post-NMI — re-asserts every
+    // active freeze via the corresponding set_* method, so coupled-byte
+    // logic re-runs every frame.  The trainer GUI is "dumb": it just
+    // calls freeze_power(Fire); Mario decides what bytes that means.
+    void freeze_power(PowerStatus v);
+    void thaw_power();
+    bool is_power_frozen() const { return frozen_power_active_; }
+    PowerStatus frozen_power_value() const { return frozen_power_; }
+
+    // apply_freezes is called every frame by SemcompGame::apply_post_nmi.
+    void apply_freezes();
+
 private:
     GameState& state_;
+    // Per-field optional-style frozen values. Using bool + value rather
+    // than std::optional to keep the ABI flat and the header dependency
+    // light.
+    bool        frozen_power_active_ = false;
+    PowerStatus frozen_power_        = PowerStatus::Small;
 };
 
 }  // namespace smb::semcomp

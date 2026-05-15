@@ -32,6 +32,21 @@ public:
     void shutdown() {}
     void update_frame() {}
 
+    // Called every frame post-NMI by extras.c (via Runtime bridge).
+    // Runs:
+    //   1. Trainer raw-byte freezes (addr-keyed; unchanged from Phase 2)
+    //   2. Mario semantic freezes (re-assert frozen Power, etc., which
+    //      re-runs Mario::set_power and thereby re-couples Size +
+    //      ChangeSizeFlag every frame)
+    //   3. PlayerSession semantic freezes (clamped lives/coins)
+    // The order matters: semantic runs AFTER raw so that a slot frozen
+    // both ways uses the semantic value.
+    void apply_post_nmi() {
+        trainer_.apply();
+        mario_.apply_freezes();
+        session_.apply_freezes();
+    }
+
     // ---- Const accessors (read paths) ------------------------------------
     const GameState&     state()   const { return state_;   }
     const Level&         level()   const { return level_;   }

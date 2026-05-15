@@ -33,7 +33,12 @@ int semcomp_runtime_trainer_enabled(void) {
     return runtime().trainer().enabled() ? 1 : 0;
 }
 void semcomp_runtime_apply_trainer(void) {
-    runtime().trainer().apply();
+    // Despite the legacy name, this now runs all per-frame post-NMI
+    // semcomp work: raw byte freezes (Trainer) AND semantic freezes
+    // (Mario, PlayerSession). Renaming the C symbol would break the
+    // existing extras.c integration; the name is kept and the
+    // semantics broadened.
+    runtime().apply_post_nmi();
 }
 int semcomp_runtime_trainer_set(uint16_t addr, uint8_t val) {
     return runtime().trainer().set(addr, val) ? 1 : 0;
@@ -121,6 +126,47 @@ void semcomp_runtime_set_session_lives(uint8_t v) {
 }
 void semcomp_runtime_set_session_coins(uint8_t v) {
     runtime().session().set_coins(v);
+}
+
+// ---- Semantic freezes ----------------------------------------------------
+
+void semcomp_runtime_freeze_mario_power(uint8_t v) {
+    runtime().mario().freeze_power(static_cast<smb::semcomp::PowerStatus>(v));
+}
+void semcomp_runtime_thaw_mario_power(void) {
+    runtime().mario().thaw_power();
+}
+int semcomp_runtime_is_mario_power_frozen(void) {
+    return runtime().mario().is_power_frozen() ? 1 : 0;
+}
+uint8_t semcomp_runtime_frozen_mario_power_value(void) {
+    return static_cast<uint8_t>(runtime().mario().frozen_power_value());
+}
+
+void semcomp_runtime_freeze_session_lives(uint8_t v) {
+    runtime().session().freeze_lives(v);
+}
+void semcomp_runtime_thaw_session_lives(void) {
+    runtime().session().thaw_lives();
+}
+int semcomp_runtime_is_session_lives_frozen(void) {
+    return runtime().session().is_lives_frozen() ? 1 : 0;
+}
+uint8_t semcomp_runtime_frozen_session_lives_value(void) {
+    return runtime().session().frozen_lives_value();
+}
+
+void semcomp_runtime_freeze_session_coins(uint8_t v) {
+    runtime().session().freeze_coins(v);
+}
+void semcomp_runtime_thaw_session_coins(void) {
+    runtime().session().thaw_coins();
+}
+int semcomp_runtime_is_session_coins_frozen(void) {
+    return runtime().session().is_coins_frozen() ? 1 : 0;
+}
+uint8_t semcomp_runtime_frozen_session_coins_value(void) {
+    return runtime().session().frozen_coins_value();
 }
 
 }  // extern "C"

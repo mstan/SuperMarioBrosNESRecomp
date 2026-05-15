@@ -43,6 +43,15 @@ constexpr std::uint16_t PlayerStatus        = 0x0756;
 // frames during powerup/damage transitions.
 constexpr std::uint16_t PlayerSize          = 0x0754;
 
+// Size-change animation flag. Set non-zero by the damage routine (and
+// by powerup pickup) to trigger the shrink/grow animation; sprite
+// renderer respects it for the animation frames even when PlayerSize is
+// at the target value. Mario::set_power clears this so the freeze
+// path suppresses the damage-shrink visual.
+// Smbdis: PlayerChangeSizeFlag. Reference only — not trace-verified
+// against this repo's traces yet.
+constexpr std::uint16_t PlayerChangeSizeFlag = 0x070B;
+
 // Facing and movement direction. Observed [0, 1, 2]:
 //   0 = none / uninitialized / title idle
 //   1 = right

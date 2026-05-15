@@ -96,6 +96,27 @@ void semcomp_runtime_set_mario_facing(uint8_t v);
 void semcomp_runtime_set_session_lives(uint8_t v);
 void semcomp_runtime_set_session_coins(uint8_t v);
 
+// ---- Semantic freezes (Phase 2.5) ----------------------------------------
+// Route a freeze request through the C++ semcomp class so coupling
+// logic re-runs every frame.  freeze_* records the value AND asserts
+// it immediately; thaw_* clears the freeze record (the Trainer's
+// per-frame apply will stop re-writing the bytes).  Listings are
+// returned by trainer_list via its "semantic" array.
+void semcomp_runtime_freeze_mario_power(uint8_t v);
+void semcomp_runtime_thaw_mario_power(void);
+int  semcomp_runtime_is_mario_power_frozen(void);
+uint8_t semcomp_runtime_frozen_mario_power_value(void);
+
+void semcomp_runtime_freeze_session_lives(uint8_t v);
+void semcomp_runtime_thaw_session_lives(void);
+int  semcomp_runtime_is_session_lives_frozen(void);
+uint8_t semcomp_runtime_frozen_session_lives_value(void);
+
+void semcomp_runtime_freeze_session_coins(uint8_t v);
+void semcomp_runtime_thaw_session_coins(void);
+int  semcomp_runtime_is_session_coins_frozen(void);
+uint8_t semcomp_runtime_frozen_session_coins_value(void);
+
 #ifdef __cplusplus
 }
 #endif

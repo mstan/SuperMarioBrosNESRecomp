@@ -417,7 +417,7 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
     if (strcmp(cmd, "trainer_list") == 0) {
         size_t n = semcomp_runtime_trainer_count();
         /* Send a streaming JSON array. Bounded to kMaxFreezeEntries=32. */
-        char buf[1024];
+        char buf[2048];
         int off = snprintf(buf, sizeof(buf),
             "{\"id\":%d,\"cmd\":\"trainer_list\",\"enabled\":%s,\"count\":%zu,\"entries\":[",
             id, semcomp_runtime_trainer_enabled() ? "true" : "false", n);
@@ -427,6 +427,29 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
                 i ? "," : "",
                 semcomp_runtime_trainer_entry_addr(i),
                 semcomp_runtime_trainer_entry_value(i));
+        }
+        /* Semantic freezes — one per known facade field. The list is
+         * intentionally enumerated rather than auto-generated so each
+         * field's addition is explicit in code. */
+        off += snprintf(buf + off, sizeof(buf) - off, "],\"semantic\":[");
+        int sem_count = 0;
+        if (semcomp_runtime_is_mario_power_frozen()) {
+            off += snprintf(buf + off, sizeof(buf) - off,
+                "%s{\"name\":\"mario.power\",\"val\":%u}",
+                sem_count++ ? "," : "",
+                semcomp_runtime_frozen_mario_power_value());
+        }
+        if (semcomp_runtime_is_session_lives_frozen()) {
+            off += snprintf(buf + off, sizeof(buf) - off,
+                "%s{\"name\":\"session.lives\",\"val\":%u}",
+                sem_count++ ? "," : "",
+                semcomp_runtime_frozen_session_lives_value());
+        }
+        if (semcomp_runtime_is_session_coins_frozen()) {
+            off += snprintf(buf + off, sizeof(buf) - off,
+                "%s{\"name\":\"session.coins\",\"val\":%u}",
+                sem_count++ ? "," : "",
+                semcomp_runtime_frozen_session_coins_value());
         }
         snprintf(buf + off, sizeof(buf) - off, "]}\n");
         debug_server_send_fmt("%s", buf);
@@ -471,6 +494,52 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
             id,
             semcomp_runtime_session_lives(),
             semcomp_runtime_session_coins());
+        return 1;
+    }
+
+    /* ---- Semantic freeze/thaw TCP commands ---- */
+    /* These route through C++ semantic methods so coupling logic
+     * fires every frame (apply_freezes re-asserts via set_*).  The
+     * coupling knowledge lives entirely in the C++ class — callers
+     * just name the field. */
+    if (strncmp(cmd, "semcomp_freeze_", 15) == 0) {
+        int val = extras_json_get_int(json, "val", -1);
+        if (val < 0 || val > 255) {
+            debug_server_send_fmt(
+                "{\"id\":%d,\"ok\":false,\"error\":\"semcomp_freeze_*: val 0-255 required\"}\n", id);
+            return 1;
+        }
+        const char *field = cmd + 15;
+        int handled = 1;
+        if      (strcmp(field, "mario_power")    == 0) semcomp_runtime_freeze_mario_power((uint8_t)val);
+        else if (strcmp(field, "session_lives")  == 0) semcomp_runtime_freeze_session_lives((uint8_t)val);
+        else if (strcmp(field, "session_coins")  == 0) semcomp_runtime_freeze_session_coins((uint8_t)val);
+        else handled = 0;
+        if (handled) {
+            debug_server_send_fmt(
+                "{\"id\":%d,\"ok\":true,\"cmd\":\"%s\",\"val\":%d}\n", id, cmd, val);
+        } else {
+            debug_server_send_fmt(
+                "{\"id\":%d,\"ok\":false,\"error\":\"unknown semantic field '%s'\"}\n",
+                id, field);
+        }
+        return 1;
+    }
+    if (strncmp(cmd, "semcomp_thaw_", 13) == 0) {
+        const char *field = cmd + 13;
+        int handled = 1;
+        if      (strcmp(field, "mario_power")    == 0) semcomp_runtime_thaw_mario_power();
+        else if (strcmp(field, "session_lives")  == 0) semcomp_runtime_thaw_session_lives();
+        else if (strcmp(field, "session_coins")  == 0) semcomp_runtime_thaw_session_coins();
+        else handled = 0;
+        if (handled) {
+            debug_server_send_fmt(
+                "{\"id\":%d,\"ok\":true,\"cmd\":\"%s\"}\n", id, cmd);
+        } else {
+            debug_server_send_fmt(
+                "{\"id\":%d,\"ok\":false,\"error\":\"unknown semantic field '%s'\"}\n",
+                id, field);
+        }
         return 1;
     }
 
