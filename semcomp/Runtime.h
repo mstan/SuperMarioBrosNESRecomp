@@ -117,6 +117,72 @@ void semcomp_runtime_thaw_session_coins(void);
 int  semcomp_runtime_is_session_coins_frozen(void);
 uint8_t semcomp_runtime_frozen_session_coins_value(void);
 
+// ---- Phase 3 routine replacement -----------------------------------------
+// Each replaced 6502 routine has a semantic C++ implementation in
+// semcomp/SmbRoutines.cpp; this bridge exposes invocation entry points
+// that extras.c can stitch into the replace_func body it provides to
+// the generated code (when game.toml's [[replace_func]] excludes the
+// generated body).
+//
+// Calling these directly from non-replace_func code paths is also
+// supported and useful — e.g. the Trainer's "Add coin" semantic setter
+// invokes semcomp_runtime_give_coin() so the full HUD refresh + 1-Up
+// side effects fire, rather than just incrementing $075E.
+//
+// Each call bumps the routine's invocation counter, queryable via
+// semcomp_runtime_routine_count / _entry_*.
+void semcomp_runtime_give_coin(void);
+
+// Grant N coins in a row — equivalent to N natural pickups, full side
+// effects (SFX, score, 1-Up at 100, HUD refresh). Bumps the GiveOneCoin
+// invocation counter by N. Driven by the trainer's "Add Coins" action
+// (positive N).
+void semcomp_runtime_add_coins(uint8_t n);
+
+// Subtract N from CoinTally (clamped at 0), refresh HUD. Driven by
+// negative N in the trainer's "Add Coins" input — no real-game verb
+// matches this; it's trainer-only.
+void semcomp_runtime_remove_coins(uint8_t n);
+
+// Coin grants pending in the per-frame ticker (see Runtime.cpp).
+// semcomp_runtime_add_coins(N) returns immediately after enqueueing,
+// and the grants drain one per frame from apply_post_nmi. Callers
+// that want the live $075E should poll, not trust the immediate
+// TCP-response echo.
+uint32_t semcomp_runtime_pending_coin_grants(void);
+
+// Same shape for lives. semcomp_runtime_add_lives bumps NumberofLives
+// by N (clamped at 99) and plays the extra-life jingle.
+// semcomp_runtime_remove_lives decrements (clamped at 0), silent.
+void semcomp_runtime_add_lives(uint8_t n);
+void semcomp_runtime_remove_lives(uint8_t n);
+
+// Score (6 BCD digits, max 999999). add takes a SIGNED delta.
+void     semcomp_runtime_set_score(uint32_t value);
+void     semcomp_runtime_add_score(int32_t  delta);
+uint32_t semcomp_runtime_get_score(void);
+
+// Game timer (3 BCD digits, 0..999). add takes a SIGNED delta.
+void     semcomp_runtime_set_timer(uint16_t seconds);
+void     semcomp_runtime_add_timer(int16_t  delta);
+uint16_t semcomp_runtime_get_timer(void);
+
+// Mario power: Small / Big / Fire. give_power_up steps up one tier
+// (capped at Fire); take_damage steps down one tier (stays at Small
+// rather than auto-killing). Both go through Mario::set_power so the
+// PlayerStatus / PlayerSize / PlayerChangeSizeFlag bytes stay coupled.
+// Return 1 iff a tier transition actually happened, 0 if at the limit.
+int semcomp_runtime_give_power_up(void);
+int semcomp_runtime_take_damage(void);
+
+// Diagnostics: list of registered (replaced) routine PCs and their
+// invocation counters. Populated lazily as semcomp_runtime_give_coin
+// (and future replacements) get called.
+size_t        semcomp_runtime_routine_count(void);
+uint16_t      semcomp_runtime_routine_entry_pc(size_t i);
+const char*   semcomp_runtime_routine_entry_name(size_t i);
+uint64_t      semcomp_runtime_routine_entry_invocations(size_t i);
+
 #ifdef __cplusplus
 }
 #endif

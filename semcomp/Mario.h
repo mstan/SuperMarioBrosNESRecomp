@@ -79,6 +79,25 @@ public:
     void set_physics_state_raw(std::uint8_t v);
     void set_facing(Direction v);
 
+    // ---- Phase 3 verbs ---------------------------------------------------
+    // give_power_up: Small → Big → Fire. Caps at Fire. No-op already-Fire.
+    //                Mirrors the natural mushroom/fire-flower pickup path:
+    //                writes the new $0756 tier, refreshes player palette
+    //                when promoting to Fire (GetPlayerColors @ $85F1), and
+    //                drives the player-routine selector ($0747/$0775/$0E/
+    //                $1D) so the game's per-frame PlayerCtrlRoutine plays
+    //                the multi-frame grow / fire-flower-flash animation.
+    //                Returns true iff a tier transition actually happened.
+    // take_damage:   Like getting hit by a Goomba: triggers the game's
+    //                InjurePlayer routine ($D92C). For Fire/Big Mario this
+    //                shrinks to Small with the invuln blink animation; for
+    //                Small Mario it kicks off the death animation flow.
+    //                Returns true iff the routine was actually invoked
+    //                (currently always true — InjurePlayer self-gates on
+    //                $079E invuln, which we pre-clear).
+    bool give_power_up();
+    bool take_damage();
+
     // ---- Semantic freezes (Phase 2.5) ------------------------------------
     // freeze_* records the desired value AND immediately asserts it.
     // apply_freezes() — called once per frame post-NMI — re-asserts every

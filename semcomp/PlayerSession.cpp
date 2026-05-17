@@ -2,6 +2,11 @@
 #include "semcomp/PlayerSession.h"
 #include "semcomp/GameState.h"
 #include "semcomp/SmbRamMap.h"
+#include "semcomp/SmbRoutines.h"
+
+extern "C" {
+#include "nes_runtime.h"  // maybe_trigger_vblank
+}
 
 namespace smb::semcomp {
 
@@ -32,9 +37,25 @@ void PlayerSession::set_lives(std::uint8_t v) {
     state_.write8(ram::NumberofLives, clamp99(v));
 }
 
-void PlayerSession::set_coins(std::uint8_t v) {
-    // Same caveat as set_lives — counter only; HUD doesn't auto-refresh.
+void PlayerSession::write_coins_raw(std::uint8_t v) {
     state_.write8(ram::CoinTally, clamp99(v));
+}
+
+void PlayerSession::set_coins(std::uint8_t v) {
+    // Phase 3: write the counter, queue the coin pickup SFX ($00FE bit
+    // 0 — the audible "ding"), and push a single status-bar refresh
+    // into VRAM_Buffer1 so the HUD digits reflect the new value at the
+    // next NMI.
+    //
+    // Unlike give_coin() (which would only handle +1 increments and
+    // bring score / 1-Up side effects), this is idempotent for arbitrary
+    // set-to-N values: counter is written exactly, no score change, no
+    // life grant, one SFX, one HUD refresh.
+    write_coins_raw(v);
+    int c = 0;
+    c += smb::semcomp::play_coin_pickup_sfx();
+    c += smb::semcomp::refresh_status_bar_cycles();
+    maybe_trigger_vblank(c);
 }
 
 // ---- Semantic freezes -------------------------------------------------------
@@ -55,7 +76,10 @@ void PlayerSession::thaw_coins() { frozen_coins_active_ = false; }
 
 void PlayerSession::apply_freezes() {
     if (frozen_lives_active_) set_lives(frozen_lives_);
-    if (frozen_coins_active_) set_coins(frozen_coins_);
+    // Coins: re-assert the byte without churning the HUD queue each frame.
+    // The initial freeze_coins() call already did one set_coins() (raw +
+    // refresh), so the on-screen value is correct from that point on.
+    if (frozen_coins_active_) write_coins_raw(frozen_coins_);
 }
 
 }  // namespace smb::semcomp

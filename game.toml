@@ -53,3 +53,10 @@ fixed = [
 bank0 = [
     0xB308,  # JSR target missing definition — bank0 explicit for correct suffix
 ]
+
+# [[replace_func]] — bodies provided by extras.c, recompiler skips emit.
+# Dispatch table and call-site references still resolve to func_XXXX_b0,
+# which extras.c defines as a thin extern-C shim into semcomp/SmbRoutines.cpp.
+[[replace_func]]
+bank = 0       # $8000-$BFFF range; default would be fixed_bank=1, which mismatches
+addr = 0xBBFE  # GiveOneCoin — semantic impl in smb::semcomp::give_one_coin

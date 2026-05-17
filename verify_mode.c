@@ -24,6 +24,38 @@ RunMode  g_run_mode = RUN_MODE_NATIVE;
 static uint64_t s_divergence_count = 0;
 static int s_emu_initialized = 0;
 
+/* Always-on divergence ring. Newest at (s_div_ring_total - 1) % SIZE. */
+static VerifyDivergence s_div_ring[VERIFY_DIVERGENCE_RING_SIZE];
+static uint64_t         s_div_ring_total = 0;
+
+static void push_divergence(uint64_t frame, uint16_t addr,
+                            uint8_t native_val, uint8_t emu_val,
+                            uint16_t total_diff_count) {
+    VerifyDivergence *r = &s_div_ring[s_div_ring_total %
+                                      VERIFY_DIVERGENCE_RING_SIZE];
+    r->frame            = frame;
+    r->first_diff_addr  = addr;
+    r->native_val       = native_val;
+    r->emu_val          = emu_val;
+    r->total_diff_count = total_diff_count;
+    s_div_ring_total++;
+}
+
+uint64_t verify_mode_divergence_ring_total(void) {
+    return s_div_ring_total;
+}
+
+int verify_mode_divergence_ring_get(uint64_t i, VerifyDivergence *out) {
+    if (!out) return 0;
+    if (s_div_ring_total == 0) return 0;
+    /* Oldest live entry index = max(0, total - SIZE). */
+    uint64_t oldest = (s_div_ring_total > VERIFY_DIVERGENCE_RING_SIZE)
+                      ? (s_div_ring_total - VERIFY_DIVERGENCE_RING_SIZE) : 0;
+    if (i < oldest || i >= s_div_ring_total) return 0;
+    *out = s_div_ring[i % VERIFY_DIVERGENCE_RING_SIZE];
+    return 1;
+}
+
 void verify_mode_init(const char *rom_path) {
 #ifdef ENABLE_NESTOPIA_ORACLE
     if (g_run_mode == RUN_MODE_NATIVE) return;
@@ -119,6 +151,10 @@ int verify_mode_run_nmi(void) {
 
     if (!passed) {
         s_divergence_count++;
+        push_divergence(g_frame_count,
+                        (uint16_t)first_diff_addr,
+                        first_native, first_emu,
+                        (uint16_t)diff_count);
         fprintf(stderr, "[verify] DIVERGE frame %llu: %d bytes differ | first: $%04X native=0x%02X emu=0x%02X\n",
                 (unsigned long long)g_frame_count, diff_count,
                 first_diff_addr, first_native, first_emu);

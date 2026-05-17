@@ -105,6 +105,99 @@ constexpr std::uint16_t NumberofLives       = 0x075A;
 // coins. 0..99 range expected in full gameplay.
 constexpr std::uint16_t CoinTally           = 0x075E;
 
+// Two-player slot index, $00 = player 1, $01 = player 2. Used by routines
+// that share work between the two players (CoinTallyOffsets, ScoreOffsets,
+// StatusBarNybbles all index off of CurrentPlayer).
+constexpr std::uint16_t CurrentPlayer       = 0x0753;
+
+// Per-player 1-Up coin counter. Independent of CoinTally — increments
+// every coin grab and is consumed by an outer routine for the 100-coin
+// extra-life award. Documented for completeness; not used directly by
+// the GiveOneCoin replacement.
+constexpr std::uint16_t CoinTallyFor1Ups    = 0x0748;
+
+// ---- Sound queue slots (CORRECTED) ----------------------------------------
+// The actual SFX queues are in ZERO PAGE, read by SoundEngine's handlers
+// (Square1SfxHandler reads $00FF; Square2SfxHandler reads $00FE). Each is
+// a bitmask — bit-per-SFX, so multiple effects can be queued in one byte.
+// Game code triggers an effect by ORing or storing the bit:
+//   $00FE bit 0 ($01) = coin pickup ("ding")   — JCoinC writes this at $BB79
+//   $00FE bit 6 ($40) = extra-life jingle       — GiveOneCoin 1-Up branch
+//   $00FF = Square1 SFX queue (various effects, exact map TBD)
+//
+// IMPORTANT: $0138 and $0139 are NOT sound queues — they are entries 4 and
+// 5 of the DigitModifier array (see below). The earlier naming was wrong;
+// it conflated the GiveOneCoin instructions LDA #$01; STA $0139 (which
+// sets DigitModifier[5]=1 for the BCD coin-digit add) with a sound queue.
+// The actual coin SFX queue write happens in the CALLER (JCoinC at $BB79:
+// STA $FE), not inside GiveOneCoin itself.
+constexpr std::uint16_t Square2_SoundQueue  = 0x00FE;
+constexpr std::uint16_t Square1_SoundQueue  = 0x00FF;
+
+// SFX magic values for Square2 queue. Each bit drives one effect.
+constexpr std::uint8_t  SFX_CoinPickup       = 0x01;  // bit 0
+constexpr std::uint8_t  SFX_ExtraLifeJingle  = 0x40;  // bit 6
+
+// ---- DigitModifier array --------------------------------------------------
+// $0134..$0139 is a 6-byte BCD-add work buffer that DigitsMathRoutine
+// ($8F5F) reads. Each entry says "add N to the corresponding digit
+// position of the target digit run." Callers set up DigitModifier[k] = N
+// before JSR'ing DigitsMathRoutine; the routine clears each entry as it
+// consumes it.
+//
+// GiveOneCoin uses two slots:
+//   $0139 DigitModifier[5] = 1 → advance the coin display by 1
+//   $0138 DigitModifier[4] = 2 → add 2 to the hundreds digit of score
+//                                (BCD math turns this into +200 points)
+constexpr std::uint16_t DigitModifier_Base  = 0x0134;     // base of 6-byte array
+constexpr std::uint16_t DigitModifier_4     = 0x0138;     // hundreds slot (score +200)
+constexpr std::uint16_t DigitModifier_5     = 0x0139;     // units slot (coin +1)
+
+// ---- VRAM update buffer ---------------------------------------------------
+// The CPU stages PPU writes into VRAM_Buffer1; the NMI handler flushes the
+// buffer at vblank. The HUD digit refresh path (PrintStatusBarNumbers ->
+// the tail of GiveOneCoin) drops a sentinel tile $24 into the buffer slot
+// at $02FB + VRAM_Buffer1_Offset when that slot reads zero.
+constexpr std::uint16_t VRAM_Buffer1        = 0x0301;
+constexpr std::uint16_t VRAM_Buffer1_Offset = 0x0300;
+constexpr std::uint16_t VRAM_Buffer1_BackQueue = 0x02FB;
+
+// Zero-page scratch slot $08 — generated code uses this as a scratch X
+// save across the GiveOneCoin fall-through to AddToScore. Named here so
+// the semantic replacement can do the same save/restore.
+constexpr std::uint16_t ZP_Scratch_08       = 0x0008;
+
+// ---- Score / Timer --------------------------------------------------------
+// Score is stored as 6 BCD digits per player. Two parallel copies exist:
+//   $07D7..$07DC PlayerOneScore_Display — what PrintStatusBarNumbers reads
+//                                          to push the HUD tiles. Each byte
+//                                          holds one decimal digit (0-9),
+//                                          leftmost = hundred-thousands.
+//   $07DD..$07E2 PlayerOneScore_Internal — gameplay-mutable; UpdateTopScore
+//                                          copies internal→display when the
+//                                          current run sets a new top.
+// Trainer-side set/add writes BOTH so the HUD reflects the new value
+// without waiting on UpdateTopScore.
+constexpr std::uint16_t PlayerOneScore_Display  = 0x07D7;
+constexpr std::uint16_t PlayerOneScore_Internal = 0x07DD;
+constexpr int           kScoreDigits            = 6;
+
+// Game timer — 3 BCD digits, hundreds/tens/units. Counts down during
+// gameplay. PrintStatusBarNumbers refreshes the displayed digits via the
+// same status-bar nybbles mechanism used for score and coins.
+constexpr std::uint16_t GameTimer_Hundreds = 0x07F8;
+constexpr std::uint16_t GameTimer_Tens     = 0x07F9;
+constexpr std::uint16_t GameTimer_Units    = 0x07FA;
+
+// ---- ROM tables (indexed by CurrentPlayer) --------------------------------
+// These live in PRG ROM, not work RAM, so they must be read via the
+// runtime's nes_read (which falls through the mapper) rather than via
+// GameState::read8 (which only models the 2KB work-RAM window). They are
+// adjacent to the GiveOneCoin routine itself in the original ROM.
+constexpr std::uint16_t ROM_CoinTallyOffsets = 0xBBF8;
+constexpr std::uint16_t ROM_ScoreOffsets     = 0xBBFA;
+constexpr std::uint16_t ROM_StatusBarNybbles = 0xBBFC;
+
 // TODO(phase1.5): score ($07FC..$07FE BCD triplet), GameTimer
 // ($0747..$0749 or similar; address unverified), AreaNumber (the
 // sub-area index inside a level used for pipe rooms). None of these

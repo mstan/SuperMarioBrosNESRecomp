@@ -29,20 +29,22 @@ public:
     // grants a 1-up at 100.
     std::uint8_t coins() const;
 
-    // ---- Writes (Phase 2) ------------------------------------------------
-    // IMPORTANT — HUD does not auto-refresh from these writes.  SMB's
-    // HUD digits live in PPU VRAM, fed by the VRAM update queue at
-    // $0301-$0344; that queue is built by the game's own coin-grant /
-    // life-grant routines, not by writes to $075E / $075A.  These
-    // setters update the *internal* counter, and the HUD reflects the
-    // new value only after the next game-driven event for that field.
-    // See memory/project_smb_hud_in_ppu.md for the full story and the
-    // Phase 3 plan to dispatch into the coin-grant routine for proper
-    // HUD refresh.
-    //
+    // ---- Writes (Phase 2 → Phase 3) --------------------------------------
     // Values are clamped to 0..99 because the HUD font only renders two
     // decimal digits; values >= 100 produce garbled glyphs (the byte is
     // used as a tile index in some render paths).
+    //
+    // set_coins (Phase 3): writes $075E AND emits a single status-bar
+    // refresh entry into VRAM_Buffer1, so the on-screen coin digits
+    // reflect the new value within one NMI. Uses
+    // smb::semcomp::refresh_status_bar() — no SFX, no score, no $0748
+    // tally side effects (unlike a full GiveOneCoin call). The freeze
+    // re-apply path uses write_coins_raw() to avoid churning the VRAM
+    // queue every frame for an unchanging value.
+    //
+    // set_lives: still raw-only — there's no GiveOneLife semantic routine
+    // yet, so the HUD does not auto-refresh for life writes. See
+    // memory/project_smb_hud_in_ppu.md for the broader HUD story.
     void set_lives(std::uint8_t v);
     void set_coins(std::uint8_t v);
 
@@ -67,6 +69,11 @@ public:
     // byte.
 
 private:
+    // Per-frame freeze maintenance path: bytes only, no HUD refresh, to
+    // avoid pushing a fresh status-bar update into VRAM_Buffer1 every
+    // frame for an unchanging frozen value.
+    void write_coins_raw(std::uint8_t v);
+
     GameState&    state_;
     bool          frozen_lives_active_ = false;
     std::uint8_t  frozen_lives_        = 0;

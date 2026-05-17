@@ -11,6 +11,7 @@
 #include "semcomp/Mario.h"
 #include "semcomp/ModApi.h"
 #include "semcomp/PlayerSession.h"
+#include "semcomp/RoutineRegistry.h"
 #include "semcomp/Trainer.h"
 #include "semcomp/TrainerUI.h"
 
@@ -26,7 +27,8 @@ public:
           session_(state_),
           trainer_(state_),
           trainer_ui_(*this),
-          mod_api_() {}
+          mod_api_(),
+          routines_() {}
 
     void init()     {}
     void shutdown() {}
@@ -66,15 +68,19 @@ public:
 
     ModApi&        mod_api()       { return mod_api_; }
 
+    RoutineRegistry&       routines()       { return routines_; }
+    const RoutineRegistry& routines() const { return routines_; }
+
 private:
-    GameState     state_;
-    Mario         mario_;
-    Level         level_;
-    Camera        camera_;
-    PlayerSession session_;
-    Trainer       trainer_;
-    TrainerUI     trainer_ui_;
-    ModApi        mod_api_;
+    GameState        state_;
+    Mario            mario_;
+    Level            level_;
+    Camera           camera_;
+    PlayerSession    session_;
+    Trainer          trainer_;
+    TrainerUI        trainer_ui_;
+    ModApi           mod_api_;
+    RoutineRegistry  routines_;
 };
 
 }  // namespace smb::semcomp

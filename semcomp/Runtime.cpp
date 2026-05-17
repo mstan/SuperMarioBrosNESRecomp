@@ -7,6 +7,11 @@
 #include "semcomp/Runtime.h"
 
 #include "semcomp/SemcompGame.h"
+#include "semcomp/SmbRoutines.h"
+
+extern "C" {
+#include "nes_runtime.h"
+}
 
 namespace {
 
@@ -14,6 +19,14 @@ smb::semcomp::SemcompGame& runtime() {
     static smb::semcomp::SemcompGame g;
     return g;
 }
+
+// Pending trainer coin grants. semcomp_runtime_add_coins bumps this;
+// apply_post_nmi drains one per frame by invoking the full give_coin()
+// path (= our $BBFE GiveOneCoin replacement). One grant per frame keeps
+// VRAM_Buffer1 to a single PrintStatusBarNumbers entry — bursting N in
+// a single frame overflows the ~64-byte buffer and corrupts the HUD
+// row with garbled tiles (observed for N>=10 or so).
+int g_pending_coin_grants = 0;
 
 }  // namespace
 
@@ -39,6 +52,20 @@ void semcomp_runtime_apply_trainer(void) {
     // existing extras.c integration; the name is kept and the
     // semantics broadened.
     runtime().apply_post_nmi();
+
+    // Drain one trainer coin grant per frame via the natural-pickup
+    // pattern: queue $00FE |= $01 (matches JCoinC at $BB79) then JSR
+    // give_coin (our $BBFE GiveOneCoin replacement). give_coin runs
+    // DigitsMathRoutine on BOTH the BCD coin-display digits and the
+    // score, increments the $075E byte (with 100-coin -> 1-Up rollover
+    // and extra-life jingle), and queues one HUD refresh entry.
+    if (g_pending_coin_grants > 0) {
+        const uint8_t q = nes_read(0x00FE);
+        nes_write(0x00FE, static_cast<uint8_t>(q | 0x01));
+        runtime().routines().note_invocation(0xBBFE);
+        smb::semcomp::give_coin();
+        g_pending_coin_grants--;
+    }
 }
 int semcomp_runtime_trainer_set(uint16_t addr, uint8_t val) {
     return runtime().trainer().set(addr, val) ? 1 : 0;
@@ -167,6 +194,79 @@ int semcomp_runtime_is_session_coins_frozen(void) {
 }
 uint8_t semcomp_runtime_frozen_session_coins_value(void) {
     return runtime().session().frozen_coins_value();
+}
+
+// ---- Phase 3 routine replacement -----------------------------------------
+
+void semcomp_runtime_give_coin(void) {
+    runtime().routines().register_routine(0xBBFE, "GiveOneCoin");
+    runtime().routines().note_invocation(0xBBFE);
+    smb::semcomp::give_coin();
+}
+
+void semcomp_runtime_add_coins(uint8_t n) {
+    // Queue N grants for the per-frame ticker. Each frame's apply_post_nmi
+    // drains one (full give_coin invocation, full HUD + BCD-digit update,
+    // rollover handling, SFX). Two earlier approaches both had bugs:
+    //
+    //   - Loop give_coin() N times inline: VRAM_Buffer1 overflow on
+    //     N>~7 (HUD row corrupted with stray '6' tiles).
+    //   - Atomic smb::semcomp::add_coins(N): only wrote the $075E byte,
+    //     not the BCD display digits — rollover fired internally but
+    //     the on-screen count never changed.
+    //
+    // Per-frame draining mirrors natural in-game pickup pacing exactly:
+    // 25 coins -> 25 frames -> ~0.42 seconds, visibly tickering up,
+    // with the 1-Up jingle landing on the natural rollover frame.
+    runtime().routines().register_routine(0xBBFE, "GiveOneCoin");
+    g_pending_coin_grants += n;
+}
+
+void semcomp_runtime_remove_coins(uint8_t n) {
+    smb::semcomp::remove_coins(n);
+}
+
+uint32_t semcomp_runtime_pending_coin_grants(void) {
+    return (uint32_t)(g_pending_coin_grants > 0 ? g_pending_coin_grants : 0);
+}
+
+void semcomp_runtime_add_lives(uint8_t n) {
+    smb::semcomp::add_lives(n);
+}
+
+void semcomp_runtime_remove_lives(uint8_t n) {
+    smb::semcomp::remove_lives(n);
+}
+
+void semcomp_runtime_set_score(uint32_t value)  { smb::semcomp::set_score(value); }
+void semcomp_runtime_add_score(int32_t  delta)  { smb::semcomp::add_score(delta); }
+uint32_t semcomp_runtime_get_score(void)        { return smb::semcomp::read_player_score(); }
+
+void semcomp_runtime_set_timer(uint16_t s)      { smb::semcomp::set_timer(s); }
+void semcomp_runtime_add_timer(int16_t  d)      { smb::semcomp::add_timer(d); }
+uint16_t semcomp_runtime_get_timer(void)        { return smb::semcomp::read_game_timer(); }
+
+int semcomp_runtime_give_power_up(void) {
+    return runtime().mario().give_power_up() ? 1 : 0;
+}
+int semcomp_runtime_take_damage(void) {
+    return runtime().mario().take_damage() ? 1 : 0;
+}
+
+size_t semcomp_runtime_routine_count(void) {
+    return runtime().routines().count();
+}
+uint16_t semcomp_runtime_routine_entry_pc(size_t i) {
+    if (i >= runtime().routines().count()) return 0;
+    return runtime().routines().entry(i).pc;
+}
+const char* semcomp_runtime_routine_entry_name(size_t i) {
+    if (i >= runtime().routines().count()) return "";
+    return runtime().routines().entry(i).name;
+}
+uint64_t semcomp_runtime_routine_entry_invocations(size_t i) {
+    if (i >= runtime().routines().count()) return 0;
+    return runtime().routines().entry(i).invocations;
 }
 
 }  // extern "C"

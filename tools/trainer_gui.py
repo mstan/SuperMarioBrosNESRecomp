@@ -252,57 +252,11 @@ LEVEL_SLOTS = [
 ]
 
 # ---- Player / session tab slots -------------------------------------------
-PLAYER_SLOTS = [
-    SlotDef(
-        name="Lives", addr=0x075A, sem_cmd="semcomp_session", sem_field="lives",
-        semantic_set_cmd="semcomp_set_session_lives",
-        semantic_freeze_cmd="semcomp_freeze_session_lives",
-        semantic_thaw_cmd="semcomp_thaw_session_lives",
-        semantic_name="session.lives",
-        warning="HUD doesn't auto-refresh — see tooltip",
-        tooltip=(
-            "Lives remaining BEYOND the current Mario (so '0' here = the Mario "
-            "you're playing is the last one; one more death = Game Over).\n"
-            "The HUD displays Lives+1 (a value of 2 shows as 'x3').\n\n"
-            "Decrements on Mario's death; +1 when a 1-Up Mushroom is collected "
-            "or every 100 Coins.\n\n"
-            "⚠ HUD limitation: SMB's lives/coins display digits live in PPU\n"
-            "VRAM and are only refreshed when the game's own life-grant /\n"
-            "level-intro code runs.  Setting this byte updates the internal\n"
-            "counter; the visible HUD won't reflect the new value until the\n"
-            "next time the game itself rewrites it (death/respawn, 1-Up\n"
-            "pickup, level transition).\n\n"
-            "Semantic setter clamps value to 0–99 to avoid garbled tile\n"
-            "glyphs (the byte gets used as a CHR tile index in some render\n"
-            "paths — e.g. 25 was rendering as 'F').\n\n"
-            "RAM: $075A — smbdis: NumberofLives"
-        ),
-    ),
-    SlotDef(
-        name="Coins", addr=0x075E, sem_cmd="semcomp_session", sem_field="coins",
-        semantic_set_cmd="semcomp_set_session_coins",
-        semantic_freeze_cmd="semcomp_freeze_session_coins",
-        semantic_thaw_cmd="semcomp_thaw_session_coins",
-        semantic_name="session.coins",
-        warning="HUD doesn't auto-refresh — see tooltip",
-        tooltip=(
-            "Coins collected in the current run, 0–99.\nRolls over to 0 at "
-            "100 and grants a 1-Up (Lives += 1).\n\n"
-            "⚠ HUD limitation: same as Lives — the displayed coin digits\n"
-            "live in PPU VRAM, populated by SMB's coin-grant routine which\n"
-            "writes BOTH the counter AND the VRAM update queue.  Setting\n"
-            "the counter alone leaves the HUD showing the old value until\n"
-            "the next natural coin pickup, which then increments from the\n"
-            "stale HUD value (so freezing at 66 with HUD=17 plus one\n"
-            "pickup gives HUD=18, not 67).\n\n"
-            "Phase 3 plan: dispatch into the coin-grant routine via\n"
-            "game_dispatch_override so the HUD refreshes correctly.  Until\n"
-            "then this setter only updates the counter.\n\n"
-            "Semantic setter clamps value to 0–99.\n\n"
-            "RAM: $075E — smbdis: CoinTally"
-        ),
-    ),
-]
+# Both Coins and Lives now live under "Actions" — the byte-level slot
+# rows are gone in favor of semantic verbs (Add Coins / Add Lives). Phase
+# 3 plan: future verbs (take_damage, give_power_up, ...) follow the same
+# pattern.
+PLAYER_SLOTS = []
 
 
 # ---------------------------------------------------------------------------
@@ -529,18 +483,38 @@ class SlotRow:
 
 
 class TrainerTab(ttk.Frame):
-    """A tab containing a set of SlotRows backed by a single semcomp_* cmd."""
+    """A tab containing a set of SlotRows backed by a single semcomp_* cmd.
+
+    Optional `actions` is a list of ActionDef tuples rendered as buttons
+    in a footer "Actions" group. Each click dispatches the named TCP
+    command — with or without a `val` argument depending on whether the
+    action declares an input field. This is the trainer's "semantic
+    verb" UI surface (e.g. "Add Coins" → semcomp_add_coins → N coin
+    grants), preferred over the byte-level Set/Freeze in the slot rows
+    above.
+    """
 
     def __init__(self, parent, title: str, slots, client: TrainerClient,
-                 status_setter: Callable[[str], None]):
+                 status_setter: Callable[[str], None],
+                 actions=None, actions_on_top=False):
         super().__init__(parent, padding=(8, 8, 8, 8))
         self.title  = title
         self.slots  = slots
         self.client = client
+        self.status_setter = status_setter
+
+        row = 0
+
+        if actions and actions_on_top:
+            row = self._build_actions(actions, row)
+            ttk.Separator(self, orient="horizontal").grid(
+                row=row, column=0, sticky="ew", pady=(8, 4))
+            row += 1
 
         # Header row.
         hdr = ttk.Frame(self)
-        hdr.grid(row=0, column=0, sticky="ew")
+        hdr.grid(row=row, column=0, sticky="ew")
+        row += 1
         hdr_cfg = [
             ("Field", 18, 0), ("Addr", 7, 1),
             ("Raw RAM", 14, 2), ("Semcomp", 14, 3),
@@ -552,18 +526,148 @@ class TrainerTab(ttk.Frame):
 
         # Slot rows.
         rows_frame = ttk.Frame(self)
-        rows_frame.grid(row=1, column=0, sticky="nsew", pady=(4, 0))
+        rows_frame.grid(row=row, column=0, sticky="nsew", pady=(4, 0))
+        row += 1
         self.rows = [SlotRow(rows_frame, i, s, client, status_setter)
                      for i, s in enumerate(slots)]
 
+        if actions and not actions_on_top:
+            ttk.Separator(self, orient="horizontal").grid(
+                row=row, column=0, sticky="ew", pady=(8, 4))
+            row += 1
+            row = self._build_actions(actions, row)
+
         # Per-tab note.
         ttk.Separator(self, orient="horizontal").grid(
-            row=2, column=0, sticky="ew", pady=(8, 4))
+            row=row, column=0, sticky="ew", pady=(8, 4))
+        row += 1
         note_text = ("Hover any Field name for a description of the byte. "
                      "Semcomp column should always equal Raw RAM; "
                      "mismatch (red) means the semcomp accessor reads the wrong address.")
         ttk.Label(self, text=note_text, foreground="#666",
-                  wraplength=720, justify="left").grid(row=3, column=0, sticky="w")
+                  wraplength=720, justify="left").grid(row=row, column=0, sticky="w")
+
+    def _build_actions(self, actions, row: int) -> int:
+        # One action per row: [entry] [button]. Keeps the row readable
+        # at a glance — the single horizontal row of 6 actions overflowed
+        # the window. Header label gets its own row above the grid.
+        actions_frame = ttk.Frame(self)
+        actions_frame.grid(row=row, column=0, sticky="w")
+        ttk.Label(actions_frame, text="Actions:",
+                  font=("Segoe UI", 9, "bold")).grid(
+            row=0, column=0, columnspan=2, sticky="w", padx=(0, 8), pady=(0, 4))
+        for i, action in enumerate(actions):
+            self._build_action(actions_frame, i + 1, action)
+        return row + 1
+
+    def _build_action(self, parent, row: int, action) -> None:
+        """Render one action on its own row.
+
+        ActionDef shape (dict, recommended):
+          {"label": str, "cmd": str, "tip": str,
+           "default": int|None,    # if given, action takes a `val` field
+           "neg_cmd": str|None,    # for signed inputs, command used when N<0
+           "scale": int = 1,       # display = val_sent * scale (val_sent = display / scale)
+           "max_abs": int = 255}   # GUI clamp on absolute value of (display / scale)
+
+        Or legacy tuple:
+          (label, cmd, tip)                            — no arg
+          (label, cmd, tip, default)                   — unsigned val
+          (label, cmd, tip, default, neg_cmd)          — signed val
+        """
+        a = self._normalize_action(action)
+        if a.get("default") is None:
+            btn = ttk.Button(
+                parent, text=a["label"], width=14,
+                command=lambda c=a["cmd"], l=a["label"]: self._on_action(c, l))
+            btn.grid(row=row, column=0, columnspan=2, padx=4, pady=2, sticky="w")
+            if a["tip"]: Tooltip(btn, a["tip"])
+            return
+
+        input_var = tk.StringVar(value=str(a["default"]))
+        ent = ttk.Entry(parent, textvariable=input_var, width=8)
+        ent.grid(row=row, column=0, padx=(4, 2), pady=2, sticky="w")
+        btn = ttk.Button(
+            parent, text=a["label"], width=14,
+            command=lambda cfg=a, v=input_var: self._on_action_val(cfg, v))
+        btn.grid(row=row, column=1, padx=2, pady=2, sticky="w")
+        if a["tip"]: Tooltip(btn, a["tip"])
+
+    @staticmethod
+    def _normalize_action(action) -> dict:
+        if isinstance(action, dict):
+            a = dict(action)
+        else:
+            a = {"label": action[0], "cmd": action[1], "tip": action[2]}
+            if len(action) >= 4: a["default"] = action[3]
+            if len(action) >= 5: a["neg_cmd"] = action[4]
+        a.setdefault("default", None)
+        a.setdefault("neg_cmd", None)
+        a.setdefault("scale",   1)   # display_val / scale = val sent to TCP
+        a.setdefault("step",    None) # quantum on the display value; defaults to scale
+        a.setdefault("max_abs", 255)
+        if a["step"] is None:
+            a["step"] = a["scale"]
+        return a
+
+    def _on_action(self, tcp_cmd: str, label: str):
+        try:
+            r = self.client.call_named(tcp_cmd)
+            self._report(label, r)
+        except (ConnectionError, OSError) as e:
+            self.status_setter(f"{label}: TCP error {e}")
+
+    def _on_action_val(self, cfg: dict, var: tk.StringVar):
+        label = cfg["label"]
+        scale = max(1, int(cfg.get("scale") or 1))
+        step  = max(1, int(cfg.get("step")  or scale))
+        raw   = var.get().strip()
+        try:
+            display = int(raw, 0) if raw else 0
+        except ValueError:
+            self.status_setter(f"{label}: invalid value '{raw}'"); return
+        # Quantum check on the display value. `step` is independent of
+        # `scale` so e.g. score can have scale=10 (C++ multiplies val by
+        # 10) yet require display to be a multiple of 100 (the smallest
+        # in-game-visible score change — the BCD ones place is hidden on
+        # the HUD).
+        if step > 1 and (display % step) != 0:
+            self.status_setter(
+                f"{label}: value must be a multiple of {step} (got {display})"); return
+        # After step validation, the display value is necessarily a
+        # multiple of scale (since step is a multiple of scale by
+        # construction). val_sent = display / scale is exact.
+        val_sent = display // scale
+        max_abs  = int(cfg.get("max_abs") or 255)
+        if not (-max_abs <= val_sent <= max_abs):
+            self.status_setter(
+                f"{label}: value out of range "
+                f"(|sent|={abs(val_sent)} > {max_abs}; "
+                f"display={display}, scale={scale})"); return
+        neg_cmd = cfg.get("neg_cmd")
+        if val_sent < 0:
+            if neg_cmd is None:
+                self.status_setter(
+                    f"{label}: negative not supported"); return
+            cmd = neg_cmd; payload = -val_sent
+        else:
+            cmd = cfg["cmd"]; payload = val_sent
+        try:
+            r = self.client.call_named(cmd, val=payload)
+            tag = f"{label} ({display:+d})" if display != 0 else f"{label} (0)"
+            self._report(tag, r)
+        except (ConnectionError, OSError) as e:
+            self.status_setter(f"{label}: TCP error {e}")
+
+    def _report(self, label: str, resp: dict):
+        if resp.get("ok"):
+            extras = []
+            for k in ("coin_tally", "lives", "n"):
+                if k in resp: extras.append(f"{k}={resp[k]}")
+            self.status_setter(f"{label}: ok" + (
+                f"  ({', '.join(extras)})" if extras else ""))
+        else:
+            self.status_setter(f"{label}: {resp}")
 
     def refresh(self, frozen_addrs: Dict[int, int],
                 semantic_freezes: Dict[str, int],
@@ -699,9 +803,80 @@ class TrainerGUI:
         nb = ttk.Notebook(self.root)
         nb.pack(fill="both", expand=True, padx=8, pady=(8, 0))
 
-        self.mario_tab  = TrainerTab(nb, "Mario",  MARIO_SLOTS,  self.client, self._status)
+        # Mario tab — Actions section (top) for semantic verbs; the
+        # byte-level slots stay below for inspection / freeze use.
+        self.mario_tab = TrainerTab(
+            nb, "Mario", MARIO_SLOTS, self.client, self._status,
+            actions_on_top=True,
+            actions=[
+                ("Give Power-Up", "semcomp_give_power_up",
+                 "Step Mario up one power tier: Small → Big → Fire.\n"
+                 "No-op at Fire. Routes through Mario::set_power so\n"
+                 "PlayerStatus, PlayerSize, and PlayerChangeSizeFlag\n"
+                 "stay coupled."),
+                ("Take Damage", "semcomp_take_damage",
+                 "Step Mario down one power tier: Fire → Big → Small.\n"
+                 "Stays at Small (does NOT auto-kill — the death\n"
+                 "animation flow is a separate Phase 3 verb to be\n"
+                 "lifted later)."),
+            ])
         self.level_tab  = TrainerTab(nb, "Level",  LEVEL_SLOTS,  self.client, self._status)
-        self.player_tab = TrainerTab(nb, "Player", PLAYER_SLOTS, self.client, self._status)
+        # Player tab — Actions are the primary verbs (slot rows are gone).
+        # Coins / Lives accept signed N (positive → add with SFX,
+        # negative → remove silent). Score uses scale=10 because SMB's
+        # smallest score increment is 10 points (BCD low digit is always
+        # 0 on the HUD); the user types the real point value, the GUI
+        # divides by 10 before sending, and the C++ side multiplies back.
+        self.player_tab = TrainerTab(
+            nb, "Player", PLAYER_SLOTS, self.client, self._status,
+            actions_on_top=True,
+            actions=[
+                {"label": "Add Coins", "cmd": "semcomp_add_coins",
+                 "default": 1, "neg_cmd": "semcomp_remove_coins",
+                 "tip":
+                 "Coin delta.\n"
+                 "  • Positive N → bump $075E by N (wraps every 100 with\n"
+                 "    one extra-life grant per rollover), HUD refresh,\n"
+                 "    one coin-pickup SFX (or extra-life jingle if a\n"
+                 "    rollover fired).\n"
+                 "  • Negative N → decrement $075E (clamped at 0), HUD\n"
+                 "    refresh, silent (no 'un-grab a coin' verb exists)."},
+                {"label": "Add Lives", "cmd": "semcomp_add_lives",
+                 "default": 1, "neg_cmd": "semcomp_remove_lives",
+                 "tip":
+                 "Life delta.\n"
+                 "  • Positive N → bump $075A by N (clamped at 99 — values\n"
+                 "    higher render as garbled HUD tiles), HUD refresh,\n"
+                 "    extra-life jingle.\n"
+                 "  • Negative N → decrement $075A (clamped at 0), HUD\n"
+                 "    refresh, silent."},
+                {"label": "Add Score", "cmd": "semcomp_add_score",
+                 "default": 100, "scale": 10, "step": 100, "max_abs": 99999,
+                 "tip":
+                 "Score delta in real points. Must be a multiple of 100\n"
+                 "(SMB's HUD only shows score changes in 100-point chunks —\n"
+                 "the rightmost two BCD digits aren't independently rendered\n"
+                 "during normal play). Positive adds, negative subtracts\n"
+                 "(clamped at 0 in C++). Max ±999900.\n\n"
+                 "Wire: GUI sends val = display/10; C++ handler multiplies\n"
+                 "back by 10. Writes BCD to both $07D7..$07DC (display)\n"
+                 "and $07DD..$07E2 (gameplay), refreshes HUD. No SFX."},
+                {"label": "Set Score", "cmd": "semcomp_set_score",
+                 "default": 50000, "scale": 10, "step": 100, "max_abs": 99999,
+                 "tip":
+                 "Set the score to an exact value (multiple of 100).\n"
+                 "Max 999900. Writes both BCD copies, refreshes HUD."},
+                {"label": "Add Time", "cmd": "semcomp_add_timer",
+                 "default": 100, "max_abs": 999,
+                 "tip":
+                 "Game-timer delta (signed). Positive extends, negative\n"
+                 "subtracts (clamped at 0; max 999). Refreshes HUD."},
+                {"label": "Set Time", "cmd": "semcomp_set_timer",
+                 "default": 400, "max_abs": 999,
+                 "tip":
+                 "Set the game timer to an exact value (0..999).\n"
+                 "Refreshes the HUD."},
+            ])
         self.raw_tab    = RawTab(nb, self.client, self._status)
 
         nb.add(self.mario_tab,  text="Mario")

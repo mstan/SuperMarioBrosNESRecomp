@@ -134,10 +134,12 @@ if(ENABLE_SEMCOMP)
         semcomp/Trainer.cpp
         semcomp/TrainerUI.cpp
         semcomp/Runtime.cpp
+        semcomp/RoutineRegistry.cpp
+        semcomp/SmbRoutines.cpp
         semcomp/Selftest.cpp
     )
     target_compile_definitions(SuperMarioBrosRecomp PRIVATE ENABLE_SEMCOMP=1)
-    message(STATUS "Semcomp facade: ON (Phase 2 — Trainer wired into post-NMI)")
+    message(STATUS "Semcomp facade: ON (Phase 3 framework — semantic GiveOneCoin available, not yet wired via replace_func)")
 endif()
 
 target_include_directories(SuperMarioBrosRecomp PRIVATE

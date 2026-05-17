@@ -276,6 +276,17 @@ void game_run_main(void) {
 
 int game_dispatch_override(uint16_t addr) { (void)addr; return 0; }
 
+/* ---- Phase 3 replace_func shims ----
+ * game.toml's [[replace_func]] suppresses generated bodies for these PCs;
+ * the dispatch table and JSR call sites still reference func_XXXX_b0, so we
+ * supply the symbol here and forward to the semantic implementation.
+ * Unconditional — replace_func runs at recomp time regardless of
+ * ENABLE_SEMCOMP, so the symbol must exist. Building with ENABLE_SEMCOMP=OFF
+ * yields a deliberate link error against semcomp_runtime_give_coin. */
+void func_BBFE_b0(void) { /* GiveOneCoin */
+    semcomp_runtime_give_coin();
+}
+
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     (void)pc; (void)addr; return val;
 }
@@ -547,8 +558,16 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
     /* Each routes through the C++ facade setter so coupled-byte logic
      * fires (e.g. Mario::set_power couples PlayerStatus + PlayerSize).
      * The trainer's trainer_set/freeze remain pure raw writes; these
-     * are the explicit semantic alternative the GUI uses by default. */
-    if (strncmp(cmd, "semcomp_set_", 12) == 0) {
+     * are the explicit semantic alternative the GUI uses by default.
+     *
+     * The prefix `semcomp_set_*` is byte-tier (val 0..255). Commands that
+     * accept a wider range (set_score, set_timer) are handled BELOW with
+     * exact-match strcmp — so we skip the prefix block for them, else the
+     * 0..255 clamp here would reject their inputs with a bogus
+     * "unknown semantic field" error. */
+    if (strncmp(cmd, "semcomp_set_", 12) == 0
+            && strcmp(cmd, "semcomp_set_score") != 0
+            && strcmp(cmd, "semcomp_set_timer") != 0) {
         int val = extras_json_get_int(json, "val", -1);
         if (val < 0 || val > 255) {
             debug_server_send_fmt(
@@ -577,7 +596,209 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
         }
         return 1;
     }
+
+    /* ---- Phase 3 routine replacement commands ----
+     * semcomp_routine_list — list registered (replaced) routines with
+     *   invocation counts. Useful for confirming a replacement actually
+     *   fired during a workload.
+     * semcomp_give_coin — directly call the semantic GiveOneCoin
+     *   from outside the game's frame path. Equivalent to what a future
+     *   replace_func wiring will do at $BBFE call sites; also exposed
+     *   independently for trainer use (so set_session_coins-style
+     *   helpers can grow into "actually grant a coin" behavior with
+     *   full HUD refresh). */
+    if (strcmp(cmd, "semcomp_routine_list") == 0) {
+        /* debug_server_send_line appends "\n" after every call, so
+         * multi-call response building emits one JSON fragment per line.
+         * Build the whole response into a local buffer and emit once. */
+        char buf[2048];
+        int pos = snprintf(buf, sizeof(buf),
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_routine_list\",\"routines\":[",
+            id);
+        size_t n = semcomp_runtime_routine_count();
+        for (size_t i = 0; i < n && pos < (int)sizeof(buf) - 1; i++) {
+            uint16_t pc      = semcomp_runtime_routine_entry_pc(i);
+            const char *name = semcomp_runtime_routine_entry_name(i);
+            uint64_t calls   = semcomp_runtime_routine_entry_invocations(i);
+            pos += snprintf(buf + pos, sizeof(buf) - pos,
+                "%s{\"pc\":\"0x%04X\",\"name\":\"%s\",\"invocations\":%llu}",
+                (i == 0) ? "" : ",", pc, name ? name : "",
+                (unsigned long long)calls);
+        }
+        snprintf(buf + pos, sizeof(buf) - pos, "]}");
+        debug_server_send_fmt("%s", buf);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_give_coin") == 0) {
+        semcomp_runtime_give_coin();
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_give_coin\","
+            "\"coin_tally\":%d,\"lives\":%d}\n",
+            id, g_ram[0x075E], g_ram[0x075A]);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_add_coins") == 0) {
+        int n = extras_json_get_int(json, "val", 1);
+        if (n < 0)   n = 0;
+        if (n > 255) n = 255;
+        semcomp_runtime_add_coins((uint8_t)n);
+        /* coin_tally echoed here is the LIVE byte at the moment of the
+         * response — the trainer's grants drain one per frame (see
+         * Runtime.cpp) so it lags by `queued`. Poll semcomp_session for
+         * live state, or just wait queued/60 seconds. */
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_add_coins\","
+            "\"n\":%d,\"coin_tally\":%d,\"lives\":%d,\"queued\":%u}\n",
+            id, n, g_ram[0x075E], g_ram[0x075A],
+            (unsigned)semcomp_runtime_pending_coin_grants());
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_remove_coins") == 0) {
+        int n = extras_json_get_int(json, "val", 1);
+        if (n < 0)   n = 0;
+        if (n > 255) n = 255;
+        semcomp_runtime_remove_coins((uint8_t)n);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_remove_coins\","
+            "\"n\":%d,\"coin_tally\":%d}\n",
+            id, n, g_ram[0x075E]);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_add_lives") == 0) {
+        int n = extras_json_get_int(json, "val", 1);
+        if (n < 0)   n = 0;
+        if (n > 255) n = 255;
+        semcomp_runtime_add_lives((uint8_t)n);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_add_lives\","
+            "\"n\":%d,\"lives\":%d}\n",
+            id, n, g_ram[0x075A]);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_remove_lives") == 0) {
+        int n = extras_json_get_int(json, "val", 1);
+        if (n < 0)   n = 0;
+        if (n > 255) n = 255;
+        semcomp_runtime_remove_lives((uint8_t)n);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_remove_lives\","
+            "\"n\":%d,\"lives\":%d}\n",
+            id, n, g_ram[0x075A]);
+        return 1;
+    }
+    /* Score has a 10-point quantum in SMB — the last digit is always 0
+     * on the HUD because the game only adds multiples of 10 (and 100 /
+     * 200 / 400 etc). To keep both TCP arg and GUI input compact, the
+     * `val` here is "tens of points": val=5 → 50 points, val=100 →
+     * 1000 points. The response echoes the real point delta so callers
+     * don't have to unscale. */
+    if (strcmp(cmd, "semcomp_set_score") == 0) {
+        int v = extras_json_get_int(json, "val", 0);
+        if (v < 0)       v = 0;
+        if (v > 99999)   v = 99999;       /* 99999 * 10 = 999990, fits 6 digits */
+        uint32_t points = (uint32_t)v * 10u;
+        semcomp_runtime_set_score(points);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_set_score\","
+            "\"val\":%d,\"points\":%u,\"score\":%u}\n",
+            id, v, (unsigned)points, (unsigned)semcomp_runtime_get_score());
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_add_score") == 0) {
+        int d = extras_json_get_int(json, "val", 0);
+        if (d < -99999) d = -99999;
+        if (d >  99999) d =  99999;
+        int32_t points_delta = (int32_t)d * 10;
+        semcomp_runtime_add_score(points_delta);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_add_score\","
+            "\"val\":%d,\"points_delta\":%d,\"score\":%u}\n",
+            id, d, (int)points_delta, (unsigned)semcomp_runtime_get_score());
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_set_timer") == 0) {
+        int v = extras_json_get_int(json, "val", 0);
+        if (v < 0)   v = 0;
+        if (v > 999) v = 999;
+        semcomp_runtime_set_timer((uint16_t)v);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_set_timer\",\"val\":%d,"
+            "\"timer\":%u}\n",
+            id, v, (unsigned)semcomp_runtime_get_timer());
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_add_timer") == 0) {
+        int d = extras_json_get_int(json, "val", 0);
+        if (d < -999) d = -999;
+        if (d >  999) d =  999;
+        semcomp_runtime_add_timer((int16_t)d);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_add_timer\",\"delta\":%d,"
+            "\"timer\":%u}\n",
+            id, d, (unsigned)semcomp_runtime_get_timer());
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_give_power_up") == 0) {
+        int changed = semcomp_runtime_give_power_up();
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_give_power_up\","
+            "\"changed\":%d,\"power\":%d}\n",
+            id, changed, g_ram[0x0756]);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_take_damage") == 0) {
+        int changed = semcomp_runtime_take_damage();
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_take_damage\","
+            "\"changed\":%d,\"power\":%d}\n",
+            id, changed, g_ram[0x0756]);
+        return 1;
+    }
 #endif  /* ENABLE_SEMCOMP */
+
+    /* ---- Verify mode divergence ring ----
+     * Query the always-on divergence ring populated by verify_mode.c
+     * each time a frame's WRAM disagrees with the Nestopia oracle.
+     * Optional args: "limit" (max entries to return, default 32),
+     * "since" (return only entries from this frame onward).
+     * The ring lives independently of ENABLE_SEMCOMP — useful for any
+     * --verify run, with or without routine replacements active. */
+    if (strcmp(cmd, "verify_diff_ring") == 0) {
+        int limit = extras_json_get_int(json, "limit", 32);
+        int since = extras_json_get_int(json, "since", 0);
+        if (limit < 1) limit = 1;
+        if (limit > VERIFY_DIVERGENCE_RING_SIZE) limit = VERIFY_DIVERGENCE_RING_SIZE;
+
+        uint64_t total  = verify_mode_divergence_ring_total();
+        uint64_t oldest = (total > (uint64_t)VERIFY_DIVERGENCE_RING_SIZE)
+                          ? (total - VERIFY_DIVERGENCE_RING_SIZE) : 0;
+        uint64_t start  = (total > (uint64_t)limit) ? (total - (uint64_t)limit) : 0;
+        if (start < oldest) start = oldest;
+
+        /* Build single-line response — see semcomp_routine_list note above. */
+        char buf[16000];
+        int pos = snprintf(buf, sizeof(buf),
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"verify_diff_ring\","
+            "\"total\":%llu,\"oldest_live\":%llu,\"entries\":[",
+            id, (unsigned long long)total, (unsigned long long)oldest);
+        int wrote = 0;
+        for (uint64_t i = start; i < total && pos < (int)sizeof(buf) - 256; i++) {
+            VerifyDivergence d;
+            if (!verify_mode_divergence_ring_get(i, &d)) continue;
+            if ((int)d.frame < since) continue;
+            pos += snprintf(buf + pos, sizeof(buf) - pos,
+                "%s{\"idx\":%llu,\"frame\":%llu,\"addr\":\"0x%04X\","
+                "\"native\":%d,\"emu\":%d,\"total_diffs\":%d}",
+                (wrote == 0) ? "" : ",",
+                (unsigned long long)i,
+                (unsigned long long)d.frame,
+                d.first_diff_addr, d.native_val, d.emu_val, d.total_diff_count);
+            wrote++;
+        }
+        snprintf(buf + pos, sizeof(buf) - pos, "]}");
+        debug_server_send_fmt("%s", buf);
+        return 1;
+    }
 
     return 0;
 }
