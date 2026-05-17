@@ -342,6 +342,19 @@ uint8_t semcomp_runtime_spawn_floatey(uint8_t points_table_index) {
     return smb::semcomp::spawn_floatey_above_mario(points_table_index);
 }
 
+// ---- Replace_func bridges ------------------------------------------------
+
+void semcomp_runtime_bump_block_replacement(void) {
+    runtime().routines().register_routine(0xBD9B, "BumpBlock");
+    runtime().routines().note_invocation(0xBD9B);
+    runtime().blocks().bump_block();
+}
+void semcomp_runtime_setup_powerup_replacement(void) {
+    runtime().routines().register_routine(0xBC49, "SetupPowerUp");
+    runtime().routines().note_invocation(0xBC49);
+    runtime().powerups().setup();
+}
+
 size_t semcomp_runtime_routine_count(void) {
     return runtime().routines().count();
 }

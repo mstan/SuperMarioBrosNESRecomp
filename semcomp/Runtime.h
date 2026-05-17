@@ -225,6 +225,15 @@ int semcomp_runtime_spawn_powerup(uint8_t type);
 // Returns the clamped index used.
 uint8_t semcomp_runtime_spawn_floatey(uint8_t points_table_index);
 
+// ---- Replace_func bridges (called from extras.c shims) -------------------
+// These are the entry points game.toml's [[replace_func]] suppresses
+// the generated body of. extras.c provides the linker symbol
+// func_XXXX_b0() and forwards into these. The C++ class methods own
+// the routine semantics; the natural in-game caller continues to
+// drive them.
+void semcomp_runtime_bump_block_replacement(void);    // $BD9B BumpBlock
+void semcomp_runtime_setup_powerup_replacement(void); // $BC49 SetupPowerUp
+
 // Diagnostics: list of registered (replaced) routine PCs and their
 // invocation counters. Populated lazily as semcomp_runtime_give_coin
 // (and future replacements) get called.

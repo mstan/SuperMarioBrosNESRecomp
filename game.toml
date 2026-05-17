@@ -60,3 +60,20 @@ bank0 = [
 [[replace_func]]
 bank = 0       # $8000-$BFFF range; default would be fixed_bank=1, which mismatches
 addr = 0xBBFE  # GiveOneCoin — semantic impl in smb::semcomp::give_one_coin
+
+# BumpBlock ($BD9B) — DEFERRED. Replacement attempted but the recompiler
+# emits its sub-handlers (MushFlowerBlock $BDD2, VineBlock $BDDF, the
+# $BB38/$BDD5/$BDD8 entries) as labels INSIDE BumpBlock's body rather
+# than as standalone functions. When [[replace_func]] suppresses
+# BumpBlock's body, the dispatch table still references the sub-handler
+# function symbols — and they're now missing at link time. Either the
+# recompiler needs an inner-label "split into separate function" hint,
+# or we re-implement the sub-handlers in C++ too. Revisit in a later
+# phase; the Blocks class stays in semcomp/ as documentation.
+
+# SetupPowerUp — owned by smb::semcomp::Powerups. Natural caller is
+# MushFlowerBlock at $BDD2 (when Mario bumps a power-up brick). Verified
+# in-game by hitting a ?-block or brick that contains a power-up.
+[[replace_func]]
+bank = 0
+addr = 0xBC49

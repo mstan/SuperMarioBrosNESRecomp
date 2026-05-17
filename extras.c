@@ -287,6 +287,14 @@ void func_BBFE_b0(void) { /* GiveOneCoin */
     semcomp_runtime_give_coin();
 }
 
+/* BumpBlock $BD9B deferred — sub-handlers MushFlowerBlock / VineBlock
+ * live as inner labels in the recompiler's emission and can't be
+ * resolved when BumpBlock is replace_func'd. See game.toml comment. */
+
+void func_BC49_b0(void) { /* SetupPowerUp */
+    semcomp_runtime_setup_powerup_replacement();
+}
+
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     (void)pc; (void)addr; return val;
 }
