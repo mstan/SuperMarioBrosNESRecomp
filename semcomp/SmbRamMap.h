@@ -103,11 +103,44 @@ constexpr std::uint16_t kPC_KillEnemy        = 0xE18E;
 constexpr std::uint16_t kPC_EnemyStomped     = 0xD969;
 constexpr std::uint16_t kPC_SpawnEnemyByID   = 0xC26C;
 
+// Block + power-up + floatey routine entry points.
+//   $BD9B BumpBlock             — invoke a brick/coin/powerup bump.
+//                                 A = block code (0..8), $05 = metatile col.
+//   $BC49 SetupPowerUp          — spawn a power-up entity. X = slot,
+//                                 $0039 PowerUpType = mushroom/flower/star/1up.
+//   $DA11 SetupFloateyNumber    — pop a "+N pts" sprite. X = obj slot,
+//                                 A = points-table index (0..9 -> 100..8000).
+constexpr std::uint16_t kPC_BumpBlock           = 0xBD9B;
+constexpr std::uint16_t kPC_SetupPowerUp        = 0xBC49;
+constexpr std::uint16_t kPC_SetupFloateyNumber  = 0xDA11;
+
+// PowerUpType byte read by SetupPowerUp / HandlePowerUpCollision.
+//   0 = mushroom
+//   1 = fire flower (also star vs flower decision)
+//   2 = star
+//   3 = 1-up
+// Game writes this when a bumped brick is configured for power-ups.
+constexpr std::uint16_t PowerUpType          = 0x0039;
+
+// BumpBlock scratch — metatile column / row staging.
+constexpr std::uint16_t Block_BumpedMetaCol  = 0x0005;
+
 // ---- Camera / screen bounds -----------------------------------------------
 constexpr std::uint16_t ScreenLeft_PageLoc  = 0x071A;
 constexpr std::uint16_t ScreenLeft_X_Pos    = 0x071C;
 constexpr std::uint16_t ScreenRight_PageLoc = 0x071B;
 constexpr std::uint16_t ScreenRight_X_Pos   = 0x071D;
+
+// Scroll-lock flag. ScrollHandler at $AF9D reads this; if non-zero,
+// the auto-scroll code is skipped. SMB uses it in boss rooms to pin
+// the camera. Trainer "Lock Camera" sets and reasserts this.
+constexpr std::uint16_t ScrollLock          = 0x0723;
+
+// Per-frame scroll amount staged at the bottom of UpdScrollVar at
+// $AFC4 (TYA / STA $0775). ScrollScreen reads it back to advance
+// $071C/$071A. Zeroing this each frame is an alternative to setting
+// $0723 — same end effect, slightly different code paths.
+constexpr std::uint16_t ScrollAmount        = 0x0775;
 
 // ---- Level identity -------------------------------------------------------
 // 0-indexed: World 1-1 reads as world=0, level=0. The HUD displays "1-1"

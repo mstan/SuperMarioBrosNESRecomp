@@ -311,6 +311,37 @@ int semcomp_runtime_stomp_enemy(uint8_t slot) {
     return 1;
 }
 
+// ---- Camera ---------------------------------------------------------------
+
+uint16_t semcomp_runtime_camera_left_world_x(void) {
+    return runtime().camera().left_world_x();
+}
+uint16_t semcomp_runtime_camera_right_world_x(void) {
+    return runtime().camera().right_world_x();
+}
+int semcomp_runtime_camera_is_locked(void) {
+    return runtime().camera().is_locked() ? 1 : 0;
+}
+void semcomp_runtime_camera_set_world_x(uint16_t world_x) {
+    runtime().camera().set_world_x(world_x);
+}
+void semcomp_runtime_camera_lock(void)   { runtime().camera().lock();   }
+void semcomp_runtime_camera_unlock(void) { runtime().camera().unlock(); }
+
+// ---- World verbs ---------------------------------------------------------
+
+int semcomp_runtime_bump_block_under_mario(uint8_t block_code) {
+    smb::semcomp::bump_block_under_mario(block_code);
+    return 1;
+}
+int semcomp_runtime_spawn_powerup(uint8_t type) {
+    smb::semcomp::spawn_powerup(type);
+    return 1;
+}
+uint8_t semcomp_runtime_spawn_floatey(uint8_t points_table_index) {
+    return smb::semcomp::spawn_floatey_above_mario(points_table_index);
+}
+
 size_t semcomp_runtime_routine_count(void) {
     return runtime().routines().count();
 }

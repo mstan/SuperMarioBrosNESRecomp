@@ -710,6 +710,105 @@ class TrainerTab(ttk.Frame):
 
 
 # ---------------------------------------------------------------------------
+# World tab — camera, block bumps, power-up spawn, floatey points
+# ---------------------------------------------------------------------------
+
+class WorldTab(ttk.Frame):
+    """Phase 4 verbs: camera lock / teleport, block bump under Mario,
+    power-up entity spawn, standalone floatey-points popup. Each is a
+    one-shot button (or input + button) with the relevant TCP command
+    wired up — same dispatch pattern as the Player tab Actions."""
+
+    def __init__(self, parent, client: TrainerClient,
+                 status_setter: Callable[[str], None]):
+        super().__init__(parent, padding=(8, 8, 8, 8))
+        self.client = client
+        self.status_setter = status_setter
+
+        # ---- Camera section ----
+        ttk.Label(self, text="Camera", font=("Segoe UI", 10, "bold")).grid(
+            row=0, column=0, sticky="w", pady=(0, 4))
+        cam = ttk.Frame(self)
+        cam.grid(row=1, column=0, sticky="w", pady=(0, 8))
+
+        self.cam_status = tk.StringVar(value="left=?   right=?   locked=?")
+        ttk.Label(cam, textvariable=self.cam_status,
+                  foreground="#444", width=44).grid(
+            row=0, column=0, columnspan=4, sticky="w", padx=(0, 8), pady=(0, 4))
+
+        ttk.Button(cam, text="Lock",   width=8,
+                   command=lambda: self._fire("semcomp_camera_lock",   "Lock Camera")
+                   ).grid(row=1, column=0, padx=2)
+        ttk.Button(cam, text="Unlock", width=8,
+                   command=lambda: self._fire("semcomp_camera_unlock", "Unlock Camera")
+                   ).grid(row=1, column=1, padx=2)
+
+        self.cam_x_var = tk.StringVar(value="0")
+        ttk.Entry(cam, textvariable=self.cam_x_var, width=8).grid(
+            row=1, column=2, padx=(12, 2))
+        ttk.Button(cam, text="Teleport (world X)", width=18,
+                   command=self._on_teleport).grid(row=1, column=3, padx=2)
+
+        ttk.Separator(self, orient="horizontal").grid(
+            row=2, column=0, sticky="ew", pady=(8, 4))
+        ttk.Label(self, foreground="#666", justify="left", wraplength=720,
+                  text=(
+                    "Camera teleport sets the screen-left/right page+x bytes; "
+                    "the level loader won't re-stream — small offsets in the "
+                    "currently-loaded window are visually clean.\n\n"
+                    "Note: Player tab → Add Score automatically pops a "
+                    "floatey-points sprite (+N pts) above Mario, picking the "
+                    "closest preset to the score delta (100 / 200 / 400 / "
+                    "500 / 800 / 1000 / 2000 / 4000 / 5000 / 8000).\n\n"
+                    "Block-bump and power-up entity spawn TCP commands "
+                    "(semcomp_bump_block, semcomp_spawn_powerup, "
+                    "semcomp_spawn_floatey) exist but are deferred from "
+                    "the GUI — the natural-caller state setup is more "
+                    "intricate than a single button can stage. Revisit "
+                    "after researching BumpBlock metatile staging and "
+                    "SetupPowerUp slot conventions.")).grid(
+            row=3, column=0, sticky="w")
+
+    def _fire(self, cmd, label):
+        try:
+            r = self.client.call_named(cmd)
+            self.status_setter(f"{label}: {'ok' if r.get('ok') else r}")
+        except (ConnectionError, OSError) as e:
+            self.status_setter(f"{label}: TCP error {e}")
+
+    def _fire_val(self, cmd, val, label):
+        try:
+            r = self.client.call_named(cmd, val=val)
+            self.status_setter(f"{label}: {'ok' if r.get('ok') else r}")
+        except (ConnectionError, OSError) as e:
+            self.status_setter(f"{label}: TCP error {e}")
+
+    def _parse_combo_int(self, s):
+        # "N - Name" -> N; "N" -> N.
+        head = s.split("-", 1)[0].strip() if "-" in s else s.strip()
+        try: return int(head, 0)
+        except ValueError: return 0
+
+    def _on_teleport(self):
+        try: wx = int(self.cam_x_var.get(), 0)
+        except ValueError:
+            self.status_setter("Teleport: invalid world X"); return
+        self._fire_val("semcomp_camera_set_world_x", wx, "Teleport")
+
+    def refresh(self, _frozen_addrs, _sem_responses):
+        # Live camera status.
+        try:
+            r = self.client.call_named("semcomp_camera")
+        except (ConnectionError, OSError):
+            return
+        if not r.get("ok"): return
+        self.cam_status.set(
+            f"left={r.get('left_world_x','?')}   "
+            f"right={r.get('right_world_x','?')}   "
+            f"locked={r.get('locked','?')}")
+
+
+# ---------------------------------------------------------------------------
 # Enemies tab — facade over the 5-slot enemy array
 # ---------------------------------------------------------------------------
 
@@ -1085,12 +1184,14 @@ class TrainerGUI:
                  "Refreshes the HUD."},
             ])
         self.enemies_tab = EnemiesTab(nb, self.client, self._status)
+        self.world_tab   = WorldTab(nb, self.client, self._status)
         self.raw_tab     = RawTab(nb, self.client, self._status)
 
         nb.add(self.mario_tab,   text="Mario")
         nb.add(self.level_tab,   text="Level")
         nb.add(self.player_tab,  text="Player")
         nb.add(self.enemies_tab, text="Enemies")
+        nb.add(self.world_tab,   text="World")
         nb.add(self.raw_tab,     text="Raw")
 
         # Status bar.
@@ -1120,6 +1221,7 @@ class TrainerGUI:
             self.level_tab.refresh(frozen, sem_freezes, sem)
             self.player_tab.refresh(frozen, sem_freezes, sem)
             self.enemies_tab.refresh(frozen, sem)
+            self.world_tab.refresh(frozen, sem)
             self.raw_tab.refresh(frozen, sem)
             self.error_count = 0
             world  = sem["semcomp_level"].get("world", "?")

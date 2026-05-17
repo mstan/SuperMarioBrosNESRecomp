@@ -13,20 +13,37 @@ class GameState;
 
 class Camera {
 public:
-    explicit Camera(const GameState& state) : state_(state) {}
+    // Mutable now (Phase 4): set_world_x / lock both write to RAM.
+    // Constructed in SemcompGame with a mutable GameState ref.
+    explicit Camera(GameState& state) : state_(state) {}
 
-    // Left edge of the visible screen in world coordinates.
-    std::uint16_t left_world_x() const;
-    // Right edge of the visible screen in world coordinates.
-    std::uint16_t right_world_x() const;
+    // ---- Reads -----------------------------------------------------------
+    std::uint16_t left_world_x() const;     // ($071A << 8) | $071C
+    std::uint16_t right_world_x() const;    // ($071B << 8) | $071D
+    std::uint16_t width() const;            // right - left (always 256 stock)
+    bool          is_locked() const;        // $0723 != 0
 
-    // Convenience: width of the camera in world pixels.
-    // Always 256 in stock SMB; included for parity with future widescreen
-    // semcomp work where camera width is variable.
-    std::uint16_t width() const;
+    // ---- Mutations -------------------------------------------------------
+    // Teleport the camera. Writes the page byte and offset within page for
+    // BOTH the left and right edges (keeping width=256). Level data won't
+    // re-stream from ROM though — for small offsets within the current
+    // loaded window the visual jump is clean; for large jumps you'll see
+    // garbled or blank tiles until the player walks the level loader to
+    // the new area.
+    void set_world_x(std::uint16_t world_x);
+
+    // Lock auto-scroll. Sets $0723 (the boss-room scroll-lock flag the
+    // ScrollHandler reads at $AF9D). Reasserted every frame in
+    // apply_freezes so the natural scroll code can't clear it.
+    void lock();
+    void unlock();
+
+    // Called every frame by SemcompGame::apply_post_nmi.
+    void apply_freezes();
 
 private:
-    const GameState& state_;
+    GameState& state_;
+    bool       locked_ = false;
 };
 
 }  // namespace smb::semcomp

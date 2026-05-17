@@ -203,6 +203,28 @@ int semcomp_runtime_freeze_enemies(void);
 int semcomp_runtime_kill_enemy(uint8_t slot);
 int semcomp_runtime_stomp_enemy(uint8_t slot);
 
+// ---- Camera (Phase 4) ----------------------------------------------------
+uint16_t semcomp_runtime_camera_left_world_x(void);
+uint16_t semcomp_runtime_camera_right_world_x(void);
+int      semcomp_runtime_camera_is_locked(void);
+void     semcomp_runtime_camera_set_world_x(uint16_t world_x);
+void     semcomp_runtime_camera_lock(void);
+void     semcomp_runtime_camera_unlock(void);
+
+// ---- World verbs (Phase 4) -----------------------------------------------
+// Bump a block at Mario's metatile column. Returns 1 (always — best
+// effort; if BumpBlock didn't match it silently does nothing).
+int semcomp_runtime_bump_block_under_mario(uint8_t block_code);
+
+// Spawn a power-up entity in slot 5. type: 0=mushroom, 1=fire flower,
+// 2=star, 3=1-up. Returns 1.
+int semcomp_runtime_spawn_powerup(uint8_t type);
+
+// Pop a floatey number above Mario. points_table_index: 0..9 mapping
+// to {100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000}.
+// Returns the clamped index used.
+uint8_t semcomp_runtime_spawn_floatey(uint8_t points_table_index);
+
 // Diagnostics: list of registered (replaced) routine PCs and their
 // invocation counters. Populated lazily as semcomp_runtime_give_coin
 // (and future replacements) get called.

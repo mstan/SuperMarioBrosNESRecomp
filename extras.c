@@ -839,6 +839,70 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
             "\"slot\":%d,\"stomped\":%d}\n", id, slot, n);
         return 1;
     }
+
+    /* ---- Camera (Phase 4) ---- */
+    if (strcmp(cmd, "semcomp_camera") == 0) {
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_camera\","
+            "\"left_world_x\":%u,\"right_world_x\":%u,\"locked\":%s}\n",
+            id,
+            (unsigned)semcomp_runtime_camera_left_world_x(),
+            (unsigned)semcomp_runtime_camera_right_world_x(),
+            semcomp_runtime_camera_is_locked() ? "true" : "false");
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_camera_lock") == 0) {
+        semcomp_runtime_camera_lock();
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_camera_lock\"}\n", id);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_camera_unlock") == 0) {
+        semcomp_runtime_camera_unlock();
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_camera_unlock\"}\n", id);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_camera_set_world_x") == 0) {
+        int wx = extras_json_get_int(json, "val", 0);
+        if (wx < 0)       wx = 0;
+        if (wx > 0xFFFF)  wx = 0xFFFF;
+        semcomp_runtime_camera_set_world_x((uint16_t)wx);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_camera_set_world_x\","
+            "\"world_x\":%d}\n", id, wx);
+        return 1;
+    }
+
+    /* ---- World verbs (Phase 4): blocks, power-ups, floateys ---- */
+    if (strcmp(cmd, "semcomp_bump_block") == 0) {
+        int code = extras_json_get_int(json, "val", 4);  /* 4 = brick */
+        if (code < 0 || code > 8) code = 4;
+        semcomp_runtime_bump_block_under_mario((uint8_t)code);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_bump_block\","
+            "\"block_code\":%d}\n", id, code);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_spawn_powerup") == 0) {
+        int type = extras_json_get_int(json, "val", 0);  /* 0 = mushroom */
+        if (type < 0 || type > 3) type = 0;
+        semcomp_runtime_spawn_powerup((uint8_t)type);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_spawn_powerup\","
+            "\"type\":%d}\n", id, type);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_spawn_floatey") == 0) {
+        int idx = extras_json_get_int(json, "val", 0);  /* 0 = 100 pts */
+        if (idx < 0) idx = 0;
+        if (idx > 9) idx = 9;
+        uint8_t used = semcomp_runtime_spawn_floatey((uint8_t)idx);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_spawn_floatey\","
+            "\"index\":%u}\n", id, (unsigned)used);
+        return 1;
+    }
 #endif  /* ENABLE_SEMCOMP */
 
     /* ---- Verify mode divergence ring ----

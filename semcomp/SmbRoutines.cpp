@@ -390,6 +390,14 @@ void add_score(std::int32_t delta) {
     if (next > 999999)    next = 999999;
     write_player_score(static_cast<std::uint32_t>(next));
     maybe_trigger_vblank(refresh_status_bar_cycles());
+    // Cosmetic: pop a floatey "+N pts" above Mario for any positive
+    // delta. Picks the closest preset (100/200/400/500/800/1000/2000/
+    // 4000/5000/8000) — for the natural in-game amounts this maps 1:1;
+    // for trainer arbitrary values the visual amount may not match the
+    // BCD-updated amount exactly. Negative deltas suppress the floatey.
+    if (delta > 0) {
+        spawn_floatey_above_mario(pick_floatey_index_for_score(delta));
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -427,6 +435,62 @@ void add_timer(std::int16_t delta) {
     if (next > 999) next = 999;
     write_game_timer(static_cast<std::uint16_t>(next));
     maybe_trigger_vblank(refresh_status_bar_cycles());
+}
+
+// ---------------------------------------------------------------------------
+// Phase 4 world verbs (block / power-up / floatey)
+// ---------------------------------------------------------------------------
+
+void bump_block_under_mario(std::uint8_t block_code) {
+    // Mario's world X / 16 = metatile column. Stage at $05 (the
+    // BumpBlock zero-page scratch). Pass A = block_code so BlockBumpedChk
+    // matches against its dispatch table.
+    const std::uint8_t mario_page = nes_read(ram::Player_PageLoc);
+    const std::uint8_t mario_x    = nes_read(ram::Player_X_Position);
+    const std::uint16_t world_x   = static_cast<std::uint16_t>(
+        (mario_page << 8) | mario_x);
+    const std::uint8_t metatile_col = static_cast<std::uint8_t>(world_x >> 4);
+    nes_write(ram::Block_BumpedMetaCol, metatile_col);
+    g_cpu.A = block_code;
+    call_by_address(ram::kPC_BumpBlock);
+}
+
+void spawn_powerup(std::uint8_t type) {
+    // Convention: power-up entities live in slot 5 (one past the 5-slot
+    // enemy array). The natural game also uses an extended slot for
+    // power-ups; using 5 here keeps it isolated from the Goomba/Koopa
+    // entries.
+    constexpr std::uint8_t kPowerupSlot = 5;
+    nes_write(ram::PowerUpType, type);
+    g_cpu.X = kPowerupSlot;
+    call_by_address(ram::kPC_SetupPowerUp);
+}
+
+std::uint8_t spawn_floatey_above_mario(std::uint8_t points_table_index) {
+    if (points_table_index > 9) points_table_index = 9;
+    // SetupFloateyNumber reads $CF+X for the floatey's initial Y —
+    // with X=0 that's Player_Y_Position. We pass slot 0 so the floatey
+    // anchors above Mario. Other reads inside the routine (e.g. $73,
+    // $8C indexed by X) also reach into the player's per-slot state,
+    // which we leave alone.
+    g_cpu.X = 0;
+    g_cpu.A = points_table_index;
+    call_by_address(ram::kPC_SetupFloateyNumber);
+    return points_table_index;
+}
+
+std::uint8_t pick_floatey_index_for_score(std::int32_t points_delta) {
+    static constexpr int kPresets[10] = {
+        100, 200, 400, 500, 800, 1000, 2000, 4000, 5000, 8000
+    };
+    const std::int32_t mag = points_delta < 0 ? -points_delta : points_delta;
+    int best_i = 0;
+    int best_d = mag > kPresets[0] ? mag - kPresets[0] : kPresets[0] - mag;
+    for (int i = 1; i < 10; ++i) {
+        const int d = mag > kPresets[i] ? mag - kPresets[i] : kPresets[i] - mag;
+        if (d < best_d) { best_d = d; best_i = i; }
+    }
+    return static_cast<std::uint8_t>(best_i);
 }
 
 }  // namespace smb::semcomp

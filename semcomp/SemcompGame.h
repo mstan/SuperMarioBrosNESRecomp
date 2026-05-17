@@ -49,11 +49,13 @@ public:
         trainer_.apply();
         mario_.apply_freezes();
         session_.apply_freezes();
+        camera_.apply_freezes();
     }
 
     // ---- Const accessors (read paths) ------------------------------------
     const GameState&     state()   const { return state_;   }
     const Level&         level()   const { return level_;   }
+    Camera&              camera()        { return camera_;  }
     const Camera&        camera()  const { return camera_;  }
 
     // ---- Mutable Mario / PlayerSession / Trainer accessors --------------

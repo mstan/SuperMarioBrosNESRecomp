@@ -131,4 +131,39 @@ void          write_game_timer(std::uint16_t seconds);
 void          set_timer(std::uint16_t seconds);
 void          add_timer(std::int16_t delta);
 
+// ---- World verbs (Phase 4) ----
+
+// Bump the block at the metatile column nearest Mario. Stages $05 with
+// (Mario.world_x() / 16), loads A with `block_code` (0..8 per BumpBlock's
+// dispatch table), and calls $BD9B BumpBlock. Best-effort — if the
+// position doesn't resolve to a bumpable metatile, BumpBlock silently
+// returns. Typical block_code: 4 = brick.
+void bump_block_under_mario(std::uint8_t block_code = 4);
+
+// Spawn a power-up entity (mushroom / flower / star / 1-up) in front of
+// Mario. Writes $0039 (PowerUpType), seeds the power-up slot (an
+// extension of the enemy-slot array — slot 5 conventionally), then
+// calls $BC49 SetupPowerUp with X = that slot. The natural in-game
+// chain is brick-bump -> SetupPowerUp; we skip the brick and go
+// straight to the spawn. type values:
+//   0 = mushroom (super)
+//   1 = fire flower (or star if Mario is Big — natural game decision)
+//   2 = star (forced)
+//   3 = 1-up mushroom
+void spawn_powerup(std::uint8_t type);
+
+// Pop a floatey-number sprite ("+100", "+1000", ...) above Mario.
+// `points_table_index` selects the value displayed:
+//   0=100, 1=200, 2=400, 3=500, 4=800, 5=1000,
+//   6=2000, 7=4000, 8=5000, 9=8000
+// Returns the index actually used (clamped to 0..9). The trainer's
+// add_score wrapper uses pick_floatey_index_for_score() below to
+// pick the closest preset to the requested delta.
+std::uint8_t spawn_floatey_above_mario(std::uint8_t points_table_index);
+
+// Mapping helper: given a score delta in real points, return the
+// index whose preset value is closest. Used by add_score to fire
+// a cosmetic floatey alongside the BCD update.
+std::uint8_t pick_floatey_index_for_score(std::int32_t points_delta);
+
 }  // namespace smb::semcomp
