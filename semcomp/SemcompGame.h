@@ -6,6 +6,7 @@
 #pragma once
 
 #include "semcomp/Camera.h"
+#include "semcomp/Enemies.h"
 #include "semcomp/GameState.h"
 #include "semcomp/Level.h"
 #include "semcomp/Mario.h"
@@ -25,6 +26,7 @@ public:
           level_(state_),
           camera_(state_),
           session_(state_),
+          enemies_(state_),
           trainer_(state_),
           trainer_ui_(*this),
           mod_api_(),
@@ -60,6 +62,8 @@ public:
     const Mario&         mario()   const { return mario_;   }
     PlayerSession&       session()       { return session_; }
     const PlayerSession& session() const { return session_; }
+    Enemies&             enemies()       { return enemies_; }
+    const Enemies&       enemies() const { return enemies_; }
     Trainer&             trainer()       { return trainer_; }
     const Trainer&       trainer() const { return trainer_; }
 
@@ -77,6 +81,7 @@ private:
     Level            level_;
     Camera           camera_;
     PlayerSession    session_;
+    Enemies          enemies_;
     Trainer          trainer_;
     TrainerUI        trainer_ui_;
     ModApi           mod_api_;

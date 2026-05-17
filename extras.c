@@ -754,6 +754,91 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
             id, changed, g_ram[0x0756]);
         return 1;
     }
+
+    /* ---- Enemy commands (Phase 3+) ----
+     * The "enemies" concept is a new semcomp abstraction over SMB's
+     * parallel per-byte enemy arrays at $000F+/$0016+/$001E+/... etc.
+     * Reads list active slots; bulk verbs invoke the natural in-game
+     * KillEnemy ($E18E) / EnemyStomped ($D969) routines via
+     * call_by_address with X = slot. */
+    if (strcmp(cmd, "semcomp_enemies") == 0) {
+        /* List all 5 slots with active state + key fields. Single
+         * send_fmt to avoid the debug_server_send_line per-call
+         * newline-fragmenting issue. */
+        char buf[1024];
+        int pos = snprintf(buf, sizeof(buf),
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_enemies\","
+            "\"active_count\":%d,\"slots\":[",
+            id, semcomp_runtime_enemy_active_count());
+        for (int i = 0; i < 5 && pos < (int)sizeof(buf) - 1; i++) {
+            int active = semcomp_runtime_enemy_active((uint8_t)i);
+            pos += snprintf(buf + pos, sizeof(buf) - pos,
+                "%s{\"slot\":%d,\"active\":%s",
+                (i == 0) ? "" : ",", i, active ? "true" : "false");
+            if (active) {
+                pos += snprintf(buf + pos, sizeof(buf) - pos,
+                    ",\"id\":%u,\"state\":%u,\"world_x\":%u,\"y\":%u,"
+                    "\"x_vel\":%d,\"y_vel\":%d",
+                    (unsigned)semcomp_runtime_enemy_id((uint8_t)i),
+                    (unsigned)semcomp_runtime_enemy_state((uint8_t)i),
+                    (unsigned)semcomp_runtime_enemy_world_x((uint8_t)i),
+                    (unsigned)semcomp_runtime_enemy_y((uint8_t)i),
+                    (int)semcomp_runtime_enemy_x_velocity((uint8_t)i),
+                    (int)semcomp_runtime_enemy_y_velocity((uint8_t)i));
+            }
+            pos += snprintf(buf + pos, sizeof(buf) - pos, "}");
+        }
+        snprintf(buf + pos, sizeof(buf) - pos, "]}");
+        debug_server_send_fmt("%s", buf);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_kill_all_enemies") == 0) {
+        int n = semcomp_runtime_kill_all_enemies();
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_kill_all_enemies\","
+            "\"killed\":%d}\n", id, n);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_stomp_all_enemies") == 0) {
+        int n = semcomp_runtime_stomp_all_enemies();
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_stomp_all_enemies\","
+            "\"stomped\":%d}\n", id, n);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_freeze_enemies") == 0) {
+        int n = semcomp_runtime_freeze_enemies();
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_freeze_enemies\","
+            "\"frozen\":%d}\n", id, n);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_kill_enemy") == 0) {
+        int slot = extras_json_get_int(json, "slot", -1);
+        if (slot < 0 || slot > 4) {
+            debug_server_send_fmt(
+                "{\"id\":%d,\"ok\":false,\"error\":\"slot must be 0..4\"}\n", id);
+            return 1;
+        }
+        int n = semcomp_runtime_kill_enemy((uint8_t)slot);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_kill_enemy\","
+            "\"slot\":%d,\"killed\":%d}\n", id, slot, n);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_stomp_enemy") == 0) {
+        int slot = extras_json_get_int(json, "slot", -1);
+        if (slot < 0 || slot > 4) {
+            debug_server_send_fmt(
+                "{\"id\":%d,\"ok\":false,\"error\":\"slot must be 0..4\"}\n", id);
+            return 1;
+        }
+        int n = semcomp_runtime_stomp_enemy((uint8_t)slot);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_stomp_enemy\","
+            "\"slot\":%d,\"stomped\":%d}\n", id, slot, n);
+        return 1;
+    }
 #endif  /* ENABLE_SEMCOMP */
 
     /* ---- Verify mode divergence ring ----

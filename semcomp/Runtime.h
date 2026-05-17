@@ -175,6 +175,34 @@ uint16_t semcomp_runtime_get_timer(void);
 int semcomp_runtime_give_power_up(void);
 int semcomp_runtime_take_damage(void);
 
+// ---- Enemies (5-slot array facade) ---------------------------------------
+// Read accessors target one slot at a time (0..4). The "active" check
+// reads $000F+slot — every other accessor returns garbage for inactive
+// slots, so callers should gate on it first.
+int     semcomp_runtime_enemy_active(uint8_t slot);
+uint8_t semcomp_runtime_enemy_id(uint8_t slot);
+uint8_t semcomp_runtime_enemy_state(uint8_t slot);
+uint16_t semcomp_runtime_enemy_world_x(uint8_t slot);
+uint8_t semcomp_runtime_enemy_y(uint8_t slot);
+int8_t  semcomp_runtime_enemy_x_velocity(uint8_t slot);
+int8_t  semcomp_runtime_enemy_y_velocity(uint8_t slot);
+int     semcomp_runtime_enemy_active_count(void);
+
+// Bulk verbs (every active slot).
+//   kill_all_enemies  — instant remove via $E18E. No score, no anim.
+//   stomp_all_enemies — score grant + stomp anim via $D969 per slot.
+//   freeze_enemies    — zero $0058 / $00B6 per slot (best effort;
+//                       enemies that recompute velocity each frame
+//                       will resist).
+// Return the number of slots that were affected.
+int semcomp_runtime_kill_all_enemies(void);
+int semcomp_runtime_stomp_all_enemies(void);
+int semcomp_runtime_freeze_enemies(void);
+
+// Per-slot verbs.
+int semcomp_runtime_kill_enemy(uint8_t slot);
+int semcomp_runtime_stomp_enemy(uint8_t slot);
+
 // Diagnostics: list of registered (replaced) routine PCs and their
 // invocation counters. Populated lazily as semcomp_runtime_give_coin
 // (and future replacements) get called.

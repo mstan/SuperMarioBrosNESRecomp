@@ -253,6 +253,64 @@ int semcomp_runtime_take_damage(void) {
     return runtime().mario().take_damage() ? 1 : 0;
 }
 
+// ---- Enemies --------------------------------------------------------------
+
+int semcomp_runtime_enemy_active(uint8_t slot) {
+    return runtime().enemies().slot(slot).active() ? 1 : 0;
+}
+uint8_t semcomp_runtime_enemy_id(uint8_t slot) {
+    return runtime().enemies().slot(slot).id_raw();
+}
+uint8_t semcomp_runtime_enemy_state(uint8_t slot) {
+    return runtime().enemies().slot(slot).state_raw();
+}
+uint16_t semcomp_runtime_enemy_world_x(uint8_t slot) {
+    return runtime().enemies().slot(slot).world_x();
+}
+uint8_t semcomp_runtime_enemy_y(uint8_t slot) {
+    return runtime().enemies().slot(slot).y();
+}
+int8_t semcomp_runtime_enemy_x_velocity(uint8_t slot) {
+    return runtime().enemies().slot(slot).x_velocity();
+}
+int8_t semcomp_runtime_enemy_y_velocity(uint8_t slot) {
+    return runtime().enemies().slot(slot).y_velocity();
+}
+int semcomp_runtime_enemy_active_count(void) {
+    return runtime().enemies().active_count();
+}
+
+int semcomp_runtime_kill_all_enemies(void) {
+    int n = runtime().enemies().active_count();
+    runtime().enemies().kill_all();
+    return n;
+}
+int semcomp_runtime_stomp_all_enemies(void) {
+    int n = runtime().enemies().active_count();
+    runtime().enemies().stomp_all();
+    return n;
+}
+int semcomp_runtime_freeze_enemies(void) {
+    int n = runtime().enemies().active_count();
+    runtime().enemies().freeze_all();
+    return n;
+}
+
+int semcomp_runtime_kill_enemy(uint8_t slot) {
+    if (slot >= smb::semcomp::Enemies::kSlotCount) return 0;
+    auto e = runtime().enemies().slot(slot);
+    if (!e.active()) return 0;
+    e.kill();
+    return 1;
+}
+int semcomp_runtime_stomp_enemy(uint8_t slot) {
+    if (slot >= smb::semcomp::Enemies::kSlotCount) return 0;
+    auto e = runtime().enemies().slot(slot);
+    if (!e.active()) return 0;
+    e.stomp();
+    return 1;
+}
+
 size_t semcomp_runtime_routine_count(void) {
     return runtime().routines().count();
 }

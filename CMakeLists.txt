@@ -130,6 +130,8 @@ if(ENABLE_SEMCOMP)
         semcomp/Camera.cpp
         semcomp/ModApi.cpp
         semcomp/PlayerSession.cpp
+        semcomp/Enemy.cpp
+        semcomp/Enemies.cpp
         semcomp/SemcompGame.cpp
         semcomp/Trainer.cpp
         semcomp/TrainerUI.cpp

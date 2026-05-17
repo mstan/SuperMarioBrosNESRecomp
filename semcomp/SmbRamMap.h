@@ -76,13 +76,32 @@ constexpr std::uint16_t Player_XSpeedAbsolute = 0x0700;
 constexpr std::uint16_t Player_SprDataOffset = 0x06EC;
 
 // ---- Enemies (5-slot array; index 0..4) -----------------------------------
-constexpr std::uint16_t Enemy_Flag_Base       = 0x000F;
-constexpr std::uint16_t Enemy_ID_Base         = 0x0016;
-constexpr std::uint16_t Enemy_PageLoc_Base    = 0x006E;
+// Per-slot bytes indexed off these base addresses. Y-register pattern in
+// the ROM: most enemy routines do `LDY slot` (where the loop counter
+// has been set up in $C5...) then `LDA Enemy_X,Y` etc. The C++ Enemy
+// facade replicates that by holding a slot index and reading
+// `base + slot` via GameState::read8.
+constexpr int           kEnemySlotCount      = 5;
+constexpr std::uint16_t Enemy_Flag_Base      = 0x000F;  // 0=empty, !=0=active
+constexpr std::uint16_t Enemy_ID_Base        = 0x0016;  // type byte; see Enemy.h enum
+constexpr std::uint16_t Enemy_State_Base     = 0x001E;  // movement phase (walking/stomped/shell)
+constexpr std::uint16_t Enemy_MovingDir_Base = 0x0046;
+constexpr std::uint16_t Enemy_XSpeed_Base    = 0x0058;  // signed 8-bit
+constexpr std::uint16_t Enemy_PageLoc_Base   = 0x006E;  // X page
+constexpr std::uint16_t Enemy_YPageLoc_Base  = 0x0076;
 constexpr std::uint16_t Enemy_X_Position_Base = 0x0087;
+constexpr std::uint16_t Enemy_YVelocity_Base = 0x00B6;  // signed 8-bit
+constexpr std::uint16_t Enemy_Y_Position_Base = 0x00CF;
 constexpr std::uint16_t Enemy_SprDataOffset_Base = 0x06E5;
 constexpr std::uint16_t Enemy_OffscreenBits   = 0x03D1;
-constexpr int kEnemySlotCount = 5;
+
+// Kill / stomp / spawn entry points (call_by_address with X=slot, A=ID).
+//   $E18E KillEnemyAboveBlock — instant remove, no points / no anim
+//   $D969 EnemyStomped        — score grant + floatey number + state=$20
+//   $C26C CheckpointEnemyID   — populate slot with type A (subject to verification)
+constexpr std::uint16_t kPC_KillEnemy        = 0xE18E;
+constexpr std::uint16_t kPC_EnemyStomped     = 0xD969;
+constexpr std::uint16_t kPC_SpawnEnemyByID   = 0xC26C;
 
 // ---- Camera / screen bounds -----------------------------------------------
 constexpr std::uint16_t ScreenLeft_PageLoc  = 0x071A;

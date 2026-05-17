@@ -272,6 +272,14 @@ class TrainerClient:
         self.sock = None
         self.lock = threading.Lock()
         self._id  = 0
+        # Persistent recv buffer. The server emits {...}\n\n per response
+        # (format string ends in \n; debug_server_send_line tacks on
+        # another). Without a persistent buffer, a recv that happens to
+        # split a response across boundaries can leak a leading \n into
+        # the next call's parse — first split returns empty line, JSON
+        # decode fails, response gets silently dropped. The persistent
+        # buffer absorbs the trailing \n cleanly across calls.
+        self._buf = b""
 
     def connect(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -293,16 +301,23 @@ class TrainerClient:
             kw["cmd"] = cmd
             kw["id"]  = self._id
             self.sock.sendall((json.dumps(kw) + "\n").encode())
-            buf = b""
-            while b"\n" not in buf:
-                chunk = self.sock.recv(65536)
-                if not chunk: raise ConnectionError("server closed connection")
-                buf += chunk
-            line = buf.split(b"\n", 1)[0].decode(errors="replace").strip()
+            # Pull lines from the persistent buffer; refill from socket
+            # when empty. Skip leading empty lines (the server double-\n
+            # framing emits one as a separator after each response).
+            while True:
+                while b"\n" not in self._buf:
+                    chunk = self.sock.recv(65536)
+                    if not chunk: raise ConnectionError("server closed connection")
+                    self._buf += chunk
+                line, _, rest = self._buf.partition(b"\n")
+                self._buf = rest
+                s = line.decode(errors="replace").strip()
+                if s:
+                    break  # got a non-empty line
             try:
-                return json.loads(line)
+                return json.loads(s)
             except json.JSONDecodeError as e:
-                return {"ok": False, "raw": line, "error": str(e)}
+                return {"ok": False, "raw": s, "error": str(e)}
 
     def read_ram(self, addr):
         r = self._call("read_ram", addr=f"0x{addr:04X}", **{"len": 1})
@@ -389,9 +404,15 @@ class SlotRow:
         # toggle on, set the same value, see whether the outcome
         # differs from semantic.  Should differ for any slot with
         # semantic_set_cmd or semantic_freeze_cmd defined.
-        self.raw_var = tk.BooleanVar(value=False)
+        # CRITICAL: this variable used to be named `self.raw_var`, which
+        # shadowed the StringVar created above for the raw RAM display
+        # label. After shadowing, `self.raw_var.set("223")` from update()
+        # hit the BooleanVar, which Tcl rejects ("expected boolean value
+        # but got '223'") — killing the poll loop and freezing every
+        # tab. Renamed to make the distinction explicit.
+        self.raw_bypass_var = tk.BooleanVar(value=False)
         if slot.semantic_set_cmd or slot.semantic_freeze_cmd:
-            raw_cb = ttk.Checkbutton(parent, text="Raw", variable=self.raw_var)
+            raw_cb = ttk.Checkbutton(parent, text="Raw", variable=self.raw_bypass_var)
             raw_cb.grid(row=row_index, column=8, padx=(8, 2), pady=3, sticky="w")
             Tooltip(raw_cb,
                     "Bypass the semcomp semantic methods for this row.\n"
@@ -430,7 +451,7 @@ class SlotRow:
             self.status_setter(f"set ${self.slot.addr:04X}: invalid value")
             return
         # Raw bypass: write the byte directly with no semantic / coupling.
-        if self.raw_var.get() or not self.slot.semantic_set_cmd:
+        if self.raw_bypass_var.get() or not self.slot.semantic_set_cmd:
             self.client.trainer_set(self.slot.addr, val & 0xFF)
             return
         # Semantic path: routes through C++ Mario::set_*, PlayerSession::set_*
@@ -444,13 +465,13 @@ class SlotRow:
             return
         # Semantic path: C++ class owns the coupling, GUI just names the
         # field. Raw path: single-byte trainer_freeze.
-        if self.raw_var.get() or not self.slot.semantic_freeze_cmd:
+        if self.raw_bypass_var.get() or not self.slot.semantic_freeze_cmd:
             self.client.trainer_freeze(self.slot.addr, val & 0xFF)
         else:
             self.client.call_named(self.slot.semantic_freeze_cmd, val=val & 0xFF)
 
     def on_thaw(self):
-        if self.raw_var.get() or not self.slot.semantic_thaw_cmd:
+        if self.raw_bypass_var.get() or not self.slot.semantic_thaw_cmd:
             self.client.trainer_thaw(self.slot.addr)
         else:
             self.client.call_named(self.slot.semantic_thaw_cmd)
@@ -689,6 +710,192 @@ class TrainerTab(ttk.Frame):
 
 
 # ---------------------------------------------------------------------------
+# Enemies tab — facade over the 5-slot enemy array
+# ---------------------------------------------------------------------------
+
+# Verified enemy ID names. Unlisted IDs render as "0xNN ?".
+ENEMY_ID_NAMES = {
+    # Verified in-game 2026-05-17: 1-1 first three enemies all read as
+    # ID $06 — those are the iconic walking Goombas. The earlier
+    # "Goomba=$14" guess from the research agent looks wrong.
+    0x00: "Green Koopa",
+    0x01: "Red Koopa",
+    0x02: "Buzzy Beetle",
+    0x03: "Red Koopa (no fall)",
+    0x04: "Hammer Bro",
+    0x05: "Green Koopa (patient)",
+    0x06: "Goomba",
+    0x07: "Bloober",
+    0x08: "Bullet Bill",
+    0x09: "Yellow CheepCheep",
+    0x0A: "Gray CheepCheep",
+    0x0B: "Podoboo",
+    0x0C: "Piranha Plant",
+    0x0D: "Green Paratroopa",
+    0x0E: "Green CheepCheep",
+    0x0F: "Red CheepCheep",
+    0x10: "Lakitu",
+    0x11: "Spiny Egg",
+    0x12: "Spiny",
+    0x2D: "Bowser",
+}
+
+
+class EnemiesTab(ttk.Frame):
+    """Live view of the 5-slot enemy array with bulk + per-slot verbs.
+
+    Polls semcomp_enemies each tick; renders one row per slot with
+    active flag, ID + name, state byte, world position, velocities, and
+    [Kill]/[Stomp] buttons gated on the slot being active.
+    """
+
+    SLOT_COUNT = 5
+
+    def __init__(self, parent, client: TrainerClient,
+                 status_setter: Callable[[str], None]):
+        super().__init__(parent, padding=(8, 8, 8, 8))
+        self.client = client
+        self.status_setter = status_setter
+
+        # ---- Bulk action row ----
+        actions = ttk.Frame(self)
+        actions.grid(row=0, column=0, sticky="w", pady=(0, 8))
+        ttk.Label(actions, text="Bulk:",
+                  font=("Segoe UI", 9, "bold")).grid(row=0, column=0, padx=(0, 8))
+        btn_specs = [
+            ("Kill All",    "semcomp_kill_all_enemies",
+             "Instant-remove every active enemy. No score, no anim.\n"
+             "Routes through KillEnemyAboveBlock ($E18E) per slot."),
+            ("Stomp All",   "semcomp_stomp_all_enemies",
+             "Stomp every active enemy with score grant + bounce anim.\n"
+             "Routes through EnemyStomped ($D969) per slot."),
+            ("Freeze All",  "semcomp_freeze_enemies",
+             "Zero $0058 (x-velocity) and $00B6 (y-velocity) for every\n"
+             "active enemy. Some types (Piranha Plant scheduled motion,\n"
+             "Lakitu) recompute velocity each frame and will resist."),
+        ]
+        for col, (label, cmd, tip) in enumerate(btn_specs, start=1):
+            b = ttk.Button(actions, text=label, width=12,
+                           command=lambda c=cmd, l=label: self._on_bulk(c, l))
+            b.grid(row=0, column=col, padx=2)
+            Tooltip(b, tip)
+
+        # ---- Per-slot grid header ----
+        ttk.Separator(self, orient="horizontal").grid(
+            row=1, column=0, sticky="ew", pady=(0, 4))
+        hdr = ttk.Frame(self)
+        hdr.grid(row=2, column=0, sticky="w")
+        for col, (text, width) in enumerate([
+            ("Slot",   4), ("Active", 6), ("ID",  6), ("Type", 18),
+            ("State",  6), ("WrldX", 7), ("Y",   5), ("XV",   5), ("YV", 5),
+        ]):
+            ttk.Label(hdr, text=text, width=width, anchor="w",
+                      font=("Segoe UI", 9, "bold")).grid(
+                row=0, column=col, padx=2)
+
+        # ---- Per-slot rows ----
+        rows_frame = ttk.Frame(self)
+        rows_frame.grid(row=3, column=0, sticky="nsew", pady=(4, 0))
+        self.rows = []
+        for i in range(self.SLOT_COUNT):
+            r = self._build_row(rows_frame, i)
+            self.rows.append(r)
+
+        ttk.Separator(self, orient="horizontal").grid(
+            row=4, column=0, sticky="ew", pady=(8, 4))
+        ttk.Label(self,
+                  text=("Polls semcomp_enemies each tick. Per-slot Kill/Stomp "
+                        "are gated on Active; inactive slots show dashes."),
+                  foreground="#666", wraplength=720, justify="left").grid(
+            row=5, column=0, sticky="w")
+
+    def _build_row(self, parent, slot_idx: int) -> dict:
+        v = {k: tk.StringVar(value="—") for k in
+             ("active", "id", "type", "state", "wx", "y", "xv", "yv")}
+        cols = [
+            (str(slot_idx), 4),
+            (v["active"],   6), (v["id"], 6), (v["type"], 18),
+            (v["state"],    6), (v["wx"], 7), (v["y"],    5),
+            (v["xv"],       5), (v["yv"], 5),
+        ]
+        for col, (val, width) in enumerate(cols):
+            if isinstance(val, tk.StringVar):
+                ttk.Label(parent, textvariable=val, width=width,
+                          anchor="w").grid(row=slot_idx, column=col, padx=2, pady=1)
+            else:
+                ttk.Label(parent, text=val, width=width, anchor="w").grid(
+                    row=slot_idx, column=col, padx=2, pady=1)
+        kill_btn = ttk.Button(parent, text="Kill", width=5, state="disabled",
+                              command=lambda s=slot_idx:
+                              self._on_per_slot("semcomp_kill_enemy", s, "Kill"))
+        kill_btn.grid(row=slot_idx, column=len(cols), padx=2)
+        stomp_btn = ttk.Button(parent, text="Stomp", width=6, state="disabled",
+                               command=lambda s=slot_idx:
+                               self._on_per_slot("semcomp_stomp_enemy", s, "Stomp"))
+        stomp_btn.grid(row=slot_idx, column=len(cols) + 1, padx=2)
+        return {**v, "kill": kill_btn, "stomp": stomp_btn}
+
+    def _on_bulk(self, cmd: str, label: str):
+        try:
+            r = self.client.call_named(cmd)
+            if r.get("ok"):
+                n = r.get("killed", r.get("stomped", r.get("frozen", 0)))
+                self.status_setter(f"{label}: {n} slot(s) affected")
+            else:
+                self.status_setter(f"{label}: {r}")
+        except (ConnectionError, OSError) as e:
+            self.status_setter(f"{label}: TCP error {e}")
+
+    def _on_per_slot(self, cmd: str, slot: int, label: str):
+        try:
+            r = self.client.call_named(cmd, slot=slot)
+            ok = r.get("ok") and (r.get("killed") or r.get("stomped"))
+            self.status_setter(f"{label} slot {slot}: {'ok' if ok else r}")
+        except (ConnectionError, OSError) as e:
+            self.status_setter(f"{label} slot {slot}: TCP error {e}")
+
+    def refresh(self, _frozen_addrs, _sem_responses):
+        try:
+            r = self.client.call_named("semcomp_enemies")
+        except (ConnectionError, OSError) as e:
+            self.status_setter(f"enemies refresh: TCP error {e}")
+            return
+        if not r.get("ok"):
+            # Diagnostic: surface failed responses to the status bar so
+            # we can tell whether the parser is eating valid data or the
+            # server returned an error.
+            self.status_setter(f"enemies refresh: not-ok response {r}")
+            return
+        # Diagnostic: brief status update on every successful refresh so
+        # the user can confirm live data is flowing.
+        ac = r.get("active_count", 0)
+        if ac > 0:
+            self.status_setter(f"enemies: active_count={ac}")
+        for entry in r.get("slots", []):
+            i = entry.get("slot")
+            if i is None or i >= len(self.rows): continue
+            row = self.rows[i]
+            active = entry.get("active", False)
+            if active:
+                row["active"].set("YES")
+                eid = entry.get("id", 0)
+                row["id"].set(f"0x{eid:02X}")
+                row["type"].set(ENEMY_ID_NAMES.get(eid, "?"))
+                row["state"].set(f"0x{entry.get('state', 0):02X}")
+                row["wx"].set(str(entry.get("world_x", 0)))
+                row["y"].set(str(entry.get("y", 0)))
+                row["xv"].set(str(entry.get("x_vel", 0)))
+                row["yv"].set(str(entry.get("y_vel", 0)))
+                row["kill"].configure(state="normal")
+                row["stomp"].configure(state="normal")
+            else:
+                for k in ("active", "id", "type", "state", "wx", "y", "xv", "yv"):
+                    row[k].set("—")
+                row["kill"].configure(state="disabled")
+                row["stomp"].configure(state="disabled")
+
+
+# ---------------------------------------------------------------------------
 # Raw tab (no semcomp validation — direct address poking)
 # ---------------------------------------------------------------------------
 
@@ -877,12 +1084,14 @@ class TrainerGUI:
                  "Set the game timer to an exact value (0..999).\n"
                  "Refreshes the HUD."},
             ])
-        self.raw_tab    = RawTab(nb, self.client, self._status)
+        self.enemies_tab = EnemiesTab(nb, self.client, self._status)
+        self.raw_tab     = RawTab(nb, self.client, self._status)
 
-        nb.add(self.mario_tab,  text="Mario")
-        nb.add(self.level_tab,  text="Level")
-        nb.add(self.player_tab, text="Player")
-        nb.add(self.raw_tab,    text="Raw")
+        nb.add(self.mario_tab,   text="Mario")
+        nb.add(self.level_tab,   text="Level")
+        nb.add(self.player_tab,  text="Player")
+        nb.add(self.enemies_tab, text="Enemies")
+        nb.add(self.raw_tab,     text="Raw")
 
         # Status bar.
         self.status_var = tk.StringVar(
@@ -910,6 +1119,7 @@ class TrainerGUI:
             self.mario_tab.refresh(frozen, sem_freezes, sem)
             self.level_tab.refresh(frozen, sem_freezes, sem)
             self.player_tab.refresh(frozen, sem_freezes, sem)
+            self.enemies_tab.refresh(frozen, sem)
             self.raw_tab.refresh(frozen, sem)
             self.error_count = 0
             world  = sem["semcomp_level"].get("world", "?")
