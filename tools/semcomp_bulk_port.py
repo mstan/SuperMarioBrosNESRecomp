@@ -90,24 +90,27 @@ def detect_shim_target(start, end, lines):
             continue
         if "recomp_stack_" in line:
             continue
-        m = re.match(r"^func_([0-9A-Fa-f]{4})_body\((\d+)\);?$", line)
+        m = re.match(r"^func_([0-9A-Fa-f]{4}(?:_b\d)?)_body\((\d+)\);?$", line)
         if m:
             if body_match is not None:
-                # Multiple body calls — not a simple shim
                 return None
-            body_match = (m.group(1).upper(), int(m.group(2)))
+            # Normalize: hex part uppercase, _bN suffix lowercase.
+            raw = m.group(1)
+            mm = re.match(r"^([0-9A-Fa-f]{4})(_b\d)?$", raw)
+            norm = mm.group(1).upper() + (mm.group(2).lower() if mm.group(2) else "")
+            body_match = (norm, int(m.group(2)))
             continue
-        # Anything else means this isn't a simple shim
         return None
     return body_match
 
 
-def find_body_def(body_addr_hex, generated):
-    """Find `static void func_XXXX_body(int _entry) { ... }`.
+def find_body_def(body_key, generated):
+    """Find `static void func_<body_key>_body(int _entry) { ... }`.
+    body_key is e.g. "F2D0" (no suffix) or "90ED_b0" (with bank suffix).
     Returns (start_line, end_line, comment) or None.
     """
     pat = (
-        rf"^static void func_{body_addr_hex}_body\(int _entry\) \{{"
+        rf"^static void func_{body_key}_body\(int _entry\) \{{"
         r"(?:\s*/\*\s*(.*?)\s*\*/)?"
     )
     for i, line in enumerate(generated):
@@ -127,8 +130,9 @@ def find_body_def(body_addr_hex, generated):
     return None
 
 
-def find_body_callers(body_addr_hex, generated):
-    """Find all shim wrappers that call func_<body_addr>_body(N).
+def find_body_callers(body_key, generated):
+    """Find all shim wrappers that call func_<body_key>_body(N).
+    body_key includes optional _bN suffix (e.g. "90ED_b0").
     Returns list of (addr_hex, suffix, entry_idx, comment) sorted by entry_idx.
     """
     func_def = re.compile(
@@ -136,7 +140,7 @@ def find_body_callers(body_addr_hex, generated):
         r"(?:\s*/\*\s*(.*?)\s*\*/)?"
     )
     body_call = re.compile(
-        rf"^func_{body_addr_hex}_body\((\d+)\);?$"
+        rf"^func_{body_key}_body\((\d+)\);?$"
     )
     out = []
     seen = set()

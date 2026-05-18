@@ -1248,6 +1248,33 @@ void semcomp_runtime_at_e8d9(void);  // $E8D9 at_e8d9
 void semcomp_runtime_enemy_to_bg_collision_det(void);  // $DFC1 EnemyToBGCollisionDet
 void semcomp_runtime_at_dfc3(void);  // $DFC3 at_dfc3
 
+// Phase 34 - LevelEngine bulk-port (10 multi-entry bodies, 25 entries)
+void semcomp_runtime_get_background_color(void);  // $85E3 GetBackgroundColor
+void semcomp_runtime_at_862e(void);  // $862E at_862e
+void semcomp_runtime_write_game_text(void);  // $8808 WriteGameText
+void semcomp_runtime_at_8887(void);  // $8887 at_8887
+void semcomp_runtime_at_8846(void);  // $8846 at_8846
+void semcomp_runtime_write_block_metatile(void);  // $8A6D WriteBlockMetatile
+void semcomp_runtime_move_v_offset(void);  // $8A8F MoveVOffset
+void semcomp_runtime_put_block_metatile(void);  // $8A97 PutBlockMetatile
+void semcomp_runtime_rem_bridge(void);  // $8ACD RemBridge
+void semcomp_runtime_at_8a9d(void);  // $8A9D at_8a9d
+void semcomp_runtime_get_area_music(void);  // $90ED GetAreaMusic
+void semcomp_runtime_at_9100(void);  // $9100 at_9100
+void semcomp_runtime_area_parser_core(void);  // $93FC AreaParserCore
+void semcomp_runtime_at_9494(void);  // $9494 at_9494
+void semcomp_runtime_terr_loop(void);  // $9491 TerrLoop
+void semcomp_runtime_process_area_data(void);  // $9508 ProcessAreaData
+void semcomp_runtime_end_a_parse(void);  // $9588 EndAParse
+void semcomp_runtime_decode_area_data(void);  // $9595 DecodeAreaData
+void semcomp_runtime_loop_cmd_e(void);  // $9645 LoopCmdE
+void semcomp_runtime_at_95df(void);  // $95DF at_95df
+void semcomp_runtime_area_style_object(void);  // $9740 AreaStyleObject
+void semcomp_runtime_at_9792(void);  // $9792 at_9792
+void semcomp_runtime_at_9989(void);  // $9989 at_9989
+void semcomp_runtime_set_hi_max(void);  // $BF94 SetHiMax
+void semcomp_runtime_set_x_move_amt(void);  // $BF96 SetXMoveAmt
+
 #ifdef __cplusplus
 }
 #endif

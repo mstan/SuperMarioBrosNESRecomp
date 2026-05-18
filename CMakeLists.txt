@@ -150,6 +150,7 @@ if(ENABLE_SEMCOMP)
         semcomp/SoundEngine.cpp
         semcomp/AudioEngine.cpp
         semcomp/EnemyEngine.cpp
+        semcomp/LevelEngine.cpp
         semcomp/MiscUtilities.cpp
         semcomp/SemcompGame.cpp
         semcomp/Trainer.cpp

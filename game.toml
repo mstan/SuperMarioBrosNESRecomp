@@ -3133,3 +3133,104 @@ addr = 0xDFC1
 
 [[replace_func]]
 addr = 0xDFC3
+
+# Phase 34 - LevelEngine bulk-port (10 multi-entry bodies, 25 entries)
+[[replace_func]]
+bank = 0
+addr = 0x85E3
+
+[[replace_func]]
+bank = 0
+addr = 0x862E
+
+[[replace_func]]
+bank = 0
+addr = 0x8808
+
+[[replace_func]]
+bank = 0
+addr = 0x8887
+
+[[replace_func]]
+bank = 0
+addr = 0x8846
+
+[[replace_func]]
+bank = 0
+addr = 0x8A6D
+
+[[replace_func]]
+bank = 0
+addr = 0x8A8F
+
+[[replace_func]]
+bank = 0
+addr = 0x8A97
+
+[[replace_func]]
+bank = 0
+addr = 0x8ACD
+
+[[replace_func]]
+bank = 0
+addr = 0x8A9D
+
+[[replace_func]]
+bank = 0
+addr = 0x90ED
+
+[[replace_func]]
+bank = 0
+addr = 0x9100
+
+[[replace_func]]
+bank = 0
+addr = 0x93FC
+
+[[replace_func]]
+bank = 0
+addr = 0x9494
+
+[[replace_func]]
+bank = 0
+addr = 0x9491
+
+[[replace_func]]
+bank = 0
+addr = 0x9508
+
+[[replace_func]]
+bank = 0
+addr = 0x9588
+
+[[replace_func]]
+bank = 0
+addr = 0x9595
+
+[[replace_func]]
+bank = 0
+addr = 0x9645
+
+[[replace_func]]
+bank = 0
+addr = 0x95DF
+
+[[replace_func]]
+bank = 0
+addr = 0x9740
+
+[[replace_func]]
+bank = 0
+addr = 0x9792
+
+[[replace_func]]
+bank = 0
+addr = 0x9989
+
+[[replace_func]]
+bank = 0
+addr = 0xBF94
+
+[[replace_func]]
+bank = 0
+addr = 0xBF96

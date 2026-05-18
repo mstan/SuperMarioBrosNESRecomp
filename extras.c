@@ -2081,3 +2081,30 @@ void func_E8FB(void) { semcomp_runtime_at_e8fb(); }
 void func_E8D9(void) { semcomp_runtime_at_e8d9(); }
 void func_DFC1(void) { semcomp_runtime_enemy_to_bg_collision_det(); }
 void func_DFC3(void) { semcomp_runtime_at_dfc3(); }
+
+/* Phase 34 - LevelEngine bulk-port (10 multi-entry bodies, 25 entries) */
+void func_85E3_b0(void) { semcomp_runtime_get_background_color(); }
+void func_862E_b0(void) { semcomp_runtime_at_862e(); }
+void func_8808_b0(void) { semcomp_runtime_write_game_text(); }
+void func_8887_b0(void) { semcomp_runtime_at_8887(); }
+void func_8846_b0(void) { semcomp_runtime_at_8846(); }
+void func_8A6D_b0(void) { semcomp_runtime_write_block_metatile(); }
+void func_8A8F_b0(void) { semcomp_runtime_move_v_offset(); }
+void func_8A97_b0(void) { semcomp_runtime_put_block_metatile(); }
+void func_8ACD_b0(void) { semcomp_runtime_rem_bridge(); }
+void func_8A9D_b0(void) { semcomp_runtime_at_8a9d(); }
+void func_90ED_b0(void) { semcomp_runtime_get_area_music(); }
+void func_9100_b0(void) { semcomp_runtime_at_9100(); }
+void func_93FC_b0(void) { semcomp_runtime_area_parser_core(); }
+void func_9494_b0(void) { semcomp_runtime_at_9494(); }
+void func_9491_b0(void) { semcomp_runtime_terr_loop(); }
+void func_9508_b0(void) { semcomp_runtime_process_area_data(); }
+void func_9588_b0(void) { semcomp_runtime_end_a_parse(); }
+void func_9595_b0(void) { semcomp_runtime_decode_area_data(); }
+void func_9645_b0(void) { semcomp_runtime_loop_cmd_e(); }
+void func_95DF_b0(void) { semcomp_runtime_at_95df(); }
+void func_9740_b0(void) { semcomp_runtime_area_style_object(); }
+void func_9792_b0(void) { semcomp_runtime_at_9792(); }
+void func_9989_b0(void) { semcomp_runtime_at_9989(); }
+void func_BF94_b0(void) { semcomp_runtime_set_hi_max(); }
+void func_BF96_b0(void) { semcomp_runtime_set_x_move_amt(); }

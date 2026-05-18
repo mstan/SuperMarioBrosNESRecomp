@@ -6080,4 +6080,155 @@ void semcomp_runtime_at_dfc3(void) {
     runtime().enemy_engine().at_dfc3();
 }
 
+// Phase 34 - LevelEngine bulk-port (10 multi-entry bodies, 25 entries)
+void semcomp_runtime_get_background_color(void) {
+    runtime().routines().register_routine(0x85E3, "GetBackgroundColor");
+    runtime().routines().note_invocation(0x85E3);
+    runtime().level_engine().get_background_color();
+}
+
+void semcomp_runtime_at_862e(void) {
+    runtime().routines().register_routine(0x862E, "at_862e");
+    runtime().routines().note_invocation(0x862E);
+    runtime().level_engine().at_862e();
+}
+
+void semcomp_runtime_write_game_text(void) {
+    runtime().routines().register_routine(0x8808, "WriteGameText");
+    runtime().routines().note_invocation(0x8808);
+    runtime().level_engine().write_game_text();
+}
+
+void semcomp_runtime_at_8887(void) {
+    runtime().routines().register_routine(0x8887, "at_8887");
+    runtime().routines().note_invocation(0x8887);
+    runtime().level_engine().at_8887();
+}
+
+void semcomp_runtime_at_8846(void) {
+    runtime().routines().register_routine(0x8846, "at_8846");
+    runtime().routines().note_invocation(0x8846);
+    runtime().level_engine().at_8846();
+}
+
+void semcomp_runtime_write_block_metatile(void) {
+    runtime().routines().register_routine(0x8A6D, "WriteBlockMetatile");
+    runtime().routines().note_invocation(0x8A6D);
+    runtime().level_engine().write_block_metatile();
+}
+
+void semcomp_runtime_move_v_offset(void) {
+    runtime().routines().register_routine(0x8A8F, "MoveVOffset");
+    runtime().routines().note_invocation(0x8A8F);
+    runtime().level_engine().move_v_offset();
+}
+
+void semcomp_runtime_put_block_metatile(void) {
+    runtime().routines().register_routine(0x8A97, "PutBlockMetatile");
+    runtime().routines().note_invocation(0x8A97);
+    runtime().level_engine().put_block_metatile();
+}
+
+void semcomp_runtime_rem_bridge(void) {
+    runtime().routines().register_routine(0x8ACD, "RemBridge");
+    runtime().routines().note_invocation(0x8ACD);
+    runtime().level_engine().rem_bridge();
+}
+
+void semcomp_runtime_at_8a9d(void) {
+    runtime().routines().register_routine(0x8A9D, "at_8a9d");
+    runtime().routines().note_invocation(0x8A9D);
+    runtime().level_engine().at_8a9d();
+}
+
+void semcomp_runtime_get_area_music(void) {
+    runtime().routines().register_routine(0x90ED, "GetAreaMusic");
+    runtime().routines().note_invocation(0x90ED);
+    runtime().level_engine().get_area_music();
+}
+
+void semcomp_runtime_at_9100(void) {
+    runtime().routines().register_routine(0x9100, "at_9100");
+    runtime().routines().note_invocation(0x9100);
+    runtime().level_engine().at_9100();
+}
+
+void semcomp_runtime_area_parser_core(void) {
+    runtime().routines().register_routine(0x93FC, "AreaParserCore");
+    runtime().routines().note_invocation(0x93FC);
+    runtime().level_engine().area_parser_core();
+}
+
+void semcomp_runtime_at_9494(void) {
+    runtime().routines().register_routine(0x9494, "at_9494");
+    runtime().routines().note_invocation(0x9494);
+    runtime().level_engine().at_9494();
+}
+
+void semcomp_runtime_terr_loop(void) {
+    runtime().routines().register_routine(0x9491, "TerrLoop");
+    runtime().routines().note_invocation(0x9491);
+    runtime().level_engine().terr_loop();
+}
+
+void semcomp_runtime_process_area_data(void) {
+    runtime().routines().register_routine(0x9508, "ProcessAreaData");
+    runtime().routines().note_invocation(0x9508);
+    runtime().level_engine().process_area_data();
+}
+
+void semcomp_runtime_end_a_parse(void) {
+    runtime().routines().register_routine(0x9588, "EndAParse");
+    runtime().routines().note_invocation(0x9588);
+    runtime().level_engine().end_a_parse();
+}
+
+void semcomp_runtime_decode_area_data(void) {
+    runtime().routines().register_routine(0x9595, "DecodeAreaData");
+    runtime().routines().note_invocation(0x9595);
+    runtime().level_engine().decode_area_data();
+}
+
+void semcomp_runtime_loop_cmd_e(void) {
+    runtime().routines().register_routine(0x9645, "LoopCmdE");
+    runtime().routines().note_invocation(0x9645);
+    runtime().level_engine().loop_cmd_e();
+}
+
+void semcomp_runtime_at_95df(void) {
+    runtime().routines().register_routine(0x95DF, "at_95df");
+    runtime().routines().note_invocation(0x95DF);
+    runtime().level_engine().at_95df();
+}
+
+void semcomp_runtime_area_style_object(void) {
+    runtime().routines().register_routine(0x9740, "AreaStyleObject");
+    runtime().routines().note_invocation(0x9740);
+    runtime().level_engine().area_style_object();
+}
+
+void semcomp_runtime_at_9792(void) {
+    runtime().routines().register_routine(0x9792, "at_9792");
+    runtime().routines().note_invocation(0x9792);
+    runtime().level_engine().at_9792();
+}
+
+void semcomp_runtime_at_9989(void) {
+    runtime().routines().register_routine(0x9989, "at_9989");
+    runtime().routines().note_invocation(0x9989);
+    runtime().level_engine().at_9989();
+}
+
+void semcomp_runtime_set_hi_max(void) {
+    runtime().routines().register_routine(0xBF94, "SetHiMax");
+    runtime().routines().note_invocation(0xBF94);
+    runtime().level_engine().set_hi_max();
+}
+
+void semcomp_runtime_set_x_move_amt(void) {
+    runtime().routines().register_routine(0xBF96, "SetXMoveAmt");
+    runtime().routines().note_invocation(0xBF96);
+    runtime().level_engine().set_x_move_amt();
+}
+
 }  // extern "C"
