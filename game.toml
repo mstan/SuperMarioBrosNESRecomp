@@ -576,3 +576,38 @@ addr = 0xF552
 
 [[replace_func]]
 addr = 0xF64D
+
+# Phase 31 — Misc utilities
+[[replace_func]]
+bank = 0
+addr = 0x8745
+
+[[replace_func]]
+bank = 0
+addr = 0x8220
+
+[[replace_func]]
+bank = 0
+addr = 0x8223
+
+[[replace_func]]
+bank = 0
+addr = 0x8643
+
+[[replace_func]]
+addr = 0xDFB0
+
+[[replace_func]]
+addr = 0xE5B3
+
+[[replace_func]]
+bank = 0
+addr = 0x92DB
+
+[[replace_func]]
+bank = 0
+addr = 0x9589
+
+[[replace_func]]
+bank = 0
+addr = 0x874E

@@ -1226,3 +1226,14 @@ void func_F51E(void) { semcomp_runtime_play_timer_tick(); }
 void func_F53A(void) { semcomp_runtime_play_blast(); }
 void func_F552(void) { semcomp_runtime_play_power_up_grab(); }
 void func_F64D(void) { semcomp_runtime_play_noise_sfx(); }
+
+/* Phase 31 — Misc utilities */
+void func_8745_b0(void) { semcomp_runtime_inc_subtask(); }
+void func_8220_b0(void) { semcomp_runtime_move_all_sprites_offscreen(); }
+void func_8223_b0(void) { semcomp_runtime_move_sprites_offscreen(); }
+void func_8643_b0(void) { semcomp_runtime_get_alternate_palette1(); }
+void func_DFB0(void) { semcomp_runtime_get_m_tile_attrib(); }
+void func_E5B3(void) { semcomp_runtime_move_six_sprites_offscreen(); }
+void func_92DB_b0(void) { semcomp_runtime_increment_column_pos(); }
+void func_9589_b0(void) { semcomp_runtime_inc_area_obj_offset(); }
+void func_874E_b0(void) { semcomp_runtime_inc_mode_task__b(); }

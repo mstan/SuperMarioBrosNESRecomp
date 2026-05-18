@@ -393,6 +393,17 @@ void semcomp_runtime_play_blast(void);  // $F53A PlayBlast
 void semcomp_runtime_play_power_up_grab(void);  // $F552 PlayPowerUpGrab
 void semcomp_runtime_play_noise_sfx(void);  // $F64D PlayNoiseSfx
 
+// Phase 31 — Misc utilities
+void semcomp_runtime_inc_subtask(void);  // $8745 IncSubtask
+void semcomp_runtime_move_all_sprites_offscreen(void);  // $8220 MoveAllSpritesOffscreen
+void semcomp_runtime_move_sprites_offscreen(void);  // $8223 MoveSpritesOffscreen
+void semcomp_runtime_get_alternate_palette1(void);  // $8643 GetAlternatePalette1
+void semcomp_runtime_get_m_tile_attrib(void);  // $DFB0 GetMTileAttrib
+void semcomp_runtime_move_six_sprites_offscreen(void);  // $E5B3 MoveSixSpritesOffscreen
+void semcomp_runtime_increment_column_pos(void);  // $92DB IncrementColumnPos
+void semcomp_runtime_inc_area_obj_offset(void);  // $9589 IncAreaObjOffset
+void semcomp_runtime_inc_mode_task__b(void);  // $874E IncModeTask_B
+
 #ifdef __cplusplus
 }
 #endif

@@ -983,4 +983,59 @@ void semcomp_runtime_play_noise_sfx(void) {
     runtime().sound_engine().play_noise_sfx();
 }
 
+// Phase 31 — Misc utilities
+void semcomp_runtime_inc_subtask(void) {
+    runtime().routines().register_routine(0x8745, "IncSubtask");
+    runtime().routines().note_invocation(0x8745);
+    runtime().misc_utilities().inc_subtask();
+}
+
+void semcomp_runtime_move_all_sprites_offscreen(void) {
+    runtime().routines().register_routine(0x8220, "MoveAllSpritesOffscreen");
+    runtime().routines().note_invocation(0x8220);
+    runtime().misc_utilities().move_all_sprites_offscreen();
+}
+
+void semcomp_runtime_move_sprites_offscreen(void) {
+    runtime().routines().register_routine(0x8223, "MoveSpritesOffscreen");
+    runtime().routines().note_invocation(0x8223);
+    runtime().misc_utilities().move_sprites_offscreen();
+}
+
+void semcomp_runtime_get_alternate_palette1(void) {
+    runtime().routines().register_routine(0x8643, "GetAlternatePalette1");
+    runtime().routines().note_invocation(0x8643);
+    runtime().misc_utilities().get_alternate_palette1();
+}
+
+void semcomp_runtime_get_m_tile_attrib(void) {
+    runtime().routines().register_routine(0xDFB0, "GetMTileAttrib");
+    runtime().routines().note_invocation(0xDFB0);
+    runtime().misc_utilities().get_m_tile_attrib();
+}
+
+void semcomp_runtime_move_six_sprites_offscreen(void) {
+    runtime().routines().register_routine(0xE5B3, "MoveSixSpritesOffscreen");
+    runtime().routines().note_invocation(0xE5B3);
+    runtime().misc_utilities().move_six_sprites_offscreen();
+}
+
+void semcomp_runtime_increment_column_pos(void) {
+    runtime().routines().register_routine(0x92DB, "IncrementColumnPos");
+    runtime().routines().note_invocation(0x92DB);
+    runtime().misc_utilities().increment_column_pos();
+}
+
+void semcomp_runtime_inc_area_obj_offset(void) {
+    runtime().routines().register_routine(0x9589, "IncAreaObjOffset");
+    runtime().routines().note_invocation(0x9589);
+    runtime().misc_utilities().inc_area_obj_offset();
+}
+
+void semcomp_runtime_inc_mode_task__b(void) {
+    runtime().routines().register_routine(0x874E, "IncModeTask_B");
+    runtime().routines().note_invocation(0x874E);
+    runtime().misc_utilities().inc_mode_task__b();
+}
+
 }  // extern "C"
