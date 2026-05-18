@@ -140,9 +140,14 @@ Candidate addresses surveyed via symbols.sym:
 the $BF09/$BF4D pair needs the same untangle treatment as Phase 19/20/21.
 Bundled into a future untangle-batch phase.
 
-### Phase 16 — Player BG collision
-- Player-vs-background collision detection. Find canonical addresses
-  via `symbols.sym`.
+### Phase 16 — Player BG collision (DEFERRED — large + likely tangled)
+- `$DC64 PlayerBGCollision` — 420 lines of generated C. Almost certainly
+  contains inner labels (post-DA00 routines pattern). Needs an untangle
+  audit before replace_func is safe.
+- Related: `$E325 PlayerCollisionCore`, `$BCED PlayerHeadCollision`.
+- **Why deferred:** size + tangle risk. High-stakes (Mario's
+  collision response — falling off cliffs, hitting blocks). Worth a
+  dedicated session with frame-perfect oracle comparison.
 
 ### Phase 17 — Player graphics
 - `$DC64 DrawPlayer`, `$E9CD RelativePlayerPosition`, `$85F1
