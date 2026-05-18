@@ -112,10 +112,18 @@ semcomp/
 - `$B3CF ClimbingSub` — vine/flagpole climb. Position update plus
   $B420-$B447 animation-frame tail.
 
-### Phase 14 — PhysicsSub (dedicated, ~300 lines)
+### Phase 14 — PhysicsSub (DEFERRED — dedicated future session, ~300 lines)
 - `$B450 PlayerPhysicsSub` — per-frame physics dispatcher. 3 nested
   branches (ProcClimb / CheckForJumping / X_Physics) + multiple ROM
-  table lookups.
+  table lookups at $B44D/$B44A/$B424/$B42B/$B439/$B432/$B440/$B443/$B447.
+- Calls into 3 standalone helpers ($B488 NoJump, $B51C X_Physics, $B55E
+  GetXPhy) which all exist as separately-emitted func_XXXX_b0.
+- Carry-flag propagation hazards: 16-bit physics-tier accumulator math
+  + branch-polarity hazards (BPL/BCS/BCC checks against $0700 sub-state).
+- **Why deferred:** highest-stakes routine in the player-control chain;
+  a subtle polarity inversion makes Mario unplayable. Worth a full
+  session of careful porting + frame-perfect comparison vs Nestopia
+  oracle, not a rushed spike.
 
 ### Phase 15 — MovePlayer (dedicated)
 - `$B450` calls `MovePlayer` (different address — search before
