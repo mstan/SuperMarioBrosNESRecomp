@@ -254,6 +254,7 @@ void semcomp_runtime_move_player_y_axis(void);        // $B200 MovePlayerYAxis
 void semcomp_runtime_move_player_horizontally(void);  // $BF09 MovePlayerHorizontally
 void semcomp_runtime_ex_x_move(void);                 // $BF4C ExXMove
 void semcomp_runtime_move_player_vertically(void);    // $BF4D MovePlayerVertically
+void semcomp_runtime_player_bg_collision(void);       // $DC64 PlayerBGCollision
 void semcomp_runtime_title_screen_mode(void);         // $8231 TitleScreenMode
 void semcomp_runtime_game_mode_tick(void);            // $AEDC GameMode
 void semcomp_runtime_game_over_mode(void);            // $9218 GameOverMode

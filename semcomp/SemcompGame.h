@@ -16,6 +16,7 @@
 #include "semcomp/Mario.h"
 #include "semcomp/ModApi.h"
 #include "semcomp/PlayerAnim.h"
+#include "semcomp/PlayerCollision.h"
 #include "semcomp/PlayerPhysics.h"
 #include "semcomp/PlayerSession.h"
 #include "semcomp/Powerups.h"
@@ -41,6 +42,7 @@ public:
           floateys_(state_),
           player_physics_(state_),
           player_anim_(state_),
+          player_collision_(state_),
           trainer_(state_),
           trainer_ui_(*this),
           mod_api_(),
@@ -88,6 +90,7 @@ public:
     FloateyNumbers&      floateys()      { return floateys_; }
     PlayerPhysics&       player_physics(){ return player_physics_; }
     PlayerAnim&          player_anim()   { return player_anim_;    }
+    PlayerCollision&     player_collision() { return player_collision_; }
     Trainer&             trainer()       { return trainer_; }
     const Trainer&       trainer() const { return trainer_; }
 
@@ -113,6 +116,7 @@ private:
     FloateyNumbers   floateys_;
     PlayerPhysics    player_physics_;
     PlayerAnim       player_anim_;
+    PlayerCollision  player_collision_;
     Trainer          trainer_;
     TrainerUI        trainer_ui_;
     ModApi           mod_api_;

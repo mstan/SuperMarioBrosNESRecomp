@@ -459,6 +459,11 @@ void semcomp_runtime_move_player_vertically(void) {
     runtime().routines().note_invocation(0xBF4D);
     runtime().player_physics().move_player_vertically();
 }
+void semcomp_runtime_player_bg_collision(void) {
+    runtime().routines().register_routine(0xDC64, "PlayerBGCollision");
+    runtime().routines().note_invocation(0xDC64);
+    runtime().player_collision().player_bg_collision();
+}
 void semcomp_runtime_title_screen_mode(void) {
     runtime().routines().register_routine(0x8231, "TitleScreenMode");
     runtime().routines().note_invocation(0x8231);

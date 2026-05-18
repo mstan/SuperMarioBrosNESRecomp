@@ -379,6 +379,10 @@ void func_BF4D_b0(void) { /* MovePlayerVertically */
     semcomp_runtime_move_player_vertically();
 }
 
+void func_DC64(void) { /* PlayerBGCollision (no _b0 suffix — fixed bank) */
+    semcomp_runtime_player_bg_collision();
+}
+
 void func_8231_b0(void) { /* TitleScreenMode */
     semcomp_runtime_title_screen_mode();
 }

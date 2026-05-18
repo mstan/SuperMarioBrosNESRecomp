@@ -227,6 +227,13 @@ addr = 0xBF4C
 bank = 0
 addr = 0xBF4D
 
+# Phase 16 — $DC64 PlayerBGCollision. Per-frame BG collision check.
+# Verbatim port; tail-calls into many natural-generated helpers
+# ($E3E9, $DFA1, $DF8F, $DEBD, $DEDD, $DEC4, $DEE8) and standalones
+# ($DCF6, $DD1A, $DDFF, $DE05, $DE0E, $DE2E, $DF4B, $BCED, $BBFE).
+[[replace_func]]
+addr = 0xDC64
+
 # Phase 23 — Game-mode dispatchers. Three small inline-dispatch shells
 # that read OperMode_Task ($0772) and dispatch via $8E04 into natural
 # sub-handlers. $8212 OperModeExecutionTree NOT owned (multi-entry-body
