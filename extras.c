@@ -359,6 +359,18 @@ void func_B3CF_b0(void) { /* ClimbingSub */
     semcomp_runtime_climbing_sub();
 }
 
+void func_8231_b0(void) { /* TitleScreenMode */
+    semcomp_runtime_title_screen_mode();
+}
+
+void func_AEDC_b0(void) { /* GameMode */
+    semcomp_runtime_game_mode_tick();
+}
+
+void func_9218_b0(void) { /* GameOverMode */
+    semcomp_runtime_game_over_mode();
+}
+
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     (void)pc; (void)addr; return val;
 }

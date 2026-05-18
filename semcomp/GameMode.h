@@ -78,6 +78,22 @@ public:
     // debounce + reload timer.
     void on_pause_tick();
 
+    // ---- Phase 23 — Game-mode dispatchers -------------------------------
+    // These three are small inline-dispatch routines: LDA $0772 OperMode_Task,
+    // then 4-way (3-way for GameOver) dispatch into the natural sub-handlers.
+    // All sub-handlers (InitializeArea, ScreenRoutines, PrimaryGameSetup,
+    // GameCoreRoutine, SetupGameOver, etc.) remain natural-generated and
+    // are reached via call_by_address.
+    //
+    // $8231 TitleScreenMode  — OperMode 0 (title + demo)
+    // $AEDC GameMode         — OperMode 2 (gameplay)
+    // $9218 GameOverMode     — OperMode 3
+    //
+    // $8212 OperModeExecutionTree NOT owned (multi-entry-body tangle with $8222).
+    void title_screen_mode();
+    void game_mode_tick();
+    void game_over_mode();
+
 private:
     GameState& state_;
 };

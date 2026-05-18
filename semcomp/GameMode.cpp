@@ -4,6 +4,10 @@
 #include "semcomp/GameState.h"
 #include "semcomp/SmbRamMap.h"
 
+extern "C" {
+#include "nes_runtime.h"
+}
+
 namespace smb::semcomp {
 
 // ---- Reads ----------------------------------------------------------------
@@ -117,6 +121,56 @@ void GameMode::on_pause_tick() {
     pause_status ^= 0x01;
     pause_status |= 0x80;
     state_.write8(ram::GamePauseStatus, pause_status);
+}
+
+// ---- Phase 23 — Game-mode dispatchers --------------------------------------
+//
+// Each routine is a 5-line body: LDA $0772 OperMode_Task, then dispatch via
+// the $8E04 inline-dispatch table into a small set of sub-handlers. All
+// sub-handlers remain natural-generated (their bodies live in the recompiler
+// output) and are reached via call_by_address.
+//
+// $8231 TitleScreenMode  — 4-way dispatch on OperMode_Task
+// $AEDC GameMode         — 4-way dispatch (case 3 = GameCoreRoutine $AEEA)
+// $9218 GameOverMode     — 3-way dispatch
+//
+// Each case in the original 6502 returns immediately (the inline_dispatch
+// pops the return address itself), so the natural code never falls through
+// past the switch. Our port returns from each case too.
+
+void GameMode::title_screen_mode() {
+    const std::uint8_t task = state_.read8(ram::OperMode_Task);
+    g_cpu.A = task;
+    switch (task) {
+        case 0: call_by_address(0x8FCF); return;  // InitializeArea
+        case 1: call_by_address(0x8567); return;  // ScreenRoutines
+        case 2: call_by_address(0x9061); return;  // PrimaryGameSetup (title variant)
+        case 3: call_by_address(0x8245); return;  // GameMenuRoutine
+        default: return;
+    }
+}
+
+void GameMode::game_mode_tick() {
+    const std::uint8_t task = state_.read8(ram::OperMode_Task);
+    g_cpu.A = task;
+    switch (task) {
+        case 0: call_by_address(0x8FE4); return;  // InitializeArea (gameplay variant)
+        case 1: call_by_address(0x8567); return;  // ScreenRoutines
+        case 2: call_by_address(0x9071); return;  // PrimaryGameSetup (gameplay)
+        case 3: call_by_address(0xAEEA); return;  // GameCoreRoutine
+        default: return;
+    }
+}
+
+void GameMode::game_over_mode() {
+    const std::uint8_t task = state_.read8(ram::OperMode_Task);
+    g_cpu.A = task;
+    switch (task) {
+        case 0: call_by_address(0x9224); return;  // SetupGameOver
+        case 1: call_by_address(0x8567); return;  // ScreenRoutines
+        case 2: call_by_address(0x9237); return;  // RunGameOver
+        default: return;
+    }
 }
 
 }  // namespace smb::semcomp

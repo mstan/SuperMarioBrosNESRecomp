@@ -434,6 +434,21 @@ void semcomp_runtime_climbing_sub(void) {
     runtime().routines().note_invocation(0xB3CF);
     runtime().player_physics().climbing_sub();
 }
+void semcomp_runtime_title_screen_mode(void) {
+    runtime().routines().register_routine(0x8231, "TitleScreenMode");
+    runtime().routines().note_invocation(0x8231);
+    runtime().mode().title_screen_mode();
+}
+void semcomp_runtime_game_mode_tick(void) {
+    runtime().routines().register_routine(0xAEDC, "GameMode");
+    runtime().routines().note_invocation(0xAEDC);
+    runtime().mode().game_mode_tick();
+}
+void semcomp_runtime_game_over_mode(void) {
+    runtime().routines().register_routine(0x9218, "GameOverMode");
+    runtime().routines().note_invocation(0x9218);
+    runtime().mode().game_over_mode();
+}
 
 // ---- GameMode reads + verbs ----------------------------------------------
 
