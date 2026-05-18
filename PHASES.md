@@ -149,9 +149,18 @@ Bundled into a future untangle-batch phase.
   collision response — falling off cliffs, hitting blocks). Worth a
   dedicated session with frame-perfect oracle comparison.
 
-### Phase 17 — Player graphics
-- `$DC64 DrawPlayer`, `$E9CD RelativePlayerPosition`, `$85F1
-  GetPlayerColors`. New `PlayerSprite` class.
+### Phase 17 — Player graphics (DEFERRED — multi-entry-point tangles)
+Original Phase 17 addresses were wrong. Verified via symbols.sym:
+- `$EFA4 DrawPlayer_Intermediate`, `$EFDC DrawPlayerLoop`
+- `$F12A RelativePlayerPosition` — multi-entry body shared with $F12C
+  (multi-entry _body(int _entry) pattern)
+- `$85F1 GetPlayerColors`
+- `$EEE9 PlayerGfxHandler` — 12-entry-point body (heaviest tangle in the
+  codebase so far)
+
+**Why deferred:** Pervasive multi-entry-point tangles. Each entry has
+distinct semantics handled by the case dispatch at function head.
+Replacing one entry without the others is unsafe. Untangle pass needed.
 
 ### Phase 18 — Non-enemy object handlers
 - `$BC85 PowerUpObjHandler`, fireball/coin per-frame handlers.
