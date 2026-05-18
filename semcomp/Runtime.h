@@ -289,6 +289,12 @@ void semcomp_runtime_mush_flower_block(void);         // $BDD2
 void semcomp_runtime_vine_block(void);                // $BDDF
 void semcomp_runtime_star_block(void);                // $BDD5
 void semcomp_runtime_extra_life_mush_block(void);     // $BDD8
+
+// Phase 20 — HUD math untangle.
+void semcomp_runtime_digits_math_routine(void);       // $8F5F
+void semcomp_runtime_add_mod_loop(void);              // $8F68
+void semcomp_runtime_store_new_d(void);               // $8F75
+void semcomp_runtime_output_numbers(void);            // $8F11
 void semcomp_runtime_title_screen_mode(void);         // $8231 TitleScreenMode
 void semcomp_runtime_game_mode_tick(void);            // $AEDC GameMode
 void semcomp_runtime_game_over_mode(void);            // $9218 GameOverMode

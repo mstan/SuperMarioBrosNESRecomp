@@ -417,6 +417,12 @@ void func_BDDF_b0(void) { semcomp_runtime_vine_block(); }
 void func_BDD5_b0(void) { semcomp_runtime_star_block(); }
 void func_BDD8_b0(void) { semcomp_runtime_extra_life_mush_block(); }
 
+/* Phase 20 — HUD math untangle. */
+void func_8F5F_b0(void) { semcomp_runtime_digits_math_routine(); }
+void func_8F68_b0(void) { semcomp_runtime_add_mod_loop(); }
+void func_8F75_b0(void) { semcomp_runtime_store_new_d(); }
+void func_8F11_b0(void) { semcomp_runtime_output_numbers(); }
+
 void func_8231_b0(void) { /* TitleScreenMode */
     semcomp_runtime_title_screen_mode();
 }

@@ -538,6 +538,28 @@ void semcomp_runtime_extra_life_mush_block(void) {
     runtime().routines().note_invocation(0xBDD8);
     runtime().blocks().extra_life_mush_block();
 }
+
+// Phase 20 — HUD math untangle.
+void semcomp_runtime_digits_math_routine(void) {
+    runtime().routines().register_routine(0x8F5F, "DigitsMathRoutine");
+    runtime().routines().note_invocation(0x8F5F);
+    runtime().hud().digits_math_routine();
+}
+void semcomp_runtime_add_mod_loop(void) {
+    runtime().routines().register_routine(0x8F68, "AddModLoop");
+    runtime().routines().note_invocation(0x8F68);
+    runtime().hud().add_mod_loop();
+}
+void semcomp_runtime_store_new_d(void) {
+    runtime().routines().register_routine(0x8F75, "StoreNewD");
+    runtime().routines().note_invocation(0x8F75);
+    runtime().hud().store_new_d();
+}
+void semcomp_runtime_output_numbers(void) {
+    runtime().routines().register_routine(0x8F11, "OutputNumbers");
+    runtime().routines().note_invocation(0x8F11);
+    runtime().hud().output_numbers();
+}
 void semcomp_runtime_title_screen_mode(void) {
     runtime().routines().register_routine(0x8231, "TitleScreenMode");
     runtime().routines().note_invocation(0x8231);

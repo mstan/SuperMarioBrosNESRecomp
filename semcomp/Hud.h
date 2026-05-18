@@ -53,6 +53,21 @@ public:
     //   8. Restore X from ZP_Scratch_08.
     void add_to_score();
 
+    // Phase 20 — HUD math untangle.
+    //   $8F5F DigitsMathRoutine — applies pre-staged DigitModifier
+    //                              entries to the player's digit array
+    //                              with BCD carry/borrow chain.
+    //   $8F68 AddModLoop        — inner-label of DigitsMathRoutine,
+    //                              also emitted standalone.
+    //   $8F75 StoreNewD         — inner-label of DigitsMathRoutine,
+    //                              also emitted standalone.
+    //   $8F11 OutputNumbers     — stages player's digit tiles into
+    //                              VRAM_Buffer1.
+    void digits_math_routine();
+    void add_mod_loop();
+    void store_new_d();
+    void output_numbers();
+
 private:
     GameState& state_;
 };

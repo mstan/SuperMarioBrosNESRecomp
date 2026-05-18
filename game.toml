@@ -332,6 +332,25 @@ addr = 0xBDD5
 bank = 0
 addr = 0xBDD8
 
+# Phase 20 — HUD math untangle. All four entry points owned together so
+# the BCD-carry chain inside DigitsMathRoutine stays coherent (it loops
+# through StoreNewD which calls back into AddModLoop).
+[[replace_func]]
+bank = 0
+addr = 0x8F5F
+
+[[replace_func]]
+bank = 0
+addr = 0x8F68
+
+[[replace_func]]
+bank = 0
+addr = 0x8F75
+
+[[replace_func]]
+bank = 0
+addr = 0x8F11
+
 # Phase 23 — Game-mode dispatchers. Three small inline-dispatch shells
 # that read OperMode_Task ($0772) and dispatch via $8E04 into natural
 # sub-handlers. $8212 OperModeExecutionTree NOT owned (multi-entry-body
