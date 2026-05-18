@@ -646,4 +646,65 @@ uint64_t semcomp_runtime_routine_entry_invocations(size_t i) {
     return runtime().routines().entry(i).invocations;
 }
 
+// Phase 24 — Enemies mega (batch 1).
+void semcomp_runtime_init_goomba(void) {
+    runtime().routines().register_routine(0xC2F1, "InitGoomba");
+    runtime().routines().note_invocation(0xC2F1);
+    runtime().enemy_handlers().init_goomba();
+}
+
+void semcomp_runtime_init_hammer_bro(void) {
+    runtime().routines().register_routine(0xC328, "InitHammerBro");
+    runtime().routines().note_invocation(0xC328);
+    runtime().enemy_handlers().init_hammer_bro();
+}
+
+void semcomp_runtime_init_bullet_bill(void) {
+    runtime().routines().register_routine(0xC36B, "InitBulletBill");
+    runtime().routines().note_invocation(0xC36B);
+    runtime().enemy_handlers().init_bullet_bill();
+}
+
+void semcomp_runtime_init_cheep_cheep(void) {
+    runtime().routines().register_routine(0xC375, "InitCheepCheep");
+    runtime().routines().note_invocation(0xC375);
+    runtime().enemy_handlers().init_cheep_cheep();
+}
+
+void semcomp_runtime_init_lakitu(void) {
+    runtime().routines().register_routine(0xC385, "InitLakitu");
+    runtime().routines().note_invocation(0xC385);
+    runtime().enemy_handlers().init_lakitu();
+}
+
+void semcomp_runtime_setup_lakitu(void) {
+    runtime().routines().register_routine(0xC38A, "SetupLakitu");
+    runtime().routines().note_invocation(0xC38A);
+    runtime().enemy_handlers().setup_lakitu();
+}
+
+void semcomp_runtime_init_short_firebar(void) {
+    runtime().routines().register_routine(0xC45C, "InitShortFirebar");
+    runtime().routines().note_invocation(0xC45C);
+    runtime().enemy_handlers().init_short_firebar();
+}
+
+void semcomp_runtime_move_defeated_enemy(void) {
+    runtime().routines().register_routine(0xCAE5, "MoveDefeatedEnemy");
+    runtime().routines().note_invocation(0xCAE5);
+    runtime().enemy_handlers().move_defeated_enemy();
+}
+
+void semcomp_runtime_move_jumping_enemy(void) {
+    runtime().routines().register_routine(0xCAF9, "MoveJumpingEnemy");
+    runtime().routines().note_invocation(0xCAF9);
+    runtime().enemy_handlers().move_jumping_enemy();
+}
+
+void semcomp_runtime_move_bloober(void) {
+    runtime().routines().register_routine(0xCB89, "MoveBloober");
+    runtime().routines().note_invocation(0xCB89);
+    runtime().enemy_handlers().move_bloober();
+}
+
 }  // extern "C"

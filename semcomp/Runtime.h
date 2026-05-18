@@ -326,6 +326,19 @@ uint16_t      semcomp_runtime_routine_entry_pc(size_t i);
 const char*   semcomp_runtime_routine_entry_name(size_t i);
 uint64_t      semcomp_runtime_routine_entry_invocations(size_t i);
 
+// Phase 24 — Enemies mega (batch 1, bulk-ported).
+void semcomp_runtime_init_goomba(void);  // $C2F1 InitGoomba
+void semcomp_runtime_init_hammer_bro(void);  // $C328 InitHammerBro
+void semcomp_runtime_init_bullet_bill(void);  // $C36B InitBulletBill
+void semcomp_runtime_init_cheep_cheep(void);  // $C375 InitCheepCheep
+void semcomp_runtime_init_lakitu(void);  // $C385 InitLakitu
+void semcomp_runtime_setup_lakitu(void);  // $C38A SetupLakitu
+void semcomp_runtime_init_short_firebar(void);  // $C45C InitShortFirebar
+void semcomp_runtime_move_defeated_enemy(void);  // $CAE5 MoveDefeatedEnemy
+void semcomp_runtime_move_jumping_enemy(void);  // $CAF9 MoveJumpingEnemy
+void semcomp_runtime_move_bloober(void);  // $CB89 MoveBloober
+
 #ifdef __cplusplus
 }
 #endif
+

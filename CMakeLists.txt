@@ -143,6 +143,7 @@ if(ENABLE_SEMCOMP)
         semcomp/PlayerGraphics.cpp
         semcomp/ObjectHandlers.cpp
         semcomp/DamageChain.cpp
+        semcomp/EnemyHandlers.cpp
         semcomp/SemcompGame.cpp
         semcomp/Trainer.cpp
         semcomp/TrainerUI.cpp

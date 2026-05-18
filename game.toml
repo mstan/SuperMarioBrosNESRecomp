@@ -384,3 +384,34 @@ addr = 0xAEDC   # GameMode
 [[replace_func]]
 bank = 0
 addr = 0x9218   # GameOverMode
+
+# Phase 24 — Enemies mega (batch 1, bulk-ported single-entry routines).
+[[replace_func]]
+addr = 0xC2F1
+
+[[replace_func]]
+addr = 0xC328
+
+[[replace_func]]
+addr = 0xC36B
+
+[[replace_func]]
+addr = 0xC375
+
+[[replace_func]]
+addr = 0xC385
+
+[[replace_func]]
+addr = 0xC38A
+
+[[replace_func]]
+addr = 0xC45C
+
+[[replace_func]]
+addr = 0xCAE5
+
+[[replace_func]]
+addr = 0xCAF9
+
+[[replace_func]]
+addr = 0xCB89

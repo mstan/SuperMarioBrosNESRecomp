@@ -1157,3 +1157,16 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
 
     return 0;
 }
+
+/* Phase 24 — Enemies mega (batch 1). */
+void func_C2F1(void) { semcomp_runtime_init_goomba(); }
+void func_C328(void) { semcomp_runtime_init_hammer_bro(); }
+void func_C36B(void) { semcomp_runtime_init_bullet_bill(); }
+void func_C375(void) { semcomp_runtime_init_cheep_cheep(); }
+void func_C385(void) { semcomp_runtime_init_lakitu(); }
+void func_C38A(void) { semcomp_runtime_setup_lakitu(); }
+void func_C45C(void) { semcomp_runtime_init_short_firebar(); }
+void func_CAE5(void) { semcomp_runtime_move_defeated_enemy(); }
+void func_CAF9(void) { semcomp_runtime_move_jumping_enemy(); }
+void func_CB89(void) { semcomp_runtime_move_bloober(); }
+

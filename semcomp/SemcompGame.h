@@ -20,6 +20,7 @@
 #include "semcomp/PlayerGraphics.h"
 #include "semcomp/ObjectHandlers.h"
 #include "semcomp/DamageChain.h"
+#include "semcomp/EnemyHandlers.h"
 #include "semcomp/PlayerPhysics.h"
 #include "semcomp/PlayerSession.h"
 #include "semcomp/Powerups.h"
@@ -49,6 +50,7 @@ public:
           player_graphics_(state_),
           object_handlers_(state_),
           damage_chain_(state_),
+          enemy_handlers_(state_),
           trainer_(state_),
           trainer_ui_(*this),
           mod_api_(),
@@ -100,6 +102,7 @@ public:
     PlayerGraphics&      player_graphics() { return player_graphics_; }
     ObjectHandlers&      object_handlers() { return object_handlers_; }
     DamageChain&         damage_chain()    { return damage_chain_; }
+    EnemyHandlers&       enemy_handlers()  { return enemy_handlers_; }
     Trainer&             trainer()       { return trainer_; }
     const Trainer&       trainer() const { return trainer_; }
 
@@ -129,6 +132,7 @@ private:
     PlayerGraphics   player_graphics_;
     ObjectHandlers   object_handlers_;
     DamageChain      damage_chain_;
+    EnemyHandlers    enemy_handlers_;
     Trainer          trainer_;
     TrainerUI        trainer_ui_;
     ModApi           mod_api_;
