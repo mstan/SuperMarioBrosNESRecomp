@@ -256,11 +256,14 @@ project, not a spike target.
   ($F41B/$F57C/$F2D0 all use call_by_address re-entry). Needs untangle
   + careful APU register sequencing test. Own check-in before starting.
 
-### Phase 31 — Utility routines (last, own check-in)
+### Phase 31 — Utility routines (DEFERRED — last priority, own check-in)
 - Math helpers, OAM dumpers, sprite-data writers, palette writers,
   misc small utilities.
 - Final coverage audit; document anything intentionally left natural.
-- **Check-in BEFORE starting Phase 31.**
+- **Why deferred:** lowest priority per user's spike instruction
+  ("misc come last"). These are leaf utilities — owning them has the
+  smallest gameplay impact and the highest churn risk for the
+  amount of fidelity testing required. Last to land.
 
 ## Skill / tooling notes
 
