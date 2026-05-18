@@ -1038,4 +1038,701 @@ void semcomp_runtime_inc_mode_task__b(void) {
     runtime().misc_utilities().inc_mode_task__b();
 }
 
+// Phase 32 - AudioEngine bulk-port (116 entries across 12 multi-entry bodies + 2 single-entry)
+void semcomp_runtime_square1_sfx_handler(void) {
+    runtime().routines().register_routine(0xF41B, "Square1SfxHandler");
+    runtime().routines().note_invocation(0xF41B);
+    runtime().audio_engine().square1_sfx_handler();
+}
+
+void semcomp_runtime_square2_sfx_handler(void) {
+    runtime().routines().register_routine(0xF57C, "Square2SfxHandler");
+    runtime().routines().note_invocation(0xF57C);
+    runtime().audio_engine().square2_sfx_handler();
+}
+
+void semcomp_runtime_sound_engine(void) {
+    runtime().routines().register_routine(0xF2D0, "SoundEngine");
+    runtime().routines().note_invocation(0xF2D0);
+    runtime().audio_engine().sound_engine();
+}
+
+void semcomp_runtime_at_f2d3(void) {
+    runtime().routines().register_routine(0xF2D3, "at_f2d3");
+    runtime().routines().note_invocation(0xF2D3);
+    runtime().audio_engine().at_f2d3();
+}
+
+void semcomp_runtime_at_f2ea(void) {
+    runtime().routines().register_routine(0xF2EA, "at_f2ea");
+    runtime().routines().note_invocation(0xF2EA);
+    runtime().audio_engine().at_f2ea();
+}
+
+void semcomp_runtime_at_f2f3(void) {
+    runtime().routines().register_routine(0xF2F3, "at_f2f3");
+    runtime().routines().note_invocation(0xF2F3);
+    runtime().audio_engine().at_f2f3();
+}
+
+void semcomp_runtime_at_f329(void) {
+    runtime().routines().register_routine(0xF329, "at_f329");
+    runtime().routines().note_invocation(0xF329);
+    runtime().audio_engine().at_f329();
+}
+
+void semcomp_runtime_at_f380(void) {
+    runtime().routines().register_routine(0xF380, "at_f380");
+    runtime().routines().note_invocation(0xF380);
+    runtime().audio_engine().at_f380();
+}
+
+void semcomp_runtime_at_f367(void) {
+    runtime().routines().register_routine(0xF367, "at_f367");
+    runtime().routines().note_invocation(0xF367);
+    runtime().audio_engine().at_f367();
+}
+
+void semcomp_runtime_no_inc_dac(void) {
+    runtime().routines().register_routine(0xF377, "NoIncDAC");
+    runtime().routines().note_invocation(0xF377);
+    runtime().audio_engine().no_inc_dac();
+}
+
+void semcomp_runtime_dump_squ1_regs(void) {
+    runtime().routines().register_routine(0xF381, "Dump_Squ1_Regs");
+    runtime().routines().note_invocation(0xF381);
+    runtime().audio_engine().dump_squ1_regs();
+}
+
+void semcomp_runtime_at_f384(void) {
+    runtime().routines().register_routine(0xF384, "at_f384");
+    runtime().routines().note_invocation(0xF384);
+    runtime().audio_engine().at_f384();
+}
+
+void semcomp_runtime_play_squ1_sfx(void) {
+    runtime().routines().register_routine(0xF388, "PlaySqu1Sfx");
+    runtime().routines().note_invocation(0xF388);
+    runtime().audio_engine().play_squ1_sfx();
+}
+
+void semcomp_runtime_at_f38e(void) {
+    runtime().routines().register_routine(0xF38E, "at_f38e");
+    runtime().routines().note_invocation(0xF38E);
+    runtime().audio_engine().at_f38e();
+}
+
+void semcomp_runtime_dump_sq2_regs(void) {
+    runtime().routines().register_routine(0xF39F, "Dump_Sq2_Regs");
+    runtime().routines().note_invocation(0xF39F);
+    runtime().audio_engine().dump_sq2_regs();
+}
+
+void semcomp_runtime_at_f3a5(void) {
+    runtime().routines().register_routine(0xF3A5, "at_f3a5");
+    runtime().routines().note_invocation(0xF3A5);
+    runtime().audio_engine().at_f3a5();
+}
+
+void semcomp_runtime_play_squ2_sfx(void) {
+    runtime().routines().register_routine(0xF3A6, "PlaySqu2Sfx");
+    runtime().routines().note_invocation(0xF3A6);
+    runtime().audio_engine().play_squ2_sfx();
+}
+
+void semcomp_runtime_no_p_dwn_l(void) {
+    runtime().routines().register_routine(0xF4D1, "NoPDwnL");
+    runtime().routines().note_invocation(0xF4D1);
+    runtime().audio_engine().no_p_dwn_l();
+}
+
+void semcomp_runtime_at_f410(void) {
+    runtime().routines().register_routine(0xF410, "at_f410");
+    runtime().routines().note_invocation(0xF410);
+    runtime().audio_engine().at_f410();
+}
+
+void semcomp_runtime_at_f4b0(void) {
+    runtime().routines().register_routine(0xF4B0, "at_f4b0");
+    runtime().routines().note_invocation(0xF4B0);
+    runtime().audio_engine().at_f4b0();
+}
+
+void semcomp_runtime_fps2nd(void) {
+    runtime().routines().register_routine(0xF3F2, "FPS2nd");
+    runtime().routines().note_invocation(0xF3F2);
+    runtime().audio_engine().fps2nd();
+}
+
+void semcomp_runtime_dmp_jp_fps(void) {
+    runtime().routines().register_routine(0xF3F4, "DmpJpFPS");
+    runtime().routines().note_invocation(0xF3F4);
+    runtime().audio_engine().dmp_jp_fps();
+}
+
+void semcomp_runtime_at_f4be(void) {
+    runtime().routines().register_routine(0xF4BE, "at_f4be");
+    runtime().routines().note_invocation(0xF4BE);
+    runtime().audio_engine().at_f4be();
+}
+
+void semcomp_runtime_at_f4bf(void) {
+    runtime().routines().register_routine(0xF4BF, "at_f4bf");
+    runtime().routines().note_invocation(0xF4BF);
+    runtime().audio_engine().at_f4bf();
+}
+
+void semcomp_runtime_at_f4a5(void) {
+    runtime().routines().register_routine(0xF4A5, "at_f4a5");
+    runtime().routines().note_invocation(0xF4A5);
+    runtime().audio_engine().at_f4a5();
+}
+
+void semcomp_runtime_at_f405(void) {
+    runtime().routines().register_routine(0xF405, "at_f405");
+    runtime().routines().note_invocation(0xF405);
+    runtime().audio_engine().at_f405();
+}
+
+void semcomp_runtime_at_f486(void) {
+    runtime().routines().register_routine(0xF486, "at_f486");
+    runtime().routines().note_invocation(0xF486);
+    runtime().audio_engine().at_f486();
+}
+
+void semcomp_runtime_at_f421(void) {
+    runtime().routines().register_routine(0xF421, "at_f421");
+    runtime().routines().note_invocation(0xF421);
+    runtime().audio_engine().at_f421();
+}
+
+void semcomp_runtime_at_f3ee(void) {
+    runtime().routines().register_routine(0xF3EE, "at_f3ee");
+    runtime().routines().note_invocation(0xF3EE);
+    runtime().audio_engine().at_f3ee();
+}
+
+void semcomp_runtime_at_f490(void) {
+    runtime().routines().register_routine(0xF490, "at_f490");
+    runtime().routines().note_invocation(0xF490);
+    runtime().audio_engine().at_f490();
+}
+
+void semcomp_runtime_at_f462(void) {
+    runtime().routines().register_routine(0xF462, "at_f462");
+    runtime().routines().note_invocation(0xF462);
+    runtime().audio_engine().at_f462();
+}
+
+void semcomp_runtime_at_f4a9(void) {
+    runtime().routines().register_routine(0xF4A9, "at_f4a9");
+    runtime().routines().note_invocation(0xF4A9);
+    runtime().audio_engine().at_f4a9();
+}
+
+void semcomp_runtime_at_f44c(void) {
+    runtime().routines().register_routine(0xF44C, "at_f44c");
+    runtime().routines().note_invocation(0xF44C);
+    runtime().audio_engine().at_f44c();
+}
+
+void semcomp_runtime_play_coin_grab(void) {
+    runtime().routines().register_routine(0xF518, "PlayCoinGrab");
+    runtime().routines().note_invocation(0xF518);
+    runtime().audio_engine().play_coin_grab();
+}
+
+void semcomp_runtime_blst_s_jp(void) {
+    runtime().routines().register_routine(0xF5D1, "BlstSJp");
+    runtime().routines().note_invocation(0xF5D1);
+    runtime().audio_engine().blst_s_jp();
+}
+
+void semcomp_runtime_grow_item_regs(void) {
+    runtime().routines().register_routine(0xF602, "GrowItemRegs");
+    runtime().routines().note_invocation(0xF602);
+    runtime().audio_engine().grow_item_regs();
+}
+
+void semcomp_runtime_n2_tone(void) {
+    runtime().routines().register_routine(0xF538, "N2Tone");
+    runtime().routines().note_invocation(0xF538);
+    runtime().audio_engine().n2_tone();
+}
+
+void semcomp_runtime_at_f607(void) {
+    runtime().routines().register_routine(0xF607, "at_f607");
+    runtime().routines().note_invocation(0xF607);
+    runtime().audio_engine().at_f607();
+}
+
+void semcomp_runtime_at_f621(void) {
+    runtime().routines().register_routine(0xF621, "at_f621");
+    runtime().routines().note_invocation(0xF621);
+    runtime().audio_engine().at_f621();
+}
+
+void semcomp_runtime_at_f5f6(void) {
+    runtime().routines().register_routine(0xF5F6, "at_f5f6");
+    runtime().routines().note_invocation(0xF5F6);
+    runtime().audio_engine().at_f5f6();
+}
+
+void semcomp_runtime_play_grow_power_up(void) {
+    runtime().routines().register_routine(0xF5FC, "PlayGrowPowerUp");
+    runtime().routines().note_invocation(0xF5FC);
+    runtime().audio_engine().play_grow_power_up();
+}
+
+void semcomp_runtime_at_f624(void) {
+    runtime().routines().register_routine(0xF624, "at_f624");
+    runtime().routines().note_invocation(0xF624);
+    runtime().audio_engine().at_f624();
+}
+
+void semcomp_runtime_at_f586(void) {
+    runtime().routines().register_routine(0xF586, "at_f586");
+    runtime().routines().note_invocation(0xF586);
+    runtime().audio_engine().at_f586();
+}
+
+void semcomp_runtime_at_f5b2(void) {
+    runtime().routines().register_routine(0xF5B2, "at_f5b2");
+    runtime().routines().note_invocation(0xF5B2);
+    runtime().audio_engine().at_f5b2();
+}
+
+void semcomp_runtime_at_f5f8(void) {
+    runtime().routines().register_routine(0xF5F8, "at_f5f8");
+    runtime().routines().note_invocation(0xF5F8);
+    runtime().audio_engine().at_f5f8();
+}
+
+void semcomp_runtime_at_f5ed(void) {
+    runtime().routines().register_routine(0xF5ED, "at_f5ed");
+    runtime().routines().note_invocation(0xF5ED);
+    runtime().audio_engine().at_f5ed();
+}
+
+void semcomp_runtime_jump_to_dec_length2(void) {
+    runtime().routines().register_routine(0xF5C5, "JumpToDecLength2");
+    runtime().routines().note_invocation(0xF5C5);
+    runtime().audio_engine().jump_to_dec_length2();
+}
+
+void semcomp_runtime_el_l_regs(void) {
+    runtime().routines().register_routine(0xF5E0, "EL_LRegs");
+    runtime().routines().note_invocation(0xF5E0);
+    runtime().audio_engine().el_l_regs();
+}
+
+void semcomp_runtime_at_f5cf(void) {
+    runtime().routines().register_routine(0xF5CF, "at_f5cf");
+    runtime().routines().note_invocation(0xF5CF);
+    runtime().audio_engine().at_f5cf();
+}
+
+void semcomp_runtime_div_l_loop(void) {
+    runtime().routines().register_routine(0xF5EC, "DivLLoop");
+    runtime().routines().note_invocation(0xF5EC);
+    runtime().audio_engine().div_l_loop();
+}
+
+void semcomp_runtime_at_f5b9(void) {
+    runtime().routines().register_routine(0xF5B9, "at_f5b9");
+    runtime().routines().note_invocation(0xF5B9);
+    runtime().audio_engine().at_f5b9();
+}
+
+void semcomp_runtime_at_f605(void) {
+    runtime().routines().register_routine(0xF605, "at_f605");
+    runtime().routines().note_invocation(0xF605);
+    runtime().audio_engine().at_f605();
+}
+
+void semcomp_runtime_c_grab_t_tick_reg_l(void) {
+    runtime().routines().register_routine(0xF522, "CGrab_TTickRegL");
+    runtime().routines().note_invocation(0xF522);
+    runtime().audio_engine().c_grab_t_tick_reg_l();
+}
+
+void semcomp_runtime_at_f617(void) {
+    runtime().routines().register_routine(0xF617, "at_f617");
+    runtime().routines().note_invocation(0xF617);
+    runtime().audio_engine().at_f617();
+}
+
+void semcomp_runtime_play_brick_shatter(void) {
+    runtime().routines().register_routine(0xF63B, "PlayBrickShatter");
+    runtime().routines().note_invocation(0xF63B);
+    runtime().audio_engine().play_brick_shatter();
+}
+
+void semcomp_runtime_decrement_sfx3_length(void) {
+    runtime().routines().register_routine(0xF658, "DecrementSfx3Length");
+    runtime().routines().note_invocation(0xF658);
+    runtime().audio_engine().decrement_sfx3_length();
+}
+
+void semcomp_runtime_at_f644(void) {
+    runtime().routines().register_routine(0xF644, "at_f644");
+    runtime().routines().note_invocation(0xF644);
+    runtime().audio_engine().at_f644();
+}
+
+void semcomp_runtime_noise_sfx_handler(void) {
+    runtime().routines().register_routine(0xF667, "NoiseSfxHandler");
+    runtime().routines().note_invocation(0xF667);
+    runtime().audio_engine().noise_sfx_handler();
+}
+
+void semcomp_runtime_continue_bowser_flame(void) {
+    runtime().routines().register_routine(0xF685, "ContinueBowserFlame");
+    runtime().routines().note_invocation(0xF685);
+    runtime().audio_engine().continue_bowser_flame();
+}
+
+void semcomp_runtime_at_f679(void) {
+    runtime().routines().register_routine(0xF679, "at_f679");
+    runtime().routines().note_invocation(0xF679);
+    runtime().audio_engine().at_f679();
+}
+
+void semcomp_runtime_at_f68f(void) {
+    runtime().routines().register_routine(0xF68F, "at_f68f");
+    runtime().routines().note_invocation(0xF68F);
+    runtime().audio_engine().at_f68f();
+}
+
+void semcomp_runtime_music_handler(void) {
+    runtime().routines().register_routine(0xF694, "MusicHandler");
+    runtime().routines().note_invocation(0xF694);
+    runtime().audio_engine().music_handler();
+}
+
+void semcomp_runtime_silent_beat(void) {
+    runtime().routines().register_routine(0xF8B9, "SilentBeat");
+    runtime().routines().note_invocation(0xF8B9);
+    runtime().audio_engine().silent_beat();
+}
+
+void semcomp_runtime_at_f7c3(void) {
+    runtime().routines().register_routine(0xF7C3, "at_f7c3");
+    runtime().routines().note_invocation(0xF7C3);
+    runtime().audio_engine().at_f7c3();
+}
+
+void semcomp_runtime_at_f860(void) {
+    runtime().routines().register_routine(0xF860, "at_f860");
+    runtime().routines().note_invocation(0xF860);
+    runtime().audio_engine().at_f860();
+}
+
+void semcomp_runtime_strong_beat(void) {
+    runtime().routines().register_routine(0xF8A9, "StrongBeat");
+    runtime().routines().note_invocation(0xF8A9);
+    runtime().audio_engine().strong_beat();
+}
+
+void semcomp_runtime_find_event_music_header(void) {
+    runtime().routines().register_routine(0xF6F1, "FindEventMusicHeader");
+    runtime().routines().note_invocation(0xF6F1);
+    runtime().audio_engine().find_event_music_header();
+}
+
+void semcomp_runtime_at_f80d(void) {
+    runtime().routines().register_routine(0xF80D, "at_f80d");
+    runtime().routines().note_invocation(0xF80D);
+    runtime().audio_engine().at_f80d();
+}
+
+void semcomp_runtime_at_f720(void) {
+    runtime().routines().register_routine(0xF720, "at_f720");
+    runtime().routines().note_invocation(0xF720);
+    runtime().audio_engine().at_f720();
+}
+
+void semcomp_runtime_at_f710(void) {
+    runtime().routines().register_routine(0xF710, "at_f710");
+    runtime().routines().note_invocation(0xF710);
+    runtime().audio_engine().at_f710();
+}
+
+void semcomp_runtime_at_f6a1(void) {
+    runtime().routines().register_routine(0xF6A1, "at_f6a1");
+    runtime().routines().note_invocation(0xF6A1);
+    runtime().audio_engine().at_f6a1();
+}
+
+void semcomp_runtime_at_f8ad(void) {
+    runtime().routines().register_routine(0xF8AD, "at_f8ad");
+    runtime().routines().note_invocation(0xF8AD);
+    runtime().audio_engine().at_f8ad();
+}
+
+void semcomp_runtime_at_f829(void) {
+    runtime().routines().register_routine(0xF829, "at_f829");
+    runtime().routines().note_invocation(0xF829);
+    runtime().audio_engine().at_f829();
+}
+
+void semcomp_runtime_at_f750(void) {
+    runtime().routines().register_routine(0xF750, "at_f750");
+    runtime().routines().note_invocation(0xF750);
+    runtime().audio_engine().at_f750();
+}
+
+void semcomp_runtime_at_f6fc(void) {
+    runtime().routines().register_routine(0xF6FC, "at_f6fc");
+    runtime().routines().note_invocation(0xF6FC);
+    runtime().audio_engine().at_f6fc();
+}
+
+void semcomp_runtime_at_f7a9(void) {
+    runtime().routines().register_routine(0xF7A9, "at_f7a9");
+    runtime().routines().note_invocation(0xF7A9);
+    runtime().audio_engine().at_f7a9();
+}
+
+void semcomp_runtime_death_m_alt_reg(void) {
+    runtime().routines().register_routine(0xF810, "DeathMAltReg");
+    runtime().routines().note_invocation(0xF810);
+    runtime().audio_engine().death_m_alt_reg();
+}
+
+void semcomp_runtime_at_f784(void) {
+    runtime().routines().register_routine(0xF784, "at_f784");
+    runtime().routines().note_invocation(0xF784);
+    runtime().audio_engine().at_f784();
+}
+
+void semcomp_runtime_at_f885(void) {
+    runtime().routines().register_routine(0xF885, "at_f885");
+    runtime().routines().note_invocation(0xF885);
+    runtime().audio_engine().at_f885();
+}
+
+void semcomp_runtime_squ2_note_handler(void) {
+    runtime().routines().register_routine(0xF786, "Squ2NoteHandler");
+    runtime().routines().note_invocation(0xF786);
+    runtime().audio_engine().squ2_note_handler();
+}
+
+void semcomp_runtime_at_f7a5(void) {
+    runtime().routines().register_routine(0xF7A5, "at_f7a5");
+    runtime().routines().note_invocation(0xF7A5);
+    runtime().audio_engine().at_f7a5();
+}
+
+void semcomp_runtime_at_f7e6(void) {
+    runtime().routines().register_routine(0xF7E6, "at_f7e6");
+    runtime().routines().note_invocation(0xF7E6);
+    runtime().audio_engine().at_f7e6();
+}
+
+void semcomp_runtime_at_f7e7(void) {
+    runtime().routines().register_routine(0xF7E7, "at_f7e7");
+    runtime().routines().note_invocation(0xF7E7);
+    runtime().audio_engine().at_f7e7();
+}
+
+void semcomp_runtime_at_f8a5(void) {
+    runtime().routines().register_routine(0xF8A5, "at_f8a5");
+    runtime().routines().note_invocation(0xF8A5);
+    runtime().audio_engine().at_f8a5();
+}
+
+void semcomp_runtime_at_f7e4(void) {
+    runtime().routines().register_routine(0xF7E4, "at_f7e4");
+    runtime().routines().note_invocation(0xF7E4);
+    runtime().audio_engine().at_f7e4();
+}
+
+void semcomp_runtime_misc_squ1_music_tasks(void) {
+    runtime().routines().register_routine(0xF7F7, "MiscSqu1MusicTasks");
+    runtime().routines().note_invocation(0xF7F7);
+    runtime().audio_engine().misc_squ1_music_tasks();
+}
+
+void semcomp_runtime_skip_ctrl_l(void) {
+    runtime().routines().register_routine(0xF7F1, "SkipCtrlL");
+    runtime().routines().note_invocation(0xF7F1);
+    runtime().audio_engine().skip_ctrl_l();
+}
+
+void semcomp_runtime_load_header(void) {
+    runtime().routines().register_routine(0xF6F5, "LoadHeader");
+    runtime().routines().note_invocation(0xF6F5);
+    runtime().audio_engine().load_header();
+}
+
+void semcomp_runtime_fetch_noise_beat_data(void) {
+    runtime().routines().register_routine(0xF878, "FetchNoiseBeatData");
+    runtime().routines().note_invocation(0xF878);
+    runtime().audio_engine().fetch_noise_beat_data();
+}
+
+void semcomp_runtime_at_f6b8(void) {
+    runtime().routines().register_routine(0xF6B8, "at_f6b8");
+    runtime().routines().note_invocation(0xF6B8);
+    runtime().audio_engine().at_f6b8();
+}
+
+void semcomp_runtime_at_f7fb(void) {
+    runtime().routines().register_routine(0xF7FB, "at_f7fb");
+    runtime().routines().note_invocation(0xF7FB);
+    runtime().audio_engine().at_f7fb();
+}
+
+void semcomp_runtime_at_f850(void) {
+    runtime().routines().register_routine(0xF850, "at_f850");
+    runtime().routines().note_invocation(0xF850);
+    runtime().audio_engine().at_f850();
+}
+
+void semcomp_runtime_at_f88d(void) {
+    runtime().routines().register_routine(0xF88D, "at_f88d");
+    runtime().routines().note_invocation(0xF88D);
+    runtime().audio_engine().at_f88d();
+}
+
+void semcomp_runtime_at_f6b6(void) {
+    runtime().routines().register_routine(0xF6B6, "at_f6b6");
+    runtime().routines().note_invocation(0xF6B6);
+    runtime().audio_engine().at_f6b6();
+}
+
+void semcomp_runtime_medi_n(void) {
+    runtime().routines().register_routine(0xF864, "MediN");
+    runtime().routines().note_invocation(0xF864);
+    runtime().audio_engine().medi_n();
+}
+
+void semcomp_runtime_at_f862(void) {
+    runtime().routines().register_routine(0xF862, "at_f862");
+    runtime().routines().note_invocation(0xF862);
+    runtime().audio_engine().at_f862();
+}
+
+void semcomp_runtime_at_f741(void) {
+    runtime().routines().register_routine(0xF741, "at_f741");
+    runtime().routines().note_invocation(0xF741);
+    runtime().audio_engine().at_f741();
+}
+
+void semcomp_runtime_at_f844(void) {
+    runtime().routines().register_routine(0xF844, "at_f844");
+    runtime().routines().note_invocation(0xF844);
+    runtime().audio_engine().at_f844();
+}
+
+void semcomp_runtime_at_f807(void) {
+    runtime().routines().register_routine(0xF807, "at_f807");
+    runtime().routines().note_invocation(0xF807);
+    runtime().audio_engine().at_f807();
+}
+
+void semcomp_runtime_at_f706(void) {
+    runtime().routines().register_routine(0xF706, "at_f706");
+    runtime().routines().note_invocation(0xF706);
+    runtime().audio_engine().at_f706();
+}
+
+void semcomp_runtime_at_f729(void) {
+    runtime().routines().register_routine(0xF729, "at_f729");
+    runtime().routines().note_invocation(0xF729);
+    runtime().audio_engine().at_f729();
+}
+
+void semcomp_runtime_alternate_length_handler(void) {
+    runtime().routines().register_routine(0xF8C5, "AlternateLengthHandler");
+    runtime().routines().note_invocation(0xF8C5);
+    runtime().audio_engine().alternate_length_handler();
+}
+
+void semcomp_runtime_at_f8d0(void) {
+    runtime().routines().register_routine(0xF8D0, "at_f8d0");
+    runtime().routines().note_invocation(0xF8D0);
+    runtime().audio_engine().at_f8d0();
+}
+
+void semcomp_runtime_at_f8c9(void) {
+    runtime().routines().register_routine(0xF8C9, "at_f8c9");
+    runtime().routines().note_invocation(0xF8C9);
+    runtime().audio_engine().at_f8c9();
+}
+
+void semcomp_runtime_at_f8ca(void) {
+    runtime().routines().register_routine(0xF8CA, "at_f8ca");
+    runtime().routines().note_invocation(0xF8CA);
+    runtime().audio_engine().at_f8ca();
+}
+
+void semcomp_runtime_at_f8c6(void) {
+    runtime().routines().register_routine(0xF8C6, "at_f8c6");
+    runtime().routines().note_invocation(0xF8C6);
+    runtime().audio_engine().at_f8c6();
+}
+
+void semcomp_runtime_at_f8ce(void) {
+    runtime().routines().register_routine(0xF8CE, "at_f8ce");
+    runtime().routines().note_invocation(0xF8CE);
+    runtime().audio_engine().at_f8ce();
+}
+
+void semcomp_runtime_at_f8c8(void) {
+    runtime().routines().register_routine(0xF8C8, "at_f8c8");
+    runtime().routines().note_invocation(0xF8C8);
+    runtime().audio_engine().at_f8c8();
+}
+
+void semcomp_runtime_load_control_regs(void) {
+    runtime().routines().register_routine(0xF8D8, "LoadControlRegs");
+    runtime().routines().note_invocation(0xF8D8);
+    runtime().audio_engine().load_control_regs();
+}
+
+void semcomp_runtime_at_f8f1(void) {
+    runtime().routines().register_routine(0xF8F1, "at_f8f1");
+    runtime().routines().note_invocation(0xF8F1);
+    runtime().audio_engine().at_f8f1();
+}
+
+void semcomp_runtime_at_f8e7(void) {
+    runtime().routines().register_routine(0xF8E7, "at_f8e7");
+    runtime().routines().note_invocation(0xF8E7);
+    runtime().audio_engine().at_f8e7();
+}
+
+void semcomp_runtime_load_envelope_data(void) {
+    runtime().routines().register_routine(0xF8F4, "LoadEnvelopeData");
+    runtime().routines().note_invocation(0xF8F4);
+    runtime().audio_engine().load_envelope_data();
+}
+
+void semcomp_runtime_at_f8fb(void) {
+    runtime().routines().register_routine(0xF8FB, "at_f8fb");
+    runtime().routines().note_invocation(0xF8FB);
+    runtime().audio_engine().at_f8fb();
+}
+
+void semcomp_runtime_at_f90c(void) {
+    runtime().routines().register_routine(0xF90C, "at_f90c");
+    runtime().routines().note_invocation(0xF90C);
+    runtime().audio_engine().at_f90c();
+}
+
+void semcomp_runtime_at_f903(void) {
+    runtime().routines().register_routine(0xF903, "at_f903");
+    runtime().routines().note_invocation(0xF903);
+    runtime().audio_engine().at_f903();
+}
+
+void semcomp_runtime_at_f905(void) {
+    runtime().routines().register_routine(0xF905, "at_f905");
+    runtime().routines().note_invocation(0xF905);
+    runtime().audio_engine().at_f905();
+}
+
 }  // extern "C"

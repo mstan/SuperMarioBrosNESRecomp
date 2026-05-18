@@ -10,8 +10,17 @@ Given a list of (hex_addr, name) tuples plus a module name, this:
 6. Emits game.toml [[replace_func]] entries
 7. Updates SemcompGame.h + CMakeLists.txt
 
-Used for Phase 24+ where individual hand-porting is impractical due
-to the routine count (60-80 enemies + 30-40 level + 80-100 sound).
+Supports two emission patterns:
+
+(A) Single-entry: function body emitted inline. Direct verbatim port.
+
+(B) Shim+body (multi-entry): recompiler emits
+        static void func_XXXX_body(int _entry) { switch(_entry){...} ... }
+        void func_XXXX(void) { func_XXXX_body(0); }
+        void func_YYYY(void) { func_XXXX_body(1); }
+    For these, we port the shared body once and emit one public method per
+    entry-point address. The tool auto-discovers ALL sibling entries that
+    share a body so the whole body gets owned (no half-owned tangles).
 """
 import re
 import sys
@@ -21,14 +30,15 @@ ROOT = Path(__file__).parent.parent
 FULL_C = ROOT / "generated" / "super-mario-bros_full.c"
 
 
+# ---------------------------------------------------------------------------
+# Function locators
+# ---------------------------------------------------------------------------
+
 def find_function(addr_hex, generated):
     """Find the function body for hex addr like 'C30E' or 'C30E_b0'.
     Returns (start_line, end_line, suffix). suffix is e.g. '_b0' or ''.
     """
     addr = addr_hex.upper()
-    # Try with _b0 suffix first (bank-suffixed names)
-    # Only match the DEFINITION (line ends with `{`), not the forward
-    # declaration (line ends with `;`).
     patterns = [
         (rf"^(?:static )?void func_{addr}_b0\(void\) \{{", "_b0"),
         (rf"^(?:static )?void func_{addr}\(void\) \{{", ""),
@@ -36,17 +46,11 @@ def find_function(addr_hex, generated):
     for pat, suffix in patterns:
         for i, line in enumerate(generated):
             if re.match(pat, line):
-                # Track brace depth to find the matching close brace.
-                # Start at depth 1 because the header line ends with `{`.
                 depth = 1
                 for j in range(i + 1, len(generated)):
                     cur = generated[j]
-                    # Count occurrences (very rough, but ok for generated code
-                    # which doesn't use { or } inside strings/comments often).
                     opens = cur.count("{")
                     closes = cur.count("}")
-                    # If the line is the standalone closing `}` at depth 1,
-                    # treat it as function close. Otherwise update depth.
                     if cur.rstrip() == "}" and depth == 1:
                         return (i, j, suffix)
                     depth += opens - closes
@@ -56,11 +60,100 @@ def find_function(addr_hex, generated):
     return None
 
 
+def detect_shim_target(start, end, lines):
+    """If the function at lines[start:end+1] is a thin shim that only calls
+    `func_XXXX_body(N);`, return (body_addr_hex, entry_index). Else None.
+    """
+    body_match = None
+    for k in range(start + 1, end):
+        line = lines[k].strip()
+        if not line:
+            continue
+        if line.startswith("#ifdef") or line.startswith("#endif"):
+            continue
+        if "recomp_stack_" in line:
+            continue
+        m = re.match(r"^func_([0-9A-Fa-f]{4})_body\((\d+)\);?$", line)
+        if m:
+            if body_match is not None:
+                # Multiple body calls — not a simple shim
+                return None
+            body_match = (m.group(1).upper(), int(m.group(2)))
+            continue
+        # Anything else means this isn't a simple shim
+        return None
+    return body_match
+
+
+def find_body_def(body_addr_hex, generated):
+    """Find `static void func_XXXX_body(int _entry) { ... }`.
+    Returns (start_line, end_line, comment) or None.
+    """
+    pat = (
+        rf"^static void func_{body_addr_hex}_body\(int _entry\) \{{"
+        r"(?:\s*/\*\s*(.*?)\s*\*/)?"
+    )
+    for i, line in enumerate(generated):
+        m = re.match(pat, line)
+        if m:
+            comment = m.group(1) or ""
+            depth = 1
+            for j in range(i + 1, len(generated)):
+                cur = generated[j]
+                opens = cur.count("{")
+                closes = cur.count("}")
+                if cur.rstrip() == "}" and depth == 1:
+                    return (i, j, comment)
+                depth += opens - closes
+                if depth == 0:
+                    return (i, j, comment)
+    return None
+
+
+def find_body_callers(body_addr_hex, generated):
+    """Find all shim wrappers that call func_<body_addr>_body(N).
+    Returns list of (addr_hex, suffix, entry_idx, comment) sorted by entry_idx.
+    """
+    func_def = re.compile(
+        r"^void func_([0-9A-Fa-f]{4})(_b\d)?\(void\)\s*\{"
+        r"(?:\s*/\*\s*(.*?)\s*\*/)?"
+    )
+    body_call = re.compile(
+        rf"^func_{body_addr_hex}_body\((\d+)\);?$"
+    )
+    out = []
+    seen = set()
+    for i, line in enumerate(generated):
+        m = func_def.match(line)
+        if not m:
+            continue
+        addr = m.group(1).upper()
+        suffix = m.group(2) or ""
+        comment = m.group(3) or ""
+        # Skim ahead ~20 lines for the body call
+        for j in range(i + 1, min(i + 20, len(generated))):
+            inner = generated[j].strip()
+            mm = body_call.match(inner)
+            if mm:
+                idx = int(mm.group(1))
+                key = (addr, suffix)
+                if key in seen:
+                    break
+                seen.add(key)
+                out.append((addr, suffix, idx, comment))
+                break
+    out.sort(key=lambda t: t[2])
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Body extraction + rewriting
+# ---------------------------------------------------------------------------
+
 def extract_body_lines(start, end, lines):
     """Extract just the body (between { and final }) excluding the function header.
 
-    Strip the `#ifdef RECOMP_STACK_TRACKING ... #endif` blocks (entire block, 3 lines).
-    Other `#ifdef ... #endif` blocks (e.g. WATCHDOG_ENABLED) are preserved.
+    Strip the `#ifdef RECOMP_STACK_TRACKING ... #endif` blocks (entire block).
     """
     raw = []
     for k in range(start + 1, end):
@@ -69,17 +162,11 @@ def extract_body_lines(start, end, lines):
     i = 0
     while i < len(raw):
         line = raw[i]
-        # Detect the 3-line stack-tracking block:
-        #   #ifdef RECOMP_STACK_TRACKING
-        #       recomp_stack_push(...) or recomp_stack_pop()
-        #   #endif
         if line.strip() == "#ifdef RECOMP_STACK_TRACKING":
-            # Skip until matching #endif (inside the body, RECOMP_STACK_TRACKING
-            # blocks are short and never nested).
             j = i + 1
             while j < len(raw) and raw[j].strip() != "#endif":
                 j += 1
-            i = j + 1  # skip past #endif
+            i = j + 1
             continue
         out.append(line)
         i += 1
@@ -87,24 +174,20 @@ def extract_body_lines(start, end, lines):
 
 
 def rewrite_body(body_lines):
-    """Rewrite the body to use call_by_address for cross-function calls.
+    """Rewrite inter-function calls to call_by_address.
 
-    The recompiler emits both `func_XXXX_b0()` and `call_by_address(0xXXXX)`.
-    For our verbatim port to compile, we need to ensure all func_*_b0() calls
-    refer to functions that still exist OR be converted to call_by_address.
-    Since replace_func may strip some functions, the safest is to convert
-    all `func_XXXX[_b0]()` calls to `call_by_address(0xXXXX)`.
+    `func_XXXX_b0()` and `func_XXXX()` -> `call_by_address(0xXXXX)`.
+    `func_XXXX_body(N)` calls (rare — body calling another body directly)
+    are left as-is for now (won't link until those bodies are also ported).
     """
     out = []
     for line in body_lines:
-        # func_XXXX_b0()  -> call_by_address(0xXXXX)
         line = re.sub(
             r"\bfunc_([0-9A-Fa-f]{4})_b\d\(\)",
             r"call_by_address(0x\1)",
             line,
         )
-        # func_XXXX()     -> call_by_address(0xXXXX)
-        # Avoid matching func_XXXX_body() helpers (private)
+        # Match func_XXXX() but NOT func_XXXX_body()
         line = re.sub(
             r"\bfunc_([0-9A-Fa-f]{4})\(\)(?!_body)",
             r"call_by_address(0x\1)",
@@ -115,16 +198,74 @@ def rewrite_body(body_lines):
 
 
 def slug_for_name(name):
-    """Convert SymbolName to snake_case."""
-    s = re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
-    return s
+    """Convert SymbolName to snake_case.
+
+    Handles camelCase, acronyms, existing underscores, and digits.
+    Examples:
+      SoundEngine        -> sound_engine
+      NoIncDAC           -> no_inc_dac
+      Dump_Squ1_Regs     -> dump_squ1_regs
+      Entry_F2D3         -> entry_f2d3
+      Squ2NoteHandler    -> squ2_note_handler
+    """
+    # Split lowercase/digit -> uppercase boundary
+    s = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
+    # Split end of acronym (UPPER+ -> Upper+lower)
+    s = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", s)
+    s = s.lower()
+    # Replace any non-identifier chars
+    s = re.sub(r"[^a-z0-9_]+", "_", s)
+    # Collapse runs of underscores
+    s = re.sub(r"_+", "_", s)
+    return s.strip("_")
+
+
+def entry_friendly_name(name_override, comment, addr_hex):
+    """Pick a friendly C++ identifier for an entry point.
+
+    Priority: user-supplied name > recompiler /* Comment */ > addr-based fallback.
+    Address-based fallback uses lowercase `at_<addr>` so slug_for_name leaves it
+    alone (no hex-digit-vs-letter splits).
+    """
+    if name_override:
+        return name_override
+    if comment:
+        return comment
+    return f"at_{addr_hex.lower()}"
+
+
+# ---------------------------------------------------------------------------
+# Module generation
+# ---------------------------------------------------------------------------
+
+def build_runtime_wiring(addr_hex, suffix, slug, class_name, name):
+    """Generate (decl, def, extras_shim, toml_entry) for a single owned addr."""
+    decl = f"void semcomp_runtime_{slug}(void);  // ${addr_hex} {name}"
+    def_text = (
+        f"void semcomp_runtime_{slug}(void) {{\n"
+        f'    runtime().routines().register_routine(0x{addr_hex}, "{name}");\n'
+        f"    runtime().routines().note_invocation(0x{addr_hex});\n"
+        f"    runtime().{slug_for_name(class_name)}().{slug}();\n"
+        f"}}"
+    )
+    func_decl = f"func_{addr_hex}{suffix}"
+    extras_shim = f"void {func_decl}(void) {{ semcomp_runtime_{slug}(); }}"
+    if suffix == "_b0":
+        toml = f"[[replace_func]]\nbank = 0\naddr = 0x{addr_hex}\n"
+    else:
+        toml = f"[[replace_func]]\naddr = 0x{addr_hex}\n"
+    return decl, def_text, extras_shim, toml
 
 
 def generate_module(module_name, class_name, routines, generated):
-    """Generate header + cpp + wiring fragments for a set of routines."""
+    """Generate header + cpp + wiring fragments for a set of routines.
+
+    Handles both single-entry and multi-entry (shim+body) patterns. For
+    multi-entry, auto-discovers sibling entries to ensure full body ownership.
+    """
     cpp_lines = [
         f"// semcomp/{module_name}.cpp — bulk-ported routines (auto-generated).",
-        '#include "semcomp/' + module_name + '.h"',
+        f'#include "semcomp/{module_name}.h"',
         "",
         '#include "semcomp/GameState.h"',
         '#include "semcomp/cpu_flags.h"',
@@ -156,55 +297,131 @@ def generate_module(module_name, class_name, routines, generated):
     extras_shims = []
     toml_entries = []
     skipped = []
+    body_methods = []  # cpp blocks for private body() methods, appended later
 
+    # ---- Phase 1: classify routines -----------------------------------------
+    # singles: list of (addr, name, start, end, suffix)
+    # body_groups: dict body_addr_hex -> {
+    #     "comment": str,
+    #     "user_overrides": dict entry_idx -> (name, suffix),
+    # }
+    singles = []
+    body_groups = {}
     for addr_hex, name in routines:
-        result = find_function(addr_hex, generated)
-        if not result:
+        res = find_function(addr_hex, generated)
+        if not res:
             skipped.append((addr_hex, name, "not found"))
             continue
-        start, end, suffix = result
+        start, end, suffix = res
+        shim = detect_shim_target(start, end, generated)
+        if shim is None:
+            # Single-entry — body is inline
+            singles.append((addr_hex.upper(), name, start, end, suffix))
+        else:
+            body_addr, entry_idx = shim
+            grp = body_groups.setdefault(body_addr, {"user_overrides": {}})
+            grp["user_overrides"][entry_idx] = (name, suffix)
+
+    # ---- Phase 2: emit single-entry methods ---------------------------------
+    for addr_hex, name, start, end, suffix in singles:
         body = extract_body_lines(start, end, generated)
-        # Detect multi-entry-body wrapper (body is just `func_XXX_body(N);`)
-        body_stripped = [l for l in body if l.strip()]
-        if any("_body(" in l for l in body_stripped):
-            skipped.append((addr_hex, name, "multi-entry-body wrapper"))
-            continue
         body = rewrite_body(body)
         slug = slug_for_name(name)
-        # Method
         cpp_lines.append(f"void {class_name}::{slug}() {{")
         cpp_lines.append("    (void)state_;")
         for line in body:
             cpp_lines.append(line)
         cpp_lines.append("}")
         cpp_lines.append("")
-        # Header
         header_lines.append(f"    void {slug}();  // ${addr_hex} {name}")
-        # Runtime bridge
-        runtime_decls.append(
-            f"void semcomp_runtime_{slug}(void);  // ${addr_hex} {name}"
-        )
-        member_lc = class_name[0].lower() + class_name[1:]
-        # Use snake_case for runtime accessor: PhaseNNFoo -> phase_n_n_foo... no, just hardcode.
-        runtime_defs.append(
-            f"""void semcomp_runtime_{slug}(void) {{
-    runtime().routines().register_routine(0x{addr_hex}, "{name}");
-    runtime().routines().note_invocation(0x{addr_hex});
-    runtime().{slug_for_name(class_name)}().{slug}();
-}}"""
-        )
-        # extras.c shim
-        func_decl = f"func_{addr_hex}{suffix}"
-        extras_shims.append(f"void {func_decl}(void) {{ semcomp_runtime_{slug}(); }}")
-        # toml entry — fixed-bank functions get no `bank = 0`
-        if suffix == "_b0":
-            toml_entries.append(f"[[replace_func]]\nbank = 0\naddr = 0x{addr_hex}\n")
-        else:
-            toml_entries.append(f"[[replace_func]]\naddr = 0x{addr_hex}\n")
+        d, df, ex, tm = build_runtime_wiring(addr_hex, suffix, slug, class_name, name)
+        runtime_decls.append(d)
+        runtime_defs.append(df)
+        extras_shims.append(ex)
+        toml_entries.append(tm)
 
+    # ---- Phase 3: emit multi-entry body groups ------------------------------
+    private_body_decls = []  # for header private: section
+    for body_addr in sorted(body_groups.keys()):
+        grp = body_groups[body_addr]
+        user_overrides = grp["user_overrides"]
+        body_def = find_body_def(body_addr, generated)
+        if not body_def:
+            for idx, (nm, _) in user_overrides.items():
+                skipped.append((body_addr, nm, f"body func_{body_addr}_body not found"))
+            continue
+        body_start, body_end, body_comment = body_def
+
+        # Discover ALL siblings calling this body (auto-expand for 100% ownership).
+        all_entries = find_body_callers(body_addr, generated)
+        if not all_entries:
+            # Shouldn't happen — we found a shim that pointed here. Fall through.
+            skipped.append((body_addr, "?", "no callers found for body"))
+            continue
+
+        # Resolve friendly names for every entry.
+        # Use user override if provided, otherwise recompiler comment, otherwise addr.
+        entry_specs = []  # list of (addr, suffix, idx, friendly_name, slug)
+        for addr, suf, idx, com in all_entries:
+            override = user_overrides.get(idx)
+            if override:
+                friendly = override[0]
+                use_suffix = override[1] if override[1] == suf else suf
+            else:
+                friendly = entry_friendly_name(None, com, addr)
+                use_suffix = suf
+            slug = slug_for_name(friendly)
+            entry_specs.append((addr, use_suffix, idx, friendly, slug))
+        entry_specs.sort(key=lambda t: t[2])
+
+        # Pick a name for the body method based on entry 0's friendly name.
+        root_friendly = entry_specs[0][3] if entry_specs else body_comment or f"body_{body_addr}"
+        body_method_slug = slug_for_name(root_friendly) + "_body"
+
+        # Extract body content (between { and final }).
+        body_raw = extract_body_lines(body_start, body_end, generated)
+        body_rewritten = rewrite_body(body_raw)
+
+        # Emit private body method into cpp.
+        body_methods.append(f"void {class_name}::{body_method_slug}(int _entry) {{")
+        body_methods.append("    (void)state_;")
+        for line in body_rewritten:
+            body_methods.append(line)
+        body_methods.append("}")
+        body_methods.append("")
+
+        # Declare body method in header (private section).
+        private_body_decls.append(
+            f"    void {body_method_slug}(int _entry);  // shared body for ${body_addr}"
+            + (f" /* {body_comment} */" if body_comment else "")
+        )
+
+        # Emit one public method per entry.
+        for addr, suf, idx, friendly, slug in entry_specs:
+            cpp_lines.append(f"void {class_name}::{slug}() {{")
+            cpp_lines.append(f"    {body_method_slug}({idx});")
+            cpp_lines.append("}")
+            cpp_lines.append("")
+            header_lines.append(
+                f"    void {slug}();  // ${addr} {friendly} (entry {idx})"
+            )
+            d, df, ex, tm = build_runtime_wiring(addr, suf, slug, class_name, friendly)
+            runtime_decls.append(d)
+            runtime_defs.append(df)
+            extras_shims.append(ex)
+            toml_entries.append(tm)
+
+    # Append the private body methods after public methods in the cpp.
+    cpp_lines.extend(body_methods)
+
+    # ---- Phase 4: finalize header -------------------------------------------
     header_lines.extend([
         "",
         "private:",
+    ])
+    for d in private_body_decls:
+        header_lines.append(d)
+    header_lines.extend([
         "    GameState& state_;",
         "};",
         "",
@@ -223,6 +440,10 @@ def generate_module(module_name, class_name, routines, generated):
     }
 
 
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
 def main():
     """Driven by CLI args:  python semcomp_bulk_port.py <module> <class> <addr1=name1> ..."""
     if len(sys.argv) < 4:
@@ -238,11 +459,9 @@ def main():
     generated = FULL_C.read_text(encoding="utf-8").splitlines()
     result = generate_module(module_name, class_name, routines, generated)
 
-    # Write header + cpp
     (ROOT / "semcomp" / f"{module_name}.h").write_text(result["header"], encoding="utf-8")
     (ROOT / "semcomp" / f"{module_name}.cpp").write_text(result["cpp"], encoding="utf-8")
 
-    # Emit wiring fragments to a single file so the caller can review/paste
     wiring = (
         "// ---- Runtime.h decls (add at end of bridges block) ----\n"
         + result["runtime_decls"]
@@ -256,9 +475,10 @@ def main():
     (ROOT / f"_wiring_{module_name}.txt").write_text(wiring, encoding="utf-8")
 
     print(f"Wrote semcomp/{module_name}.h, semcomp/{module_name}.cpp")
-    print(f"Wrote _wiring_{module_name}.txt with {len(routines) - len(result['skipped'])} routines.")
+    n_emitted = result["toml_entries"].count("[[replace_func]]")
+    print(f"Wrote _wiring_{module_name}.txt with {n_emitted} replace_func entries.")
     if result["skipped"]:
-        print("SKIPPED (not found):")
+        print("SKIPPED:")
         for addr, name, reason in result["skipped"]:
             print(f"  ${addr} {name}: {reason}")
 

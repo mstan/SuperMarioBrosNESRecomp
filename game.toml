@@ -611,3 +611,352 @@ addr = 0x9589
 [[replace_func]]
 bank = 0
 addr = 0x874E
+
+# Phase 32 - AudioEngine bulk-port (116 entries across 12 multi-entry bodies + 2 single-entry)
+[[replace_func]]
+addr = 0xF41B
+
+[[replace_func]]
+addr = 0xF57C
+
+[[replace_func]]
+addr = 0xF2D0
+
+[[replace_func]]
+addr = 0xF2D3
+
+[[replace_func]]
+addr = 0xF2EA
+
+[[replace_func]]
+addr = 0xF2F3
+
+[[replace_func]]
+addr = 0xF329
+
+[[replace_func]]
+addr = 0xF380
+
+[[replace_func]]
+addr = 0xF367
+
+[[replace_func]]
+addr = 0xF377
+
+[[replace_func]]
+addr = 0xF381
+
+[[replace_func]]
+addr = 0xF384
+
+[[replace_func]]
+addr = 0xF388
+
+[[replace_func]]
+addr = 0xF38E
+
+[[replace_func]]
+addr = 0xF39F
+
+[[replace_func]]
+addr = 0xF3A5
+
+[[replace_func]]
+addr = 0xF3A6
+
+[[replace_func]]
+addr = 0xF4D1
+
+[[replace_func]]
+addr = 0xF410
+
+[[replace_func]]
+addr = 0xF4B0
+
+[[replace_func]]
+addr = 0xF3F2
+
+[[replace_func]]
+addr = 0xF3F4
+
+[[replace_func]]
+addr = 0xF4BE
+
+[[replace_func]]
+addr = 0xF4BF
+
+[[replace_func]]
+addr = 0xF4A5
+
+[[replace_func]]
+addr = 0xF405
+
+[[replace_func]]
+addr = 0xF486
+
+[[replace_func]]
+addr = 0xF421
+
+[[replace_func]]
+addr = 0xF3EE
+
+[[replace_func]]
+addr = 0xF490
+
+[[replace_func]]
+addr = 0xF462
+
+[[replace_func]]
+addr = 0xF4A9
+
+[[replace_func]]
+addr = 0xF44C
+
+[[replace_func]]
+addr = 0xF518
+
+[[replace_func]]
+addr = 0xF5D1
+
+[[replace_func]]
+addr = 0xF602
+
+[[replace_func]]
+addr = 0xF538
+
+[[replace_func]]
+addr = 0xF607
+
+[[replace_func]]
+addr = 0xF621
+
+[[replace_func]]
+addr = 0xF5F6
+
+[[replace_func]]
+addr = 0xF5FC
+
+[[replace_func]]
+addr = 0xF624
+
+[[replace_func]]
+addr = 0xF586
+
+[[replace_func]]
+addr = 0xF5B2
+
+[[replace_func]]
+addr = 0xF5F8
+
+[[replace_func]]
+addr = 0xF5ED
+
+[[replace_func]]
+addr = 0xF5C5
+
+[[replace_func]]
+addr = 0xF5E0
+
+[[replace_func]]
+addr = 0xF5CF
+
+[[replace_func]]
+addr = 0xF5EC
+
+[[replace_func]]
+addr = 0xF5B9
+
+[[replace_func]]
+addr = 0xF605
+
+[[replace_func]]
+addr = 0xF522
+
+[[replace_func]]
+addr = 0xF617
+
+[[replace_func]]
+addr = 0xF63B
+
+[[replace_func]]
+addr = 0xF658
+
+[[replace_func]]
+addr = 0xF644
+
+[[replace_func]]
+addr = 0xF667
+
+[[replace_func]]
+addr = 0xF685
+
+[[replace_func]]
+addr = 0xF679
+
+[[replace_func]]
+addr = 0xF68F
+
+[[replace_func]]
+addr = 0xF694
+
+[[replace_func]]
+addr = 0xF8B9
+
+[[replace_func]]
+addr = 0xF7C3
+
+[[replace_func]]
+addr = 0xF860
+
+[[replace_func]]
+addr = 0xF8A9
+
+[[replace_func]]
+addr = 0xF6F1
+
+[[replace_func]]
+addr = 0xF80D
+
+[[replace_func]]
+addr = 0xF720
+
+[[replace_func]]
+addr = 0xF710
+
+[[replace_func]]
+addr = 0xF6A1
+
+[[replace_func]]
+addr = 0xF8AD
+
+[[replace_func]]
+addr = 0xF829
+
+[[replace_func]]
+addr = 0xF750
+
+[[replace_func]]
+addr = 0xF6FC
+
+[[replace_func]]
+addr = 0xF7A9
+
+[[replace_func]]
+addr = 0xF810
+
+[[replace_func]]
+addr = 0xF784
+
+[[replace_func]]
+addr = 0xF885
+
+[[replace_func]]
+addr = 0xF786
+
+[[replace_func]]
+addr = 0xF7A5
+
+[[replace_func]]
+addr = 0xF7E6
+
+[[replace_func]]
+addr = 0xF7E7
+
+[[replace_func]]
+addr = 0xF8A5
+
+[[replace_func]]
+addr = 0xF7E4
+
+[[replace_func]]
+addr = 0xF7F7
+
+[[replace_func]]
+addr = 0xF7F1
+
+[[replace_func]]
+addr = 0xF6F5
+
+[[replace_func]]
+addr = 0xF878
+
+[[replace_func]]
+addr = 0xF6B8
+
+[[replace_func]]
+addr = 0xF7FB
+
+[[replace_func]]
+addr = 0xF850
+
+[[replace_func]]
+addr = 0xF88D
+
+[[replace_func]]
+addr = 0xF6B6
+
+[[replace_func]]
+addr = 0xF864
+
+[[replace_func]]
+addr = 0xF862
+
+[[replace_func]]
+addr = 0xF741
+
+[[replace_func]]
+addr = 0xF844
+
+[[replace_func]]
+addr = 0xF807
+
+[[replace_func]]
+addr = 0xF706
+
+[[replace_func]]
+addr = 0xF729
+
+[[replace_func]]
+addr = 0xF8C5
+
+[[replace_func]]
+addr = 0xF8D0
+
+[[replace_func]]
+addr = 0xF8C9
+
+[[replace_func]]
+addr = 0xF8CA
+
+[[replace_func]]
+addr = 0xF8C6
+
+[[replace_func]]
+addr = 0xF8CE
+
+[[replace_func]]
+addr = 0xF8C8
+
+[[replace_func]]
+addr = 0xF8D8
+
+[[replace_func]]
+addr = 0xF8F1
+
+[[replace_func]]
+addr = 0xF8E7
+
+[[replace_func]]
+addr = 0xF8F4
+
+[[replace_func]]
+addr = 0xF8FB
+
+[[replace_func]]
+addr = 0xF90C
+
+[[replace_func]]
+addr = 0xF903
+
+[[replace_func]]
+addr = 0xF905

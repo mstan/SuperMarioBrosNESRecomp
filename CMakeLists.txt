@@ -148,6 +148,7 @@ if(ENABLE_SEMCOMP)
         semcomp/LevelParser.cpp
         semcomp/BgRenderer.cpp
         semcomp/SoundEngine.cpp
+        semcomp/AudioEngine.cpp
         semcomp/MiscUtilities.cpp
         semcomp/SemcompGame.cpp
         semcomp/Trainer.cpp
