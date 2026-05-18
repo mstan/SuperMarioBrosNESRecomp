@@ -410,6 +410,13 @@ void func_BC85_b0(void) { semcomp_runtime_powerup_obj_handler(); }
 void func_B689_b0(void) { semcomp_runtime_fireball_obj_core(); }
 void func_BB38_b0(void) { semcomp_runtime_coin_block(); }
 
+/* Phase 19 — BumpBlock untangle. */
+void func_BD9B_b0(void) { semcomp_runtime_bump_block(); }
+void func_BDD2_b0(void) { semcomp_runtime_mush_flower_block(); }
+void func_BDDF_b0(void) { semcomp_runtime_vine_block(); }
+void func_BDD5_b0(void) { semcomp_runtime_star_block(); }
+void func_BDD8_b0(void) { semcomp_runtime_extra_life_mush_block(); }
+
 void func_8231_b0(void) { /* TitleScreenMode */
     semcomp_runtime_title_screen_mode();
 }

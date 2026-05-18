@@ -511,6 +511,33 @@ void semcomp_runtime_coin_block(void) {
     runtime().routines().note_invocation(0xBB38);
     runtime().object_handlers().coin_block();
 }
+
+// Phase 19 — BumpBlock untangle.
+void semcomp_runtime_bump_block(void) {
+    runtime().routines().register_routine(0xBD9B, "BumpBlock");
+    runtime().routines().note_invocation(0xBD9B);
+    runtime().blocks().bump_block();
+}
+void semcomp_runtime_mush_flower_block(void) {
+    runtime().routines().register_routine(0xBDD2, "MushFlowerBlock");
+    runtime().routines().note_invocation(0xBDD2);
+    runtime().blocks().mush_flower_block();
+}
+void semcomp_runtime_vine_block(void) {
+    runtime().routines().register_routine(0xBDDF, "VineBlock");
+    runtime().routines().note_invocation(0xBDDF);
+    runtime().blocks().vine_block();
+}
+void semcomp_runtime_star_block(void) {
+    runtime().routines().register_routine(0xBDD5, "StarBlock");
+    runtime().routines().note_invocation(0xBDD5);
+    runtime().blocks().star_block();
+}
+void semcomp_runtime_extra_life_mush_block(void) {
+    runtime().routines().register_routine(0xBDD8, "ExtraLifeMushBlock");
+    runtime().routines().note_invocation(0xBDD8);
+    runtime().blocks().extra_life_mush_block();
+}
 void semcomp_runtime_title_screen_mode(void) {
     runtime().routines().register_routine(0x8231, "TitleScreenMode");
     runtime().routines().note_invocation(0x8231);

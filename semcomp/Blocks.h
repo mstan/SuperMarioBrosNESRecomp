@@ -36,6 +36,17 @@ public:
     //      the $8E04 inline-dispatch table (9 entries).
     void bump_block();
 
+    // Phase 19 untangle — own all multi-entry-body entries + the two small
+    // standalones so the dispatch chain stays coherent.
+    //   $BDD2 MushFlowerBlock     — inner-label of $BD9B body
+    //   $BDDF VineBlock           — inner-label of $BD9B body
+    //   $BDD5 StarBlock           — small standalone
+    //   $BDD8 ExtraLifeMushBlock  — small standalone
+    void mush_flower_block();
+    void vine_block();
+    void star_block();
+    void extra_life_mush_block();
+
 private:
     GameState& state_;
 };

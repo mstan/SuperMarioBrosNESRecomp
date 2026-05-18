@@ -309,6 +309,29 @@ addr = 0xB689
 bank = 0
 addr = 0xBB38
 
+# Phase 19 — BumpBlock untangle. $BD9B BumpBlock + its multi-entry inner
+# labels ($BDD2 MushFlowerBlock, $BDDF VineBlock) all owned together with
+# the two small standalones ($BDD5 StarBlock, $BDD8 ExtraLifeMushBlock).
+[[replace_func]]
+bank = 0
+addr = 0xBD9B
+
+[[replace_func]]
+bank = 0
+addr = 0xBDD2
+
+[[replace_func]]
+bank = 0
+addr = 0xBDDF
+
+[[replace_func]]
+bank = 0
+addr = 0xBDD5
+
+[[replace_func]]
+bank = 0
+addr = 0xBDD8
+
 # Phase 23 — Game-mode dispatchers. Three small inline-dispatch shells
 # that read OperMode_Task ($0772) and dispatch via $8E04 into natural
 # sub-handlers. $8212 OperModeExecutionTree NOT owned (multi-entry-body

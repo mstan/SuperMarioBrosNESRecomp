@@ -282,6 +282,13 @@ void semcomp_runtime_player_gfx_handler_ef97(void);   // $EF97
 void semcomp_runtime_powerup_obj_handler(void);       // $BC85
 void semcomp_runtime_fireball_obj_core(void);         // $B689
 void semcomp_runtime_coin_block(void);                // $BB38
+
+// Phase 19 — BumpBlock untangle.
+void semcomp_runtime_bump_block(void);                // $BD9B
+void semcomp_runtime_mush_flower_block(void);         // $BDD2
+void semcomp_runtime_vine_block(void);                // $BDDF
+void semcomp_runtime_star_block(void);                // $BDD5
+void semcomp_runtime_extra_life_mush_block(void);     // $BDD8
 void semcomp_runtime_title_screen_mode(void);         // $8231 TitleScreenMode
 void semcomp_runtime_game_mode_tick(void);            // $AEDC GameMode
 void semcomp_runtime_game_over_mode(void);            // $9218 GameOverMode

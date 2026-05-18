@@ -3,6 +3,7 @@
 
 #include "semcomp/GameState.h"
 #include "semcomp/SmbRamMap.h"
+#include "semcomp/cpu_flags.h"
 
 extern "C" {
 #include "nes_runtime.h"
@@ -71,6 +72,58 @@ void Blocks::bump_block() {
         case 8: call_by_address(kPC_Block_BDD8);      break;
         default: break;  // out-of-range — no-op (matches natural fallthrough)
     }
+}
+
+// Phase 19 untangle — sub-handlers extracted to standalone methods.
+// MushFlowerBlock and VineBlock used to live as inner labels of $BD9B;
+// $BDD5 StarBlock and $BDD8 ExtraLifeMushBlock were already standalone.
+
+void Blocks::mush_flower_block() {
+    (void)state_;
+label_BDD2:; /* MushFlowerBlock */
+    /* $BDD2: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
+label_BDD4:;
+    /* $BDD4: 2C */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x02A9); g_cpu.Z=(g_cpu.A&m)?0:1; g_cpu.N=(m>>7)&1; g_cpu.V=(m>>6)&1; }
+label_BDD7:;
+    /* $BDD7: 2C */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x03A9); g_cpu.Z=(g_cpu.A&m)?0:1; g_cpu.N=(m>>7)&1; g_cpu.V=(m>>6)&1; }
+label_BDDA:;
+    /* $BDDA: 85 */ maybe_trigger_vblank(3); nes_write(0x39, g_cpu.A);
+label_BDDC:;
+    /* $BDDC: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); call_by_address(0xBC49); return;
+}
+
+void Blocks::vine_block() {
+    (void)state_;
+label_BDDF:; /* VineBlock */
+    /* $BDDF: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x05; FLAG_NZ(g_cpu.X);
+label_BDE1:;
+    /* $BDE1: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x03EE); FLAG_NZ(g_cpu.Y);
+label_BDE4:;
+    /* $BDE4: 20 */ maybe_trigger_vblank(6); call_by_address(0xB91E);
+label_BDE7:; /* ExitBlockChk */
+    /* $BDE7: 60 */ maybe_trigger_vblank(6);
+}
+
+void Blocks::star_block() {
+    (void)state_;
+label_BDD5:; /* StarBlock */
+    /* $BDD5: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x02; FLAG_NZ(g_cpu.A);
+label_BDD7:;
+    /* $BDD7: 2C */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x03A9); g_cpu.Z=(g_cpu.A&m)?0:1; g_cpu.N=(m>>7)&1; g_cpu.V=(m>>6)&1; }
+label_BDDA:;
+    /* $BDDA: 85 */ maybe_trigger_vblank(3); nes_write(0x39, g_cpu.A);
+label_BDDC:;
+    /* $BDDC: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); call_by_address(0xBC49); return;
+}
+
+void Blocks::extra_life_mush_block() {
+    (void)state_;
+label_BDD8:; /* ExtraLifeMushBlock */
+    /* $BDD8: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x03; FLAG_NZ(g_cpu.A);
+label_BDDA:;
+    /* $BDDA: 85 */ maybe_trigger_vblank(3); nes_write(0x39, g_cpu.A);
+label_BDDC:;
+    /* $BDDC: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); call_by_address(0xBC49); return;
 }
 
 }  // namespace smb::semcomp
