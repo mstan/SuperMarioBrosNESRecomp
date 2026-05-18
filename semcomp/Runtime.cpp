@@ -495,6 +495,22 @@ SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_ef7a, 0xEF7A, "PlayerOffsc
 SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_ef97, 0xEF97, "PGH_EF97", player_gfx_handler_ef97)
 
 #undef SEMCOMP_GFX_BRIDGE
+
+void semcomp_runtime_powerup_obj_handler(void) {
+    runtime().routines().register_routine(0xBC85, "PowerUpObjHandler");
+    runtime().routines().note_invocation(0xBC85);
+    runtime().object_handlers().powerup_obj_handler();
+}
+void semcomp_runtime_fireball_obj_core(void) {
+    runtime().routines().register_routine(0xB689, "FireballObjCore");
+    runtime().routines().note_invocation(0xB689);
+    runtime().object_handlers().fireball_obj_core();
+}
+void semcomp_runtime_coin_block(void) {
+    runtime().routines().register_routine(0xBB38, "CoinBlock");
+    runtime().routines().note_invocation(0xBB38);
+    runtime().object_handlers().coin_block();
+}
 void semcomp_runtime_title_screen_mode(void) {
     runtime().routines().register_routine(0x8231, "TitleScreenMode");
     runtime().routines().note_invocation(0x8231);

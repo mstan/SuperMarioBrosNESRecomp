@@ -277,6 +277,11 @@ void semcomp_runtime_player_gfx_handler_ef01(void);   // $EF01
 void semcomp_runtime_player_gfx_handler_ef42(void);   // $EF42
 void semcomp_runtime_player_gfx_handler_ef7a(void);   // $EF7A
 void semcomp_runtime_player_gfx_handler_ef97(void);   // $EF97
+
+// Phase 18 — Object handlers.
+void semcomp_runtime_powerup_obj_handler(void);       // $BC85
+void semcomp_runtime_fireball_obj_core(void);         // $B689
+void semcomp_runtime_coin_block(void);                // $BB38
 void semcomp_runtime_title_screen_mode(void);         // $8231 TitleScreenMode
 void semcomp_runtime_game_mode_tick(void);            // $AEDC GameMode
 void semcomp_runtime_game_over_mode(void);            // $9218 GameOverMode

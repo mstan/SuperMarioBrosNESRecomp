@@ -292,6 +292,23 @@ addr = 0xEF7A
 [[replace_func]]
 addr = 0xEF97
 
+# Phase 18 — Object handlers.
+# $BC85 PowerUpObjHandler — per-frame power-up entity update. Inner label
+# $BCD8 RunPUSubs already standalone (called via call_by_address).
+[[replace_func]]
+bank = 0
+addr = 0xBC85
+
+# $B689 FireballObjCore — per-frame fireball update + BG/enemy collision.
+[[replace_func]]
+bank = 0
+addr = 0xB689
+
+# $BB38 CoinBlock — coin metatile bookkeeping after a brick/?-block bump.
+[[replace_func]]
+bank = 0
+addr = 0xBB38
+
 # Phase 23 — Game-mode dispatchers. Three small inline-dispatch shells
 # that read OperMode_Task ($0772) and dispatch via $8E04 into natural
 # sub-handlers. $8212 OperModeExecutionTree NOT owned (multi-entry-body

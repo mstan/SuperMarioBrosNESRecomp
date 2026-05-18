@@ -405,6 +405,11 @@ void func_EF42(void)    { semcomp_runtime_player_gfx_handler_ef42(); }
 void func_EF7A(void)    { semcomp_runtime_player_gfx_handler_ef7a(); }
 void func_EF97(void)    { semcomp_runtime_player_gfx_handler_ef97(); }
 
+/* Phase 18 — Object handlers. */
+void func_BC85_b0(void) { semcomp_runtime_powerup_obj_handler(); }
+void func_B689_b0(void) { semcomp_runtime_fireball_obj_core(); }
+void func_BB38_b0(void) { semcomp_runtime_coin_block(); }
+
 void func_8231_b0(void) { /* TitleScreenMode */
     semcomp_runtime_title_screen_mode();
 }
