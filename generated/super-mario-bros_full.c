@@ -27581,32 +27581,6 @@ label_B58B:; /* ExitPhy */
     return;
 }
 
-void func_B35A_b0(void) { /* OnGroundStateSub */
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_push("func_B35A_b0");
-#endif
-label_B35A:; /* OnGroundStateSub */
-    /* $B35A: 20 */ maybe_trigger_vblank(6); func_B58F_b0();
-label_B35D:;
-    /* $B35D: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0C); FLAG_NZ(g_cpu.A);
-label_B35F:;
-    /* $B35F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B363;
-label_B361:;
-    /* $B361: 85 */ maybe_trigger_vblank(3); nes_write(0x33, g_cpu.A);
-label_B363:; /* GndMove */
-    /* $B363: 20 */ maybe_trigger_vblank(6); func_B5CC_b0();
-label_B366:;
-    /* $B366: 20 */ maybe_trigger_vblank(6); func_BF09_b0();
-label_B369:;
-    /* $B369: 8D */ maybe_trigger_vblank(4); nes_write(0x06FF, g_cpu.A);
-label_B36C:;
-    /* $B36C: 60 */ maybe_trigger_vblank(6); 
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_pop();
-#endif
-    return;
-}
-
 void func_B376_b0(void) { /* JumpSwimSub */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_B376_b0");
@@ -27681,18 +27655,6 @@ label_B3C1:;
     /* $B3C1: 8D */ maybe_trigger_vblank(4); nes_write(0x0709, g_cpu.A);
 label_B3C4:; /* ExitMov1 */
     /* $B3C4: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_BF4D_b0(); return;
-}
-
-void func_B36D_b0(void) { /* FallingSub */
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_push("func_B36D_b0");
-#endif
-label_B36D:; /* FallingSub */
-    /* $B36D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x070A); FLAG_NZ(g_cpu.A);
-label_B370:;
-    /* $B370: 8D */ maybe_trigger_vblank(4); nes_write(0x0709, g_cpu.A);
-label_B373:;
-    /* $B373: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_B3AC_b0(); return;
 }
 
 void func_B3CF_b0(void) { /* ClimbingSub */

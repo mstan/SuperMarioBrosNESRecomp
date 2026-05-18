@@ -343,6 +343,14 @@ void func_B27D_b0(void) { /* PlayerFireFlower */
     semcomp_runtime_player_fire_flower();
 }
 
+void func_B35A_b0(void) { /* OnGroundStateSub */
+    semcomp_runtime_on_ground_state_sub();
+}
+
+void func_B36D_b0(void) { /* FallingSub */
+    semcomp_runtime_falling_sub();
+}
+
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     (void)pc; (void)addr; return val;
 }

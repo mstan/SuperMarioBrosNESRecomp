@@ -176,3 +176,14 @@ addr = 0xB269   # PlayerDeath
 [[replace_func]]
 bank = 0
 addr = 0xB27D   # PlayerFireFlower
+
+# Phase 11 (reduced scope) — two small dispatch targets from
+# PlayerMovementSubs. JumpSwimSub / ClimbingSub / PhysicsSub deferred
+# to dedicated future phases (75/140/300-line bodies need careful ports).
+[[replace_func]]
+bank = 0
+addr = 0xB35A   # OnGroundStateSub
+
+[[replace_func]]
+bank = 0
+addr = 0xB36D   # FallingSub

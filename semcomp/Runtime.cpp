@@ -414,6 +414,16 @@ void semcomp_runtime_player_fire_flower(void) {
     runtime().routines().note_invocation(0xB27D);
     runtime().player_anim().fire_flower();
 }
+void semcomp_runtime_on_ground_state_sub(void) {
+    runtime().routines().register_routine(0xB35A, "OnGroundStateSub");
+    runtime().routines().note_invocation(0xB35A);
+    runtime().player_physics().on_ground_state_sub();
+}
+void semcomp_runtime_falling_sub(void) {
+    runtime().routines().register_routine(0xB36D, "FallingSub");
+    runtime().routines().note_invocation(0xB36D);
+    runtime().player_physics().falling_sub();
+}
 
 // ---- GameMode reads + verbs ----------------------------------------------
 

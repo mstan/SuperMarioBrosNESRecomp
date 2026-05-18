@@ -27,6 +27,48 @@ void PlayerPhysics::auto_control() {
     call_by_address(kPC_PlayerCtrlRoutine);
 }
 
+// ---- Phase 11 ports (reduced scope) ---------------------------------------
+//
+// Each method is a literal port of the recompiler's generated body for the
+// corresponding 6502 routine. Sub-callees stay natural-generated and are
+// invoked via call_by_address (which dispatches through the recompiler's
+// table — every emitted func_XXXX_b0 has a case).
+//
+// JumpSwimSub / ClimbingSub / PhysicsSub deferred to dedicated phases due
+// to scale + branch density.
+
+void PlayerPhysics::on_ground_state_sub() {
+    // $B35A: JSR $B58F GetPlayerAnimSpeed
+    call_by_address(0xB58F);
+    // $B35D-$B361: A = $0C; if A != 0, $33 = A (write Player_MovingDir).
+    {
+        const std::uint8_t a = state_.read8(0x000C);
+        if (a != 0) state_.write8(0x0033, a);
+        g_cpu.A = a;
+    }
+    // $B363 GndMove: JSR $B5CC ImposeFriction
+    call_by_address(0xB5CC);
+    // $B366: JSR $BF09 MovePlayerHorizontally — leaves A set with the
+    // horizontal displacement byte.
+    call_by_address(0xBF09);
+    // $B369: STA $06FF (BG-scroll-pending byte? — copy A returned by
+    // MovePlayerHorizontally).
+    state_.write8(0x06FF, g_cpu.A);
+    // $B36C: RTS
+}
+
+void PlayerPhysics::falling_sub() {
+    // $B36D: A = $070A (terminal y-velocity?); $0709 = A.
+    {
+        const std::uint8_t v = state_.read8(0x070A);
+        state_.write8(0x0709, v);
+        g_cpu.A = v;
+    }
+    // $B373: JMP $B3AC LRAir (tail-call, leaves A live for the rest of
+    // LRAir's chain). $B3AC is emitted as standalone func_B3AC_b0.
+    call_by_address(0xB3AC);
+}
+
 void PlayerPhysics::movement_subs() {
     // $B329-$B32E: A = 0; Y = $0754 (PlayerSize). If Y != 0 (Small),
     // skip the joypad-down check and go straight to SetCrouch with A=0

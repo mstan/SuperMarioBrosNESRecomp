@@ -245,6 +245,8 @@ void semcomp_runtime_player_change_size(void);        // $B233 PlayerChangeSize
 void semcomp_runtime_player_injury_blink(void);       // $B245 PlayerInjuryBlink
 void semcomp_runtime_player_death(void);              // $B269 PlayerDeath
 void semcomp_runtime_player_fire_flower(void);        // $B27D PlayerFireFlower
+void semcomp_runtime_on_ground_state_sub(void);       // $B35A OnGroundStateSub
+void semcomp_runtime_falling_sub(void);               // $B36D FallingSub
 
 // ---- GameMode reads + verbs (Phase 5) ------------------------------------
 uint8_t semcomp_runtime_mode_oper_mode(void);

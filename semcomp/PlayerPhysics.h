@@ -45,6 +45,17 @@ public:
     // standalone function the recompiler emitted, NOT owned by us.
     void auto_control();
 
+    // ---- Phase 11 (reduced scope) ---------------------------------------
+    // Two small clean routines from PlayerMovementSubs' dispatch table.
+    // JumpSwimSub / ClimbingSub / PhysicsSub deferred to dedicated phases
+    // (their bodies are 75-300 lines of dense 6502 branch logic that
+    // doesn't lend itself to one-shot hand-porting at quality).
+    //
+    // $B35A OnGroundStateSub — ground-walking frame. 4 sub-calls, 1 branch.
+    // $B36D FallingSub       — copy $070A → $0709, tail-call $B3AC LRAir.
+    void on_ground_state_sub();
+    void falling_sub();
+
     // movement_subs: replacement body for $B329.
     // Logic chain:
     //   1. CrouchingFlag computation: tall Mario on ground with Down
