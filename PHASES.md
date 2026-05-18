@@ -125,9 +125,20 @@ semcomp/
   session of careful porting + frame-perfect comparison vs Nestopia
   oracle, not a rushed spike.
 
-### Phase 15 — MovePlayer (dedicated)
-- `$B450` calls `MovePlayer` (different address — search before
-  starting). Apply velocity to position.
+### Phase 15 — MovePlayer family (DEFERRED — split across other phases)
+Candidate addresses surveyed via symbols.sym:
+- `$B200 MovePlayerYAxis` — trivial 3-instruction Y-position increment.
+  Too small for a standalone phase; will roll into Phase 14 (PhysicsSub)
+  when that lands, since $B450 is its main caller.
+- `$BF09 MovePlayerHorizontally` — emitted with multi-entry-point body
+  via `func_BF09_b0_body(int _entry)`. Shares body with `$BF4C ExXMove`.
+  Inner-tangle: needs untangle before replace_func can land.
+- `$BF4D MovePlayerVertically` — `call_by_address(0xBF4C)` re-entry from
+  inside. Same tangle class. Untangle first.
+
+**Why deferred:** the trivial $B200 isn't worth a phase on its own, and
+the $BF09/$BF4D pair needs the same untangle treatment as Phase 19/20/21.
+Bundled into a future untangle-batch phase.
 
 ### Phase 16 — Player BG collision
 - Player-vs-background collision detection. Find canonical addresses
