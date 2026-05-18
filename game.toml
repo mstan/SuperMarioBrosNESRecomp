@@ -504,3 +504,44 @@ addr = 0x9C09
 [[replace_func]]
 bank = 0
 addr = 0x9C22
+
+# Phase 26 — BG renderer + VRAM
+[[replace_func]]
+bank = 0
+addr = 0x85C5
+
+[[replace_func]]
+bank = 0
+addr = 0x863F
+
+[[replace_func]]
+bank = 0
+addr = 0x864C
+
+[[replace_func]]
+bank = 0
+addr = 0x8652
+
+[[replace_func]]
+bank = 0
+addr = 0x865A
+
+[[replace_func]]
+bank = 0
+addr = 0x8749
+
+[[replace_func]]
+bank = 0
+addr = 0x89BD
+
+[[replace_func]]
+bank = 0
+addr = 0x8E2D
+
+[[replace_func]]
+bank = 0
+addr = 0x8E92
+
+[[replace_func]]
+bank = 0
+addr = 0x8EED

@@ -861,4 +861,65 @@ void semcomp_runtime_get_area_data_addrs(void) {
 
 // Phase 25 — Level parser (batch 1)
 
+// Phase 26 — BG renderer + VRAM
+void semcomp_runtime_set_v_r_a_m_addr__a(void) {
+    runtime().routines().register_routine(0x85C5, "SetVRAMAddr_A");
+    runtime().routines().note_invocation(0x85C5);
+    runtime().bg_renderer().set_v_r_a_m_addr__a();
+}
+
+void semcomp_runtime_set_v_r_a_m_offset(void) {
+    runtime().routines().register_routine(0x863F, "SetVRAMOffset");
+    runtime().routines().note_invocation(0x863F);
+    runtime().bg_renderer().set_v_r_a_m_offset();
+}
+
+void semcomp_runtime_set_v_r_a_m_addr__b(void) {
+    runtime().routines().register_routine(0x864C, "SetVRAMAddr_B");
+    runtime().routines().note_invocation(0x864C);
+    runtime().bg_renderer().set_v_r_a_m_addr__b();
+}
+
+void semcomp_runtime_write_top_status_line(void) {
+    runtime().routines().register_routine(0x8652, "WriteTopStatusLine");
+    runtime().routines().note_invocation(0x8652);
+    runtime().bg_renderer().write_top_status_line();
+}
+
+void semcomp_runtime_write_bottom_status_line(void) {
+    runtime().routines().register_routine(0x865A, "WriteBottomStatusLine");
+    runtime().routines().note_invocation(0x865A);
+    runtime().bg_renderer().write_bottom_status_line();
+}
+
+void semcomp_runtime_write_top_score(void) {
+    runtime().routines().register_routine(0x8749, "WriteTopScore");
+    runtime().routines().note_invocation(0x8749);
+    runtime().bg_renderer().write_top_score();
+}
+
+void semcomp_runtime_set_v_r_a_m_ctrl(void) {
+    runtime().routines().register_routine(0x89BD, "SetVRAMCtrl");
+    runtime().routines().note_invocation(0x89BD);
+    runtime().bg_renderer().set_v_r_a_m_ctrl();
+}
+
+void semcomp_runtime_write_n_t_addr(void) {
+    runtime().routines().register_routine(0x8E2D, "WriteNTAddr");
+    runtime().routines().note_invocation(0x8E2D);
+    runtime().bg_renderer().write_n_t_addr();
+}
+
+void semcomp_runtime_write_buffer_to_screen(void) {
+    runtime().routines().register_routine(0x8E92, "WriteBufferToScreen");
+    runtime().routines().note_invocation(0x8E92);
+    runtime().bg_renderer().write_buffer_to_screen();
+}
+
+void semcomp_runtime_write_p_p_u_reg1(void) {
+    runtime().routines().register_routine(0x8EED, "WritePPUReg1");
+    runtime().routines().note_invocation(0x8EED);
+    runtime().bg_renderer().write_p_p_u_reg1();
+}
+
 }  // extern "C"

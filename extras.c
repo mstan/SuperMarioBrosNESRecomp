@@ -1202,3 +1202,15 @@ void func_9C09_b0(void) { semcomp_runtime_get_area_type(); }
 void func_9C22_b0(void) { semcomp_runtime_get_area_data_addrs(); }
 
 /* Phase 25 — Level parser (batch 1) */
+
+/* Phase 26 — BG renderer + VRAM */
+void func_85C5_b0(void) { semcomp_runtime_set_v_r_a_m_addr__a(); }
+void func_863F_b0(void) { semcomp_runtime_set_v_r_a_m_offset(); }
+void func_864C_b0(void) { semcomp_runtime_set_v_r_a_m_addr__b(); }
+void func_8652_b0(void) { semcomp_runtime_write_top_status_line(); }
+void func_865A_b0(void) { semcomp_runtime_write_bottom_status_line(); }
+void func_8749_b0(void) { semcomp_runtime_write_top_score(); }
+void func_89BD_b0(void) { semcomp_runtime_set_v_r_a_m_ctrl(); }
+void func_8E2D_b0(void) { semcomp_runtime_write_n_t_addr(); }
+void func_8E92_b0(void) { semcomp_runtime_write_buffer_to_screen(); }
+void func_8EED_b0(void) { semcomp_runtime_write_p_p_u_reg1(); }

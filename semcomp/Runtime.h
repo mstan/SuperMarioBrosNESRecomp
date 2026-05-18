@@ -369,6 +369,18 @@ void semcomp_runtime_get_area_data_addrs(void);  // $9C22 GetAreaDataAddrs
 
 // Phase 25 — Level parser (batch 1)
 
+// Phase 26 — BG renderer + VRAM
+void semcomp_runtime_set_v_r_a_m_addr__a(void);  // $85C5 SetVRAMAddr_A
+void semcomp_runtime_set_v_r_a_m_offset(void);  // $863F SetVRAMOffset
+void semcomp_runtime_set_v_r_a_m_addr__b(void);  // $864C SetVRAMAddr_B
+void semcomp_runtime_write_top_status_line(void);  // $8652 WriteTopStatusLine
+void semcomp_runtime_write_bottom_status_line(void);  // $865A WriteBottomStatusLine
+void semcomp_runtime_write_top_score(void);  // $8749 WriteTopScore
+void semcomp_runtime_set_v_r_a_m_ctrl(void);  // $89BD SetVRAMCtrl
+void semcomp_runtime_write_n_t_addr(void);  // $8E2D WriteNTAddr
+void semcomp_runtime_write_buffer_to_screen(void);  // $8E92 WriteBufferToScreen
+void semcomp_runtime_write_p_p_u_reg1(void);  // $8EED WritePPUReg1
+
 #ifdef __cplusplus
 }
 #endif
