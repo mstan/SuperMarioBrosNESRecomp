@@ -162,8 +162,17 @@ Original Phase 17 addresses were wrong. Verified via symbols.sym:
 distinct semantics handled by the case dispatch at function head.
 Replacing one entry without the others is unsafe. Untangle pass needed.
 
-### Phase 18 — Non-enemy object handlers
-- `$BC85 PowerUpObjHandler`, fireball/coin per-frame handlers.
+### Phase 18 — Non-enemy object handlers (DEFERRED — inner-label split + helper chain)
+- `$BC85 PowerUpObjHandler` — ~100 lines. Has inner-label split:
+  $BCD8 RunPUSubs is emitted as standalone func_BCD8_b0 and is
+  tail-called from within $BC85 at $BCA7/$BCB0. The RunPUSubs block at
+  $BCD8 also exists inline in $BC85's body (fall-through path).
+- Fireball/coin per-frame handlers: `$D410 FireballObjCore`,
+  `$F38C FireballObjHandler`, related coin entry.
+- **Why deferred:** PowerUpObjHandler is mostly mechanical (state dispatch +
+  6 sub-routine calls), but coordinating with Powerups facade ownership
+  + tail-call to RunPUSubs needs careful planning. Bundles cleanly with
+  Phase 19 (Block ownership) which also touches the power-up path.
 
 ### Phase 19 — Block ownership (untangle + replace)
 - Re-implement `$BDD2 MushFlowerBlock`, `$BDDF VineBlock`, `$BB38`,
