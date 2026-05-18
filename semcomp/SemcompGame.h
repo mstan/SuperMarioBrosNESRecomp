@@ -26,6 +26,7 @@
 #include "semcomp/BgRenderer.h"
 #include "semcomp/SoundEngine.h"
 #include "semcomp/AudioEngine.h"
+#include "semcomp/EnemyEngine.h"
 #include "semcomp/MiscUtilities.h"
 #include "semcomp/PlayerPhysics.h"
 #include "semcomp/PlayerSession.h"
@@ -62,6 +63,7 @@ public:
           bg_renderer_(state_),
           sound_engine_(state_),
           audio_engine_(state_),
+          enemy_engine_(state_),
           misc_utilities_(state_),
           trainer_(state_),
           trainer_ui_(*this),
@@ -120,6 +122,7 @@ public:
     BgRenderer&          bg_renderer()     { return bg_renderer_; }
     SoundEngine&         sound_engine()    { return sound_engine_; }
     AudioEngine&         audio_engine()    { return audio_engine_; }
+    EnemyEngine&         enemy_engine()    { return enemy_engine_; }
     MiscUtilities&       misc_utilities()  { return misc_utilities_; }
     Trainer&             trainer()       { return trainer_; }
     const Trainer&       trainer() const { return trainer_; }
@@ -156,6 +159,7 @@ private:
     BgRenderer       bg_renderer_;
     SoundEngine      sound_engine_;
     AudioEngine      audio_engine_;
+    EnemyEngine      enemy_engine_;
     MiscUtilities    misc_utilities_;
     Trainer          trainer_;
     TrainerUI        trainer_ui_;

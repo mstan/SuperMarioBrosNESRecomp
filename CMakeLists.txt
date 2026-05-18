@@ -149,6 +149,7 @@ if(ENABLE_SEMCOMP)
         semcomp/BgRenderer.cpp
         semcomp/SoundEngine.cpp
         semcomp/AudioEngine.cpp
+        semcomp/EnemyEngine.cpp
         semcomp/MiscUtilities.cpp
         semcomp/SemcompGame.cpp
         semcomp/Trainer.cpp

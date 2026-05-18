@@ -28,6 +28,23 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 FULL_C = ROOT / "generated" / "super-mario-bros_full.c"
+GAME_TOML = ROOT / "game.toml"
+
+
+def load_owned_addresses():
+    """Read game.toml and return the set of addresses already replace_func'd.
+
+    Used to auto-skip already-owned shims when auto-discovering body siblings
+    so we don't emit duplicate [[replace_func]] entries.
+    """
+    owned = set()
+    if not GAME_TOML.exists():
+        return owned
+    for line in GAME_TOML.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"\s*addr\s*=\s*0x([0-9A-Fa-f]+)", line)
+        if m:
+            owned.add(m.group(1).upper())
+    return owned
 
 
 # ---------------------------------------------------------------------------
@@ -307,6 +324,7 @@ def generate_module(module_name, class_name, routines, generated):
     # }
     singles = []
     body_groups = {}
+    owned_already = load_owned_addresses()
     for addr_hex, name in routines:
         res = find_function(addr_hex, generated)
         if not res:
@@ -334,6 +352,9 @@ def generate_module(module_name, class_name, routines, generated):
         cpp_lines.append("}")
         cpp_lines.append("")
         header_lines.append(f"    void {slug}();  // ${addr_hex} {name}")
+        if addr_hex in owned_already:
+            skipped.append((addr_hex, name, "already owned in game.toml — wiring skipped"))
+            continue
         d, df, ex, tm = build_runtime_wiring(addr_hex, suffix, slug, class_name, name)
         runtime_decls.append(d)
         runtime_defs.append(df)
@@ -405,6 +426,15 @@ def generate_module(module_name, class_name, routines, generated):
             header_lines.append(
                 f"    void {slug}();  // ${addr} {friendly} (entry {idx})"
             )
+            if addr in owned_already:
+                # Already replace_func'd by an earlier phase. Skip wiring so we
+                # don't emit duplicate toml/extras entries — the public method
+                # still exists in our class for use by other semcomp code if
+                # needed, but no new dispatch hookup.
+                skipped.append(
+                    (addr, friendly, "already owned in game.toml — wiring skipped")
+                )
+                continue
             d, df, ex, tm = build_runtime_wiring(addr, suf, slug, class_name, friendly)
             runtime_decls.append(d)
             runtime_defs.append(df)
