@@ -3234,3 +3234,679 @@ addr = 0xBF94
 [[replace_func]]
 bank = 0
 addr = 0xBF96
+
+# Phase 35 - RenderEngine bulk-port (33 bodies, 217 entries)
+[[replace_func]]
+bank = 0
+addr = 0x81C6
+
+[[replace_func]]
+bank = 0
+addr = 0x8200
+
+[[replace_func]]
+bank = 0
+addr = 0x81F9
+
+[[replace_func]]
+bank = 0
+addr = 0x8212
+
+[[replace_func]]
+bank = 0
+addr = 0x8222
+
+[[replace_func]]
+bank = 0
+addr = 0x8325
+
+[[replace_func]]
+bank = 0
+addr = 0x8330
+
+[[replace_func]]
+bank = 0
+addr = 0x83BD
+
+[[replace_func]]
+bank = 0
+addr = 0x8434
+
+[[replace_func]]
+bank = 0
+addr = 0x8436
+
+[[replace_func]]
+bank = 0
+addr = 0x842C
+
+[[replace_func]]
+bank = 0
+addr = 0x8404
+
+[[replace_func]]
+bank = 0
+addr = 0x8461
+
+[[replace_func]]
+bank = 0
+addr = 0x8486
+
+[[replace_func]]
+bank = 0
+addr = 0x8567
+
+[[replace_func]]
+bank = 0
+addr = 0x85AD
+
+[[replace_func]]
+bank = 0
+addr = 0x92AA
+
+[[replace_func]]
+bank = 0
+addr = 0x92AF
+
+[[replace_func]]
+bank = 0
+addr = 0xAF93
+
+[[replace_func]]
+bank = 0
+addr = 0xAFB1
+
+[[replace_func]]
+bank = 0
+addr = 0xB74F
+
+[[replace_func]]
+bank = 0
+addr = 0xB7A3
+
+[[replace_func]]
+bank = 0
+addr = 0xBF63
+
+[[replace_func]]
+bank = 0
+addr = 0xBF6B
+
+[[replace_func]]
+addr = 0xE87D
+
+[[replace_func]]
+addr = 0xE9A0
+
+[[replace_func]]
+addr = 0xE939
+
+[[replace_func]]
+addr = 0xE9B2
+
+[[replace_func]]
+addr = 0xE96D
+
+[[replace_func]]
+addr = 0xE900
+
+[[replace_func]]
+addr = 0xE998
+
+[[replace_func]]
+addr = 0xEB20
+
+[[replace_func]]
+addr = 0xE96F
+
+[[replace_func]]
+addr = 0xE987
+
+[[replace_func]]
+addr = 0xE9B6
+
+[[replace_func]]
+addr = 0xE9D6
+
+[[replace_func]]
+addr = 0xE908
+
+[[replace_func]]
+addr = 0xEB86
+
+[[replace_func]]
+addr = 0xE921
+
+[[replace_func]]
+addr = 0xEBA4
+
+[[replace_func]]
+addr = 0xEB84
+
+[[replace_func]]
+addr = 0xEBA6
+
+[[replace_func]]
+addr = 0xEAAD
+
+[[replace_func]]
+addr = 0xEAE7
+
+[[replace_func]]
+addr = 0xE9EB
+
+[[replace_func]]
+addr = 0xEA3D
+
+[[replace_func]]
+addr = 0xEABA
+
+[[replace_func]]
+addr = 0xE9D0
+
+[[replace_func]]
+addr = 0xE9E0
+
+[[replace_func]]
+addr = 0xE919
+
+[[replace_func]]
+addr = 0xEA20
+
+[[replace_func]]
+addr = 0xE94C
+
+[[replace_func]]
+addr = 0xE960
+
+[[replace_func]]
+addr = 0xE9A4
+
+[[replace_func]]
+addr = 0xEAD0
+
+[[replace_func]]
+addr = 0xEA85
+
+[[replace_func]]
+addr = 0xE928
+
+[[replace_func]]
+addr = 0xEB80
+
+[[replace_func]]
+addr = 0xEA32
+
+[[replace_func]]
+addr = 0xE962
+
+[[replace_func]]
+addr = 0xEA61
+
+[[replace_func]]
+addr = 0xE953
+
+[[replace_func]]
+addr = 0xE9B0
+
+[[replace_func]]
+addr = 0xE9D4
+
+[[replace_func]]
+addr = 0xEB79
+
+[[replace_func]]
+addr = 0xE902
+
+[[replace_func]]
+addr = 0xE949
+
+[[replace_func]]
+addr = 0xEAE1
+
+[[replace_func]]
+addr = 0xEBB7
+
+[[replace_func]]
+addr = 0xEBB8
+
+[[replace_func]]
+addr = 0xEBBC
+
+[[replace_func]]
+addr = 0xEBC1
+
+[[replace_func]]
+addr = 0xEBC6
+
+[[replace_func]]
+addr = 0xEBC2
+
+[[replace_func]]
+addr = 0xEBD1
+
+[[replace_func]]
+addr = 0xEC20
+
+[[replace_func]]
+addr = 0xEC21
+
+[[replace_func]]
+addr = 0xEBE7
+
+[[replace_func]]
+addr = 0xEBEC
+
+[[replace_func]]
+addr = 0xEC23
+
+[[replace_func]]
+addr = 0xEBEA
+
+[[replace_func]]
+addr = 0xEC35
+
+[[replace_func]]
+addr = 0xEC00
+
+[[replace_func]]
+addr = 0xEC53
+
+[[replace_func]]
+addr = 0xEC91
+
+[[replace_func]]
+addr = 0xEC85
+
+[[replace_func]]
+addr = 0xECA5
+
+[[replace_func]]
+addr = 0xEC65
+
+[[replace_func]]
+addr = 0xECDE
+
+[[replace_func]]
+addr = 0xECF0
+
+[[replace_func]]
+addr = 0xECF1
+
+[[replace_func]]
+addr = 0xED09
+
+[[replace_func]]
+addr = 0xED20
+
+[[replace_func]]
+addr = 0xED18
+
+[[replace_func]]
+addr = 0xED2E
+
+[[replace_func]]
+addr = 0xED66
+
+[[replace_func]]
+addr = 0xEDD1
+
+[[replace_func]]
+addr = 0xED6F
+
+[[replace_func]]
+addr = 0xEDC5
+
+[[replace_func]]
+addr = 0xED86
+
+[[replace_func]]
+addr = 0xEDA6
+
+[[replace_func]]
+addr = 0xEDB9
+
+[[replace_func]]
+addr = 0xED76
+
+[[replace_func]]
+addr = 0xEDE1
+
+[[replace_func]]
+addr = 0xEE06
+
+[[replace_func]]
+addr = 0xEE03
+
+[[replace_func]]
+addr = 0xEDED
+
+[[replace_func]]
+addr = 0xEDE3
+
+[[replace_func]]
+addr = 0xEDE4
+
+[[replace_func]]
+addr = 0xEDE6
+
+[[replace_func]]
+addr = 0xEE01
+
+[[replace_func]]
+addr = 0xEFBE
+
+[[replace_func]]
+addr = 0xEFD1
+
+[[replace_func]]
+addr = 0xEFDF
+
+[[replace_func]]
+addr = 0xEFEC
+
+[[replace_func]]
+addr = 0xF008
+
+[[replace_func]]
+addr = 0xF041
+
+[[replace_func]]
+addr = 0xF004
+
+[[replace_func]]
+addr = 0xF006
+
+[[replace_func]]
+addr = 0xF012
+
+[[replace_func]]
+addr = 0xF010
+
+[[replace_func]]
+addr = 0xF058
+
+[[replace_func]]
+addr = 0xF02D
+
+[[replace_func]]
+addr = 0xF001
+
+[[replace_func]]
+addr = 0xF021
+
+[[replace_func]]
+addr = 0xF03C
+
+[[replace_func]]
+addr = 0xF01F
+
+[[replace_func]]
+addr = 0xEFF0
+
+[[replace_func]]
+addr = 0xF046
+
+[[replace_func]]
+addr = 0xF014
+
+[[replace_func]]
+addr = 0xF00D
+
+[[replace_func]]
+addr = 0xF030
+
+[[replace_func]]
+addr = 0xF033
+
+[[replace_func]]
+addr = 0xF025
+
+[[replace_func]]
+addr = 0xF034
+
+[[replace_func]]
+addr = 0xF02B
+
+[[replace_func]]
+addr = 0xF00B
+
+[[replace_func]]
+addr = 0xF01D
+
+[[replace_func]]
+addr = 0xF027
+
+[[replace_func]]
+addr = 0xF05F
+
+[[replace_func]]
+addr = 0xF060
+
+[[replace_func]]
+addr = 0xF016
+
+[[replace_func]]
+addr = 0xEFFD
+
+[[replace_func]]
+addr = 0xF048
+
+[[replace_func]]
+addr = 0xF050
+
+[[replace_func]]
+addr = 0xF03E
+
+[[replace_func]]
+addr = 0xF065
+
+[[replace_func]]
+addr = 0xF018
+
+[[replace_func]]
+addr = 0xF05D
+
+[[replace_func]]
+addr = 0xF052
+
+[[replace_func]]
+addr = 0xF01A
+
+[[replace_func]]
+addr = 0xF06A
+
+[[replace_func]]
+addr = 0xF023
+
+[[replace_func]]
+addr = 0xF039
+
+[[replace_func]]
+addr = 0xF06D
+
+[[replace_func]]
+addr = 0xF090
+
+[[replace_func]]
+addr = 0xF086
+
+[[replace_func]]
+addr = 0xF07D
+
+[[replace_func]]
+addr = 0xF074
+
+[[replace_func]]
+addr = 0xF075
+
+[[replace_func]]
+addr = 0xF080
+
+[[replace_func]]
+addr = 0xF088
+
+[[replace_func]]
+addr = 0xF091
+
+[[replace_func]]
+addr = 0xF098
+
+[[replace_func]]
+addr = 0xF0B0
+
+[[replace_func]]
+addr = 0xF0E1
+
+[[replace_func]]
+addr = 0xF0C3
+
+[[replace_func]]
+addr = 0xF0B9
+
+[[replace_func]]
+addr = 0xF0BA
+
+[[replace_func]]
+addr = 0xF0C9
+
+[[replace_func]]
+addr = 0xF0C6
+
+[[replace_func]]
+addr = 0xF0E3
+
+[[replace_func]]
+addr = 0xF0DE
+
+[[replace_func]]
+addr = 0xF0CB
+
+[[replace_func]]
+addr = 0xF0D8
+
+[[replace_func]]
+addr = 0xF0D9
+
+[[replace_func]]
+addr = 0xF0D1
+
+[[replace_func]]
+addr = 0xF0C0
+
+[[replace_func]]
+addr = 0xF0E8
+
+[[replace_func]]
+addr = 0xF0BE
+
+[[replace_func]]
+addr = 0xF0E9
+
+[[replace_func]]
+addr = 0xF0F0
+
+[[replace_func]]
+addr = 0xF110
+
+[[replace_func]]
+addr = 0xF0F9
+
+[[replace_func]]
+addr = 0xF0FD
+
+[[replace_func]]
+addr = 0xF0EE
+
+[[replace_func]]
+addr = 0xF0FB
+
+[[replace_func]]
+addr = 0xF0FF
+
+[[replace_func]]
+addr = 0xF0F2
+
+[[replace_func]]
+addr = 0xF0F5
+
+[[replace_func]]
+addr = 0xF11F
+
+[[replace_func]]
+addr = 0xF148
+
+[[replace_func]]
+addr = 0xF14D
+
+[[replace_func]]
+addr = 0xF180
+
+[[replace_func]]
+addr = 0xF184
+
+[[replace_func]]
+addr = 0xF19B
+
+[[replace_func]]
+addr = 0xF19D
+
+[[replace_func]]
+addr = 0xF1A8
+
+[[replace_func]]
+addr = 0xF1A9
+
+[[replace_func]]
+addr = 0xF1AF
+
+[[replace_func]]
+addr = 0xF1B1
+
+[[replace_func]]
+addr = 0xF1B6
+
+[[replace_func]]
+addr = 0xF1D1
+
+[[replace_func]]
+addr = 0xF1BD
+
+[[replace_func]]
+addr = 0xF1BC
+
+[[replace_func]]
+addr = 0xF1C1
+
+[[replace_func]]
+addr = 0xF1CE
+
+[[replace_func]]
+addr = 0xF239
+
+[[replace_func]]
+addr = 0xF23D
+
+[[replace_func]]
+addr = 0xF282
+
+[[replace_func]]
+addr = 0xF2BD
+
+[[replace_func]]
+addr = 0xF285
+
+[[replace_func]]
+addr = 0xF286
+
+[[replace_func]]
+addr = 0xF2A5
+
+[[replace_func]]
+addr = 0xF284
+
+[[replace_func]]
+addr = 0xF2C8
+
+[[replace_func]]
+addr = 0xF288
