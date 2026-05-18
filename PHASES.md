@@ -233,9 +233,14 @@ project, not a spike target.
   level-format decoders that need careful porting + cross-level
   verification.
 
-### Phase 26 — Background renderer + NMI/VRAM helpers
+### Phase 26 — Background renderer + NMI/VRAM helpers (DEFERRED — timing-critical)
 - Column writers, MetatileBuffer, BG_collision helpers.
 - Reset vector, NMI handler chain, WritePPUReg, WritePPUData.
+- **Why deferred:** NMI handler runs once per frame and is the most
+  timing-sensitive code in the codebase. The existing tile-pipeline has
+  documented stale-band behavior (see memory/project_stale_band.md) —
+  changing this path risks frame-perfect rendering quirks. Needs a
+  dedicated session with frame-by-frame diff vs Nestopia oracle.
 
 ### Phase 27-30 — Sound + music (deprioritized, own check-in)
 - Untangle Square1Sfx / Square2Sfx / Noise inner-label tangles.
