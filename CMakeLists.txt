@@ -134,6 +134,8 @@ if(ENABLE_SEMCOMP)
         semcomp/Enemies.cpp
         semcomp/Blocks.cpp
         semcomp/Powerups.cpp
+        semcomp/GameMode.cpp
+        semcomp/Hud.cpp
         semcomp/SemcompGame.cpp
         semcomp/Trainer.cpp
         semcomp/TrainerUI.cpp

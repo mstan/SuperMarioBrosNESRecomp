@@ -354,6 +354,51 @@ void semcomp_runtime_setup_powerup_replacement(void) {
     runtime().routines().note_invocation(0xBC49);
     runtime().powerups().setup();
 }
+void semcomp_runtime_pause_tick(void) {
+    runtime().routines().register_routine(0x8182, "PauseRoutine");
+    runtime().routines().note_invocation(0x8182);
+    runtime().mode().on_pause_tick();
+}
+void semcomp_runtime_print_status_bar_numbers(void) {
+    runtime().routines().register_routine(0x8F06, "PrintStatusBarNumbers");
+    runtime().routines().note_invocation(0x8F06);
+    runtime().hud().print_status_bar_numbers();
+}
+void semcomp_runtime_add_to_score(void) {
+    runtime().routines().register_routine(0xBC27, "AddToScore");
+    runtime().routines().note_invocation(0xBC27);
+    runtime().hud().add_to_score();
+}
+
+// ---- GameMode reads + verbs ----------------------------------------------
+
+uint8_t semcomp_runtime_mode_oper_mode(void) {
+    return runtime().mode().oper_mode_raw();
+}
+uint8_t semcomp_runtime_mode_oper_mode_task(void) {
+    return runtime().mode().oper_mode_task();
+}
+uint8_t semcomp_runtime_mode_player_ctrl_routine(void) {
+    return runtime().mode().player_ctrl_routine_raw();
+}
+uint8_t semcomp_runtime_mode_pause_status(void) {
+    return runtime().mode().pause_status_raw();
+}
+uint8_t semcomp_runtime_mode_pause_timer(void) {
+    return runtime().mode().pause_timer();
+}
+int semcomp_runtime_mode_is_paused(void) {
+    return runtime().mode().is_paused() ? 1 : 0;
+}
+void semcomp_runtime_mode_set_paused(int paused) {
+    runtime().mode().set_paused(paused != 0);
+}
+void semcomp_runtime_mode_end_level(void) {
+    runtime().mode().end_level();
+}
+void semcomp_runtime_mode_warp_to(uint8_t world, uint8_t level) {
+    runtime().mode().warp_to(world, level);
+}
 
 size_t semcomp_runtime_routine_count(void) {
     return runtime().routines().count();

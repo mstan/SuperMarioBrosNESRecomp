@@ -233,6 +233,20 @@ uint8_t semcomp_runtime_spawn_floatey(uint8_t points_table_index);
 // drive them.
 void semcomp_runtime_bump_block_replacement(void);    // $BD9B BumpBlock
 void semcomp_runtime_setup_powerup_replacement(void); // $BC49 SetupPowerUp
+void semcomp_runtime_pause_tick(void);                // $8182 PauseRoutine
+void semcomp_runtime_print_status_bar_numbers(void);  // $8F06
+void semcomp_runtime_add_to_score(void);              // $BC27 AddToScore
+
+// ---- GameMode reads + verbs (Phase 5) ------------------------------------
+uint8_t semcomp_runtime_mode_oper_mode(void);
+uint8_t semcomp_runtime_mode_oper_mode_task(void);
+uint8_t semcomp_runtime_mode_player_ctrl_routine(void);
+uint8_t semcomp_runtime_mode_pause_status(void);
+uint8_t semcomp_runtime_mode_pause_timer(void);
+int     semcomp_runtime_mode_is_paused(void);
+void    semcomp_runtime_mode_set_paused(int paused);
+void    semcomp_runtime_mode_end_level(void);
+void    semcomp_runtime_mode_warp_to(uint8_t world, uint8_t level);
 
 // Diagnostics: list of registered (replaced) routine PCs and their
 // invocation counters. Populated lazily as semcomp_runtime_give_coin

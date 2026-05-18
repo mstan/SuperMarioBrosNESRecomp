@@ -710,6 +710,132 @@ class TrainerTab(ttk.Frame):
 
 
 # ---------------------------------------------------------------------------
+# Game tab — OperMode / PauseStatus inspector + pause / end-level / warp
+# ---------------------------------------------------------------------------
+
+OPER_MODE_NAMES = {
+    0: "Title / Demo",
+    1: "1-Player Init",
+    2: "Gameplay",
+    3: "Game Over",
+}
+
+PLAYER_CTRL_ROUTINE_NAMES = {
+    0:  "PlayerEntrance",
+    1:  "NormalCtrl",
+    2:  "(2)",
+    3:  "(3)",
+    4:  "(4)",
+    5:  "(5)",
+    6:  "(6)",
+    7:  "(7)",
+    8:  "(8)",
+    9:  "(9)",
+    10: "(A)",
+    11: "PlayerEndLevel",
+}
+
+
+class GameTab(ttk.Frame):
+    """Game-state dispatcher inspector + verbs.
+
+    OperMode / PauseStatus / PlayerCtrlRoutine come from the new
+    GameMode facade. Pause is owned via [[replace_func]] of $8182, so
+    natural Start-press flows through smb::semcomp::GameMode. The
+    Pause/Unpause buttons here force the state from outside that flow
+    (with debounce bit set so a subsequent Start-press doesn't
+    instantly re-toggle)."""
+
+    def __init__(self, parent, client: TrainerClient,
+                 status_setter: Callable[[str], None]):
+        super().__init__(parent, padding=(8, 8, 8, 8))
+        self.client = client
+        self.status_setter = status_setter
+
+        # ---- State readout ----
+        ttk.Label(self, text="State", font=("Segoe UI", 10, "bold")).grid(
+            row=0, column=0, sticky="w", pady=(0, 4))
+        state_frame = ttk.Frame(self)
+        state_frame.grid(row=1, column=0, sticky="w", pady=(0, 8))
+        self.oper_var = tk.StringVar(value="?")
+        self.task_var = tk.StringVar(value="?")
+        self.pcr_var  = tk.StringVar(value="?")
+        self.pause_var = tk.StringVar(value="?")
+        readouts = [
+            ("OperMode:",        self.oper_var,  44),
+            ("OperMode_Task:",   self.task_var,  10),
+            ("PlayerCtrlRoutine:", self.pcr_var, 26),
+            ("Paused:",          self.pause_var, 18),
+        ]
+        for i, (label, var, width) in enumerate(readouts):
+            ttk.Label(state_frame, text=label, width=18, anchor="e").grid(
+                row=i, column=0, padx=(0, 6), sticky="e")
+            ttk.Label(state_frame, textvariable=var, width=width,
+                      anchor="w", foreground="#444").grid(
+                row=i, column=1, sticky="w")
+
+        # ---- Verbs ----
+        ttk.Separator(self, orient="horizontal").grid(
+            row=2, column=0, sticky="ew", pady=(4, 4))
+        ttk.Label(self, text="Verbs", font=("Segoe UI", 10, "bold")).grid(
+            row=3, column=0, sticky="w", pady=(0, 4))
+        verbs = ttk.Frame(self)
+        verbs.grid(row=4, column=0, sticky="w")
+
+        # Pause / unpause
+        p = ttk.Button(verbs, text="Pause", width=10,
+                       command=lambda: self._fire("semcomp_pause", "Pause"))
+        p.grid(row=0, column=0, padx=2, pady=2)
+        Tooltip(p, "Force GamePauseStatus bit 0 = 1 with debounce set.\n"
+                   "Equivalent to pressing Start mid-gameplay.")
+        u = ttk.Button(verbs, text="Unpause", width=10,
+                       command=lambda: self._fire("semcomp_unpause", "Unpause"))
+        u.grid(row=0, column=1, padx=2, pady=2)
+        Tooltip(u, "Force GamePauseStatus bit 0 = 0.")
+
+        ttk.Separator(self, orient="horizontal").grid(
+            row=5, column=0, sticky="ew", pady=(8, 4))
+        ttk.Label(self, foreground="#666", justify="left", wraplength=720,
+                  text=(
+                    "PauseRoutine ($8182) is owned by smb::semcomp::"
+                    "GameMode::on_pause_tick — pressing Start in-game "
+                    "flows through our C++ class ([[replace_func]]). "
+                    "semcomp_routine_list shows the invocation count.\n\n"
+                    "End Level and Warp TCP commands exist "
+                    "(semcomp_end_level, semcomp_warp_to) but the "
+                    "synthesised-from-arbitrary-state paths desync "
+                    "the natural game-engine dispatcher. They're "
+                    "removed from the GUI until we own enough of the "
+                    "surrounding state machine to drive them cleanly.")).grid(
+            row=6, column=0, sticky="w")
+
+    def _fire(self, cmd, label):
+        try:
+            r = self.client.call_named(cmd)
+            self.status_setter(f"{label}: {'ok' if r.get('ok') else r}")
+        except (ConnectionError, OSError) as e:
+            self.status_setter(f"{label}: TCP error {e}")
+
+    def refresh(self, _frozen_addrs, _sem_responses):
+        try:
+            r = self.client.call_named("semcomp_mode")
+        except (ConnectionError, OSError):
+            return
+        if not r.get("ok"): return
+        om = r.get("oper_mode", 0)
+        self.oper_var.set(f"{om} - {OPER_MODE_NAMES.get(om, '?')}")
+        self.task_var.set(str(r.get("oper_mode_task", 0)))
+        pcr = r.get("player_ctrl_routine", 0)
+        self.pcr_var.set(
+            f"{pcr} (${pcr:02X}) - {PLAYER_CTRL_ROUTINE_NAMES.get(pcr, '?')}")
+        ps = r.get("pause_status", 0)
+        paused = r.get("paused", False)
+        self.pause_var.set(
+            f"{'YES' if paused else 'no'}  (status=${ps:02X}, "
+            f"timer={r.get('pause_timer', 0)})")
+
+
+# ---------------------------------------------------------------------------
 # World tab — camera, block bumps, power-up spawn, floatey points
 # ---------------------------------------------------------------------------
 
@@ -1185,6 +1311,7 @@ class TrainerGUI:
             ])
         self.enemies_tab = EnemiesTab(nb, self.client, self._status)
         self.world_tab   = WorldTab(nb, self.client, self._status)
+        self.game_tab    = GameTab(nb, self.client, self._status)
         self.raw_tab     = RawTab(nb, self.client, self._status)
 
         nb.add(self.mario_tab,   text="Mario")
@@ -1192,6 +1319,7 @@ class TrainerGUI:
         nb.add(self.player_tab,  text="Player")
         nb.add(self.enemies_tab, text="Enemies")
         nb.add(self.world_tab,   text="World")
+        nb.add(self.game_tab,    text="Game")
         nb.add(self.raw_tab,     text="Raw")
 
         # Status bar.
@@ -1222,6 +1350,7 @@ class TrainerGUI:
             self.player_tab.refresh(frozen, sem_freezes, sem)
             self.enemies_tab.refresh(frozen, sem)
             self.world_tab.refresh(frozen, sem)
+            self.game_tab.refresh(frozen, sem)
             self.raw_tab.refresh(frozen, sem)
             self.error_count = 0
             world  = sem["semcomp_level"].get("world", "?")

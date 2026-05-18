@@ -168,6 +168,34 @@ constexpr std::uint16_t CurrentPlayer       = 0x0753;
 // the GiveOneCoin replacement.
 constexpr std::uint16_t CoinTallyFor1Ups    = 0x0748;
 
+// ---- Game mode / state dispatcher (Phase 5) -------------------------------
+// $0770 OperMode: 0=title/demo, 1=1P init, 2=gameplay, 3=game-over.
+// $0772 OperMode_Task: sub-state index within the current OperMode.
+// $0776 GamePauseStatus: bit 0 = paused, bit 7 = "pause-press forbidden"
+//                       debounce flag set by PauseRoutine.
+// $0777 PauseTimer: countdown frames blocking repeat pause-press.
+// $000E PlayerCtrlRoutine_Select: 0..11 index into PlayerCtrlRoutine's
+//                                dispatch table (PlayerEntrance,
+//                                NormalCtrl, PlayerLoseLife, PlayerEndLevel,
+//                                FlagpoleSlide, ...). Phase-5 verbs write
+//                                here to force end-level / death.
+// $06FC controller "newly pressed" byte (Start = bit 4).
+constexpr std::uint16_t OperMode             = 0x0770;
+constexpr std::uint16_t OperMode_Task        = 0x0772;
+constexpr std::uint16_t GamePauseStatus      = 0x0776;
+constexpr std::uint16_t PauseTimer           = 0x0777;
+constexpr std::uint16_t PlayerCtrlRoutine_Sel = 0x000E;
+constexpr std::uint16_t Controller1_NewlyPressed = 0x06FC;
+constexpr std::uint8_t  ControllerBtn_Start  = 0x10;
+
+// Music queue. Writing the area-music-complete jingle here drives the
+// level-complete fanfare; FlagpoleSlide + PlayerEndLevel set this in
+// the natural flow.
+constexpr std::uint16_t AreaMusicQueue       = 0x00FC;
+
+// Pause routine entry point (replace_func target in Phase 5).
+constexpr std::uint16_t kPC_PauseRoutine     = 0x8182;
+
 // ---- Sound queue slots (CORRECTED) ----------------------------------------
 // The actual SFX queues are in ZERO PAGE, read by SoundEngine's handlers
 // (Square1SfxHandler reads $00FF; Square2SfxHandler reads $00FE). Each is

@@ -8,7 +8,9 @@
 #include "semcomp/Blocks.h"
 #include "semcomp/Camera.h"
 #include "semcomp/Enemies.h"
+#include "semcomp/GameMode.h"
 #include "semcomp/GameState.h"
+#include "semcomp/Hud.h"
 #include "semcomp/Level.h"
 #include "semcomp/Mario.h"
 #include "semcomp/ModApi.h"
@@ -31,6 +33,8 @@ public:
           enemies_(state_),
           blocks_(state_),
           powerups_(state_),
+          mode_(state_),
+          hud_(state_),
           trainer_(state_),
           trainer_ui_(*this),
           mod_api_(),
@@ -72,6 +76,9 @@ public:
     const Enemies&       enemies() const { return enemies_; }
     Blocks&              blocks()        { return blocks_;   }
     Powerups&            powerups()      { return powerups_; }
+    GameMode&            mode()          { return mode_;     }
+    const GameMode&      mode()    const { return mode_;     }
+    Hud&                 hud()           { return hud_;      }
     Trainer&             trainer()       { return trainer_; }
     const Trainer&       trainer() const { return trainer_; }
 
@@ -92,6 +99,8 @@ private:
     Enemies          enemies_;
     Blocks           blocks_;
     Powerups         powerups_;
+    GameMode         mode_;
+    Hud              hud_;
     Trainer          trainer_;
     TrainerUI        trainer_ui_;
     ModApi           mod_api_;

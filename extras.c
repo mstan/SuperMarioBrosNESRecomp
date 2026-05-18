@@ -295,6 +295,18 @@ void func_BC49_b0(void) { /* SetupPowerUp */
     semcomp_runtime_setup_powerup_replacement();
 }
 
+void func_8182_b0(void) { /* PauseRoutine */
+    semcomp_runtime_pause_tick();
+}
+
+void func_8F06_b0(void) { /* PrintStatusBarNumbers */
+    semcomp_runtime_print_status_bar_numbers();
+}
+
+void func_BC27_b0(void) { /* AddToScore */
+    semcomp_runtime_add_to_score();
+}
+
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     (void)pc; (void)addr; return val;
 }
@@ -909,6 +921,56 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
         debug_server_send_fmt(
             "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_spawn_floatey\","
             "\"index\":%u}\n", id, (unsigned)used);
+        return 1;
+    }
+
+    /* ---- GameMode (Phase 5) ---- */
+    if (strcmp(cmd, "semcomp_mode") == 0) {
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_mode\","
+            "\"oper_mode\":%u,\"oper_mode_task\":%u,"
+            "\"player_ctrl_routine\":%u,\"pause_status\":%u,"
+            "\"pause_timer\":%u,\"paused\":%s}\n",
+            id,
+            (unsigned)semcomp_runtime_mode_oper_mode(),
+            (unsigned)semcomp_runtime_mode_oper_mode_task(),
+            (unsigned)semcomp_runtime_mode_player_ctrl_routine(),
+            (unsigned)semcomp_runtime_mode_pause_status(),
+            (unsigned)semcomp_runtime_mode_pause_timer(),
+            semcomp_runtime_mode_is_paused() ? "true" : "false");
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_pause") == 0) {
+        semcomp_runtime_mode_set_paused(1);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_pause\","
+            "\"paused\":%s}\n",
+            id, semcomp_runtime_mode_is_paused() ? "true" : "false");
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_unpause") == 0) {
+        semcomp_runtime_mode_set_paused(0);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_unpause\","
+            "\"paused\":%s}\n",
+            id, semcomp_runtime_mode_is_paused() ? "true" : "false");
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_end_level") == 0) {
+        semcomp_runtime_mode_end_level();
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_end_level\"}\n", id);
+        return 1;
+    }
+    if (strcmp(cmd, "semcomp_warp_to") == 0) {
+        int w = extras_json_get_int(json, "world", 0);
+        int l = extras_json_get_int(json, "level", 0);
+        if (w < 0) w = 0; if (w > 7) w = 7;
+        if (l < 0) l = 0; if (l > 3) l = 3;
+        semcomp_runtime_mode_warp_to((uint8_t)w, (uint8_t)l);
+        debug_server_send_fmt(
+            "{\"id\":%d,\"ok\":true,\"cmd\":\"semcomp_warp_to\","
+            "\"world\":%d,\"level\":%d}\n", id, w, l);
         return 1;
     }
 #endif  /* ENABLE_SEMCOMP */

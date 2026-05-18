@@ -77,3 +77,32 @@ addr = 0xBBFE  # GiveOneCoin — semantic impl in smb::semcomp::give_one_coin
 [[replace_func]]
 bank = 0
 addr = 0xBC49
+
+# PauseRoutine — owned by smb::semcomp::GameMode::on_pause_tick. Called
+# each frame from the natural game-state dispatcher; reads $06FC Start
+# button + $0770 OperMode + $0777 PauseTimer, toggles $0776 bit 0 on
+# Start press. Verified in-game by pressing Start during gameplay.
+# Clean replacement — no external JMP targets into the routine's
+# internal labels (ChkPauseTimer / ChkStart / ClrPauseTimer / SetPause /
+# ExitPause are all internal-only).
+[[replace_func]]
+bank = 0
+addr = 0x8182
+
+# Phase 6: Score & HUD pipeline.
+#
+# PrintStatusBarNumbers ($8F06) — owned by Hud::print_status_bar_numbers.
+# Refreshes one or two HUD digit fields per call based on the A-register
+# "nybbles" control byte. Internally calls $8F11 OutputNumbers which
+# remains in the natural-generated code (still emitted as standalone).
+[[replace_func]]
+bank = 0
+addr = 0x8F06
+
+# AddToScore ($BC27) — owned by Hud::add_to_score. The score-grant
+# pipeline endpoint: every coin / stomp / brick / fireball-kill / time-
+# bonus event calls this after staging DigitModifier[i] values. Calls
+# DigitsMathRoutine ($8F5F, not yet owned) + our PrintStatusBarNumbers.
+[[replace_func]]
+bank = 0
+addr = 0xBC27
