@@ -572,6 +572,18 @@ void semcomp_runtime_floatey_part_8534(void) {
     runtime().routines().note_invocation(0x8534);
     runtime().floateys().floatey_part_8534();
 }
+
+// Phase 22 — Damage chain untangle.
+void semcomp_runtime_injure_player(void) {
+    runtime().routines().register_routine(0xD92C, "InjurePlayer");
+    runtime().routines().note_invocation(0xD92C);
+    runtime().damage_chain().injure_player();
+}
+void semcomp_runtime_force_injury(void) {
+    runtime().routines().register_routine(0xD931, "ForceInjury");
+    runtime().routines().note_invocation(0xD931);
+    runtime().damage_chain().force_injury();
+}
 void semcomp_runtime_title_screen_mode(void) {
     runtime().routines().register_routine(0x8231, "TitleScreenMode");
     runtime().routines().note_invocation(0x8231);

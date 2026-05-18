@@ -427,6 +427,10 @@ void func_8F11_b0(void) { semcomp_runtime_output_numbers(); }
 void func_84C3_b0(void) { semcomp_runtime_floatey_per_frame(); }
 void func_8534_b0(void) { semcomp_runtime_floatey_part_8534(); }
 
+/* Phase 22 — Damage chain untangle. */
+void func_D92C(void) { semcomp_runtime_injure_player(); }
+void func_D931(void) { semcomp_runtime_force_injury(); }
+
 void func_8231_b0(void) { /* TitleScreenMode */
     semcomp_runtime_title_screen_mode();
 }

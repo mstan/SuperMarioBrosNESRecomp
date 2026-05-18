@@ -299,6 +299,10 @@ void semcomp_runtime_output_numbers(void);            // $8F11
 // Phase 21 — Floatey per-frame untangle.
 void semcomp_runtime_floatey_per_frame(void);         // $84C3
 void semcomp_runtime_floatey_part_8534(void);         // $8534
+
+// Phase 22 — Damage chain untangle.
+void semcomp_runtime_injure_player(void);             // $D92C
+void semcomp_runtime_force_injury(void);              // $D931
 void semcomp_runtime_title_screen_mode(void);         // $8231 TitleScreenMode
 void semcomp_runtime_game_mode_tick(void);            // $AEDC GameMode
 void semcomp_runtime_game_over_mode(void);            // $9218 GameOverMode

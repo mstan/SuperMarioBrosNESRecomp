@@ -360,6 +360,15 @@ addr = 0x84C3
 bank = 0
 addr = 0x8534
 
+# Phase 22 — Damage chain untangle. $D92C / $D931 share an overlapping
+# body (D92C is "gate-check then fall into D931"). $D958 KillPlayer is
+# an inner label of both — owned via the shared body.
+[[replace_func]]
+addr = 0xD92C
+
+[[replace_func]]
+addr = 0xD931
+
 # Phase 23 — Game-mode dispatchers. Three small inline-dispatch shells
 # that read OperMode_Task ($0772) and dispatch via $8E04 into natural
 # sub-handlers. $8212 OperModeExecutionTree NOT owned (multi-entry-body
