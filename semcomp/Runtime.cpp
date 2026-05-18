@@ -439,6 +439,26 @@ void semcomp_runtime_physics_sub(void) {
     runtime().routines().note_invocation(0xB450);
     runtime().player_physics().physics_sub();
 }
+void semcomp_runtime_move_player_y_axis(void) {
+    runtime().routines().register_routine(0xB200, "MovePlayerYAxis");
+    runtime().routines().note_invocation(0xB200);
+    runtime().player_physics().move_player_y_axis();
+}
+void semcomp_runtime_move_player_horizontally(void) {
+    runtime().routines().register_routine(0xBF09, "MovePlayerHorizontally");
+    runtime().routines().note_invocation(0xBF09);
+    runtime().player_physics().move_player_horizontally();
+}
+void semcomp_runtime_ex_x_move(void) {
+    runtime().routines().register_routine(0xBF4C, "ExXMove");
+    runtime().routines().note_invocation(0xBF4C);
+    runtime().player_physics().ex_x_move();
+}
+void semcomp_runtime_move_player_vertically(void) {
+    runtime().routines().register_routine(0xBF4D, "MovePlayerVertically");
+    runtime().routines().note_invocation(0xBF4D);
+    runtime().player_physics().move_player_vertically();
+}
 void semcomp_runtime_title_screen_mode(void) {
     runtime().routines().register_routine(0x8231, "TitleScreenMode");
     runtime().routines().note_invocation(0x8231);

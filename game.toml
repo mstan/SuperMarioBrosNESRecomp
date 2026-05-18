@@ -207,6 +207,26 @@ addr = 0xB3CF   # ClimbingSub
 bank = 0
 addr = 0xB450
 
+# Phase 15 — MovePlayer family. $B200 is trivial. $BF09/$BF4C share a
+# body in the generated code (multi-entry); we own both entry points
+# (the BF09 port mirrors the body, BF4C is just RTS). $BF4D tail-calls
+# $BFAD ImposeGravitySprObj (still natural).
+[[replace_func]]
+bank = 0
+addr = 0xB200
+
+[[replace_func]]
+bank = 0
+addr = 0xBF09
+
+[[replace_func]]
+bank = 0
+addr = 0xBF4C
+
+[[replace_func]]
+bank = 0
+addr = 0xBF4D
+
 # Phase 23 — Game-mode dispatchers. Three small inline-dispatch shells
 # that read OperMode_Task ($0772) and dispatch via $8E04 into natural
 # sub-handlers. $8212 OperModeExecutionTree NOT owned (multi-entry-body

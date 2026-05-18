@@ -528,4 +528,141 @@ SJumpSnd:
     call_by_address(0xB51C);
 }
 
+// Phase 15 — MovePlayer family.
+
+void PlayerPhysics::move_player_y_axis() {
+    // $B200: CLC; ADC $CE; STA $CE; RTS.
+    g_cpu.C = 0;
+    {
+        const std::uint8_t m = state_.read8(0x00CE);
+        const std::uint16_t r = static_cast<std::uint16_t>(g_cpu.A) + m + g_cpu.C;
+        g_cpu.C = (r > 0xFF) ? 1 : 0;
+        g_cpu.A = static_cast<std::uint8_t>(r & 0xFF);
+    }
+    state_.write8(0x00CE, g_cpu.A);
+}
+
+void PlayerPhysics::ex_x_move() {
+    // $BF4C: RTS (early-exit point of $BF09; also separately callable).
+}
+
+void PlayerPhysics::move_player_horizontally() {
+    // $BF09: A = $070E (PlayerCtrlRoutine_Sel).
+    g_cpu.A = state_.read8(0x070E);
+    // $BF0C: BNE ExXMove.
+    if (g_cpu.A != 0) return;
+    // $BF0E: TAX (A==0, so X=0). FLAG_NZ(X)
+    g_cpu.X = g_cpu.A;
+    // MoveObjectHorizontally at $BF0F — runs with the just-set X.
+    // $BF0F: A = $57+X (player obj velocity).
+    g_cpu.A = state_.read8(static_cast<std::uint16_t>((0x57 + g_cpu.X) & 0xFF));
+    // $BF11-$BF14: 4x ASL — extract top 4 bits as low nibble of $01.
+    for (int i = 0; i < 4; ++i) {
+        g_cpu.C = static_cast<std::uint8_t>((g_cpu.A >> 7) & 1);
+        g_cpu.A = static_cast<std::uint8_t>((g_cpu.A << 1) & 0xFF);
+    }
+    // $BF15: STA $01.
+    state_.write8(0x0001, g_cpu.A);
+    // $BF17: A = $57+X again.
+    g_cpu.A = state_.read8(static_cast<std::uint16_t>((0x57 + g_cpu.X) & 0xFF));
+    // $BF19-$BF1C: 4x LSR — extract high 4 bits as low nibble.
+    for (int i = 0; i < 4; ++i) {
+        g_cpu.C = static_cast<std::uint8_t>(g_cpu.A & 1);
+        g_cpu.A = static_cast<std::uint8_t>((g_cpu.A >> 1) & 0xFF);
+    }
+    // $BF1D: CMP #$08.
+    g_cpu.C = (g_cpu.A >= 0x08) ? 1 : 0;
+    // $BF1F: BCC SaveXSpd.
+    if (g_cpu.C) {
+        // $BF21: A |= #$F0 (sign-extend nibble to signed 8-bit negative).
+        g_cpu.A |= 0xF0;
+    }
+    // $BF23 SaveXSpd: STA $00.
+    state_.write8(0x0000, g_cpu.A);
+    // $BF25: Y = 0. $BF27: CMP #$00. $BF29: BPL UseAdder.
+    g_cpu.Y = 0x00;
+    g_cpu.C = (g_cpu.A >= 0x00) ? 1 : 0;  // always true since A is 8-bit
+    // BPL is "branch if N=0" — N = A bit 7. So if A >= 0x80, signed-negative.
+    if ((g_cpu.A & 0x80) != 0) {
+        // $BF2B: DEY -> Y = $FF (sign extension).
+        g_cpu.Y = static_cast<std::uint8_t>((g_cpu.Y - 1) & 0xFF);
+    }
+    // $BF2C UseAdder: STY $02.
+    state_.write8(0x0002, g_cpu.Y);
+    // $BF2E: A = $0400+X. $BF31: CLC. $BF32: ADC $01.
+    g_cpu.A = state_.read8(static_cast<std::uint16_t>(0x0400 + g_cpu.X));
+    g_cpu.C = 0;
+    {
+        const std::uint8_t m = state_.read8(0x0001);
+        const std::uint16_t r = static_cast<std::uint16_t>(g_cpu.A) + m + g_cpu.C;
+        g_cpu.C = (r > 0xFF) ? 1 : 0;
+        g_cpu.A = static_cast<std::uint8_t>(r & 0xFF);
+    }
+    // $BF34: STA $0400+X.
+    state_.write8(static_cast<std::uint16_t>(0x0400 + g_cpu.X), g_cpu.A);
+    // $BF37: A = #$00. $BF39: ROL A (pulls carry into bit 0).
+    g_cpu.A = 0x00;
+    {
+        const std::uint8_t c = g_cpu.C;
+        g_cpu.C = static_cast<std::uint8_t>((g_cpu.A >> 7) & 1);
+        g_cpu.A = static_cast<std::uint8_t>(((g_cpu.A << 1) | c) & 0xFF);
+    }
+    // $BF3A: PHA — push carry-extended adder. We use a local instead.
+    const std::uint8_t carry_high = g_cpu.A;
+    // $BF3B: ROR A — restore carry.
+    {
+        const std::uint8_t c = g_cpu.C;
+        g_cpu.C = static_cast<std::uint8_t>(g_cpu.A & 1);
+        g_cpu.A = static_cast<std::uint8_t>(((g_cpu.A >> 1) | (c << 7)) & 0xFF);
+    }
+    // $BF3C: A = $86+X (X position low). $BF3E: ADC $00.
+    g_cpu.A = state_.read8(static_cast<std::uint16_t>((0x86 + g_cpu.X) & 0xFF));
+    {
+        const std::uint8_t m = state_.read8(0x0000);
+        const std::uint16_t r = static_cast<std::uint16_t>(g_cpu.A) + m + g_cpu.C;
+        g_cpu.C = (r > 0xFF) ? 1 : 0;
+        g_cpu.A = static_cast<std::uint8_t>(r & 0xFF);
+    }
+    // $BF40: STA $86+X.
+    state_.write8(static_cast<std::uint16_t>((0x86 + g_cpu.X) & 0xFF), g_cpu.A);
+    // $BF42: A = $6D+X (X position high). $BF44: ADC $02.
+    g_cpu.A = state_.read8(static_cast<std::uint16_t>((0x6D + g_cpu.X) & 0xFF));
+    {
+        const std::uint8_t m = state_.read8(0x0002);
+        const std::uint16_t r = static_cast<std::uint16_t>(g_cpu.A) + m + g_cpu.C;
+        g_cpu.C = (r > 0xFF) ? 1 : 0;
+        g_cpu.A = static_cast<std::uint8_t>(r & 0xFF);
+    }
+    // $BF46: STA $6D+X.
+    state_.write8(static_cast<std::uint16_t>((0x6D + g_cpu.X) & 0xFF), g_cpu.A);
+    // $BF48: PLA (restore carry-extended adder).
+    g_cpu.A = carry_high;
+    // $BF49: CLC. $BF4A: ADC $00 (return-value calculation, A holds final result).
+    g_cpu.C = 0;
+    {
+        const std::uint8_t m = state_.read8(0x0000);
+        const std::uint16_t r = static_cast<std::uint16_t>(g_cpu.A) + m + g_cpu.C;
+        g_cpu.C = (r > 0xFF) ? 1 : 0;
+        g_cpu.A = static_cast<std::uint8_t>(r & 0xFF);
+    }
+    // $BF4C: RTS (leaves A as the carry-extended displacement for caller).
+}
+
+void PlayerPhysics::move_player_vertically() {
+    // $BF4D: X = 0. $BF4F: A = $0747. $BF52: BNE NoJSChk.
+    g_cpu.X = 0x00;
+    g_cpu.A = state_.read8(0x0747);
+    if (g_cpu.A != 0) goto NoJSChk;
+    // $BF54: A = $070E. $BF57: BNE -> ExXMove ($BF4C).
+    g_cpu.A = state_.read8(0x070E);
+    if (g_cpu.A != 0) return;  // Equivalent to call_by_address(0xBF4C) which is RTS.
+NoJSChk:
+    // $BF59: A = $0709. $BF5C: STA $00.
+    g_cpu.A = state_.read8(0x0709);
+    state_.write8(0x0000, g_cpu.A);
+    // $BF5E: A = #$04. $BF60: JMP $BFAD ImposeGravitySprObj.
+    g_cpu.A = 0x04;
+    call_by_address(0xBFAD);
+}
+
 }  // namespace smb::semcomp

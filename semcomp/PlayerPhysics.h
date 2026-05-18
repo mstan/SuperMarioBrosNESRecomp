@@ -69,6 +69,16 @@ public:
     // $B439/$B432 based on $0700 PlayerXSpeedAbsolute and $0704 SwimmingFlag.
     void physics_sub();
 
+    // Phase 15 — MovePlayer family.
+    //   $B200 MovePlayerYAxis     — trivial: $CE += A; RTS
+    //   $BF09 MovePlayerHorizontally — gate on $070E, body shared with $BF4C
+    //   $BF4C ExXMove             — just RTS (early-exit point of $BF09)
+    //   $BF4D MovePlayerVertically — gate on $0747+$070E, tail-call $BFAD
+    void move_player_y_axis();
+    void move_player_horizontally();
+    void ex_x_move();
+    void move_player_vertically();
+
     // movement_subs: replacement body for $B329.
     // Logic chain:
     //   1. CrouchingFlag computation: tall Mario on ground with Down

@@ -250,6 +250,10 @@ void semcomp_runtime_falling_sub(void);               // $B36D FallingSub
 void semcomp_runtime_jump_swim_sub(void);             // $B376 JumpSwimSub
 void semcomp_runtime_climbing_sub(void);              // $B3CF ClimbingSub
 void semcomp_runtime_physics_sub(void);               // $B450 PlayerPhysicsSub
+void semcomp_runtime_move_player_y_axis(void);        // $B200 MovePlayerYAxis
+void semcomp_runtime_move_player_horizontally(void);  // $BF09 MovePlayerHorizontally
+void semcomp_runtime_ex_x_move(void);                 // $BF4C ExXMove
+void semcomp_runtime_move_player_vertically(void);    // $BF4D MovePlayerVertically
 void semcomp_runtime_title_screen_mode(void);         // $8231 TitleScreenMode
 void semcomp_runtime_game_mode_tick(void);            // $AEDC GameMode
 void semcomp_runtime_game_over_mode(void);            // $9218 GameOverMode

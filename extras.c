@@ -363,6 +363,22 @@ void func_B450_b0(void) { /* PlayerPhysicsSub */
     semcomp_runtime_physics_sub();
 }
 
+void func_B200_b0(void) { /* MovePlayerYAxis */
+    semcomp_runtime_move_player_y_axis();
+}
+
+void func_BF09_b0(void) { /* MovePlayerHorizontally */
+    semcomp_runtime_move_player_horizontally();
+}
+
+void func_BF4C_b0(void) { /* ExXMove */
+    semcomp_runtime_ex_x_move();
+}
+
+void func_BF4D_b0(void) { /* MovePlayerVertically */
+    semcomp_runtime_move_player_vertically();
+}
+
 void func_8231_b0(void) { /* TitleScreenMode */
     semcomp_runtime_title_screen_mode();
 }
