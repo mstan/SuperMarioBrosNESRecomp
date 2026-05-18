@@ -134,3 +134,22 @@ addr = 0xC30E
 # — all separately-emitted standalones.
 [[replace_func]]
 addr = 0xCA77
+
+# Phase 9: Player physics.
+#
+# AutoControlPlayer ($B0E6) — owned by PlayerPhysics::auto_control.
+# Three-byte wrapper: write A to $06FC controller-pressed, then call
+# PlayerCtrlRoutine ($B0E9, still natural). Used by scripted-Mario
+# states (level entrance, end-level walk, death drop).
+[[replace_func]]
+bank = 0
+addr = 0xB0E6
+
+# PlayerMovementSubs ($B329) — owned by PlayerPhysics::movement_subs.
+# Per-frame physics dispatch for Mario. Computes CrouchingFlag, calls
+# MovePlayer ($B450, still natural), then switches on Player_State
+# into OnGround / JumpSwim / Falling / Climbing sub-handlers (all
+# separately-emitted standalones).
+[[replace_func]]
+bank = 0
+addr = 0xB329

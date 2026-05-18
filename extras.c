@@ -319,6 +319,14 @@ void func_CA77(void) { /* MoveNormalEnemy (no _b0 suffix — fixed bank) */
     semcomp_runtime_move_normal_enemy();
 }
 
+void func_B0E6_b0(void) { /* AutoControlPlayer */
+    semcomp_runtime_auto_control_player();
+}
+
+void func_B329_b0(void) { /* PlayerMovementSubs */
+    semcomp_runtime_player_movement_subs();
+}
+
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     (void)pc; (void)addr; return val;
 }

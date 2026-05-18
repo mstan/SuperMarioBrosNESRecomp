@@ -15,6 +15,7 @@
 #include "semcomp/Level.h"
 #include "semcomp/Mario.h"
 #include "semcomp/ModApi.h"
+#include "semcomp/PlayerPhysics.h"
 #include "semcomp/PlayerSession.h"
 #include "semcomp/Powerups.h"
 #include "semcomp/RoutineRegistry.h"
@@ -37,6 +38,7 @@ public:
           mode_(state_),
           hud_(state_),
           floateys_(state_),
+          player_physics_(state_),
           trainer_(state_),
           trainer_ui_(*this),
           mod_api_(),
@@ -82,6 +84,7 @@ public:
     const GameMode&      mode()    const { return mode_;     }
     Hud&                 hud()           { return hud_;      }
     FloateyNumbers&      floateys()      { return floateys_; }
+    PlayerPhysics&       player_physics(){ return player_physics_; }
     Trainer&             trainer()       { return trainer_; }
     const Trainer&       trainer() const { return trainer_; }
 
@@ -105,6 +108,7 @@ private:
     GameMode         mode_;
     Hud              hud_;
     FloateyNumbers   floateys_;
+    PlayerPhysics    player_physics_;
     Trainer          trainer_;
     TrainerUI        trainer_ui_;
     ModApi           mod_api_;

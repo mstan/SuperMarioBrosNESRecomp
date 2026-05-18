@@ -137,6 +137,7 @@ if(ENABLE_SEMCOMP)
         semcomp/GameMode.cpp
         semcomp/Hud.cpp
         semcomp/FloateyNumbers.cpp
+        semcomp/PlayerPhysics.cpp
         semcomp/SemcompGame.cpp
         semcomp/Trainer.cpp
         semcomp/TrainerUI.cpp

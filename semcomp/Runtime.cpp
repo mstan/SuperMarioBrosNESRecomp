@@ -384,6 +384,16 @@ void semcomp_runtime_move_normal_enemy(void) {
     runtime().routines().note_invocation(0xCA77);
     runtime().enemies().move_normal_enemy();
 }
+void semcomp_runtime_auto_control_player(void) {
+    runtime().routines().register_routine(0xB0E6, "AutoControlPlayer");
+    runtime().routines().note_invocation(0xB0E6);
+    runtime().player_physics().auto_control();
+}
+void semcomp_runtime_player_movement_subs(void) {
+    runtime().routines().register_routine(0xB329, "PlayerMovementSubs");
+    runtime().routines().note_invocation(0xB329);
+    runtime().player_physics().movement_subs();
+}
 
 // ---- GameMode reads + verbs ----------------------------------------------
 

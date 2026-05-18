@@ -239,6 +239,8 @@ void semcomp_runtime_add_to_score(void);              // $BC27 AddToScore
 void semcomp_runtime_setup_floatey_number(void);      // $DA11 SetupFloateyNumber
 void semcomp_runtime_init_normal_enemy(void);         // $C30E InitNormalEnemy
 void semcomp_runtime_move_normal_enemy(void);         // $CA77 MoveNormalEnemy
+void semcomp_runtime_auto_control_player(void);       // $B0E6 AutoControlPlayer
+void semcomp_runtime_player_movement_subs(void);      // $B329 PlayerMovementSubs
 
 // ---- GameMode reads + verbs (Phase 5) ------------------------------------
 uint8_t semcomp_runtime_mode_oper_mode(void);
