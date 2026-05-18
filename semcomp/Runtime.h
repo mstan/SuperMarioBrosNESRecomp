@@ -247,6 +247,8 @@ void semcomp_runtime_player_death(void);              // $B269 PlayerDeath
 void semcomp_runtime_player_fire_flower(void);        // $B27D PlayerFireFlower
 void semcomp_runtime_on_ground_state_sub(void);       // $B35A OnGroundStateSub
 void semcomp_runtime_falling_sub(void);               // $B36D FallingSub
+void semcomp_runtime_jump_swim_sub(void);             // $B376 JumpSwimSub
+void semcomp_runtime_climbing_sub(void);              // $B3CF ClimbingSub
 
 // ---- GameMode reads + verbs (Phase 5) ------------------------------------
 uint8_t semcomp_runtime_mode_oper_mode(void);

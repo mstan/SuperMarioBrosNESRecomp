@@ -177,9 +177,7 @@ addr = 0xB269   # PlayerDeath
 bank = 0
 addr = 0xB27D   # PlayerFireFlower
 
-# Phase 11 (reduced scope) — two small dispatch targets from
-# PlayerMovementSubs. JumpSwimSub / ClimbingSub / PhysicsSub deferred
-# to dedicated future phases (75/140/300-line bodies need careful ports).
+# Phase 11 — two small dispatch targets from PlayerMovementSubs.
 [[replace_func]]
 bank = 0
 addr = 0xB35A   # OnGroundStateSub
@@ -187,3 +185,21 @@ addr = 0xB35A   # OnGroundStateSub
 [[replace_func]]
 bank = 0
 addr = 0xB36D   # FallingSub
+
+# Phase 12 — JumpSwimSub. Air/swim physics frame. Branch-polarity hazards
+# (BPL/BCS/BCC) ported literally; tail-flows into $B3AC LRAir which stays
+# natural-generated as func_B3AC_b0.
+[[replace_func]]
+bank = 0
+addr = 0xB376   # JumpSwimSub
+
+# Phase 13 — ClimbingSub. Vine/flagpole climb. Inner labels exist as _b1
+# standalones (sound bank), but no _b0 caller reaches the interior, so the
+# replacement is safe. Two ROM-table lookups at $B3C7 / $B3CB drive the
+# 4-way climb-direction X/Y deltas.
+[[replace_func]]
+bank = 0
+addr = 0xB3CF   # ClimbingSub
+
+# Phase 14 ($B450 PhysicsSub) — deferred. ~300-line body with heavy ROM
+# table indexing + multiple nested branches; needs a dedicated phase.

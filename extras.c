@@ -351,6 +351,14 @@ void func_B36D_b0(void) { /* FallingSub */
     semcomp_runtime_falling_sub();
 }
 
+void func_B376_b0(void) { /* JumpSwimSub */
+    semcomp_runtime_jump_swim_sub();
+}
+
+void func_B3CF_b0(void) { /* ClimbingSub */
+    semcomp_runtime_climbing_sub();
+}
+
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     (void)pc; (void)addr; return val;
 }

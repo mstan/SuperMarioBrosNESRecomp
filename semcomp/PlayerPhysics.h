@@ -45,16 +45,22 @@ public:
     // standalone function the recompiler emitted, NOT owned by us.
     void auto_control();
 
-    // ---- Phase 11 (reduced scope) ---------------------------------------
-    // Two small clean routines from PlayerMovementSubs' dispatch table.
-    // JumpSwimSub / ClimbingSub / PhysicsSub deferred to dedicated phases
-    // (their bodies are 75-300 lines of dense 6502 branch logic that
-    // doesn't lend itself to one-shot hand-porting at quality).
+    // ---- PlayerMovementSubs dispatch targets (Phases 11-13) -------------
+    // The four sub-handlers from PlayerMovementSubs' $8E04 dispatch table.
+    // PhysicsSub ($B450) intentionally deferred — ~300-line body with
+    // heavy ROM-table lookups, dedicated phase later.
     //
     // $B35A OnGroundStateSub — ground-walking frame. 4 sub-calls, 1 branch.
+    // $B376 JumpSwimSub      — air/swim physics. Sign-bit branches; tail
+    //                          into $B3AC LRAir (standalone).
     // $B36D FallingSub       — copy $070A → $0709, tail-call $B3AC LRAir.
+    // $B3CF ClimbingSub      — vine/flagpole climb. Inner labels exist as
+    //                          standalone _b1 (sound bank) but are unused
+    //                          from _b0, so replace is safe.
     void on_ground_state_sub();
+    void jump_swim_sub();
     void falling_sub();
+    void climbing_sub();
 
     // movement_subs: replacement body for $B329.
     // Logic chain:

@@ -424,6 +424,16 @@ void semcomp_runtime_falling_sub(void) {
     runtime().routines().note_invocation(0xB36D);
     runtime().player_physics().falling_sub();
 }
+void semcomp_runtime_jump_swim_sub(void) {
+    runtime().routines().register_routine(0xB376, "JumpSwimSub");
+    runtime().routines().note_invocation(0xB376);
+    runtime().player_physics().jump_swim_sub();
+}
+void semcomp_runtime_climbing_sub(void) {
+    runtime().routines().register_routine(0xB3CF, "ClimbingSub");
+    runtime().routines().note_invocation(0xB3CF);
+    runtime().player_physics().climbing_sub();
+}
 
 // ---- GameMode reads + verbs ----------------------------------------------
 
