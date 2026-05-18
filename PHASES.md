@@ -242,7 +242,7 @@ project, not a spike target.
   changing this path risks frame-perfect rendering quirks. Needs a
   dedicated session with frame-by-frame diff vs Nestopia oracle.
 
-### Phase 27-30 — Sound + music (deprioritized, own check-in)
+### Phase 27-30 — Sound + music (DEFERRED — mega-phase, own check-in)
 - Untangle Square1Sfx / Square2Sfx / Noise inner-label tangles.
 - [[replace_func]] `$F41B`, `$F57C`, NoiseSfxHandler.
 - [[replace_func]] `$F2D0 SoundEngine`.
@@ -251,7 +251,10 @@ project, not a spike target.
 - DMC handlers.
 - ~80-100 routines under new `Sound` class.
 - Bonus: may unblock silent-coin-pickup mystery.
-- **Check-in BEFORE starting Phase 27.**
+- **Why deferred:** lowest priority per user's spike instruction
+  ("audio and misc come last"). Multi-entry-body tangles throughout
+  ($F41B/$F57C/$F2D0 all use call_by_address re-entry). Needs untangle
+  + careful APU register sequencing test. Own check-in before starting.
 
 ### Phase 31 — Utility routines (last, own check-in)
 - Math helpers, OAM dumpers, sprite-data writers, palette writers,
