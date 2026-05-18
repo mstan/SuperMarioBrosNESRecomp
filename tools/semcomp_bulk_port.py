@@ -52,15 +52,29 @@ def load_owned_addresses():
 # ---------------------------------------------------------------------------
 
 def find_function(addr_hex, generated):
-    """Find the function body for hex addr like 'C30E' or 'C30E_b0'.
-    Returns (start_line, end_line, suffix). suffix is e.g. '_b0' or ''.
+    """Find the function body for hex addr like 'C30E' or 'C30E_b1'.
+    Accepts both 4-hex (auto-detects bank suffix from emission) and
+    'XXXX_bN' explicit forms.
+
+    Returns (start_line, end_line, suffix). suffix is e.g. '_b0', '_b1', or ''.
     """
-    addr = addr_hex.upper()
-    patterns = [
-        (rf"^(?:static )?void func_{addr}_b0\(void\) \{{", "_b0"),
-        (rf"^(?:static )?void func_{addr}\(void\) \{{", ""),
-    ]
-    for pat, suffix in patterns:
+    addr_upper = addr_hex.upper()
+    # If caller passed an explicit `_bN` suffix, search for exactly that.
+    explicit_bank = re.match(r"^([0-9A-F]{4})_B(\d)$", addr_upper)
+    if explicit_bank:
+        addr = explicit_bank.group(1)
+        bank = explicit_bank.group(2)
+        candidates = [(rf"^(?:static )?void func_{addr}_b{bank}\(void\) \{{", f"_b{bank}")]
+    else:
+        addr = addr_upper
+        # Try every bank suffix variant, plus the no-suffix form.
+        candidates = [
+            (rf"^(?:static )?void func_{addr}_b0\(void\) \{{", "_b0"),
+            (rf"^(?:static )?void func_{addr}_b1\(void\) \{{", "_b1"),
+            (rf"^(?:static )?void func_{addr}_b2\(void\) \{{", "_b2"),
+            (rf"^(?:static )?void func_{addr}\(void\) \{{", ""),
+        ]
+    for pat, suffix in candidates:
         for i, line in enumerate(generated):
             if re.match(pat, line):
                 depth = 1
@@ -330,6 +344,11 @@ def generate_module(module_name, class_name, routines, generated):
     body_groups = {}
     owned_already = load_owned_addresses()
     for addr_hex, name in routines:
+        # Strip any user-supplied `_bN` suffix from the address before storing,
+        # so addr_hex is always the bare 4-hex part. The bank suffix is carried
+        # separately on the return value of find_function.
+        bare = re.match(r"^([0-9A-Fa-f]{4})", addr_hex)
+        bare_addr = bare.group(1).upper() if bare else addr_hex.upper()
         res = find_function(addr_hex, generated)
         if not res:
             skipped.append((addr_hex, name, "not found"))
@@ -337,8 +356,7 @@ def generate_module(module_name, class_name, routines, generated):
         start, end, suffix = res
         shim = detect_shim_target(start, end, generated)
         if shim is None:
-            # Single-entry — body is inline
-            singles.append((addr_hex.upper(), name, start, end, suffix))
+            singles.append((bare_addr, name, start, end, suffix))
         else:
             body_addr, entry_idx = shim
             grp = body_groups.setdefault(body_addr, {"user_overrides": {}})
@@ -447,6 +465,10 @@ def generate_module(module_name, class_name, routines, generated):
 
     # Append the private body methods after public methods in the cpp.
     cpp_lines.extend(body_methods)
+
+    # Force a regen-safe ordering: ensure addr_hex used in build_runtime_wiring
+    # for any '_bN'-keyed entry uses the bare 4-hex address (not the body key
+    # which may include `_bN`). Already-handled in entry_specs construction.
 
     # ---- Phase 4: finalize header -------------------------------------------
     header_lines.extend([

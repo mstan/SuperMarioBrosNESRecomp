@@ -29,6 +29,7 @@
 #include "semcomp/EnemyEngine.h"
 #include "semcomp/LevelEngine.h"
 #include "semcomp/RenderEngine.h"
+#include "semcomp/FinalBodies.h"
 #include "semcomp/MiscUtilities.h"
 #include "semcomp/PlayerPhysics.h"
 #include "semcomp/PlayerSession.h"
@@ -68,6 +69,7 @@ public:
           enemy_engine_(state_),
           level_engine_(state_),
           render_engine_(state_),
+          final_bodies_(state_),
           misc_utilities_(state_),
           trainer_(state_),
           trainer_ui_(*this),
@@ -129,6 +131,7 @@ public:
     EnemyEngine&         enemy_engine()    { return enemy_engine_; }
     LevelEngine&         level_engine()    { return level_engine_; }
     RenderEngine&        render_engine()   { return render_engine_; }
+    FinalBodies&         final_bodies()    { return final_bodies_; }
     MiscUtilities&       misc_utilities()  { return misc_utilities_; }
     Trainer&             trainer()       { return trainer_; }
     const Trainer&       trainer() const { return trainer_; }
@@ -168,6 +171,7 @@ private:
     EnemyEngine      enemy_engine_;
     LevelEngine      level_engine_;
     RenderEngine     render_engine_;
+    FinalBodies      final_bodies_;
     MiscUtilities    misc_utilities_;
     Trainer          trainer_;
     TrainerUI        trainer_ui_;

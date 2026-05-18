@@ -152,6 +152,7 @@ if(ENABLE_SEMCOMP)
         semcomp/EnemyEngine.cpp
         semcomp/LevelEngine.cpp
         semcomp/RenderEngine.cpp
+        semcomp/FinalBodies.cpp
         semcomp/MiscUtilities.cpp
         semcomp/SemcompGame.cpp
         semcomp/Trainer.cpp

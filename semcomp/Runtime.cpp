@@ -7534,4 +7534,1379 @@ void semcomp_runtime_at_f288(void) {
     runtime().render_engine().at_f288();
 }
 
+// Phase 36 - FinalBodies remaining multi-entry (22 bodies, 229 entries)
+void semcomp_runtime_bank_switch_8286(void) {
+    runtime().routines().register_routine(0x8286, "BankSwitch_8286");
+    runtime().routines().note_invocation(0x8286);
+    runtime().final_bodies().bank_switch_8286();
+}
+
+void semcomp_runtime_at_82bd(void) {
+    runtime().routines().register_routine(0x82BD, "at_82bd");
+    runtime().routines().note_invocation(0x82BD);
+    runtime().final_bodies().at_82bd();
+}
+
+void semcomp_runtime_bank_switch_838_e(void) {
+    runtime().routines().register_routine(0x838E, "BankSwitch_838E");
+    runtime().routines().note_invocation(0x838E);
+    runtime().final_bodies().bank_switch_838_e();
+}
+
+void semcomp_runtime_at_8426(void) {
+    runtime().routines().register_routine(0x8426, "at_8426");
+    runtime().routines().note_invocation(0x8426);
+    runtime().final_bodies().at_8426();
+}
+
+void semcomp_runtime_bank_switch_8653(void) {
+    runtime().routines().register_routine(0x8653, "BankSwitch_8653");
+    runtime().routines().note_invocation(0x8653);
+    runtime().final_bodies().bank_switch_8653();
+}
+
+void semcomp_runtime_at_8660(void) {
+    runtime().routines().register_routine(0x8660, "at_8660");
+    runtime().routines().note_invocation(0x8660);
+    runtime().final_bodies().at_8660();
+}
+
+void semcomp_runtime_bank_switch_8750(void) {
+    runtime().routines().register_routine(0x8750, "BankSwitch_8750");
+    runtime().routines().note_invocation(0x8750);
+    runtime().final_bodies().bank_switch_8750();
+}
+
+void semcomp_runtime_at_8759(void) {
+    runtime().routines().register_routine(0x8759, "at_8759");
+    runtime().routines().note_invocation(0x8759);
+    runtime().final_bodies().at_8759();
+}
+
+void semcomp_runtime_bank_switch_9_a56(void) {
+    runtime().routines().register_routine(0x9A56, "BankSwitch_9A56");
+    runtime().routines().note_invocation(0x9A56);
+    runtime().final_bodies().bank_switch_9_a56();
+}
+
+void semcomp_runtime_at_9a5c(void) {
+    runtime().routines().register_routine(0x9A5C, "at_9a5c");
+    runtime().routines().note_invocation(0x9A5C);
+    runtime().final_bodies().at_9a5c();
+}
+
+void semcomp_runtime_at_9a9b(void) {
+    runtime().routines().register_routine(0x9A9B, "at_9a9b");
+    runtime().routines().note_invocation(0x9A9B);
+    runtime().final_bodies().at_9a9b();
+}
+
+void semcomp_runtime_bank_switch_b2_ce(void) {
+    runtime().routines().register_routine(0xB2CE, "BankSwitch_B2CE");
+    runtime().routines().note_invocation(0xB2CE);
+    runtime().final_bodies().bank_switch_b2_ce();
+}
+
+void semcomp_runtime_at_b396(void) {
+    runtime().routines().register_routine(0xB396, "at_b396");
+    runtime().routines().note_invocation(0xB396);
+    runtime().final_bodies().at_b396();
+}
+
+void semcomp_runtime_at_b5c8(void) {
+    runtime().routines().register_routine(0xB5C8, "at_b5c8");
+    runtime().routines().note_invocation(0xB5C8);
+    runtime().final_bodies().at_b5c8();
+}
+
+void semcomp_runtime_at_b67c(void) {
+    runtime().routines().register_routine(0xB67C, "at_b67c");
+    runtime().routines().note_invocation(0xB67C);
+    runtime().final_bodies().at_b67c();
+}
+
+void semcomp_runtime_bank_switch_b976(void) {
+    runtime().routines().register_routine(0xB976, "BankSwitch_B976");
+    runtime().routines().note_invocation(0xB976);
+    runtime().final_bodies().bank_switch_b976();
+}
+
+void semcomp_runtime_at_bfc6(void) {
+    runtime().routines().register_routine(0xBFC6, "at_bfc6");
+    runtime().routines().note_invocation(0xBFC6);
+    runtime().final_bodies().at_bfc6();
+}
+
+void semcomp_runtime_at_b9a9(void) {
+    runtime().routines().register_routine(0xB9A9, "at_b9a9");
+    runtime().routines().note_invocation(0xB9A9);
+    runtime().final_bodies().at_b9a9();
+}
+
+void semcomp_runtime_at_bb33(void) {
+    runtime().routines().register_routine(0xBB33, "at_bb33");
+    runtime().routines().note_invocation(0xBB33);
+    runtime().final_bodies().at_bb33();
+}
+
+void semcomp_runtime_at_bb48(void) {
+    runtime().routines().register_routine(0xBB48, "at_bb48");
+    runtime().routines().note_invocation(0xBB48);
+    runtime().final_bodies().at_bb48();
+}
+
+void semcomp_runtime_at_bc57(void) {
+    runtime().routines().register_routine(0xBC57, "at_bc57");
+    runtime().routines().note_invocation(0xBC57);
+    runtime().final_bodies().at_bc57();
+}
+
+void semcomp_runtime_at_bc9e(void) {
+    runtime().routines().register_routine(0xBC9E, "at_bc9e");
+    runtime().routines().note_invocation(0xBC9E);
+    runtime().final_bodies().at_bc9e();
+}
+
+void semcomp_runtime_at_bd35(void) {
+    runtime().routines().register_routine(0xBD35, "at_bd35");
+    runtime().routines().note_invocation(0xBD35);
+    runtime().final_bodies().at_bd35();
+}
+
+void semcomp_runtime_at_bd8c(void) {
+    runtime().routines().register_routine(0xBD8C, "at_bd8c");
+    runtime().routines().note_invocation(0xBD8C);
+    runtime().final_bodies().at_bd8c();
+}
+
+void semcomp_runtime_at_bedb(void) {
+    runtime().routines().register_routine(0xBEDB, "at_bedb");
+    runtime().routines().note_invocation(0xBEDB);
+    runtime().final_bodies().at_bedb();
+}
+
+void semcomp_runtime_body_c11_e(void) {
+    runtime().routines().register_routine(0xC11E, "Body_C11E");
+    runtime().routines().note_invocation(0xC11E);
+    runtime().final_bodies().body_c11_e();
+}
+
+void semcomp_runtime_at_c120(void) {
+    runtime().routines().register_routine(0xC120, "at_c120");
+    runtime().routines().note_invocation(0xC120);
+    runtime().final_bodies().at_c120();
+}
+
+void semcomp_runtime_body_c4_ce(void) {
+    runtime().routines().register_routine(0xC4CE, "Body_C4CE");
+    runtime().routines().note_invocation(0xC4CE);
+    runtime().final_bodies().body_c4_ce();
+}
+
+void semcomp_runtime_at_c4d0(void) {
+    runtime().routines().register_routine(0xC4D0, "at_c4d0");
+    runtime().routines().note_invocation(0xC4D0);
+    runtime().final_bodies().at_c4d0();
+}
+
+void semcomp_runtime_body_c8_dc(void) {
+    runtime().routines().register_routine(0xC8DC, "Body_C8DC");
+    runtime().routines().note_invocation(0xC8DC);
+    runtime().final_bodies().body_c8_dc();
+}
+
+void semcomp_runtime_at_c8e1(void) {
+    runtime().routines().register_routine(0xC8E1, "at_c8e1");
+    runtime().routines().note_invocation(0xC8E1);
+    runtime().final_bodies().at_c8e1();
+}
+
+void semcomp_runtime_body_c923(void) {
+    runtime().routines().register_routine(0xC923, "Body_C923");
+    runtime().routines().note_invocation(0xC923);
+    runtime().final_bodies().body_c923();
+}
+
+void semcomp_runtime_at_c927(void) {
+    runtime().routines().register_routine(0xC927, "at_c927");
+    runtime().routines().note_invocation(0xC927);
+    runtime().final_bodies().at_c927();
+}
+
+void semcomp_runtime_at_c930(void) {
+    runtime().routines().register_routine(0xC930, "at_c930");
+    runtime().routines().note_invocation(0xC930);
+    runtime().final_bodies().at_c930();
+}
+
+void semcomp_runtime_body_c9_f0(void) {
+    runtime().routines().register_routine(0xC9F0, "Body_C9F0");
+    runtime().routines().note_invocation(0xC9F0);
+    runtime().final_bodies().body_c9_f0();
+}
+
+void semcomp_runtime_at_c9fa(void) {
+    runtime().routines().register_routine(0xC9FA, "at_c9fa");
+    runtime().routines().note_invocation(0xC9FA);
+    runtime().final_bodies().at_c9fa();
+}
+
+void semcomp_runtime_at_c9f4(void) {
+    runtime().routines().register_routine(0xC9F4, "at_c9f4");
+    runtime().routines().note_invocation(0xC9F4);
+    runtime().final_bodies().at_c9f4();
+}
+
+void semcomp_runtime_at_c9f2(void) {
+    runtime().routines().register_routine(0xC9F2, "at_c9f2");
+    runtime().routines().note_invocation(0xC9F2);
+    runtime().final_bodies().at_c9f2();
+}
+
+void semcomp_runtime_body_ca47(void) {
+    runtime().routines().register_routine(0xCA47, "Body_CA47");
+    runtime().routines().note_invocation(0xCA47);
+    runtime().final_bodies().body_ca47();
+}
+
+void semcomp_runtime_at_ca49(void) {
+    runtime().routines().register_routine(0xCA49, "at_ca49");
+    runtime().routines().note_invocation(0xCA49);
+    runtime().final_bodies().at_ca49();
+}
+
+void semcomp_runtime_body_d0_c7(void) {
+    runtime().routines().register_routine(0xD0C7, "Body_D0C7");
+    runtime().routines().note_invocation(0xD0C7);
+    runtime().final_bodies().body_d0_c7();
+}
+
+void semcomp_runtime_at_d0c9(void) {
+    runtime().routines().register_routine(0xD0C9, "at_d0c9");
+    runtime().routines().note_invocation(0xD0C9);
+    runtime().final_bodies().at_d0c9();
+}
+
+void semcomp_runtime_body_d3_d2(void) {
+    runtime().routines().register_routine(0xD3D2, "Body_D3D2");
+    runtime().routines().note_invocation(0xD3D2);
+    runtime().final_bodies().body_d3_d2();
+}
+
+void semcomp_runtime_at_d3d4(void) {
+    runtime().routines().register_routine(0xD3D4, "at_d3d4");
+    runtime().routines().note_invocation(0xD3D4);
+    runtime().final_bodies().at_d3d4();
+}
+
+void semcomp_runtime_body_e1_ac(void) {
+    runtime().routines().register_routine(0xE1AC, "Body_E1AC");
+    runtime().routines().note_invocation(0xE1AC);
+    runtime().final_bodies().body_e1_ac();
+}
+
+void semcomp_runtime_at_e1af(void) {
+    runtime().routines().register_routine(0xE1AF, "at_e1af");
+    runtime().routines().note_invocation(0xE1AF);
+    runtime().final_bodies().at_e1af();
+}
+
+void semcomp_runtime_body_e23_e(void) {
+    runtime().routines().register_routine(0xE23E, "Body_E23E");
+    runtime().routines().note_invocation(0xE23E);
+    runtime().final_bodies().body_e23_e();
+}
+
+void semcomp_runtime_at_e244(void) {
+    runtime().routines().register_routine(0xE244, "at_e244");
+    runtime().routines().note_invocation(0xE244);
+    runtime().final_bodies().at_e244();
+}
+
+void semcomp_runtime_body_e7_b3(void) {
+    runtime().routines().register_routine(0xE7B3, "Body_E7B3");
+    runtime().routines().note_invocation(0xE7B3);
+    runtime().final_bodies().body_e7_b3();
+}
+
+void semcomp_runtime_at_e7d1(void) {
+    runtime().routines().register_routine(0xE7D1, "at_e7d1");
+    runtime().routines().note_invocation(0xE7D1);
+    runtime().final_bodies().at_e7d1();
+}
+
+void semcomp_runtime_at_e7de(void) {
+    runtime().routines().register_routine(0xE7DE, "at_e7de");
+    runtime().routines().note_invocation(0xE7DE);
+    runtime().final_bodies().at_e7de();
+}
+
+void semcomp_runtime_body_ee5_b(void) {
+    runtime().routines().register_routine(0xEE5B, "Body_EE5B");
+    runtime().routines().note_invocation(0xEE5B);
+    runtime().final_bodies().body_ee5_b();
+}
+
+void semcomp_runtime_at_ee61(void) {
+    runtime().routines().register_routine(0xEE61, "at_ee61");
+    runtime().routines().note_invocation(0xEE61);
+    runtime().final_bodies().at_ee61();
+}
+
+void semcomp_runtime_at_eeb6(void) {
+    runtime().routines().register_routine(0xEEB6, "at_eeb6");
+    runtime().routines().note_invocation(0xEEB6);
+    runtime().final_bodies().at_eeb6();
+}
+
+void semcomp_runtime_at_eed1(void) {
+    runtime().routines().register_routine(0xEED1, "at_eed1");
+    runtime().routines().note_invocation(0xEED1);
+    runtime().final_bodies().at_eed1();
+}
+
+void semcomp_runtime_body_f4_c0(void) {
+    runtime().routines().register_routine(0xF4C0, "Body_F4C0");
+    runtime().routines().note_invocation(0xF4C0);
+    runtime().final_bodies().body_f4_c0();
+}
+
+void semcomp_runtime_at_f507(void) {
+    runtime().routines().register_routine(0xF507, "at_f507");
+    runtime().routines().note_invocation(0xF507);
+    runtime().final_bodies().at_f507();
+}
+
+void semcomp_runtime_at_f4f9(void) {
+    runtime().routines().register_routine(0xF4F9, "at_f4f9");
+    runtime().routines().note_invocation(0xF4F9);
+    runtime().final_bodies().at_f4f9();
+}
+
+void semcomp_runtime_at_f911(void) {
+    runtime().routines().register_routine(0xF911, "at_f911");
+    runtime().routines().note_invocation(0xF911);
+    runtime().final_bodies().at_f911();
+}
+
+void semcomp_runtime_at_f938(void) {
+    runtime().routines().register_routine(0xF938, "at_f938");
+    runtime().routines().note_invocation(0xF938);
+    runtime().final_bodies().at_f938();
+}
+
+void semcomp_runtime_music_header_data(void) {
+    runtime().routines().register_routine(0xF90D, "MusicHeaderData");
+    runtime().routines().note_invocation(0xF90D);
+    runtime().final_bodies().music_header_data();
+}
+
+void semcomp_runtime_at_f4f1(void) {
+    runtime().routines().register_routine(0xF4F1, "at_f4f1");
+    runtime().routines().note_invocation(0xF4F1);
+    runtime().final_bodies().at_f4f1();
+}
+
+void semcomp_runtime_victory_mus_hdr(void) {
+    runtime().routines().register_routine(0xF961, "VictoryMusHdr");
+    runtime().routines().note_invocation(0xF961);
+    runtime().final_bodies().victory_mus_hdr();
+}
+
+void semcomp_runtime_at_f4fd(void) {
+    runtime().routines().register_routine(0xF4FD, "at_f4fd");
+    runtime().routines().note_invocation(0xF4FD);
+    runtime().final_bodies().at_f4fd();
+}
+
+void semcomp_runtime_at_f4f4(void) {
+    runtime().routines().register_routine(0xF4F4, "at_f4f4");
+    runtime().routines().note_invocation(0xF4F4);
+    runtime().final_bodies().at_f4f4();
+}
+
+void semcomp_runtime_at_f508(void) {
+    runtime().routines().register_routine(0xF508, "at_f508");
+    runtime().routines().note_invocation(0xF508);
+    runtime().final_bodies().at_f508();
+}
+
+void semcomp_runtime_at_f501(void) {
+    runtime().routines().register_routine(0xF501, "at_f501");
+    runtime().routines().note_invocation(0xF501);
+    runtime().final_bodies().at_f501();
+}
+
+void semcomp_runtime_extra_life_freq_data(void) {
+    runtime().routines().register_routine(0xF4D4, "ExtraLifeFreqData");
+    runtime().routines().note_invocation(0xF4D4);
+    runtime().final_bodies().extra_life_freq_data();
+}
+
+void semcomp_runtime_brick_shatter_freq_data(void) {
+    runtime().routines().register_routine(0xF62B, "BrickShatterFreqData");
+    runtime().routines().note_invocation(0xF62B);
+    runtime().final_bodies().brick_shatter_freq_data();
+}
+
+void semcomp_runtime_at_f90f(void) {
+    runtime().routines().register_routine(0xF90F, "at_f90f");
+    runtime().routines().note_invocation(0xF90F);
+    runtime().final_bodies().at_f90f();
+}
+
+void semcomp_runtime_at_f919(void) {
+    runtime().routines().register_routine(0xF919, "at_f919");
+    runtime().routines().note_invocation(0xF919);
+    runtime().final_bodies().at_f919();
+}
+
+void semcomp_runtime_at_f92b(void) {
+    runtime().routines().register_routine(0xF92B, "at_f92b");
+    runtime().routines().note_invocation(0xF92B);
+    runtime().final_bodies().at_f92b();
+}
+
+void semcomp_runtime_at_f96d(void) {
+    runtime().routines().register_routine(0xF96D, "at_f96d");
+    runtime().routines().note_invocation(0xF96D);
+    runtime().final_bodies().at_f96d();
+}
+
+void semcomp_runtime_at_f914(void) {
+    runtime().routines().register_routine(0xF914, "at_f914");
+    runtime().routines().note_invocation(0xF914);
+    runtime().final_bodies().at_f914();
+}
+
+void semcomp_runtime_body_f693(void) {
+    runtime().routines().register_routine(0xF693, "Body_F693");
+    runtime().routines().note_invocation(0xF693);
+    runtime().final_bodies().body_f693();
+}
+
+void semcomp_runtime_at_f695(void) {
+    runtime().routines().register_routine(0xF695, "at_f695");
+    runtime().routines().note_invocation(0xF695);
+    runtime().final_bodies().at_f695();
+}
+
+void semcomp_runtime_ground_level_part1_hdr(void) {
+    runtime().routines().register_routine(0xF976, "GroundLevelPart1Hdr");
+    runtime().routines().note_invocation(0xF976);
+    runtime().final_bodies().ground_level_part1_hdr();
+}
+
+void semcomp_runtime_at_ffaa(void) {
+    runtime().routines().register_routine(0xFFAA, "at_ffaa");
+    runtime().routines().note_invocation(0xFFAA);
+    runtime().final_bodies().at_ffaa();
+}
+
+void semcomp_runtime_bowser_flame_env_data(void) {
+    runtime().routines().register_routine(0xFFCA, "BowserFlameEnvData");
+    runtime().routines().note_invocation(0xFFCA);
+    runtime().final_bodies().bowser_flame_env_data();
+}
+
+void semcomp_runtime_at_f990(void) {
+    runtime().routines().register_routine(0xF990, "at_f990");
+    runtime().routines().note_invocation(0xF990);
+    runtime().final_bodies().at_f990();
+}
+
+void semcomp_runtime_at_f991(void) {
+    runtime().routines().register_routine(0xF991, "at_f991");
+    runtime().routines().note_invocation(0xF991);
+    runtime().final_bodies().at_f991();
+}
+
+void semcomp_runtime_at_fdaa(void) {
+    runtime().routines().register_routine(0xFDAA, "at_fdaa");
+    runtime().routines().note_invocation(0xFDAA);
+    runtime().final_bodies().at_fdaa();
+}
+
+void semcomp_runtime_at_fbaa(void) {
+    runtime().routines().register_routine(0xFBAA, "at_fbaa");
+    runtime().routines().note_invocation(0xFBAA);
+    runtime().final_bodies().at_fbaa();
+}
+
+void semcomp_runtime_at_ffa0(void) {
+    runtime().routines().register_routine(0xFFA0, "at_ffa0");
+    runtime().routines().note_invocation(0xFFA0);
+    runtime().final_bodies().at_ffa0();
+}
+
+void semcomp_runtime_at_fad1(void) {
+    runtime().routines().register_routine(0xFAD1, "at_fad1");
+    runtime().routines().note_invocation(0xFAD1);
+    runtime().final_bodies().at_fad1();
+}
+
+void semcomp_runtime_at_fda6(void) {
+    runtime().routines().register_routine(0xFDA6, "at_fda6");
+    runtime().routines().note_invocation(0xFDA6);
+    runtime().final_bodies().at_fda6();
+}
+
+void semcomp_runtime_at_fea5(void) {
+    runtime().routines().register_routine(0xFEA5, "at_fea5");
+    runtime().routines().note_invocation(0xFEA5);
+    runtime().final_bodies().at_fea5();
+}
+
+void semcomp_runtime_water_event_mus_env_data(void) {
+    runtime().routines().register_routine(0xFFA2, "WaterEventMusEnvData");
+    runtime().routines().note_invocation(0xFFA2);
+    runtime().final_bodies().water_event_mus_env_data();
+}
+
+void semcomp_runtime_at_ff01(void) {
+    runtime().routines().register_routine(0xFF01, "at_ff01");
+    runtime().routines().note_invocation(0xFF01);
+    runtime().final_bodies().at_ff01();
+}
+
+void semcomp_runtime_at_f9a9(void) {
+    runtime().routines().register_routine(0xF9A9, "at_f9a9");
+    runtime().routines().note_invocation(0xF9A9);
+    runtime().final_bodies().at_f9a9();
+}
+
+void semcomp_runtime_at_faa1(void) {
+    runtime().routines().register_routine(0xFAA1, "at_faa1");
+    runtime().routines().note_invocation(0xFAA1);
+    runtime().final_bodies().at_faa1();
+}
+
+void semcomp_runtime_at_fda0(void) {
+    runtime().routines().register_routine(0xFDA0, "at_fda0");
+    runtime().routines().note_invocation(0xFDA0);
+    runtime().final_bodies().at_fda0();
+}
+
+void semcomp_runtime_at_fca1(void) {
+    runtime().routines().register_routine(0xFCA1, "at_fca1");
+    runtime().routines().note_invocation(0xFCA1);
+    runtime().final_bodies().at_fca1();
+}
+
+void semcomp_runtime_at_faf1(void) {
+    runtime().routines().register_routine(0xFAF1, "at_faf1");
+    runtime().routines().note_invocation(0xFAF1);
+    runtime().final_bodies().at_faf1();
+}
+
+void semcomp_runtime_at_fd38(void) {
+    runtime().routines().register_routine(0xFD38, "at_fd38");
+    runtime().routines().note_invocation(0xFD38);
+    runtime().final_bodies().at_fd38();
+}
+
+void semcomp_runtime_at_fa10(void) {
+    runtime().routines().register_routine(0xFA10, "at_fa10");
+    runtime().routines().note_invocation(0xFA10);
+    runtime().final_bodies().at_fa10();
+}
+
+void semcomp_runtime_at_fc86(void) {
+    runtime().routines().register_routine(0xFC86, "at_fc86");
+    runtime().routines().note_invocation(0xFC86);
+    runtime().final_bodies().at_fc86();
+}
+
+void semcomp_runtime_at_fea9(void) {
+    runtime().routines().register_routine(0xFEA9, "at_fea9");
+    runtime().routines().note_invocation(0xFEA9);
+    runtime().final_bodies().at_fea9();
+}
+
+void semcomp_runtime_at_faad(void) {
+    runtime().routines().register_routine(0xFAAD, "at_faad");
+    runtime().routines().note_invocation(0xFAAD);
+    runtime().final_bodies().at_faad();
+}
+
+void semcomp_runtime_at_fa0e(void) {
+    runtime().routines().register_routine(0xFA0E, "at_fa0e");
+    runtime().routines().note_invocation(0xFA0E);
+    runtime().final_bodies().at_fa0e();
+}
+
+void semcomp_runtime_at_ff4c(void) {
+    runtime().routines().register_routine(0xFF4C, "at_ff4c");
+    runtime().routines().note_invocation(0xFF4C);
+    runtime().final_bodies().at_ff4c();
+}
+
+void semcomp_runtime_at_ff4d(void) {
+    runtime().routines().register_routine(0xFF4D, "at_ff4d");
+    runtime().routines().note_invocation(0xFF4D);
+    runtime().final_bodies().at_ff4d();
+}
+
+void semcomp_runtime_at_fe4d(void) {
+    runtime().routines().register_routine(0xFE4D, "at_fe4d");
+    runtime().routines().note_invocation(0xFE4D);
+    runtime().final_bodies().at_fe4d();
+}
+
+void semcomp_runtime_at_ff86(void) {
+    runtime().routines().register_routine(0xFF86, "at_ff86");
+    runtime().routines().note_invocation(0xFF86);
+    runtime().final_bodies().at_ff86();
+}
+
+void semcomp_runtime_at_fe29(void) {
+    runtime().routines().register_routine(0xFE29, "at_fe29");
+    runtime().routines().note_invocation(0xFE29);
+    runtime().final_bodies().at_fe29();
+}
+
+void semcomp_runtime_at_fca9(void) {
+    runtime().routines().register_routine(0xFCA9, "at_fca9");
+    runtime().routines().note_invocation(0xFCA9);
+    runtime().final_bodies().at_fca9();
+}
+
+void semcomp_runtime_at_fbf7(void) {
+    runtime().routines().register_routine(0xFBF7, "at_fbf7");
+    runtime().routines().note_invocation(0xFBF7);
+    runtime().final_bodies().at_fbf7();
+}
+
+void semcomp_runtime_at_fdfc(void) {
+    runtime().routines().register_routine(0xFDFC, "at_fdfc");
+    runtime().routines().note_invocation(0xFDFC);
+    runtime().final_bodies().at_fdfc();
+}
+
+void semcomp_runtime_at_fe08(void) {
+    runtime().routines().register_routine(0xFE08, "at_fe08");
+    runtime().routines().note_invocation(0xFE08);
+    runtime().final_bodies().at_fe08();
+}
+
+void semcomp_runtime_at_fe02(void) {
+    runtime().routines().register_routine(0xFE02, "at_fe02");
+    runtime().routines().note_invocation(0xFE02);
+    runtime().final_bodies().at_fe02();
+}
+
+void semcomp_runtime_at_ff07(void) {
+    runtime().routines().register_routine(0xFF07, "at_ff07");
+    runtime().routines().note_invocation(0xFF07);
+    runtime().final_bodies().at_ff07();
+}
+
+void semcomp_runtime_at_f9f0(void) {
+    runtime().routines().register_routine(0xF9F0, "at_f9f0");
+    runtime().routines().note_invocation(0xF9F0);
+    runtime().final_bodies().at_f9f0();
+}
+
+void semcomp_runtime_at_fc4c(void) {
+    runtime().routines().register_routine(0xFC4C, "at_fc4c");
+    runtime().routines().note_invocation(0xFC4C);
+    runtime().final_bodies().at_fc4c();
+}
+
+void semcomp_runtime_at_fec9(void) {
+    runtime().routines().register_routine(0xFEC9, "at_fec9");
+    runtime().routines().note_invocation(0xFEC9);
+    runtime().final_bodies().at_fec9();
+}
+
+void semcomp_runtime_at_fd7d(void) {
+    runtime().routines().register_routine(0xFD7D, "at_fd7d");
+    runtime().routines().note_invocation(0xFD7D);
+    runtime().final_bodies().at_fd7d();
+}
+
+void semcomp_runtime_at_ff7e(void) {
+    runtime().routines().register_routine(0xFF7E, "at_ff7e");
+    runtime().routines().note_invocation(0xFF7E);
+    runtime().final_bodies().at_ff7e();
+}
+
+void semcomp_runtime_at_fc29(void) {
+    runtime().routines().register_routine(0xFC29, "at_fc29");
+    runtime().routines().note_invocation(0xFC29);
+    runtime().final_bodies().at_fc29();
+}
+
+void semcomp_runtime_at_fa50(void) {
+    runtime().routines().register_routine(0xFA50, "at_fa50");
+    runtime().routines().note_invocation(0xFA50);
+    runtime().final_bodies().at_fa50();
+}
+
+void semcomp_runtime_at_fbfa(void) {
+    runtime().routines().register_routine(0xFBFA, "at_fbfa");
+    runtime().routines().note_invocation(0xFBFA);
+    runtime().final_bodies().at_fbfa();
+}
+
+void semcomp_runtime_at_fbf9(void) {
+    runtime().routines().register_routine(0xFBF9, "at_fbf9");
+    runtime().routines().note_invocation(0xFBF9);
+    runtime().final_bodies().at_fbf9();
+}
+
+void semcomp_runtime_at_fcfd(void) {
+    runtime().routines().register_routine(0xFCFD, "at_fcfd");
+    runtime().routines().note_invocation(0xFCFD);
+    runtime().final_bodies().at_fcfd();
+}
+
+void semcomp_runtime_at_fcad(void) {
+    runtime().routines().register_routine(0xFCAD, "at_fcad");
+    runtime().routines().note_invocation(0xFCAD);
+    runtime().final_bodies().at_fcad();
+}
+
+void semcomp_runtime_at_fcb2(void) {
+    runtime().routines().register_routine(0xFCB2, "at_fcb2");
+    runtime().routines().note_invocation(0xFCB2);
+    runtime().final_bodies().at_fcb2();
+}
+
+void semcomp_runtime_at_fca5(void) {
+    runtime().routines().register_routine(0xFCA5, "at_fca5");
+    runtime().routines().note_invocation(0xFCA5);
+    runtime().final_bodies().at_fca5();
+}
+
+void semcomp_runtime_at_fc99(void) {
+    runtime().routines().register_routine(0xFC99, "at_fc99");
+    runtime().routines().note_invocation(0xFC99);
+    runtime().final_bodies().at_fc99();
+}
+
+void semcomp_runtime_at_fc8f(void) {
+    runtime().routines().register_routine(0xFC8F, "at_fc8f");
+    runtime().routines().note_invocation(0xFC8F);
+    runtime().final_bodies().at_fc8f();
+}
+
+void semcomp_runtime_at_fc95(void) {
+    runtime().routines().register_routine(0xFC95, "at_fc95");
+    runtime().routines().note_invocation(0xFC95);
+    runtime().final_bodies().at_fc95();
+}
+
+void semcomp_runtime_at_fc96(void) {
+    runtime().routines().register_routine(0xFC96, "at_fc96");
+    runtime().routines().note_invocation(0xFC96);
+    runtime().final_bodies().at_fc96();
+}
+
+void semcomp_runtime_at_fc74(void) {
+    runtime().routines().register_routine(0xFC74, "at_fc74");
+    runtime().routines().note_invocation(0xFC74);
+    runtime().final_bodies().at_fc74();
+}
+
+void semcomp_runtime_at_fc70(void) {
+    runtime().routines().register_routine(0xFC70, "at_fc70");
+    runtime().routines().note_invocation(0xFC70);
+    runtime().final_bodies().at_fc70();
+}
+
+void semcomp_runtime_at_fc6e(void) {
+    runtime().routines().register_routine(0xFC6E, "at_fc6e");
+    runtime().routines().note_invocation(0xFC6E);
+    runtime().final_bodies().at_fc6e();
+}
+
+void semcomp_runtime_at_fcf6(void) {
+    runtime().routines().register_routine(0xFCF6, "at_fcf6");
+    runtime().routines().note_invocation(0xFCF6);
+    runtime().final_bodies().at_fcf6();
+}
+
+void semcomp_runtime_at_fcf4(void) {
+    runtime().routines().register_routine(0xFCF4, "at_fcf4");
+    runtime().routines().note_invocation(0xFCF4);
+    runtime().final_bodies().at_fcf4();
+}
+
+void semcomp_runtime_at_fcbc(void) {
+    runtime().routines().register_routine(0xFCBC, "at_fcbc");
+    runtime().routines().note_invocation(0xFCBC);
+    runtime().final_bodies().at_fcbc();
+}
+
+void semcomp_runtime_at_fcbd(void) {
+    runtime().routines().register_routine(0xFCBD, "at_fcbd");
+    runtime().routines().note_invocation(0xFCBD);
+    runtime().final_bodies().at_fcbd();
+}
+
+void semcomp_runtime_at_fcef(void) {
+    runtime().routines().register_routine(0xFCEF, "at_fcef");
+    runtime().routines().note_invocation(0xFCEF);
+    runtime().final_bodies().at_fcef();
+}
+
+void semcomp_runtime_at_fcc2(void) {
+    runtime().routines().register_routine(0xFCC2, "at_fcc2");
+    runtime().routines().note_invocation(0xFCC2);
+    runtime().final_bodies().at_fcc2();
+}
+
+void semcomp_runtime_at_fccc(void) {
+    runtime().routines().register_routine(0xFCCC, "at_fccc");
+    runtime().routines().note_invocation(0xFCCC);
+    runtime().final_bodies().at_fccc();
+}
+
+void semcomp_runtime_at_fcf1(void) {
+    runtime().routines().register_routine(0xFCF1, "at_fcf1");
+    runtime().routines().note_invocation(0xFCF1);
+    runtime().final_bodies().at_fcf1();
+}
+
+void semcomp_runtime_at_ff24(void) {
+    runtime().routines().register_routine(0xFF24, "at_ff24");
+    runtime().routines().note_invocation(0xFF24);
+    runtime().final_bodies().at_ff24();
+}
+
+void semcomp_runtime_at_ff02(void) {
+    runtime().routines().register_routine(0xFF02, "at_ff02");
+    runtime().routines().note_invocation(0xFF02);
+    runtime().final_bodies().at_ff02();
+}
+
+void semcomp_runtime_at_fc0f(void) {
+    runtime().routines().register_routine(0xFC0F, "at_fc0f");
+    runtime().routines().note_invocation(0xFC0F);
+    runtime().final_bodies().at_fc0f();
+}
+
+void semcomp_runtime_at_fc36(void) {
+    runtime().routines().register_routine(0xFC36, "at_fc36");
+    runtime().routines().note_invocation(0xFC36);
+    runtime().final_bodies().at_fc36();
+}
+
+void semcomp_runtime_at_fc39(void) {
+    runtime().routines().register_routine(0xFC39, "at_fc39");
+    runtime().routines().note_invocation(0xFC39);
+    runtime().final_bodies().at_fc39();
+}
+
+void semcomp_runtime_at_fc40(void) {
+    runtime().routines().register_routine(0xFC40, "at_fc40");
+    runtime().routines().note_invocation(0xFC40);
+    runtime().final_bodies().at_fc40();
+}
+
+void semcomp_runtime_at_fc41(void) {
+    runtime().routines().register_routine(0xFC41, "at_fc41");
+    runtime().routines().note_invocation(0xFC41);
+    runtime().final_bodies().at_fc41();
+}
+
+void semcomp_runtime_at_fc43(void) {
+    runtime().routines().register_routine(0xFC43, "at_fc43");
+    runtime().routines().note_invocation(0xFC43);
+    runtime().final_bodies().at_fc43();
+}
+
+void semcomp_runtime_at_fc44(void) {
+    runtime().routines().register_routine(0xFC44, "at_fc44");
+    runtime().routines().note_invocation(0xFC44);
+    runtime().final_bodies().at_fc44();
+}
+
+void semcomp_runtime_at_fc47(void) {
+    runtime().routines().register_routine(0xFC47, "at_fc47");
+    runtime().routines().note_invocation(0xFC47);
+    runtime().final_bodies().at_fc47();
+}
+
+void semcomp_runtime_at_fc4a(void) {
+    runtime().routines().register_routine(0xFC4A, "at_fc4a");
+    runtime().routines().note_invocation(0xFC4A);
+    runtime().final_bodies().at_fc4a();
+}
+
+void semcomp_runtime_at_fc91(void) {
+    runtime().routines().register_routine(0xFC91, "at_fc91");
+    runtime().routines().note_invocation(0xFC91);
+    runtime().final_bodies().at_fc91();
+}
+
+void semcomp_runtime_at_fc93(void) {
+    runtime().routines().register_routine(0xFC93, "at_fc93");
+    runtime().routines().note_invocation(0xFC93);
+    runtime().final_bodies().at_fc93();
+}
+
+void semcomp_runtime_at_fc94(void) {
+    runtime().routines().register_routine(0xFC94, "at_fc94");
+    runtime().routines().note_invocation(0xFC94);
+    runtime().final_bodies().at_fc94();
+}
+
+void semcomp_runtime_at_fc9f(void) {
+    runtime().routines().register_routine(0xFC9F, "at_fc9f");
+    runtime().routines().note_invocation(0xFC9F);
+    runtime().final_bodies().at_fc9f();
+}
+
+void semcomp_runtime_at_fc50(void) {
+    runtime().routines().register_routine(0xFC50, "at_fc50");
+    runtime().routines().note_invocation(0xFC50);
+    runtime().final_bodies().at_fc50();
+}
+
+void semcomp_runtime_at_fcf9(void) {
+    runtime().routines().register_routine(0xFCF9, "at_fcf9");
+    runtime().routines().note_invocation(0xFCF9);
+    runtime().final_bodies().at_fcf9();
+}
+
+void semcomp_runtime_at_fefc(void) {
+    runtime().routines().register_routine(0xFEFC, "at_fefc");
+    runtime().routines().note_invocation(0xFEFC);
+    runtime().final_bodies().at_fefc();
+}
+
+void semcomp_runtime_at_faa5(void) {
+    runtime().routines().register_routine(0xFAA5, "at_faa5");
+    runtime().routines().note_invocation(0xFAA5);
+    runtime().final_bodies().at_faa5();
+}
+
+void semcomp_runtime_at_fa85(void) {
+    runtime().routines().register_routine(0xFA85, "at_fa85");
+    runtime().routines().note_invocation(0xFA85);
+    runtime().final_bodies().at_fa85();
+}
+
+void semcomp_runtime_at_ff47(void) {
+    runtime().routines().register_routine(0xFF47, "at_ff47");
+    runtime().routines().note_invocation(0xFF47);
+    runtime().final_bodies().at_ff47();
+}
+
+void semcomp_runtime_brick_shatter_env_data(void) {
+    runtime().routines().register_routine(0xFFEA, "BrickShatterEnvData");
+    runtime().routines().note_invocation(0xFFEA);
+    runtime().final_bodies().brick_shatter_env_data();
+}
+
+void semcomp_runtime_at_fda4(void) {
+    runtime().routines().register_routine(0xFDA4, "at_fda4");
+    runtime().routines().note_invocation(0xFDA4);
+    runtime().final_bodies().at_fda4();
+}
+
+void semcomp_runtime_at_fd46(void) {
+    runtime().routines().register_routine(0xFD46, "at_fd46");
+    runtime().routines().note_invocation(0xFD46);
+    runtime().final_bodies().at_fd46();
+}
+
+void semcomp_runtime_at_fba6(void) {
+    runtime().routines().register_routine(0xFBA6, "at_fba6");
+    runtime().routines().note_invocation(0xFBA6);
+    runtime().final_bodies().at_fba6();
+}
+
+void semcomp_runtime_ground_level_part4_b_hdr(void) {
+    runtime().routines().register_routine(0xF9A6, "GroundLevelPart4BHdr");
+    runtime().routines().note_invocation(0xF9A6);
+    runtime().final_bodies().ground_level_part4_b_hdr();
+}
+
+void semcomp_runtime_at_f9a4(void) {
+    runtime().routines().register_routine(0xF9A4, "at_f9a4");
+    runtime().routines().note_invocation(0xF9A4);
+    runtime().final_bodies().at_f9a4();
+}
+
+void semcomp_runtime_at_f9e6(void) {
+    runtime().routines().register_routine(0xF9E6, "at_f9e6");
+    runtime().routines().note_invocation(0xF9E6);
+    runtime().final_bodies().at_f9e6();
+}
+
+void semcomp_runtime_music_length_lookup_tbl(void) {
+    runtime().routines().register_routine(0xFF66, "MusicLengthLookupTbl");
+    runtime().routines().note_invocation(0xFF66);
+    runtime().final_bodies().music_length_lookup_tbl();
+}
+
+void semcomp_runtime_at_ff97(void) {
+    runtime().routines().register_routine(0xFF97, "at_ff97");
+    runtime().routines().note_invocation(0xFF97);
+    runtime().final_bodies().at_ff97();
+}
+
+void semcomp_runtime_area_music_env_data(void) {
+    runtime().routines().register_routine(0xFF9A, "AreaMusicEnvData");
+    runtime().routines().note_invocation(0xFF9A);
+    runtime().final_bodies().area_music_env_data();
+}
+
+void semcomp_runtime_time_run_out_mus_data(void) {
+    runtime().routines().register_routine(0xFC72, "TimeRunOutMusData");
+    runtime().routines().note_invocation(0xFC72);
+    runtime().final_bodies().time_run_out_mus_data();
+}
+
+void semcomp_runtime_at_fcc5(void) {
+    runtime().routines().register_routine(0xFCC5, "at_fcc5");
+    runtime().routines().note_invocation(0xFCC5);
+    runtime().final_bodies().at_fcc5();
+}
+
+void semcomp_runtime_silence_data(void) {
+    runtime().routines().register_routine(0xFA1C, "SilenceData");
+    runtime().routines().note_invocation(0xFA1C);
+    runtime().final_bodies().silence_data();
+}
+
+void semcomp_runtime_at_fa1d(void) {
+    runtime().routines().register_routine(0xFA1D, "at_fa1d");
+    runtime().routines().note_invocation(0xFA1D);
+    runtime().final_bodies().at_fa1d();
+}
+
+void semcomp_runtime_castle_mus_data(void) {
+    runtime().routines().register_routine(0xFBA4, "CastleMusData");
+    runtime().routines().note_invocation(0xFBA4);
+    runtime().final_bodies().castle_mus_data();
+}
+
+void semcomp_runtime_water_mus_data(void) {
+    runtime().routines().register_routine(0xFD52, "WaterMusData");
+    runtime().routines().note_invocation(0xFD52);
+    runtime().final_bodies().water_mus_data();
+}
+
+void semcomp_runtime_end_of_castle_mus_data(void) {
+    runtime().routines().register_routine(0xFE51, "EndOfCastleMusData");
+    runtime().routines().note_invocation(0xFE51);
+    runtime().final_bodies().end_of_castle_mus_data();
+}
+
+void semcomp_runtime_ground_m_p1_data(void) {
+    runtime().routines().register_routine(0xFA01, "GroundM_P1Data");
+    runtime().routines().note_invocation(0xFA01);
+    runtime().final_bodies().ground_m_p1_data();
+}
+
+void semcomp_runtime_ground_m_p2_a_data(void) {
+    runtime().routines().register_routine(0xFA49, "GroundM_P2AData");
+    runtime().routines().note_invocation(0xFA49);
+    runtime().final_bodies().ground_m_p2_a_data();
+}
+
+void semcomp_runtime_ground_m_p2_c_data(void) {
+    runtime().routines().register_routine(0xFA9D, "GroundM_P2CData");
+    runtime().routines().note_invocation(0xFA9D);
+    runtime().final_bodies().ground_m_p2_c_data();
+}
+
+void semcomp_runtime_ground_m_p3_a_data(void) {
+    runtime().routines().register_routine(0xFAC2, "GroundM_P3AData");
+    runtime().routines().note_invocation(0xFAC2);
+    runtime().final_bodies().ground_m_p3_a_data();
+}
+
+void semcomp_runtime_ground_m_p3_b_data(void) {
+    runtime().routines().register_routine(0xFADB, "GroundM_P3BData");
+    runtime().routines().note_invocation(0xFADB);
+    runtime().final_bodies().ground_m_p3_b_data();
+}
+
+void semcomp_runtime_ground_m_p4_a_data(void) {
+    runtime().routines().register_routine(0xFB25, "GroundM_P4AData");
+    runtime().routines().note_invocation(0xFB25);
+    runtime().final_bodies().ground_m_p4_a_data();
+}
+
+void semcomp_runtime_ground_m_p4_b_data(void) {
+    runtime().routines().register_routine(0xFB4B, "GroundM_P4BData");
+    runtime().routines().note_invocation(0xFB4B);
+    runtime().final_bodies().ground_m_p4_b_data();
+}
+
+void semcomp_runtime_ground_m_p4_c_data(void) {
+    runtime().routines().register_routine(0xFB74, "GroundM_P4CData");
+    runtime().routines().note_invocation(0xFB74);
+    runtime().final_bodies().ground_m_p4_c_data();
+}
+
+void semcomp_runtime_death_mus_data(void) {
+    runtime().routines().register_routine(0xFB72, "DeathMusData");
+    runtime().routines().note_invocation(0xFB72);
+    runtime().final_bodies().death_mus_data();
+}
+
+void semcomp_runtime_at_ffc0(void) {
+    runtime().routines().register_routine(0xFFC0, "at_ffc0");
+    runtime().routines().note_invocation(0xFFC0);
+    runtime().final_bodies().at_ffc0();
+}
+
+void semcomp_runtime_at_ff14(void) {
+    runtime().routines().register_routine(0xFF14, "at_ff14");
+    runtime().routines().note_invocation(0xFF14);
+    runtime().final_bodies().at_ff14();
+}
+
+void semcomp_runtime_at_fe00(void) {
+    runtime().routines().register_routine(0xFE00, "at_fe00");
+    runtime().routines().note_invocation(0xFE00);
+    runtime().final_bodies().at_fe00();
+}
+
+void semcomp_runtime_at_ff35(void) {
+    runtime().routines().register_routine(0xFF35, "at_ff35");
+    runtime().routines().note_invocation(0xFF35);
+    runtime().final_bodies().at_ff35();
+}
+
+void semcomp_runtime_at_fe54(void) {
+    runtime().routines().register_routine(0xFE54, "at_fe54");
+    runtime().routines().note_invocation(0xFE54);
+    runtime().final_bodies().at_fe54();
+}
+
+void semcomp_runtime_at_fa80(void) {
+    runtime().routines().register_routine(0xFA80, "at_fa80");
+    runtime().routines().note_invocation(0xFA80);
+    runtime().final_bodies().at_fa80();
+}
+
+void semcomp_runtime_at_fa84(void) {
+    runtime().routines().register_routine(0xFA84, "at_fa84");
+    runtime().routines().note_invocation(0xFA84);
+    runtime().final_bodies().at_fa84();
+}
+
+void semcomp_runtime_at_fd0c(void) {
+    runtime().routines().register_routine(0xFD0C, "at_fd0c");
+    runtime().routines().note_invocation(0xFD0C);
+    runtime().final_bodies().at_fd0c();
+}
+
+void semcomp_runtime_at_fafb(void) {
+    runtime().routines().register_routine(0xFAFB, "at_fafb");
+    runtime().routines().note_invocation(0xFAFB);
+    runtime().final_bodies().at_fafb();
+}
+
+void semcomp_runtime_at_fd50(void) {
+    runtime().routines().register_routine(0xFD50, "at_fd50");
+    runtime().routines().note_invocation(0xFD50);
+    runtime().final_bodies().at_fd50();
+}
+
+void semcomp_runtime_at_faa9(void) {
+    runtime().routines().register_routine(0xFAA9, "at_faa9");
+    runtime().routines().note_invocation(0xFAA9);
+    runtime().final_bodies().at_faa9();
+}
+
+void semcomp_runtime_at_ffba(void) {
+    runtime().routines().register_routine(0xFFBA, "at_ffba");
+    runtime().routines().note_invocation(0xFFBA);
+    runtime().final_bodies().at_ffba();
+}
+
+void semcomp_runtime_at_f9bd(void) {
+    runtime().routines().register_routine(0xF9BD, "at_f9bd");
+    runtime().routines().note_invocation(0xF9BD);
+    runtime().final_bodies().at_f9bd();
+}
+
+void semcomp_runtime_at_fb29(void) {
+    runtime().routines().register_routine(0xFB29, "at_fb29");
+    runtime().routines().note_invocation(0xFB29);
+    runtime().final_bodies().at_fb29();
+}
+
+void semcomp_runtime_at_ff18(void) {
+    runtime().routines().register_routine(0xFF18, "at_ff18");
+    runtime().routines().note_invocation(0xFF18);
+    runtime().final_bodies().at_ff18();
+}
+
+void semcomp_runtime_at_fa8d(void) {
+    runtime().routines().register_routine(0xFA8D, "at_fa8d");
+    runtime().routines().note_invocation(0xFA8D);
+    runtime().final_bodies().at_fa8d();
+}
+
+void semcomp_runtime_at_fc88(void) {
+    runtime().routines().register_routine(0xFC88, "at_fc88");
+    runtime().routines().note_invocation(0xFC88);
+    runtime().final_bodies().at_fc88();
+}
+
+void semcomp_runtime_at_fdc9(void) {
+    runtime().routines().register_routine(0xFDC9, "at_fdc9");
+    runtime().routines().note_invocation(0xFDC9);
+    runtime().final_bodies().at_fdc9();
+}
+
+void semcomp_runtime_at_fe05(void) {
+    runtime().routines().register_routine(0xFE05, "at_fe05");
+    runtime().routines().note_invocation(0xFE05);
+    runtime().final_bodies().at_fe05();
+}
+
+void semcomp_runtime_at_fb82(void) {
+    runtime().routines().register_routine(0xFB82, "at_fb82");
+    runtime().routines().note_invocation(0xFB82);
+    runtime().final_bodies().at_fb82();
+}
+
+void semcomp_runtime_at_ffbc(void) {
+    runtime().routines().register_routine(0xFFBC, "at_ffbc");
+    runtime().routines().note_invocation(0xFFBC);
+    runtime().final_bodies().at_ffbc();
+}
+
+void semcomp_runtime_at_fb0e(void) {
+    runtime().routines().register_routine(0xFB0E, "at_fb0e");
+    runtime().routines().note_invocation(0xFB0E);
+    runtime().final_bodies().at_fb0e();
+}
+
+void semcomp_runtime_at_ffb4(void) {
+    runtime().routines().register_routine(0xFFB4, "at_ffb4");
+    runtime().routines().note_invocation(0xFFB4);
+    runtime().final_bodies().at_ffb4();
+}
+
+void semcomp_runtime_at_fa07(void) {
+    runtime().routines().register_routine(0xFA07, "at_fa07");
+    runtime().routines().note_invocation(0xFA07);
+    runtime().final_bodies().at_fa07();
+}
+
+void semcomp_runtime_at_fe0b(void) {
+    runtime().routines().register_routine(0xFE0B, "at_fe0b");
+    runtime().routines().note_invocation(0xFE0B);
+    runtime().final_bodies().at_fe0b();
+}
+
+void semcomp_runtime_at_fa12(void) {
+    runtime().routines().register_routine(0xFA12, "at_fa12");
+    runtime().routines().note_invocation(0xFA12);
+    runtime().final_bodies().at_fa12();
+}
+
+void semcomp_runtime_at_fe87(void) {
+    runtime().routines().register_routine(0xFE87, "at_fe87");
+    runtime().routines().note_invocation(0xFE87);
+    runtime().final_bodies().at_fe87();
+}
+
+void semcomp_runtime_at_fc00(void) {
+    runtime().routines().register_routine(0xFC00, "at_fc00");
+    runtime().routines().note_invocation(0xFC00);
+    runtime().final_bodies().at_fc00();
+}
+
+void semcomp_runtime_at_fc62(void) {
+    runtime().routines().register_routine(0xFC62, "at_fc62");
+    runtime().routines().note_invocation(0xFC62);
+    runtime().final_bodies().at_fc62();
+}
+
+void semcomp_runtime_at_fc15(void) {
+    runtime().routines().register_routine(0xFC15, "at_fc15");
+    runtime().routines().note_invocation(0xFC15);
+    runtime().final_bodies().at_fc15();
+}
+
+void semcomp_runtime_at_fc21(void) {
+    runtime().routines().register_routine(0xFC21, "at_fc21");
+    runtime().routines().note_invocation(0xFC21);
+    runtime().final_bodies().at_fc21();
+}
+
+void semcomp_runtime_at_fc26(void) {
+    runtime().routines().register_routine(0xFC26, "at_fc26");
+    runtime().routines().note_invocation(0xFC26);
+    runtime().final_bodies().at_fc26();
+}
+
+void semcomp_runtime_at_fa42(void) {
+    runtime().routines().register_routine(0xFA42, "at_fa42");
+    runtime().routines().note_invocation(0xFA42);
+    runtime().final_bodies().at_fa42();
+}
+
+void semcomp_runtime_at_ffac(void) {
+    runtime().routines().register_routine(0xFFAC, "at_ffac");
+    runtime().routines().note_invocation(0xFFAC);
+    runtime().final_bodies().at_ffac();
+}
+
+void semcomp_runtime_at_fc84(void) {
+    runtime().routines().register_routine(0xFC84, "at_fc84");
+    runtime().routines().note_invocation(0xFC84);
+    runtime().final_bodies().at_fc84();
+}
+
+void semcomp_runtime_at_fc04(void) {
+    runtime().routines().register_routine(0xFC04, "at_fc04");
+    runtime().routines().note_invocation(0xFC04);
+    runtime().final_bodies().at_fc04();
+}
+
+void semcomp_runtime_at_fc09(void) {
+    runtime().routines().register_routine(0xFC09, "at_fc09");
+    runtime().routines().note_invocation(0xFC09);
+    runtime().final_bodies().at_fc09();
+}
+
+void semcomp_runtime_at_fbfc(void) {
+    runtime().routines().register_routine(0xFBFC, "at_fbfc");
+    runtime().routines().note_invocation(0xFBFC);
+    runtime().final_bodies().at_fbfc();
+}
+
+void semcomp_runtime_at_ff20(void) {
+    runtime().routines().register_routine(0xFF20, "at_ff20");
+    runtime().routines().note_invocation(0xFF20);
+    runtime().final_bodies().at_ff20();
+}
+
+void semcomp_runtime_at_fabc(void) {
+    runtime().routines().register_routine(0xFABC, "at_fabc");
+    runtime().routines().note_invocation(0xFABC);
+    runtime().final_bodies().at_fabc();
+}
+
+void semcomp_runtime_at_f99e(void) {
+    runtime().routines().register_routine(0xF99E, "at_f99e");
+    runtime().routines().note_invocation(0xF99E);
+    runtime().final_bodies().at_f99e();
+}
+
+void semcomp_runtime_at_f9df(void) {
+    runtime().routines().register_routine(0xF9DF, "at_f9df");
+    runtime().routines().note_invocation(0xF9DF);
+    runtime().final_bodies().at_f9df();
+}
+
+void semcomp_runtime_at_fb2b(void) {
+    runtime().routines().register_routine(0xFB2B, "at_fb2b");
+    runtime().routines().note_invocation(0xFB2B);
+    runtime().final_bodies().at_fb2b();
+}
+
 }  // extern "C"
