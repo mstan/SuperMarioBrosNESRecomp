@@ -8,6 +8,7 @@
 #include "semcomp/Blocks.h"
 #include "semcomp/Camera.h"
 #include "semcomp/Enemies.h"
+#include "semcomp/FloateyNumbers.h"
 #include "semcomp/GameMode.h"
 #include "semcomp/GameState.h"
 #include "semcomp/Hud.h"
@@ -35,6 +36,7 @@ public:
           powerups_(state_),
           mode_(state_),
           hud_(state_),
+          floateys_(state_),
           trainer_(state_),
           trainer_ui_(*this),
           mod_api_(),
@@ -79,6 +81,7 @@ public:
     GameMode&            mode()          { return mode_;     }
     const GameMode&      mode()    const { return mode_;     }
     Hud&                 hud()           { return hud_;      }
+    FloateyNumbers&      floateys()      { return floateys_; }
     Trainer&             trainer()       { return trainer_; }
     const Trainer&       trainer() const { return trainer_; }
 
@@ -101,6 +104,7 @@ private:
     Powerups         powerups_;
     GameMode         mode_;
     Hud              hud_;
+    FloateyNumbers   floateys_;
     Trainer          trainer_;
     TrainerUI        trainer_ui_;
     ModApi           mod_api_;

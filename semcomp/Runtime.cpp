@@ -369,6 +369,21 @@ void semcomp_runtime_add_to_score(void) {
     runtime().routines().note_invocation(0xBC27);
     runtime().hud().add_to_score();
 }
+void semcomp_runtime_setup_floatey_number(void) {
+    runtime().routines().register_routine(0xDA11, "SetupFloateyNumber");
+    runtime().routines().note_invocation(0xDA11);
+    runtime().floateys().setup();
+}
+void semcomp_runtime_init_normal_enemy(void) {
+    runtime().routines().register_routine(0xC30E, "InitNormalEnemy");
+    runtime().routines().note_invocation(0xC30E);
+    runtime().enemies().init_normal_enemy();
+}
+void semcomp_runtime_move_normal_enemy(void) {
+    runtime().routines().register_routine(0xCA77, "MoveNormalEnemy");
+    runtime().routines().note_invocation(0xCA77);
+    runtime().enemies().move_normal_enemy();
+}
 
 // ---- GameMode reads + verbs ----------------------------------------------
 

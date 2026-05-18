@@ -307,6 +307,18 @@ void func_BC27_b0(void) { /* AddToScore */
     semcomp_runtime_add_to_score();
 }
 
+void func_DA11(void) { /* SetupFloateyNumber (no _b0 suffix — fixed bank) */
+    semcomp_runtime_setup_floatey_number();
+}
+
+void func_C30E(void) { /* InitNormalEnemy (no _b0 suffix — fixed bank) */
+    semcomp_runtime_init_normal_enemy();
+}
+
+void func_CA77(void) { /* MoveNormalEnemy (no _b0 suffix — fixed bank) */
+    semcomp_runtime_move_normal_enemy();
+}
+
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     (void)pc; (void)addr; return val;
 }

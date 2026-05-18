@@ -103,6 +103,12 @@ constexpr std::uint16_t kPC_KillEnemy        = 0xE18E;
 constexpr std::uint16_t kPC_EnemyStomped     = 0xD969;
 constexpr std::uint16_t kPC_SpawnEnemyByID   = 0xC26C;
 
+// Enemy movement routine entry points (Phase 8 replace_func targets).
+//   $C30E InitNormalEnemy — pick initial XSpd, tail-call bound-box init.
+//   $CA77 MoveNormalEnemy — per-frame state-dispatch + accel + movement.
+constexpr std::uint16_t kPC_InitNormalEnemy  = 0xC30E;
+constexpr std::uint16_t kPC_MoveNormalEnemy  = 0xCA77;
+
 // Block + power-up + floatey routine entry points.
 //   $BD9B BumpBlock             — invoke a brick/coin/powerup bump.
 //                                 A = block code (0..8), $05 = metatile col.

@@ -50,6 +50,26 @@ public:
     // Lakitu schedule, etc.) — accepted limitation for v1.
     void freeze_all();
 
+    // ---- replace_func bodies (Phase 8) ---------------------------------
+    // Each takes the slot from g_cpu.X (matching the 6502 calling
+    // convention for these per-frame enemy routines).
+    //
+    // init_normal_enemy: replacement for $C30E. Initial spawn setup
+    //   for walking enemies (Goombas, Koopas). Picks an initial
+    //   XSpeed based on the "hard world" flag at $076A and tail-calls
+    //   the bounding-box setup ($C35A).
+    //
+    // move_normal_enemy: replacement for $CA77. Per-frame movement
+    //   for walking enemies — gates on state byte ($1E+X) for
+    //   stomped / stunned / shell flavours, applies the per-frame
+    //   horizontal accel from the table at $C9D0, calls into
+    //   FallE/MEHor sub-routines for vertical / horizontal motion.
+    //   The sub-handlers ReviveStunned ($CAC8) and MoveDefeatedEnemy
+    //   ($CAE5) are also emitted as standalone functions so we can
+    //   delegate to them via call_by_address without re-implementing.
+    void init_normal_enemy();
+    void move_normal_enemy();
+
 private:
     GameState& state_;
 };

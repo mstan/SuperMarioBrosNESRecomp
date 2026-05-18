@@ -106,3 +106,31 @@ addr = 0x8F06
 [[replace_func]]
 bank = 0
 addr = 0xBC27
+
+# Phase 7: Floatey numbers.
+#
+# SetupFloateyNumber ($DA11, fixed bank) — owned by FloateyNumbers::setup.
+# Every points-grant in SMB (stomp / coin-grab / power-up / 1-Up / etc.)
+# calls this to spawn the "+N pts" sprite above the source object.
+# Per-frame animator ($84C3 FloateyNumbersRoutine) has an inner-label
+# issue (separately-emitted $8534 backdoor) — deferred.
+[[replace_func]]
+addr = 0xDA11
+
+# Phase 8: Enemy AI core.
+#
+# InitNormalEnemy ($C30E, fixed bank) — owned by Enemies::init_normal_enemy.
+# Initial spawn for walking enemies (Goombas, Koopas variants). Picks
+# the per-difficulty XSpd from ROM[$C30C..$C30D] and tail-calls
+# bounding-box init ($C35A, still natural-generated).
+[[replace_func]]
+addr = 0xC30E
+
+# MoveNormalEnemy ($CA77, fixed bank) — owned by Enemies::move_normal_enemy.
+# Per-frame movement for walkers. State-dispatches into FallE / MEHor /
+# SlowM / SteadM / MoveDefeated / ReviveStunned branches based on the
+# $001E+slot state byte. Delegates to $BF02 (apply X displacement),
+# $BF63 (FallE pre), $CAC8 (ReviveStunned), $CAE5 (MoveDefeatedEnemy)
+# — all separately-emitted standalones.
+[[replace_func]]
+addr = 0xCA77
