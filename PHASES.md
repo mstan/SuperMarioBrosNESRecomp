@@ -48,7 +48,7 @@ Known tangles (deferred for now):
 - `$F41B Square1SfxHandler`, `$F57C Square2SfxHandler`, `$F2D0
   SoundEngine` — multi-entry dispatch via call_by_address.
 
-## Owned routines (as of Phase 11)
+## Owned routines (as of Phase 23)
 
 | Address | Routine             | Class                     | Phase  |
 | ------- | ------------------- | ------------------------- | ------ |
@@ -68,9 +68,15 @@ Known tangles (deferred for now):
 | $B27D   | PlayerFireFlower    | PlayerAnim::fire_flower   | 10     |
 | $B35A   | OnGroundStateSub    | PlayerPhysics::on_ground_state_sub | 11 |
 | $B36D   | FallingSub          | PlayerPhysics::falling_sub | 11    |
+| $B376   | JumpSwimSub         | PlayerPhysics::jump_swim_sub | 12  |
+| $B3CF   | ClimbingSub         | PlayerPhysics::climbing_sub | 13   |
+| $8231   | TitleScreenMode     | GameMode::title_screen_mode | 23   |
+| $AEDC   | GameMode            | GameMode::game_mode_tick  | 23     |
+| $9218   | GameOverMode        | GameMode::game_over_mode  | 23     |
 
-**16 routines owned. ~0.8% of 2026 total functions, but most of the
-core gameplay loop.**
+**21 routines owned. ~1.0% of 2026 total functions; most of the core
+gameplay loop. Phases 14, 15, 16-22, 24-31 deferred — see entries
+below for rationale.**
 
 ## C++ facade classes
 
