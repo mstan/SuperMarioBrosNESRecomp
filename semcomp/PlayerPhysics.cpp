@@ -327,4 +327,205 @@ ProcMove:
     // $B359 NoMoveSub: RTS — unreachable here (each case returns).
 }
 
+// Phase 14 — $B450 PlayerPhysicsSub. Literal port of the per-frame physics
+// dispatcher. Three branches off $1D Player_State: climbing → ProcClimb;
+// not-climbing → CheckForJumping → (NoJump tail-call to $B51C X_Physics
+// standalone, or InitJS to set up a fresh jump). InitJS picks the Y-physics
+// tier from ROM tables at $B424/$B42B/$B439/$B432, indexed by $0700
+// PlayerXSpeedAbsolute (categorical 0..4) and $0704 SwimmingFlag (extra +5).
+//
+// Branch polarity notes:
+//   $B454 BNE CheckForJumping  -> if A != 3 (not climbing)
+//   $B45D BEQ ProcClimb        -> if (Joypad & $0490) == 0
+//   $B462 BNE ProcClimb        -> if (A & $08) != 0  (Up button)
+//   $B47C BNE NoJump           -> if $070E != 0 (PlayerCtrlRoutine_Sel busy)
+//   $B482 BEQ NoJump           -> if (Joypad_held & $80) == 0
+//   $B486 BEQ ProcJumping      -> if (A & $0D) == 0
+//   $B48D BEQ InitJS           -> if $1D == 0 (was on ground)
+//   $B492 BEQ NoJump           -> if $0704 == 0 (not swimming)
+//   $B497 BNE InitJS           -> if $0782 != 0
+//   $B49B BPL InitJS           -> if $9F sign bit clear
+//   $B4C0/$B4C5/$B4CA/$B4CF BCC ChkWtr -> if A < threshold
+//   $B4DA BEQ GetYPhy          -> if $0704 == 0
+//   $B4E1 BEQ GetYPhy          -> if $047D == 0
+//   $B4FE BEQ PJumpSnd         -> if $0704 == 0
+//   $B508 BCS X_Physics        -> if $CE >= $14
+//   $B516 BEQ SJumpSnd         -> if Y == 0 (PlayerSize 0 = tall)
+void PlayerPhysics::physics_sub() {
+    // $B450: A = $1D (Player_State).
+    g_cpu.A = state_.read8(0x001D);
+    // $B452: CMP #$03. $B454: BNE CheckForJumping.
+    g_cpu.C = (g_cpu.A >= 0x03) ? 1 : 0;
+    if (g_cpu.A != 0x03) goto CheckForJumping;
+
+    // ProcClimb path — choose climbing-state animation tier.
+    g_cpu.Y = 0x00;
+    // $B458: A = $0B. $B45A: A &= $0490.
+    g_cpu.A = state_.read8(0x000B);
+    g_cpu.A &= state_.read8(0x0490);
+    // $B45D: BEQ ProcClimb.
+    if (g_cpu.A == 0) goto ProcClimb;
+    g_cpu.Y = static_cast<std::uint8_t>((g_cpu.Y + 1) & 0xFF);
+    // $B460: A &= #$08 (Up button).
+    g_cpu.A &= 0x08;
+    // $B462: BNE ProcClimb.
+    if (g_cpu.A != 0) goto ProcClimb;
+    g_cpu.Y = static_cast<std::uint8_t>((g_cpu.Y + 1) & 0xFF);
+
+ProcClimb:
+    // $B465: X = ROM[$B44D + Y]. $B468: STX $0433.
+    g_cpu.X = nes_read(static_cast<std::uint16_t>(0xB44D + g_cpu.Y));
+    state_.write8(0x0433, g_cpu.X);
+    // $B46B: A = #$08.
+    g_cpu.A = 0x08;
+    // $B46D: X = ROM[$B44A + Y]. $B470: STX $9F. N=X[7].
+    g_cpu.X = nes_read(static_cast<std::uint16_t>(0xB44A + g_cpu.Y));
+    state_.write8(0x009F, g_cpu.X);
+    // $B472: BMI SetCAnim — skip LSR if X (last LDX result) has bit 7 set.
+    if ((g_cpu.X & 0x80) == 0) {
+        // $B474: LSR A.
+        g_cpu.C = static_cast<std::uint8_t>(g_cpu.A & 1);
+        g_cpu.A = static_cast<std::uint8_t>((g_cpu.A >> 1) & 0xFF);
+    }
+    // $B475 SetCAnim: STA $070C. $B478: RTS.
+    state_.write8(0x070C, g_cpu.A);
+    return;
+
+CheckForJumping:
+    // $B479: A = $070E (PlayerCtrlRoutine_Sel).
+    g_cpu.A = state_.read8(0x070E);
+    // $B47C: BNE NoJump.
+    if (g_cpu.A != 0) goto NoJump;
+    // $B47E: A = $0A. $B480: A &= #$80.
+    g_cpu.A = state_.read8(0x000A);
+    g_cpu.A &= 0x80;
+    // $B482: BEQ NoJump.
+    if (g_cpu.A == 0) goto NoJump;
+    // $B484: A &= $0D.
+    g_cpu.A &= state_.read8(0x000D);
+    // $B486: BEQ ProcJumping.
+    if (g_cpu.A == 0) goto ProcJumping;
+    // fall through to NoJump
+
+NoJump:
+    // $B488: JMP $B51C X_Physics (standalone tail-call).
+    call_by_address(0xB51C);
+    return;
+
+ProcJumping:
+    // $B48B: A = $1D. $B48D: BEQ InitJS.
+    g_cpu.A = state_.read8(0x001D);
+    if (g_cpu.A == 0) goto InitJS;
+    // $B48F: A = $0704. $B492: BEQ NoJump.
+    g_cpu.A = state_.read8(0x0704);
+    if (g_cpu.A == 0) goto NoJump;
+    // $B494: A = $0782. $B497: BNE InitJS.
+    g_cpu.A = state_.read8(0x0782);
+    if (g_cpu.A != 0) goto InitJS;
+    // $B499: A = $9F. $B49B: BPL InitJS.
+    g_cpu.A = state_.read8(0x009F);
+    if ((g_cpu.A & 0x80) == 0) goto InitJS;
+    // $B49D: JMP X_Physics.
+    call_by_address(0xB51C);
+    return;
+
+InitJS:
+    // $B4A0: A = #$20. $B4A2: STA $0782.
+    g_cpu.A = 0x20;
+    state_.write8(0x0782, 0x20);
+    // $B4A5: Y = 0. $B4A7: STY $0416. $B4AA: STY $0433.
+    g_cpu.Y = 0x00;
+    state_.write8(0x0416, 0x00);
+    state_.write8(0x0433, 0x00);
+    // $B4AD: A = $B5. $B4AF: STA $0707.
+    g_cpu.A = state_.read8(0x00B5);
+    state_.write8(0x0707, g_cpu.A);
+    // $B4B2: A = $CE. $B4B4: STA $0708.
+    g_cpu.A = state_.read8(0x00CE);
+    state_.write8(0x0708, g_cpu.A);
+    // $B4B7: A = #$01. $B4B9: STA $1D.
+    g_cpu.A = 0x01;
+    state_.write8(0x001D, 0x01);
+    // $B4BB: A = $0700 (PlayerXSpeedAbsolute).
+    g_cpu.A = state_.read8(0x0700);
+    // $B4BE: CMP #$09. $B4C0: BCC ChkWtr.
+    g_cpu.C = (g_cpu.A >= 0x09) ? 1 : 0;
+    if (!g_cpu.C) goto ChkWtr;
+    g_cpu.Y = static_cast<std::uint8_t>((g_cpu.Y + 1) & 0xFF);
+    // $B4C3: CMP #$10. $B4C5: BCC ChkWtr.
+    g_cpu.C = (g_cpu.A >= 0x10) ? 1 : 0;
+    if (!g_cpu.C) goto ChkWtr;
+    g_cpu.Y = static_cast<std::uint8_t>((g_cpu.Y + 1) & 0xFF);
+    // $B4C8: CMP #$19. $B4CA: BCC ChkWtr.
+    g_cpu.C = (g_cpu.A >= 0x19) ? 1 : 0;
+    if (!g_cpu.C) goto ChkWtr;
+    g_cpu.Y = static_cast<std::uint8_t>((g_cpu.Y + 1) & 0xFF);
+    // $B4CD: CMP #$1C. $B4CF: BCC ChkWtr.
+    g_cpu.C = (g_cpu.A >= 0x1C) ? 1 : 0;
+    if (!g_cpu.C) goto ChkWtr;
+    // $B4D1: INY.
+    g_cpu.Y = static_cast<std::uint8_t>((g_cpu.Y + 1) & 0xFF);
+
+ChkWtr:
+    // $B4D2: A = #$01. $B4D4: STA $0706.
+    g_cpu.A = 0x01;
+    state_.write8(0x0706, 0x01);
+    // $B4D7: A = $0704. $B4DA: BEQ GetYPhy.
+    g_cpu.A = state_.read8(0x0704);
+    if (g_cpu.A == 0) goto GetYPhy;
+    // $B4DC: Y = #$05.
+    g_cpu.Y = 0x05;
+    // $B4DE: A = $047D. $B4E1: BEQ GetYPhy.
+    g_cpu.A = state_.read8(0x047D);
+    if (g_cpu.A == 0) goto GetYPhy;
+    // $B4E3: INY.
+    g_cpu.Y = static_cast<std::uint8_t>((g_cpu.Y + 1) & 0xFF);
+
+GetYPhy:
+    // $B4E4: A = ROM[$B424 + Y]. $B4E7: STA $0709.
+    g_cpu.A = nes_read(static_cast<std::uint16_t>(0xB424 + g_cpu.Y));
+    state_.write8(0x0709, g_cpu.A);
+    // $B4EA: A = ROM[$B42B + Y]. $B4ED: STA $070A.
+    g_cpu.A = nes_read(static_cast<std::uint16_t>(0xB42B + g_cpu.Y));
+    state_.write8(0x070A, g_cpu.A);
+    // $B4F0: A = ROM[$B439 + Y]. $B4F3: STA $0433.
+    g_cpu.A = nes_read(static_cast<std::uint16_t>(0xB439 + g_cpu.Y));
+    state_.write8(0x0433, g_cpu.A);
+    // $B4F6: A = ROM[$B432 + Y]. $B4F9: STA $9F.
+    g_cpu.A = nes_read(static_cast<std::uint16_t>(0xB432 + g_cpu.Y));
+    state_.write8(0x009F, g_cpu.A);
+    // $B4FB: A = $0704. $B4FE: BEQ PJumpSnd.
+    g_cpu.A = state_.read8(0x0704);
+    if (g_cpu.A == 0) goto PJumpSnd;
+    // $B500: A = #$04. $B502: STA $FF (queue Square1 SFX channel).
+    g_cpu.A = 0x04;
+    state_.write8(0x00FF, 0x04);
+    // $B504: A = $CE. $B506: CMP #$14. $B508: BCS X_Physics.
+    g_cpu.A = state_.read8(0x00CE);
+    g_cpu.C = (g_cpu.A >= 0x14) ? 1 : 0;
+    if (g_cpu.C) {
+        call_by_address(0xB51C);
+        return;
+    }
+    // $B50A: A = #$00. $B50C: STA $9F.
+    g_cpu.A = 0x00;
+    state_.write8(0x009F, 0x00);
+    // $B50E: JMP X_Physics.
+    call_by_address(0xB51C);
+    return;
+
+PJumpSnd:
+    // $B511: A = #$01. $B513: Y = $0754 (PlayerSize). $B516: BEQ SJumpSnd.
+    g_cpu.A = 0x01;
+    g_cpu.Y = state_.read8(0x0754);
+    if (g_cpu.Y == 0) goto SJumpSnd;
+    // $B518: A = #$80.
+    g_cpu.A = 0x80;
+
+SJumpSnd:
+    // $B51A: STA $FF. Fall through to X_Physics.
+    state_.write8(0x00FF, g_cpu.A);
+    call_by_address(0xB51C);
+}
+
 }  // namespace smb::semcomp

@@ -434,6 +434,11 @@ void semcomp_runtime_climbing_sub(void) {
     runtime().routines().note_invocation(0xB3CF);
     runtime().player_physics().climbing_sub();
 }
+void semcomp_runtime_physics_sub(void) {
+    runtime().routines().register_routine(0xB450, "PlayerPhysicsSub");
+    runtime().routines().note_invocation(0xB450);
+    runtime().player_physics().physics_sub();
+}
 void semcomp_runtime_title_screen_mode(void) {
     runtime().routines().register_routine(0x8231, "TitleScreenMode");
     runtime().routines().note_invocation(0x8231);

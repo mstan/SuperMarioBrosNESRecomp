@@ -62,6 +62,13 @@ public:
     void falling_sub();
     void climbing_sub();
 
+    // Phase 14 — $B450 PlayerPhysicsSub. Per-frame physics dispatcher.
+    // Three-branch tree: climbing (ProcClimb) / new-jump (CheckForJumping +
+    // InitJS) / X-physics (tail-call to standalone $B51C). Sets initial
+    // jump-state, picks Y-physics tier from ROM tables at $B424/$B42B/
+    // $B439/$B432 based on $0700 PlayerXSpeedAbsolute and $0704 SwimmingFlag.
+    void physics_sub();
+
     // movement_subs: replacement body for $B329.
     // Logic chain:
     //   1. CrouchingFlag computation: tall Mario on ground with Down

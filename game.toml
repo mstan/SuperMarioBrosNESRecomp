@@ -201,8 +201,11 @@ addr = 0xB376   # JumpSwimSub
 bank = 0
 addr = 0xB3CF   # ClimbingSub
 
-# Phase 14 ($B450 PhysicsSub) — deferred. ~300-line body with heavy ROM
-# table indexing + multiple nested branches; needs a dedicated phase.
+# Phase 14 — $B450 PlayerPhysicsSub. Per-frame physics dispatcher.
+# Tail-calls $B51C X_Physics (standalone) for the non-climbing path.
+[[replace_func]]
+bank = 0
+addr = 0xB450
 
 # Phase 23 — Game-mode dispatchers. Three small inline-dispatch shells
 # that read OperMode_Task ($0772) and dispatch via $8E04 into natural

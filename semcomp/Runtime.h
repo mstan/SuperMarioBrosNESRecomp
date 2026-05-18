@@ -249,6 +249,7 @@ void semcomp_runtime_on_ground_state_sub(void);       // $B35A OnGroundStateSub
 void semcomp_runtime_falling_sub(void);               // $B36D FallingSub
 void semcomp_runtime_jump_swim_sub(void);             // $B376 JumpSwimSub
 void semcomp_runtime_climbing_sub(void);              // $B3CF ClimbingSub
+void semcomp_runtime_physics_sub(void);               // $B450 PlayerPhysicsSub
 void semcomp_runtime_title_screen_mode(void);         // $8231 TitleScreenMode
 void semcomp_runtime_game_mode_tick(void);            // $AEDC GameMode
 void semcomp_runtime_game_over_mode(void);            // $9218 GameOverMode

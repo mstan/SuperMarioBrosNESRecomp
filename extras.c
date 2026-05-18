@@ -359,6 +359,10 @@ void func_B3CF_b0(void) { /* ClimbingSub */
     semcomp_runtime_climbing_sub();
 }
 
+void func_B450_b0(void) { /* PlayerPhysicsSub */
+    semcomp_runtime_physics_sub();
+}
+
 void func_8231_b0(void) { /* TitleScreenMode */
     semcomp_runtime_title_screen_mode();
 }
