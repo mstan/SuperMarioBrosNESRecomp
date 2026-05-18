@@ -381,6 +381,18 @@ void semcomp_runtime_write_n_t_addr(void);  // $8E2D WriteNTAddr
 void semcomp_runtime_write_buffer_to_screen(void);  // $8E92 WriteBufferToScreen
 void semcomp_runtime_write_p_p_u_reg1(void);  // $8EED WritePPUReg1
 
+// Phase 27-30 — Audio
+void semcomp_runtime_run_offscr_bits_subs(void);  // $F1D7 RunOffscrBitsSubs
+void semcomp_runtime_play_flagpole_slide(void);  // $F3BF PlayFlagpoleSlide
+void semcomp_runtime_play_small_jump(void);  // $F3CD PlaySmallJump
+void semcomp_runtime_play_big_jump(void);  // $F3D1 PlayBigJump
+void semcomp_runtime_play_fireball_throw(void);  // $F3F9 PlayFireballThrow
+void semcomp_runtime_play_bump(void);  // $F3FF PlayBump
+void semcomp_runtime_play_timer_tick(void);  // $F51E PlayTimerTick
+void semcomp_runtime_play_blast(void);  // $F53A PlayBlast
+void semcomp_runtime_play_power_up_grab(void);  // $F552 PlayPowerUpGrab
+void semcomp_runtime_play_noise_sfx(void);  // $F64D PlayNoiseSfx
+
 #ifdef __cplusplus
 }
 #endif

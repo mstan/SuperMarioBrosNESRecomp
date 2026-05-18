@@ -24,6 +24,7 @@
 #include "semcomp/EnemyHandlers2.h"
 #include "semcomp/LevelParser.h"
 #include "semcomp/BgRenderer.h"
+#include "semcomp/SoundEngine.h"
 #include "semcomp/PlayerPhysics.h"
 #include "semcomp/PlayerSession.h"
 #include "semcomp/Powerups.h"
@@ -57,6 +58,7 @@ public:
           enemy_handlers2_(state_),
           level_parser_(state_),
           bg_renderer_(state_),
+          sound_engine_(state_),
           trainer_(state_),
           trainer_ui_(*this),
           mod_api_(),
@@ -112,6 +114,7 @@ public:
     EnemyHandlers2&      enemy_handlers2() { return enemy_handlers2_; }
     LevelParser&         level_parser()    { return level_parser_; }
     BgRenderer&          bg_renderer()     { return bg_renderer_; }
+    SoundEngine&         sound_engine()    { return sound_engine_; }
     Trainer&             trainer()       { return trainer_; }
     const Trainer&       trainer() const { return trainer_; }
 
@@ -145,6 +148,7 @@ private:
     EnemyHandlers2   enemy_handlers2_;
     LevelParser      level_parser_;
     BgRenderer       bg_renderer_;
+    SoundEngine      sound_engine_;
     Trainer          trainer_;
     TrainerUI        trainer_ui_;
     ModApi           mod_api_;

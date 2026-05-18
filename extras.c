@@ -1214,3 +1214,15 @@ void func_89BD_b0(void) { semcomp_runtime_set_v_r_a_m_ctrl(); }
 void func_8E2D_b0(void) { semcomp_runtime_write_n_t_addr(); }
 void func_8E92_b0(void) { semcomp_runtime_write_buffer_to_screen(); }
 void func_8EED_b0(void) { semcomp_runtime_write_p_p_u_reg1(); }
+
+/* Phase 27-30 — Audio */
+void func_F1D7(void) { semcomp_runtime_run_offscr_bits_subs(); }
+void func_F3BF(void) { semcomp_runtime_play_flagpole_slide(); }
+void func_F3CD(void) { semcomp_runtime_play_small_jump(); }
+void func_F3D1(void) { semcomp_runtime_play_big_jump(); }
+void func_F3F9(void) { semcomp_runtime_play_fireball_throw(); }
+void func_F3FF(void) { semcomp_runtime_play_bump(); }
+void func_F51E(void) { semcomp_runtime_play_timer_tick(); }
+void func_F53A(void) { semcomp_runtime_play_blast(); }
+void func_F552(void) { semcomp_runtime_play_power_up_grab(); }
+void func_F64D(void) { semcomp_runtime_play_noise_sfx(); }

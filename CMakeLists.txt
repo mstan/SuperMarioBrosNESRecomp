@@ -147,6 +147,7 @@ if(ENABLE_SEMCOMP)
         semcomp/EnemyHandlers2.cpp
         semcomp/LevelParser.cpp
         semcomp/BgRenderer.cpp
+        semcomp/SoundEngine.cpp
         semcomp/SemcompGame.cpp
         semcomp/Trainer.cpp
         semcomp/TrainerUI.cpp

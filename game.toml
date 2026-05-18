@@ -545,3 +545,34 @@ addr = 0x8E92
 [[replace_func]]
 bank = 0
 addr = 0x8EED
+
+# Phase 27-30 — Audio
+[[replace_func]]
+addr = 0xF1D7
+
+[[replace_func]]
+addr = 0xF3BF
+
+[[replace_func]]
+addr = 0xF3CD
+
+[[replace_func]]
+addr = 0xF3D1
+
+[[replace_func]]
+addr = 0xF3F9
+
+[[replace_func]]
+addr = 0xF3FF
+
+[[replace_func]]
+addr = 0xF51E
+
+[[replace_func]]
+addr = 0xF53A
+
+[[replace_func]]
+addr = 0xF552
+
+[[replace_func]]
+addr = 0xF64D

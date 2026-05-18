@@ -922,4 +922,65 @@ void semcomp_runtime_write_p_p_u_reg1(void) {
     runtime().bg_renderer().write_p_p_u_reg1();
 }
 
+// Phase 27-30 — Audio
+void semcomp_runtime_run_offscr_bits_subs(void) {
+    runtime().routines().register_routine(0xF1D7, "RunOffscrBitsSubs");
+    runtime().routines().note_invocation(0xF1D7);
+    runtime().sound_engine().run_offscr_bits_subs();
+}
+
+void semcomp_runtime_play_flagpole_slide(void) {
+    runtime().routines().register_routine(0xF3BF, "PlayFlagpoleSlide");
+    runtime().routines().note_invocation(0xF3BF);
+    runtime().sound_engine().play_flagpole_slide();
+}
+
+void semcomp_runtime_play_small_jump(void) {
+    runtime().routines().register_routine(0xF3CD, "PlaySmallJump");
+    runtime().routines().note_invocation(0xF3CD);
+    runtime().sound_engine().play_small_jump();
+}
+
+void semcomp_runtime_play_big_jump(void) {
+    runtime().routines().register_routine(0xF3D1, "PlayBigJump");
+    runtime().routines().note_invocation(0xF3D1);
+    runtime().sound_engine().play_big_jump();
+}
+
+void semcomp_runtime_play_fireball_throw(void) {
+    runtime().routines().register_routine(0xF3F9, "PlayFireballThrow");
+    runtime().routines().note_invocation(0xF3F9);
+    runtime().sound_engine().play_fireball_throw();
+}
+
+void semcomp_runtime_play_bump(void) {
+    runtime().routines().register_routine(0xF3FF, "PlayBump");
+    runtime().routines().note_invocation(0xF3FF);
+    runtime().sound_engine().play_bump();
+}
+
+void semcomp_runtime_play_timer_tick(void) {
+    runtime().routines().register_routine(0xF51E, "PlayTimerTick");
+    runtime().routines().note_invocation(0xF51E);
+    runtime().sound_engine().play_timer_tick();
+}
+
+void semcomp_runtime_play_blast(void) {
+    runtime().routines().register_routine(0xF53A, "PlayBlast");
+    runtime().routines().note_invocation(0xF53A);
+    runtime().sound_engine().play_blast();
+}
+
+void semcomp_runtime_play_power_up_grab(void) {
+    runtime().routines().register_routine(0xF552, "PlayPowerUpGrab");
+    runtime().routines().note_invocation(0xF552);
+    runtime().sound_engine().play_power_up_grab();
+}
+
+void semcomp_runtime_play_noise_sfx(void) {
+    runtime().routines().register_routine(0xF64D, "PlayNoiseSfx");
+    runtime().routines().note_invocation(0xF64D);
+    runtime().sound_engine().play_noise_sfx();
+}
+
 }  // extern "C"
