@@ -174,24 +174,31 @@ Replacing one entry without the others is unsafe. Untangle pass needed.
   + tail-call to RunPUSubs needs careful planning. Bundles cleanly with
   Phase 19 (Block ownership) which also touches the power-up path.
 
-### Phase 19 — Block ownership (untangle + replace)
+### Phase 19 — Block ownership (DEFERRED — known untangle, dedicated session)
 - Re-implement `$BDD2 MushFlowerBlock`, `$BDDF VineBlock`, `$BB38`,
   `$BDD5`, `$BDD8` as standalone C++.
 - Then [[replace_func]] `$BD9B BumpBlock`. Activates dormant
   `Blocks` class.
+- **Why deferred:** untangle work is high-risk — re-implementing the
+  sub-handlers requires bit-for-bit fidelity with the generated code.
+  Worth a dedicated session per untangle target.
 
-### Phase 20 — HUD math reconciliation
+### Phase 20 — HUD math reconciliation (DEFERRED — known untangle)
 - Re-implement `$8F75 StoreNewD` in C++.
 - Then [[replace_func]] `$8F5F DigitsMathRoutine` + `$8F11
   OutputNumbers`.
+- **Why deferred:** same untangle-fidelity risk as Phase 19.
 
-### Phase 21 — Floatey per-frame
+### Phase 21 — Floatey per-frame (DEFERRED — known untangle)
 - Re-implement `$8534` helper.
 - Then [[replace_func]] `$84C3 FloateyNumbersRoutine`.
+- **Why deferred:** same untangle-fidelity risk as Phase 19.
 
-### Phase 22 — Damage chain
+### Phase 22 — Damage chain (DEFERRED — known untangle)
 - Untangle `$D92C InjurePlayer / $D931 ForceInjury / $D958
   KillPlayer`. Full re-implementation of the fused body.
+- **Why deferred:** highest-stakes untangle — wrong port lets Mario
+  die unexpectedly or become invincible. Dedicated session.
 
 ### Phase 23 — Game-mode dispatchers
 - `$8231 TitleScreenMode`, `$AEDC GameMode`, `$9218 GameOverMode`,
