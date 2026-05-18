@@ -255,6 +255,28 @@ void semcomp_runtime_move_player_horizontally(void);  // $BF09 MovePlayerHorizon
 void semcomp_runtime_ex_x_move(void);                 // $BF4C ExXMove
 void semcomp_runtime_move_player_vertically(void);    // $BF4D MovePlayerVertically
 void semcomp_runtime_player_bg_collision(void);       // $DC64 PlayerBGCollision
+
+// Phase 17 — Player graphics.
+void semcomp_runtime_get_player_colors(void);         // $85F1
+void semcomp_runtime_draw_player_loop(void);          // $EFDC
+void semcomp_runtime_relative_player_position(void);  // $F12A
+void semcomp_runtime_relative_player_position_f12c(void); // $F12C
+void semcomp_runtime_draw_player_intermediate(void);  // $EFA4
+void semcomp_runtime_draw_player_intermediate_pintloop(void); // $EFA6
+void semcomp_runtime_draw_player_intermediate_efac(void); // $EFAC
+void semcomp_runtime_player_gfx_handler(void);        // $EEE9
+void semcomp_runtime_player_gfx_handler_eef7(void);   // $EEF7
+void semcomp_runtime_player_gfx_handler_ef85(void);   // $EF85
+void semcomp_runtime_player_gfx_handler_eefc(void);   // $EEFC
+void semcomp_runtime_player_gfx_handler_eefe(void);   // $EEFE
+void semcomp_runtime_player_gfx_handler_eeee(void);   // $EEEE
+void semcomp_runtime_player_gfx_handler_eef0(void);   // $EEF0
+void semcomp_runtime_player_gfx_handler_eef1(void);   // $EEF1
+void semcomp_runtime_player_gfx_handler_ef10(void);   // $EF10
+void semcomp_runtime_player_gfx_handler_ef01(void);   // $EF01
+void semcomp_runtime_player_gfx_handler_ef42(void);   // $EF42
+void semcomp_runtime_player_gfx_handler_ef7a(void);   // $EF7A
+void semcomp_runtime_player_gfx_handler_ef97(void);   // $EF97
 void semcomp_runtime_title_screen_mode(void);         // $8231 TitleScreenMode
 void semcomp_runtime_game_mode_tick(void);            // $AEDC GameMode
 void semcomp_runtime_game_over_mode(void);            // $9218 GameOverMode

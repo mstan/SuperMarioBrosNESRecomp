@@ -234,6 +234,64 @@ addr = 0xBF4D
 [[replace_func]]
 addr = 0xDC64
 
+# Phase 17 — Player graphics. Owns 20 entry points covering 5 routine
+# groups (3 are multi-entry-body, requiring ALL entries to be replaced
+# together to keep dispatch in sync).
+#
+# $85F1 GetPlayerColors (single entry)
+[[replace_func]]
+bank = 0
+addr = 0x85F1
+
+# $EFDC DrawPlayerLoop (single entry, fixed-bank — no _b0 suffix)
+[[replace_func]]
+addr = 0xEFDC
+
+# $F12A RelativePlayerPosition (multi-entry, 2 entries — fixed bank)
+[[replace_func]]
+addr = 0xF12A
+
+[[replace_func]]
+addr = 0xF12C
+
+# $EFA4 DrawPlayer_Intermediate (multi-entry, 3 entries — fixed bank)
+[[replace_func]]
+addr = 0xEFA4
+
+[[replace_func]]
+addr = 0xEFA6
+
+[[replace_func]]
+addr = 0xEFAC
+
+# $EEE9 PlayerGfxHandler (multi-entry, 13 entries — fixed bank)
+[[replace_func]]
+addr = 0xEEE9
+[[replace_func]]
+addr = 0xEEF7
+[[replace_func]]
+addr = 0xEF85
+[[replace_func]]
+addr = 0xEEFC
+[[replace_func]]
+addr = 0xEEFE
+[[replace_func]]
+addr = 0xEEEE
+[[replace_func]]
+addr = 0xEEF0
+[[replace_func]]
+addr = 0xEEF1
+[[replace_func]]
+addr = 0xEF10
+[[replace_func]]
+addr = 0xEF01
+[[replace_func]]
+addr = 0xEF42
+[[replace_func]]
+addr = 0xEF7A
+[[replace_func]]
+addr = 0xEF97
+
 # Phase 23 — Game-mode dispatchers. Three small inline-dispatch shells
 # that read OperMode_Task ($0772) and dispatch via $8E04 into natural
 # sub-handlers. $8212 OperModeExecutionTree NOT owned (multi-entry-body

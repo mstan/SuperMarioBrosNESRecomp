@@ -464,6 +464,37 @@ void semcomp_runtime_player_bg_collision(void) {
     runtime().routines().note_invocation(0xDC64);
     runtime().player_collision().player_bg_collision();
 }
+
+// Phase 17 — Player graphics bridges.
+#define SEMCOMP_GFX_BRIDGE(fn, pc, name, method) \
+    void fn(void) { \
+        runtime().routines().register_routine(pc, name); \
+        runtime().routines().note_invocation(pc); \
+        runtime().player_graphics().method(); \
+    }
+
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_get_player_colors, 0x85F1, "GetPlayerColors", get_player_colors)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_draw_player_loop, 0xEFDC, "DrawPlayerLoop", draw_player_loop)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_relative_player_position, 0xF12A, "RelativePlayerPosition", relative_player_position)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_relative_player_position_f12c, 0xF12C, "RelativePlayerPosition_F12C", relative_player_position_f12c)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_draw_player_intermediate, 0xEFA4, "DrawPlayer_Intermediate", draw_player_intermediate)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_draw_player_intermediate_pintloop, 0xEFA6, "PIntLoop", draw_player_intermediate_pintloop)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_draw_player_intermediate_efac, 0xEFAC, "DrawPI_EFAC", draw_player_intermediate_efac)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler, 0xEEE9, "PlayerGfxHandler", player_gfx_handler)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_eef7, 0xEEF7, "PGH_EEF7", player_gfx_handler_eef7)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_ef85, 0xEF85, "PGH_EF85", player_gfx_handler_ef85)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_eefc, 0xEEFC, "PGH_EEFC", player_gfx_handler_eefc)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_eefe, 0xEEFE, "PGH_EEFE", player_gfx_handler_eefe)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_eeee, 0xEEEE, "PGH_EEEE", player_gfx_handler_eeee)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_eef0, 0xEEF0, "PGH_EEF0", player_gfx_handler_eef0)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_eef1, 0xEEF1, "PGH_EEF1", player_gfx_handler_eef1)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_ef10, 0xEF10, "PGH_EF10", player_gfx_handler_ef10)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_ef01, 0xEF01, "PGH_EF01", player_gfx_handler_ef01)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_ef42, 0xEF42, "PGH_EF42", player_gfx_handler_ef42)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_ef7a, 0xEF7A, "PlayerOffscreenChk", player_gfx_handler_ef7a)
+SEMCOMP_GFX_BRIDGE(semcomp_runtime_player_gfx_handler_ef97, 0xEF97, "PGH_EF97", player_gfx_handler_ef97)
+
+#undef SEMCOMP_GFX_BRIDGE
 void semcomp_runtime_title_screen_mode(void) {
     runtime().routines().register_routine(0x8231, "TitleScreenMode");
     runtime().routines().note_invocation(0x8231);

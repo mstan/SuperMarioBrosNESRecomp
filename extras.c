@@ -383,6 +383,28 @@ void func_DC64(void) { /* PlayerBGCollision (no _b0 suffix — fixed bank) */
     semcomp_runtime_player_bg_collision();
 }
 
+/* Phase 17 — Player graphics shims. All multi-entry-body entries owned. */
+void func_85F1_b0(void) { semcomp_runtime_get_player_colors(); }
+void func_EFDC(void)    { semcomp_runtime_draw_player_loop(); }
+void func_F12A(void)    { semcomp_runtime_relative_player_position(); }
+void func_F12C(void)    { semcomp_runtime_relative_player_position_f12c(); }
+void func_EFA4(void)    { semcomp_runtime_draw_player_intermediate(); }
+void func_EFA6(void)    { semcomp_runtime_draw_player_intermediate_pintloop(); }
+void func_EFAC(void)    { semcomp_runtime_draw_player_intermediate_efac(); }
+void func_EEE9(void)    { semcomp_runtime_player_gfx_handler(); }
+void func_EEF7(void)    { semcomp_runtime_player_gfx_handler_eef7(); }
+void func_EF85(void)    { semcomp_runtime_player_gfx_handler_ef85(); }
+void func_EEFC(void)    { semcomp_runtime_player_gfx_handler_eefc(); }
+void func_EEFE(void)    { semcomp_runtime_player_gfx_handler_eefe(); }
+void func_EEEE(void)    { semcomp_runtime_player_gfx_handler_eeee(); }
+void func_EEF0(void)    { semcomp_runtime_player_gfx_handler_eef0(); }
+void func_EEF1(void)    { semcomp_runtime_player_gfx_handler_eef1(); }
+void func_EF10(void)    { semcomp_runtime_player_gfx_handler_ef10(); }
+void func_EF01(void)    { semcomp_runtime_player_gfx_handler_ef01(); }
+void func_EF42(void)    { semcomp_runtime_player_gfx_handler_ef42(); }
+void func_EF7A(void)    { semcomp_runtime_player_gfx_handler_ef7a(); }
+void func_EF97(void)    { semcomp_runtime_player_gfx_handler_ef97(); }
+
 void func_8231_b0(void) { /* TitleScreenMode */
     semcomp_runtime_title_screen_mode();
 }

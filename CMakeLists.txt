@@ -140,6 +140,7 @@ if(ENABLE_SEMCOMP)
         semcomp/PlayerPhysics.cpp
         semcomp/PlayerAnim.cpp
         semcomp/PlayerCollision.cpp
+        semcomp/PlayerGraphics.cpp
         semcomp/SemcompGame.cpp
         semcomp/Trainer.cpp
         semcomp/TrainerUI.cpp

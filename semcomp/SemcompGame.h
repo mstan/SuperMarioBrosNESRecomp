@@ -17,6 +17,7 @@
 #include "semcomp/ModApi.h"
 #include "semcomp/PlayerAnim.h"
 #include "semcomp/PlayerCollision.h"
+#include "semcomp/PlayerGraphics.h"
 #include "semcomp/PlayerPhysics.h"
 #include "semcomp/PlayerSession.h"
 #include "semcomp/Powerups.h"
@@ -43,6 +44,7 @@ public:
           player_physics_(state_),
           player_anim_(state_),
           player_collision_(state_),
+          player_graphics_(state_),
           trainer_(state_),
           trainer_ui_(*this),
           mod_api_(),
@@ -91,6 +93,7 @@ public:
     PlayerPhysics&       player_physics(){ return player_physics_; }
     PlayerAnim&          player_anim()   { return player_anim_;    }
     PlayerCollision&     player_collision() { return player_collision_; }
+    PlayerGraphics&      player_graphics() { return player_graphics_; }
     Trainer&             trainer()       { return trainer_; }
     const Trainer&       trainer() const { return trainer_; }
 
@@ -117,6 +120,7 @@ private:
     PlayerPhysics    player_physics_;
     PlayerAnim       player_anim_;
     PlayerCollision  player_collision_;
+    PlayerGraphics   player_graphics_;
     Trainer          trainer_;
     TrainerUI        trainer_ui_;
     ModApi           mod_api_;
