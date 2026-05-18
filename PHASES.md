@@ -223,12 +223,15 @@ covering inits, per-type movement, collision, graphics. Test 1-1 through 1-4.
 check-in. Untangle audit + per-init replace_func is a multi-session
 project, not a spike target.
 
-### Phase 25 — Level parser (own check-in)
+### Phase 25 — Level parser (DEFERRED — mega-phase, own check-in)
 - AreaParser, LoadAreaPointer, ProcessAreaData, segment parsers,
   AreaParserTaskHandler dispatch, Castle/Underwater/Bonus-room
   handlers.
 - New `LevelLoader` class. ~30-40 routines.
-- **Check-in here.** Test multiple level types.
+- **Why deferred:** mega-phase per existing plan. Needs dedicated
+  multi-session ownership pass. AreaParser has dense bit-packed
+  level-format decoders that need careful porting + cross-level
+  verification.
 
 ### Phase 26 — Background renderer + NMI/VRAM helpers
 - Column writers, MetatileBuffer, BG_collision helpers.
