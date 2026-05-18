@@ -204,16 +204,24 @@ Replacing one entry without the others is unsafe. Untangle pass needed.
 - `$8231 TitleScreenMode`, `$AEDC GameMode`, `$9218 GameOverMode`,
   `$8212 OperModeExecutionTree`. Extends `GameMode`.
 
-### Phase 24 — Enemies mega-phase (own check-in)
-- All enemy init variants (`$C2F1 InitGoomba`, `$C31E InitRedKoopa`,
-  `$C328 InitHammerBro`, `$C342 InitBloober`, `$C36B InitCheepCheep`,
-  `$C549 InitBowser`, ~30 total).
-- All per-type movement (MoveBloober, MoveLakitu, MoveBowser,
-  MovePiranhaPlant, MoveBulletBill, MoveHammerBro, etc.)
-- Enemy-vs-player + enemy-vs-enemy + enemy-vs-BG collision.
-- Enemy graphics.
-- ~60-80 replacements consolidated under `Enemies`.
-- **Check-in here.** Test 1-1 through 1-4.
+### Phase 24 — Enemies mega-phase (DEFERRED — pervasive multi-entry-body tangles)
+Spike audit of the C2F0-C3xx area surfaces severe tangling:
+- `$C31E InitRedKoopa` is multi-entry-body with $C321
+- `$C342 InitBloober` is multi-entry-body (entries at $C342, $C365, $C367)
+- `$C34A InitRedPTroopa` is an INNER LABEL inside $C342_body
+- `$C346 SmallBBox` is inside $C342_body — $C2F1 InitGoomba tail-calls it
+  via func_C346(), so the recompiler must emit it standalone too
+
+Many enemy inits share bodies via fall-through (smaller per-type bounding
+box init, then a shared "rest of init" block). Original 6502 used fall-
+through liberally to save bytes. Untangling each is a per-routine task.
+
+Original plan unchanged below — ~60-80 routines under Enemies class
+covering inits, per-type movement, collision, graphics. Test 1-1 through 1-4.
+
+**Why deferred:** mega-phase. Per the existing plan this gets its own
+check-in. Untangle audit + per-init replace_func is a multi-session
+project, not a spike target.
 
 ### Phase 25 — Level parser (own check-in)
 - AreaParser, LoadAreaPointer, ProcessAreaData, segment parsers,
