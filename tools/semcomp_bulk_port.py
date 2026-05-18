@@ -36,9 +36,21 @@ def find_function(addr_hex, generated):
     for pat, suffix in patterns:
         for i, line in enumerate(generated):
             if re.match(pat, line):
-                # Find next standalone `}` at start of line (function close).
+                # Track brace depth to find the matching close brace.
+                # Start at depth 1 because the header line ends with `{`.
+                depth = 1
                 for j in range(i + 1, len(generated)):
-                    if generated[j].rstrip() == "}":
+                    cur = generated[j]
+                    # Count occurrences (very rough, but ok for generated code
+                    # which doesn't use { or } inside strings/comments often).
+                    opens = cur.count("{")
+                    closes = cur.count("}")
+                    # If the line is the standalone closing `}` at depth 1,
+                    # treat it as function close. Otherwise update depth.
+                    if cur.rstrip() == "}" and depth == 1:
+                        return (i, j, suffix)
+                    depth += opens - closes
+                    if depth == 0:
                         return (i, j, suffix)
                 return (i, len(generated) - 1, suffix)
     return None

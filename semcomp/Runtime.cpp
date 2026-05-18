@@ -786,4 +786,79 @@ void semcomp_runtime_award_game_timer_points(void) {
     runtime().enemy_handlers2().award_game_timer_points();
 }
 
+// Phase 25 — Level parser (batch 1)
+void semcomp_runtime_get_area_palette(void) {
+    runtime().routines().register_routine(0x85BF, "GetAreaPalette");
+    runtime().routines().note_invocation(0x85BF);
+    runtime().level_parser().get_area_palette();
+}
+
+void semcomp_runtime_area_parser_task_control(void) {
+    runtime().routines().register_routine(0x86E6, "AreaParserTaskControl");
+    runtime().routines().note_invocation(0x86E6);
+    runtime().level_parser().area_parser_task_control();
+}
+
+void semcomp_runtime_render_area_graphics(void) {
+    runtime().routines().register_routine(0x88AE, "RenderAreaGraphics");
+    runtime().routines().note_invocation(0x88AE);
+    runtime().level_parser().render_area_graphics();
+}
+
+void semcomp_runtime_initialize_area(void) {
+    runtime().routines().register_routine(0x8FE4, "InitializeArea");
+    runtime().routines().note_invocation(0x8FE4);
+    runtime().level_parser().initialize_area();
+}
+
+void semcomp_runtime_area_parser_task_handler(void) {
+    runtime().routines().register_routine(0x92B0, "AreaParserTaskHandler");
+    runtime().routines().note_invocation(0x92B0);
+    runtime().level_parser().area_parser_task_handler();
+}
+
+void semcomp_runtime_area_parser_tasks(void) {
+    runtime().routines().register_routine(0x92C8, "AreaParserTasks");
+    runtime().routines().note_invocation(0x92C8);
+    runtime().level_parser().area_parser_tasks();
+}
+
+void semcomp_runtime_get_area_object_i_d(void) {
+    runtime().routines().register_routine(0x9B36, "GetAreaObjectID");
+    runtime().routines().note_invocation(0x9B36);
+    runtime().level_parser().get_area_object_i_d();
+}
+
+void semcomp_runtime_get_area_obj_x_position(void) {
+    runtime().routines().register_routine(0x9BCB, "GetAreaObjXPosition");
+    runtime().routines().note_invocation(0x9BCB);
+    runtime().level_parser().get_area_obj_x_position();
+}
+
+void semcomp_runtime_get_area_obj_y_position(void) {
+    runtime().routines().register_routine(0x9BD3, "GetAreaObjYPosition");
+    runtime().routines().note_invocation(0x9BD3);
+    runtime().level_parser().get_area_obj_y_position();
+}
+
+void semcomp_runtime_load_area_pointer(void) {
+    runtime().routines().register_routine(0x9C03, "LoadAreaPointer");
+    runtime().routines().note_invocation(0x9C03);
+    runtime().level_parser().load_area_pointer();
+}
+
+void semcomp_runtime_get_area_type(void) {
+    runtime().routines().register_routine(0x9C09, "GetAreaType");
+    runtime().routines().note_invocation(0x9C09);
+    runtime().level_parser().get_area_type();
+}
+
+void semcomp_runtime_get_area_data_addrs(void) {
+    runtime().routines().register_routine(0x9C22, "GetAreaDataAddrs");
+    runtime().routines().note_invocation(0x9C22);
+    runtime().level_parser().get_area_data_addrs();
+}
+
+// Phase 25 — Level parser (batch 1)
+
 }  // extern "C"

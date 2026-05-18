@@ -1186,3 +1186,19 @@ void func_C25B(void) { semcomp_runtime_inc_3b(); }
 void func_D336(void) { semcomp_runtime_end_area_points(); }
 void func_D312(void) { semcomp_runtime_award_game_timer_points(); }
 
+
+/* Phase 25 — Level parser (batch 1) */
+void func_85BF_b0(void) { semcomp_runtime_get_area_palette(); }
+void func_86E6_b0(void) { semcomp_runtime_area_parser_task_control(); }
+void func_88AE_b0(void) { semcomp_runtime_render_area_graphics(); }
+void func_8FE4_b0(void) { semcomp_runtime_initialize_area(); }
+void func_92B0_b0(void) { semcomp_runtime_area_parser_task_handler(); }
+void func_92C8_b0(void) { semcomp_runtime_area_parser_tasks(); }
+void func_9B36_b0(void) { semcomp_runtime_get_area_object_i_d(); }
+void func_9BCB_b0(void) { semcomp_runtime_get_area_obj_x_position(); }
+void func_9BD3_b0(void) { semcomp_runtime_get_area_obj_y_position(); }
+void func_9C03_b0(void) { semcomp_runtime_load_area_pointer(); }
+void func_9C09_b0(void) { semcomp_runtime_get_area_type(); }
+void func_9C22_b0(void) { semcomp_runtime_get_area_data_addrs(); }
+
+/* Phase 25 — Level parser (batch 1) */

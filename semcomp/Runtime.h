@@ -353,6 +353,22 @@ void semcomp_runtime_end_area_points(void);  // $D336 EndAreaPoints
 void semcomp_runtime_award_game_timer_points(void);  // $D312 AwardGameTimerPoints
 
 
+// Phase 25 — Level parser (batch 1)
+void semcomp_runtime_get_area_palette(void);  // $85BF GetAreaPalette
+void semcomp_runtime_area_parser_task_control(void);  // $86E6 AreaParserTaskControl
+void semcomp_runtime_render_area_graphics(void);  // $88AE RenderAreaGraphics
+void semcomp_runtime_initialize_area(void);  // $8FE4 InitializeArea
+void semcomp_runtime_area_parser_task_handler(void);  // $92B0 AreaParserTaskHandler
+void semcomp_runtime_area_parser_tasks(void);  // $92C8 AreaParserTasks
+void semcomp_runtime_get_area_object_i_d(void);  // $9B36 GetAreaObjectID
+void semcomp_runtime_get_area_obj_x_position(void);  // $9BCB GetAreaObjXPosition
+void semcomp_runtime_get_area_obj_y_position(void);  // $9BD3 GetAreaObjYPosition
+void semcomp_runtime_load_area_pointer(void);  // $9C03 LoadAreaPointer
+void semcomp_runtime_get_area_type(void);  // $9C09 GetAreaType
+void semcomp_runtime_get_area_data_addrs(void);  // $9C22 GetAreaDataAddrs
+
+// Phase 25 — Level parser (batch 1)
+
 #ifdef __cplusplus
 }
 #endif

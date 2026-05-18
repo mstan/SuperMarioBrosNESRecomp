@@ -455,3 +455,52 @@ addr = 0xD336
 
 [[replace_func]]
 addr = 0xD312
+
+# Phase 25 — Level parser (batch 1)
+[[replace_func]]
+bank = 0
+addr = 0x85BF
+
+[[replace_func]]
+bank = 0
+addr = 0x86E6
+
+[[replace_func]]
+bank = 0
+addr = 0x88AE
+
+[[replace_func]]
+bank = 0
+addr = 0x8FE4
+
+[[replace_func]]
+bank = 0
+addr = 0x92B0
+
+[[replace_func]]
+bank = 0
+addr = 0x92C8
+
+[[replace_func]]
+bank = 0
+addr = 0x9B36
+
+[[replace_func]]
+bank = 0
+addr = 0x9BCB
+
+[[replace_func]]
+bank = 0
+addr = 0x9BD3
+
+[[replace_func]]
+bank = 0
+addr = 0x9C03
+
+[[replace_func]]
+bank = 0
+addr = 0x9C09
+
+[[replace_func]]
+bank = 0
+addr = 0x9C22

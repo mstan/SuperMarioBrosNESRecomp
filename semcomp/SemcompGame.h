@@ -22,6 +22,7 @@
 #include "semcomp/DamageChain.h"
 #include "semcomp/EnemyHandlers.h"
 #include "semcomp/EnemyHandlers2.h"
+#include "semcomp/LevelParser.h"
 #include "semcomp/PlayerPhysics.h"
 #include "semcomp/PlayerSession.h"
 #include "semcomp/Powerups.h"
@@ -53,6 +54,7 @@ public:
           damage_chain_(state_),
           enemy_handlers_(state_),
           enemy_handlers2_(state_),
+          level_parser_(state_),
           trainer_(state_),
           trainer_ui_(*this),
           mod_api_(),
@@ -106,6 +108,7 @@ public:
     DamageChain&         damage_chain()    { return damage_chain_; }
     EnemyHandlers&       enemy_handlers()  { return enemy_handlers_; }
     EnemyHandlers2&      enemy_handlers2() { return enemy_handlers2_; }
+    LevelParser&         level_parser()    { return level_parser_; }
     Trainer&             trainer()       { return trainer_; }
     const Trainer&       trainer() const { return trainer_; }
 
@@ -137,6 +140,7 @@ private:
     DamageChain      damage_chain_;
     EnemyHandlers    enemy_handlers_;
     EnemyHandlers2   enemy_handlers2_;
+    LevelParser      level_parser_;
     Trainer          trainer_;
     TrainerUI        trainer_ui_;
     ModApi           mod_api_;
