@@ -1170,3 +1170,19 @@ void func_CAE5(void) { semcomp_runtime_move_defeated_enemy(); }
 void func_CAF9(void) { semcomp_runtime_move_jumping_enemy(); }
 void func_CB89(void) { semcomp_runtime_move_bloober(); }
 
+
+/* Phase 24 batch 2 — enemies (continued). */
+void func_CFEC(void) { semcomp_runtime_bridge_collapse(); }
+void func_D071(void) { semcomp_runtime_kill_all_enemies_d071(); }
+void func_D065(void) { semcomp_runtime_run_bowser(); }
+void func_D00F(void) { semcomp_runtime_move_d_bowser(); }
+void func_C998(void) { semcomp_runtime_erase_enemy_object(); }
+void func_C363(void) { semcomp_runtime_init_vstf(); }
+void func_C226(void) { semcomp_runtime_init_enemy_object(); }
+void func_C216(void) { semcomp_runtime_check_frenzy_buffer(); }
+void func_C250(void) { semcomp_runtime_check_three_bytes(); }
+void func_C71B(void) { semcomp_runtime_handle_group_enemies(); }
+void func_C25B(void) { semcomp_runtime_inc_3b(); }
+void func_D336(void) { semcomp_runtime_end_area_points(); }
+void func_D312(void) { semcomp_runtime_award_game_timer_points(); }
+

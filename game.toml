@@ -415,3 +415,43 @@ addr = 0xCAF9
 
 [[replace_func]]
 addr = 0xCB89
+
+# Phase 24 batch 2 — enemies (continued).
+[[replace_func]]
+addr = 0xCFEC
+
+[[replace_func]]
+addr = 0xD071
+
+[[replace_func]]
+addr = 0xD065
+
+[[replace_func]]
+addr = 0xD00F
+
+[[replace_func]]
+addr = 0xC998
+
+[[replace_func]]
+addr = 0xC363
+
+[[replace_func]]
+addr = 0xC226
+
+[[replace_func]]
+addr = 0xC216
+
+[[replace_func]]
+addr = 0xC250
+
+[[replace_func]]
+addr = 0xC71B
+
+[[replace_func]]
+addr = 0xC25B
+
+[[replace_func]]
+addr = 0xD336
+
+[[replace_func]]
+addr = 0xD312

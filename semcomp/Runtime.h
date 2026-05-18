@@ -338,7 +338,21 @@ void semcomp_runtime_move_defeated_enemy(void);  // $CAE5 MoveDefeatedEnemy
 void semcomp_runtime_move_jumping_enemy(void);  // $CAF9 MoveJumpingEnemy
 void semcomp_runtime_move_bloober(void);  // $CB89 MoveBloober
 
+void semcomp_runtime_bridge_collapse(void);  // $CFEC BridgeCollapse
+void semcomp_runtime_kill_all_enemies_d071(void);  // $D071 KillAllEnemies
+void semcomp_runtime_run_bowser(void);  // $D065 RunBowser
+void semcomp_runtime_move_d_bowser(void);  // $D00F MoveD_Bowser
+void semcomp_runtime_erase_enemy_object(void);  // $C998 EraseEnemyObject
+void semcomp_runtime_init_vstf(void);  // $C363 InitVStf
+void semcomp_runtime_init_enemy_object(void);  // $C226 InitEnemyObject
+void semcomp_runtime_check_frenzy_buffer(void);  // $C216 CheckFrenzyBuffer
+void semcomp_runtime_check_three_bytes(void);  // $C250 CheckThreeBytes
+void semcomp_runtime_handle_group_enemies(void);  // $C71B HandleGroupEnemies
+void semcomp_runtime_inc_3b(void);  // $C25B Inc3B
+void semcomp_runtime_end_area_points(void);  // $D336 EndAreaPoints
+void semcomp_runtime_award_game_timer_points(void);  // $D312 AwardGameTimerPoints
+
+
 #ifdef __cplusplus
 }
 #endif
-

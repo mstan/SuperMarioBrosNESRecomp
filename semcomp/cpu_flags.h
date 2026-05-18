@@ -8,6 +8,18 @@
 // MUST match super-mario-bros_full.c (see lines 13-19 there) exactly.
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+// watchdog_check is referenced inside #ifdef WATCHDOG_ENABLED blocks emitted
+// by the recompiler. When WATCHDOG_ENABLED is defined by the build, semcomp
+// translation units need this extern declaration to find the symbol (which
+// is defined in watchdog.c at the project root).
+void watchdog_check(void);
+#ifdef __cplusplus
+}
+#endif
+
 #define FLAG_NZ(v) do { g_cpu.N=((v)>>7)&1; g_cpu.Z=((v)==0)?1:0; } while(0)
 
 #define FLAG_NZC_ADD(r,a,b) do { uint16_t _r=(r); g_cpu.C=(_r>0xFF)?1:0;        \

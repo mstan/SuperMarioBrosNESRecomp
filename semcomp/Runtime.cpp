@@ -707,4 +707,83 @@ void semcomp_runtime_move_bloober(void) {
     runtime().enemy_handlers().move_bloober();
 }
 
+// Phase 24 batch 2 — enemies.
+void semcomp_runtime_bridge_collapse(void) {
+    runtime().routines().register_routine(0xCFEC, "BridgeCollapse");
+    runtime().routines().note_invocation(0xCFEC);
+    runtime().enemy_handlers2().bridge_collapse();
+}
+
+void semcomp_runtime_kill_all_enemies_d071(void) {
+    runtime().routines().register_routine(0xD071, "KillAllEnemies");
+    runtime().routines().note_invocation(0xD071);
+    runtime().enemy_handlers2().kill_all_enemies_d071();
+}
+
+void semcomp_runtime_run_bowser(void) {
+    runtime().routines().register_routine(0xD065, "RunBowser");
+    runtime().routines().note_invocation(0xD065);
+    runtime().enemy_handlers2().run_bowser();
+}
+
+void semcomp_runtime_move_d_bowser(void) {
+    runtime().routines().register_routine(0xD00F, "MoveD_Bowser");
+    runtime().routines().note_invocation(0xD00F);
+    runtime().enemy_handlers2().move_d_bowser();
+}
+
+void semcomp_runtime_erase_enemy_object(void) {
+    runtime().routines().register_routine(0xC998, "EraseEnemyObject");
+    runtime().routines().note_invocation(0xC998);
+    runtime().enemy_handlers2().erase_enemy_object();
+}
+
+void semcomp_runtime_init_vstf(void) {
+    runtime().routines().register_routine(0xC363, "InitVStf");
+    runtime().routines().note_invocation(0xC363);
+    runtime().enemy_handlers2().init_vstf();
+}
+
+void semcomp_runtime_init_enemy_object(void) {
+    runtime().routines().register_routine(0xC226, "InitEnemyObject");
+    runtime().routines().note_invocation(0xC226);
+    runtime().enemy_handlers2().init_enemy_object();
+}
+
+void semcomp_runtime_check_frenzy_buffer(void) {
+    runtime().routines().register_routine(0xC216, "CheckFrenzyBuffer");
+    runtime().routines().note_invocation(0xC216);
+    runtime().enemy_handlers2().check_frenzy_buffer();
+}
+
+void semcomp_runtime_check_three_bytes(void) {
+    runtime().routines().register_routine(0xC250, "CheckThreeBytes");
+    runtime().routines().note_invocation(0xC250);
+    runtime().enemy_handlers2().check_three_bytes();
+}
+
+void semcomp_runtime_handle_group_enemies(void) {
+    runtime().routines().register_routine(0xC71B, "HandleGroupEnemies");
+    runtime().routines().note_invocation(0xC71B);
+    runtime().enemy_handlers2().handle_group_enemies();
+}
+
+void semcomp_runtime_inc_3b(void) {
+    runtime().routines().register_routine(0xC25B, "Inc3B");
+    runtime().routines().note_invocation(0xC25B);
+    runtime().enemy_handlers2().inc_3b();
+}
+
+void semcomp_runtime_end_area_points(void) {
+    runtime().routines().register_routine(0xD336, "EndAreaPoints");
+    runtime().routines().note_invocation(0xD336);
+    runtime().enemy_handlers2().end_area_points();
+}
+
+void semcomp_runtime_award_game_timer_points(void) {
+    runtime().routines().register_routine(0xD312, "AwardGameTimerPoints");
+    runtime().routines().note_invocation(0xD312);
+    runtime().enemy_handlers2().award_game_timer_points();
+}
+
 }  // extern "C"
