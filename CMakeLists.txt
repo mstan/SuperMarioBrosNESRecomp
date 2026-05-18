@@ -138,6 +138,7 @@ if(ENABLE_SEMCOMP)
         semcomp/Hud.cpp
         semcomp/FloateyNumbers.cpp
         semcomp/PlayerPhysics.cpp
+        semcomp/PlayerAnim.cpp
         semcomp/SemcompGame.cpp
         semcomp/Trainer.cpp
         semcomp/TrainerUI.cpp

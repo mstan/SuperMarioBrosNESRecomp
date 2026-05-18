@@ -241,6 +241,10 @@ void semcomp_runtime_init_normal_enemy(void);         // $C30E InitNormalEnemy
 void semcomp_runtime_move_normal_enemy(void);         // $CA77 MoveNormalEnemy
 void semcomp_runtime_auto_control_player(void);       // $B0E6 AutoControlPlayer
 void semcomp_runtime_player_movement_subs(void);      // $B329 PlayerMovementSubs
+void semcomp_runtime_player_change_size(void);        // $B233 PlayerChangeSize
+void semcomp_runtime_player_injury_blink(void);       // $B245 PlayerInjuryBlink
+void semcomp_runtime_player_death(void);              // $B269 PlayerDeath
+void semcomp_runtime_player_fire_flower(void);        // $B27D PlayerFireFlower
 
 // ---- GameMode reads + verbs (Phase 5) ------------------------------------
 uint8_t semcomp_runtime_mode_oper_mode(void);

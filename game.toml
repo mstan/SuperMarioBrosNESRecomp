@@ -153,3 +153,26 @@ addr = 0xB0E6
 [[replace_func]]
 bank = 0
 addr = 0xB329
+
+# Phase 10: Player animation states.
+#
+# Four small per-frame routines that PlayerCtrlRoutine ($B0E9) dispatches
+# to via the $000E selector. Each is owned by PlayerAnim::*. The helpers
+# they delegate to (InitChangeSize $B255, DonePlayerTask $B273,
+# CyclePlayerPalette $B288, ResetPalStar $B29A, PlayerCtrlRoutine $B0E9)
+# remain natural-generated and are reachable via call_by_address.
+[[replace_func]]
+bank = 0
+addr = 0xB233   # PlayerChangeSize
+
+[[replace_func]]
+bank = 0
+addr = 0xB245   # PlayerInjuryBlink
+
+[[replace_func]]
+bank = 0
+addr = 0xB269   # PlayerDeath
+
+[[replace_func]]
+bank = 0
+addr = 0xB27D   # PlayerFireFlower

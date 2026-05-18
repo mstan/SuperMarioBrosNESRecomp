@@ -394,6 +394,26 @@ void semcomp_runtime_player_movement_subs(void) {
     runtime().routines().note_invocation(0xB329);
     runtime().player_physics().movement_subs();
 }
+void semcomp_runtime_player_change_size(void) {
+    runtime().routines().register_routine(0xB233, "PlayerChangeSize");
+    runtime().routines().note_invocation(0xB233);
+    runtime().player_anim().change_size();
+}
+void semcomp_runtime_player_injury_blink(void) {
+    runtime().routines().register_routine(0xB245, "PlayerInjuryBlink");
+    runtime().routines().note_invocation(0xB245);
+    runtime().player_anim().injury_blink();
+}
+void semcomp_runtime_player_death(void) {
+    runtime().routines().register_routine(0xB269, "PlayerDeath");
+    runtime().routines().note_invocation(0xB269);
+    runtime().player_anim().player_death();
+}
+void semcomp_runtime_player_fire_flower(void) {
+    runtime().routines().register_routine(0xB27D, "PlayerFireFlower");
+    runtime().routines().note_invocation(0xB27D);
+    runtime().player_anim().fire_flower();
+}
 
 // ---- GameMode reads + verbs ----------------------------------------------
 

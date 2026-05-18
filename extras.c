@@ -327,6 +327,22 @@ void func_B329_b0(void) { /* PlayerMovementSubs */
     semcomp_runtime_player_movement_subs();
 }
 
+void func_B233_b0(void) { /* PlayerChangeSize */
+    semcomp_runtime_player_change_size();
+}
+
+void func_B245_b0(void) { /* PlayerInjuryBlink */
+    semcomp_runtime_player_injury_blink();
+}
+
+void func_B269_b0(void) { /* PlayerDeath */
+    semcomp_runtime_player_death();
+}
+
+void func_B27D_b0(void) { /* PlayerFireFlower */
+    semcomp_runtime_player_fire_flower();
+}
+
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     (void)pc; (void)addr; return val;
 }
