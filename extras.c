@@ -423,6 +423,10 @@ void func_8F68_b0(void) { semcomp_runtime_add_mod_loop(); }
 void func_8F75_b0(void) { semcomp_runtime_store_new_d(); }
 void func_8F11_b0(void) { semcomp_runtime_output_numbers(); }
 
+/* Phase 21 — Floatey per-frame untangle. */
+void func_84C3_b0(void) { semcomp_runtime_floatey_per_frame(); }
+void func_8534_b0(void) { semcomp_runtime_floatey_part_8534(); }
+
 void func_8231_b0(void) { /* TitleScreenMode */
     semcomp_runtime_title_screen_mode();
 }

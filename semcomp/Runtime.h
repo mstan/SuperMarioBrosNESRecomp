@@ -295,6 +295,10 @@ void semcomp_runtime_digits_math_routine(void);       // $8F5F
 void semcomp_runtime_add_mod_loop(void);              // $8F68
 void semcomp_runtime_store_new_d(void);               // $8F75
 void semcomp_runtime_output_numbers(void);            // $8F11
+
+// Phase 21 — Floatey per-frame untangle.
+void semcomp_runtime_floatey_per_frame(void);         // $84C3
+void semcomp_runtime_floatey_part_8534(void);         // $8534
 void semcomp_runtime_title_screen_mode(void);         // $8231 TitleScreenMode
 void semcomp_runtime_game_mode_tick(void);            // $AEDC GameMode
 void semcomp_runtime_game_over_mode(void);            // $9218 GameOverMode

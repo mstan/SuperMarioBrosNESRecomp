@@ -351,6 +351,15 @@ addr = 0x8F75
 bank = 0
 addr = 0x8F11
 
+# Phase 21 — Floatey per-frame untangle. $84C3 + $8534 multi-entry-body.
+[[replace_func]]
+bank = 0
+addr = 0x84C3
+
+[[replace_func]]
+bank = 0
+addr = 0x8534
+
 # Phase 23 — Game-mode dispatchers. Three small inline-dispatch shells
 # that read OperMode_Task ($0772) and dispatch via $8E04 into natural
 # sub-handlers. $8212 OperModeExecutionTree NOT owned (multi-entry-body

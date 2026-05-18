@@ -40,6 +40,14 @@ public:
     //             lifetime timer)
     void setup();
 
+    // Phase 21 — Floatey per-frame untangle.
+    //   $84C3 FloateyNumbersRoutine — tick + upward-float animation.
+    //   $8534 inner label             — re-entry point used by callers
+    //                                    that already set up X and want
+    //                                    to skip the tile-resolve step.
+    void per_frame_tick();
+    void floatey_part_8534();
+
 private:
     GameState& state_;
 };

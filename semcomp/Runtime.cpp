@@ -560,6 +560,18 @@ void semcomp_runtime_output_numbers(void) {
     runtime().routines().note_invocation(0x8F11);
     runtime().hud().output_numbers();
 }
+
+// Phase 21 — Floatey per-frame untangle.
+void semcomp_runtime_floatey_per_frame(void) {
+    runtime().routines().register_routine(0x84C3, "FloateyNumbersRoutine");
+    runtime().routines().note_invocation(0x84C3);
+    runtime().floateys().per_frame_tick();
+}
+void semcomp_runtime_floatey_part_8534(void) {
+    runtime().routines().register_routine(0x8534, "FloateyPart");
+    runtime().routines().note_invocation(0x8534);
+    runtime().floateys().floatey_part_8534();
+}
 void semcomp_runtime_title_screen_mode(void) {
     runtime().routines().register_routine(0x8231, "TitleScreenMode");
     runtime().routines().note_invocation(0x8231);
