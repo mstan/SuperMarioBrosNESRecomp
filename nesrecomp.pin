@@ -23,8 +23,5 @@
 #   2. re-run the setup script (or manually: git -C nesrecomp checkout <sha>)
 #   3. commit this file change
 
-# Tracking the CPU-coverage audit branch while Phase 1-5 land.
-# Pinned SHA (not branch tip) so the build is reproducible even as the
-# branch advances. Restore to origin/master once merged upstream.
-branch = audit/cpu-coverage-2026-05
-sha    = 7d394316ba6f74d2ea005f76bc2b9d91cfe77dee
+branch = master
+sha    = 549d45d3e66d3cb8f61ec14ff26c56a02e824162
