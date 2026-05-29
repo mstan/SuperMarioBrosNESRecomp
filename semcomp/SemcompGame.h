@@ -11,6 +11,7 @@
 #include "semcomp/FloateyNumbers.h"
 #include "semcomp/GameMode.h"
 #include "semcomp/GameState.h"
+#include "semcomp/SpriteWorld.h"
 #include "semcomp/Hud.h"
 #include "semcomp/Level.h"
 #include "semcomp/Mario.h"
@@ -44,6 +45,7 @@ class SemcompGame {
 public:
     SemcompGame()
         : state_(),
+          sprite_world_(state_),
           mario_(state_),
           level_(state_),
           camera_(state_),
@@ -90,6 +92,9 @@ public:
     // The order matters: semantic runs AFTER raw so that a slot frozen
     // both ways uses the semantic value.
     void apply_post_nmi() {
+        // Phase 1: snapshot the object model each frame (pure reads, no
+        // behavior change). Consumed by the OAM emit path from Phase 2 on.
+        sprite_world_.refresh();
         trainer_.apply();
         mario_.apply_freezes();
         session_.apply_freezes();
@@ -98,6 +103,8 @@ public:
 
     // ---- Const accessors (read paths) ------------------------------------
     const GameState&     state()   const { return state_;   }
+    SpriteWorld&         sprite_world()       { return sprite_world_; }
+    const SpriteWorld&   sprite_world() const { return sprite_world_; }
     const Level&         level()   const { return level_;   }
     Camera&              camera()        { return camera_;  }
     const Camera&        camera()  const { return camera_;  }
@@ -146,6 +153,7 @@ public:
 
 private:
     GameState        state_;
+    SpriteWorld      sprite_world_;
     Mario            mario_;
     Level            level_;
     Camera           camera_;

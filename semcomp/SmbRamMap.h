@@ -95,6 +95,23 @@ constexpr std::uint16_t Enemy_Y_Position_Base = 0x00CF;
 constexpr std::uint16_t Enemy_SprDataOffset_Base = 0x06E5;
 constexpr std::uint16_t Enemy_OffscreenBits   = 0x03D1;
 
+// ---- Sprite-object rendering tables (per-CLASS, indexed by $F171 Y) --------
+// SMB recomputes each drawing object's screen-relative position just before
+// drawing it, into these per-CLASS scratch slots. The index is the Y register
+// passed to $F171 GetObjRelativePosition (the "rel offset"):
+//   0=player  1=enemy  2=fireball  3=bubble  4/5=block(two columns)  6=misc
+// (misc = powerup / bouncing coin / flag). The 16-bit screen X reconstructed
+// in $F171 (world_x - camera) has these as its low byte.
+constexpr std::uint16_t SprObject_Rel_XPos      = 0x03AD;  // +rel_ofs
+constexpr std::uint16_t SprObject_Rel_YPos      = 0x03B8;  // +rel_ofs
+constexpr std::uint16_t SprObject_OffscreenBits = 0x03D0;  // +rel_ofs (enemy=$03D1)
+
+// SprDataOffset = the OAM byte offset ($0200+N) where an object's metasprite
+// begins. Player + enemy bases are above; the remaining classes:
+constexpr std::uint16_t PowerUp_SprDataOffset      = 0x06EA;  // single powerup slot
+constexpr std::uint16_t Fireball_SprDataOffset_Base = 0x06F1;  // 2 player fireballs
+constexpr std::uint16_t JumpCoin_SprDataOffset_Base = 0x06F3;  // bouncing coin / misc
+
 // Kill / stomp / spawn entry points (call_by_address with X=slot, A=ID).
 //   $E18E KillEnemyAboveBlock — instant remove, no points / no anim
 //   $D969 EnemyStomped        — score grant + floatey number + state=$20
