@@ -1469,6 +1469,7 @@ void semcomp_runtime_at_f0f5(void);  // $F0F5 at_f0f5
 void semcomp_runtime_at_f11f(void);  // $F11F at_f11f
 void semcomp_runtime_relative_misc_position(void);  // $F148 RelativeMiscPosition
 void semcomp_runtime_at_f14d(void);  // $F14D at_f14d
+void semcomp_runtime_get_obj_relative_position(void);  // $F171 GetObjRelativePosition
 void semcomp_runtime_get_player_offscreen_bits(void);  // $F180 GetPlayerOffscreenBits
 void semcomp_runtime_at_f184(void);  // $F184 at_f184
 void semcomp_runtime_get_misc_offscreen_bits(void);  // $F19B GetMiscOffscreenBits

@@ -2303,6 +2303,7 @@ void func_F0F5(void) { semcomp_runtime_at_f0f5(); }
 void func_F11F(void) { semcomp_runtime_at_f11f(); }
 void func_F148(void) { semcomp_runtime_relative_misc_position(); }
 void func_F14D(void) { semcomp_runtime_at_f14d(); }
+void func_F171(void) { semcomp_runtime_get_obj_relative_position(); }
 void func_F180(void) { semcomp_runtime_get_player_offscreen_bits(); }
 void func_F184(void) { semcomp_runtime_at_f184(); }
 void func_F19B(void) { semcomp_runtime_get_misc_offscreen_bits(); }

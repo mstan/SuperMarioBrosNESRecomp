@@ -7384,6 +7384,12 @@ void semcomp_runtime_relative_misc_position(void) {
     runtime().render_engine().relative_misc_position();
 }
 
+void semcomp_runtime_get_obj_relative_position(void) {
+    runtime().routines().register_routine(0xF171, "GetObjRelativePosition");
+    runtime().routines().note_invocation(0xF171);
+    runtime().render_engine().get_obj_relative_position();
+}
+
 void semcomp_runtime_at_f14d(void) {
     runtime().routines().register_routine(0xF14D, "at_f14d");
     runtime().routines().note_invocation(0xF14D);

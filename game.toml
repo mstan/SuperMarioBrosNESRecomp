@@ -3840,6 +3840,9 @@ addr = 0xF148
 addr = 0xF14D
 
 [[replace_func]]
+addr = 0xF171  # GetObjRelativePosition — owned for OAM-identity (semcomp)
+
+[[replace_func]]
 addr = 0xF180
 
 [[replace_func]]

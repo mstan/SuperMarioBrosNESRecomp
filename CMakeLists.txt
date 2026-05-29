@@ -126,6 +126,7 @@ if(ENABLE_SEMCOMP)
     target_sources(SuperMarioBrosRecomp PRIVATE
         semcomp/GameState.cpp
         semcomp/SpriteWorld.cpp
+        semcomp/OamWriter.cpp
         semcomp/Mario.cpp
         semcomp/Level.cpp
         semcomp/Camera.cpp

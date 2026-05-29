@@ -16925,30 +16925,6 @@ label_C8DD:;
     /* $C8DD: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_E87D(); return;
 }
 
-void func_F171(void) { /* GetObjRelativePosition */
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_push("func_F171");
-#endif
-label_F171:; /* GetObjRelativePosition */
-    /* $F171: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0xCE + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
-label_F173:;
-    /* $F173: 99 */ maybe_trigger_vblank(5); nes_write((0x03B8 + g_cpu.Y) & 0xFFFF, g_cpu.A);
-label_F176:;
-    /* $F176: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x86 + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
-label_F178:;
-    /* $F178: 38 */ maybe_trigger_vblank(2); g_cpu.C = 1;
-label_F179:;
-    /* $F179: ED */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x071C); int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
-label_F17C:;
-    /* $F17C: 99 */ maybe_trigger_vblank(5); nes_write((0x03AD + g_cpu.Y) & 0xFFFF, g_cpu.A);
-label_F17F:;
-    /* $F17F: 60 */ maybe_trigger_vblank(6); 
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_pop();
-#endif
-    return;
-}
-
 void func_F028(void) { /* NonAnimatedActs */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_F028");

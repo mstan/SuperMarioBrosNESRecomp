@@ -2,6 +2,7 @@
 #include "semcomp/RenderEngine.h"
 
 #include "semcomp/GameState.h"
+#include "semcomp/OamWriter.h"
 #include "semcomp/cpu_flags.h"
 
 extern "C" {
@@ -9,6 +10,37 @@ extern "C" {
 }
 
 namespace smb::semcomp {
+
+// $F171 GetObjRelativePosition — OWNED to publish per-object identity to the
+// OAM emit path (OamWriter). The vanilla body (8-bit screen-relative position
+// into $03B8+Y / $03AD+Y) is reproduced EXACTLY — same cycle calls + flag
+// semantics — so behavior is byte-identical; we only ADD the identity publish
+// at the end. The extra reads carry no emulated CPU cycles and touch only work
+// RAM (no MMIO side effects), so NMI timing and CPU state are preserved.
+void RenderEngine::get_obj_relative_position() {
+    (void)state_;
+    /* $F171: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0xCE + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
+    /* $F173: 99 */ maybe_trigger_vblank(5); nes_write((0x03B8 + g_cpu.Y) & 0xFFFF, g_cpu.A);
+    /* $F176: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x86 + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
+    /* $F178: 38 */ maybe_trigger_vblank(2); g_cpu.C = 1;
+    /* $F179: ED */ maybe_trigger_vblank(4); { uint8_t m = nes_read(0x071C); int16_t r = g_cpu.A - m - (1 - g_cpu.C); FLAG_NZC_SUB(r, g_cpu.A, m); g_cpu.A = r & 0xFF; }
+    /* $F17C: 99 */ maybe_trigger_vblank(5); nes_write((0x03AD + g_cpu.Y) & 0xFFFF, g_cpu.A);
+    /* $F17F: 60 */ maybe_trigger_vblank(6);
+
+    // Publish this object as the owner of the OAM writes its draw is about to
+    // make. obj_index (X) + rel_ofs (Y) identify it; rel_x8 is the just-stored
+    // 8-bit screen X; screen_x16 is the full signed 16-bit screen X (world -
+    // camera), recovered fresh from the same arrays the 8-bit math used.
+    const uint8_t obj_index = g_cpu.X;
+    const uint8_t rel_ofs   = g_cpu.Y;
+    const uint8_t rel_x8    = g_cpu.A;
+    const int world_x  = (nes_read((0x6D + obj_index) & 0xFF) << 8) | nes_read((0x86 + obj_index) & 0xFF);
+    const int camera_x = (nes_read(0x071A) << 8) | nes_read(0x071C);
+    int screen_x16 = world_x - camera_x;
+    if (screen_x16 > 32767)  screen_x16 -= 65536;
+    if (screen_x16 < -32768) screen_x16 += 65536;
+    OamWriter::set_current_owner(obj_index, rel_ofs, static_cast<int16_t>(screen_x16), rel_x8);
+}
 
 void RenderEngine::sprite_shuffler() {
     sprite_shuffler_body(0);

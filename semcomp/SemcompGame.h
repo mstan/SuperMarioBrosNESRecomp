@@ -12,6 +12,7 @@
 #include "semcomp/GameMode.h"
 #include "semcomp/GameState.h"
 #include "semcomp/SpriteWorld.h"
+#include "semcomp/OamWriter.h"
 #include "semcomp/Hud.h"
 #include "semcomp/Level.h"
 #include "semcomp/Mario.h"
@@ -95,6 +96,7 @@ public:
         // Phase 1: snapshot the object model each frame (pure reads, no
         // behavior change). Consumed by the OAM emit path from Phase 2 on.
         sprite_world_.refresh();
+        OamWriter::begin_frame();
         trainer_.apply();
         mario_.apply_freezes();
         session_.apply_freezes();

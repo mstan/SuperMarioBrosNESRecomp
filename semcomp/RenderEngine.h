@@ -209,6 +209,7 @@ public:
     void get_misc_offscreen_bits();  // $F19B GetMiscOffscreenBits (entry 0)
     void at_f19d();  // $F19D at_f19d (entry 1)
     void get_proper_obj_offset();  // $F1A8 GetProperObjOffset (entry 0)
+    void get_obj_relative_position();  // $F171 GetObjRelativePosition (owned: OAM identity)
     void at_f1a9();  // $F1A9 at_f1a9 (entry 1)
     void get_enemy_offscreen_bits();  // $F1AF GetEnemyOffscreenBits (entry 0)
     void at_f1b1();  // $F1B1 at_f1b1 (entry 1)
