@@ -16,3 +16,6 @@ debug.ini
 # Pinned SHA recorded in nesrecomp.pin and enforced at CMake configure time.
 nesrecomp
 nestopia-core
+tests/candidate_*.ndjson
+tests/_parity_scout.py
+_objmodel_build*.out
