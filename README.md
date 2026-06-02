@@ -8,9 +8,9 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 ## Known Issues
 
 - **Demo sequence non-determinism** — the title screen auto-play demo may behave
-  differently between launches. On some runs Mario misses the mushroom from the
-  first `?` block; on others he collects it normally. This is a minor frame-timing
-  inconsistency in real-time mode (turbo/fast-forward mode is fully deterministic).
+  differently between launches — an item the demo collects on one run can be
+  missed on another. This is a minor frame-timing inconsistency in real-time mode
+  (turbo/fast-forward mode is fully deterministic).
   Gameplay is unaffected.
 - **2-player mode non-functional** — controller 2 input is not bound; Luigi cannot
   move when play switches to him after Mario dies.
