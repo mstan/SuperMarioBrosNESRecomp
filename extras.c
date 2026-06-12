@@ -77,7 +77,11 @@ static void get_exe_relative_path(const char *filename, char *out, int max_len) 
  *     the opposite edge.  At GetObjRelativePosition's SBC ScreenLeft_X
  *     ($F179) we publish the object's true 16-bit screen X (g_cpu.X is
  *     the SprObject index for player/enemy/fireball/bubble/misc/block
- *     alike); the runner unwraps every subsequent shadow-OAM X write.
+ *     alike) and remember it per rel slot (g_cpu.Y); reads of any
+ *     SprObject_Rel_XPos var ($03AD-$03B3, hooked in game.toml) re-arm
+ *     the live bias for that slot's object, so batch-computed rels
+ *     (e.g. both block slots) can't clobber each other's draw context.
+ *     The runner unwraps every subsequent shadow-OAM X write.
  *
  *  3. Window widening — the game's own draw-cull, despawn, and spawn
  *     decisions are widened by shifting the screen-edge values they read,
@@ -124,6 +128,21 @@ static int     s_ws_pend_spawnb  = 0;
 static int     s_ws_pend_spawnc  = 0;
 static int     s_ws_pend_frenzy  = 0;
 static uint8_t s_ws_c73c_lo      = 0;  /* $C73C pair reads page FIRST */
+
+/* Per-rel-slot sidecar bias table.  GetObjRelativePosition stores rel X
+ * into SprObject_Rel_XPos ($03AD,Y); Y is the rel slot (0 player, 1 enemy,
+ * 2 fireball, 3/4 block 0/1, 5 bubble, 6 misc).  The slot's true 16-bit
+ * rel is captured at $F179.  A single live context is not enough: SMB
+ * batch-computes some rels before drawing (RelativeBlockPosition does both
+ * block slots back-to-back, so block 0 would draw under block 1's bias).
+ * Any READ of a rel X var therefore re-arms the live context for that
+ * slot's object — draw code always loads its own rel var right before
+ * laying out sprites. */
+#define SMB_WS_REL_BASE  0x03AD
+#define SMB_WS_REL_SLOTS 7
+static int16_t s_ws_rel16_tab[SMB_WS_REL_SLOTS];
+static uint8_t s_ws_rel8_tab[SMB_WS_REL_SLOTS];
+static uint8_t s_ws_rel_mask = 0;   /* bit n: slot n captured this mode */
 
 /* Shift an 8-bit edge value by ±margin, recording the page carry. */
 static uint8_t ws_shift_lo(uint8_t val, int shift, int *pend) {
@@ -203,7 +222,7 @@ static void ws_update_frame_gate(void) {
     int wide = ws_sim_active();
     g_ws_eff_left  = wide ? s_ws_left  : 0;
     g_ws_eff_right = wide ? s_ws_right : 0;
-    if (!wide) g_ws_obj_ctx_valid = 0;
+    if (!wide) { g_ws_obj_ctx_valid = 0; s_ws_rel_mask = 0; }
 }
 
 /* ---- game_extras.h implementation ---- */
@@ -365,6 +384,21 @@ int game_dispatch_override(uint16_t addr) { (void)addr; return 0; }
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     if (!ws_sim_active()) return val;
 
+    /* ---- Sidecar re-arm: SprObject_Rel_XPos reads (any PC) ----
+     * Draw code loads its object's rel X right before writing sprites;
+     * re-arm the live bias for that slot so the OAM unwrapping always
+     * matches the object actually being drawn.  Value returned unchanged
+     * — simulation stays vanilla. */
+    if (addr >= SMB_WS_REL_BASE && addr < SMB_WS_REL_BASE + SMB_WS_REL_SLOTS) {
+        unsigned slot = addr - SMB_WS_REL_BASE;
+        if (s_ws_rel_mask & (1u << slot)) {
+            g_ws_obj_true_rel  = s_ws_rel16_tab[slot];
+            g_ws_obj_rel8      = s_ws_rel8_tab[slot];
+            g_ws_obj_ctx_valid = 1;
+        }
+        return val;
+    }
+
     switch (pc) {
 
     /* ---- Sidecar bias capture: GetObjRelativePosition ($F171) ----
@@ -381,6 +415,13 @@ uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
         g_ws_obj_true_rel  = (int16_t)rel;
         g_ws_obj_rel8      = (uint8_t)(rel & 0xFF);
         g_ws_obj_ctx_valid = 1;
+        /* g_cpu.Y = rel slot (the STA $03AD,Y follows at $F17C); remember
+         * the bias per slot so later rel-var reads can re-arm it. */
+        if (g_cpu.Y < SMB_WS_REL_SLOTS) {
+            s_ws_rel16_tab[g_cpu.Y] = (int16_t)rel;
+            s_ws_rel8_tab[g_cpu.Y]  = (uint8_t)(rel & 0xFF);
+            s_ws_rel_mask |= (uint8_t)(1u << g_cpu.Y);
+        }
         return val;
     }
 

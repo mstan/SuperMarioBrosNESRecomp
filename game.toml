@@ -22,6 +22,29 @@ indexed = true
 [[ram_read_hook]]
 addr = 0x071D           # ScreenRight_X_Pos
 
+# Widescreen sidecar draw-context re-arm: SprObject_Rel_XPos slots
+# ($03AD,Y written by GetObjRelativePosition; Y = 0 player, 1 enemy,
+# 2 fireball, 3/4 blocks, 5 bubble, 6 misc).  Draw code loads its own rel
+# var right before laying out sprites, so hooking these reads keys the
+# OAM X16 unwrapping to the object actually being drawn (a single live
+# context gets clobbered when rels are batch-computed, e.g. both block
+# slots).  Hook returns values unchanged — simulation stays vanilla.
+[[ram_read_hook]]
+addr = 0x03AD           # Player_Rel_XPos (indexed base: SprObject_Rel_XPos,y)
+indexed = true
+[[ram_read_hook]]
+addr = 0x03AE           # Enemy_Rel_XPos
+[[ram_read_hook]]
+addr = 0x03AF           # Fireball_Rel_XPos
+[[ram_read_hook]]
+addr = 0x03B0           # Block_Rel_XPos (slot 0)
+[[ram_read_hook]]
+addr = 0x03B1           # Block_Rel_XPos (slot 1)
+[[ram_read_hook]]
+addr = 0x03B2           # Bubble_Rel_XPos
+[[ram_read_hook]]
+addr = 0x03B3           # Misc_Rel_XPos
+
 # SMB inline indexed dispatch: JSR $8E04 pops return address to find a
 # 2-byte LE address table immediately after the JSR. Dispatches via A register.
 [[inline_dispatch]]

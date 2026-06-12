@@ -377,6 +377,42 @@ byte-identical to the Nestopia oracle.
 
 ---
 
+## ISSUE #12 — Widescreen: enemy spawn-timeline drift (DEFERRED by design)
+
+**Status:** OPEN / DEFERRED — accepted trade-off of the widened spawn window;
+user has okayed deferring (2026-06-12)
+
+### Symptom
+With widescreen margins active, enemies sometimes behave differently from
+the vanilla timeline: different walk patterns on approach, enemies bumping
+into each other, and occasionally an enemy visibly overlapping level
+geometry (e.g. a 1-2 Goomba inside a brick column).
+
+### Why this happens (mechanism, not a sim bug)
+The simulation is oracle-verified vanilla; what changes is WHEN spawns
+trigger.  Enemy placements are fixed world columns; vanilla spawns an
+enemy when ScreenRight reaches its column, widescreen when the widened
+right edge does — i.e. up to `right-margin` pixels of camera travel
+EARLIER.  From that moment the enemy simulates normally, so by the time
+the player arrives its phase (position along its walk/fall cycle) differs
+from the vanilla timeline.  Vanilla also produces awkward spawn states
+(enemies intersecting geometry they escape before scrolling into view) —
+the margins simply make a region visible that vanilla guarantees you
+never see, and the earlier spawn gives enemies more simulated time to
+wander into odd places.
+
+### Mitigation ideas if this is ever revisited
+- Spawn at the vanilla edge but suppress drawing until the enemy has
+  cleared geometry — rejected for now: reintroduces pop-in, the thing
+  the widened window exists to prevent.
+- Push the spawn window further right than the margin (extra hysteresis)
+  so initial-state weirdness resolves before entering the visible margin;
+  costs spawn latency for fast right-scrolling.
+- Per-enemy-type policy (only screen-relative spawners like Cheep-Cheep /
+  Bullet Bill / Hammer Bros timers really care about the edge).
+
+---
+
 ## ROM / config facts
 - SMB ROM: `F:/Projects/nesrecomp/Super Mario Bros. (World).nes`
 - Mapper 0 (NROM-256), 2 PRG banks × 16KB, 1 CHR bank × 8KB (CHR ROM, read-only)
