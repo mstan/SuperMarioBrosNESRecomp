@@ -32,7 +32,7 @@ set "VSNINJA=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE
 set "PATH=%VSCMAKE%;%VSNINJA%;%PATH%"
 
 echo === STEP 1: Build recompiler ===
-cd /d F:\Projects\nesrecomp-release\SuperMarioBrosRecomp\nesrecomp
+cd /d %~dp0nesrecomp
 if not exist build_recomp (
     cmake -S recompiler -B build_recomp -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl
     if !ERRORLEVEL! NEQ 0 ( echo RECOMPILER CMAKE FAILED & exit /b 1 )
@@ -41,7 +41,7 @@ cmake --build build_recomp
 if !ERRORLEVEL! NEQ 0 ( echo RECOMPILER BUILD FAILED & exit /b 1 )
 
 echo === STEP 2: Regen game code WITH --reverse-debug ===
-cd /d F:\Projects\nesrecomp-release\SuperMarioBrosRecomp
+cd /d %~dp0
 nesrecomp\build_recomp\NESRecomp.exe baserom.nes --game game.toml --reverse-debug
 if !ERRORLEVEL! NEQ 0 ( echo REGEN FAILED & exit /b 2 )
 

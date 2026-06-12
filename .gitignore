@@ -1,6 +1,9 @@
 build/
 build_release/
 build_debug/
+release/
+widescreen.ini
+_ws_build.bat
 *.nes
 *.bin
 *.sav

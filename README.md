@@ -21,6 +21,22 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 2. Extract and run `SuperMarioBrosRecomp.exe`
 3. Select your Super Mario Bros. (World) ROM when prompted — the path is saved for future launches
 
+## Widescreen (experimental)
+
+An optional 16:9 mode renders the world beyond the NES's 256-px viewport
+— real background and sprites in the margins, no stretching. It is
+**experimental and buggy** (see [WIDESCREEN.md](WIDESCREEN.md)).
+
+- Download `SuperMarioBrosRecomp-widescreen-windows-x64.zip` from
+  [Releases](../../releases), **or**
+- drop a `widescreen.ini` next to the exe (`enabled = 1`, `aspect = 16:9`),
+  **or** pass `--widescreen 16:9` (or `--widescreen <left>x<right>`,
+  `--widescreen off`).
+
+Both release zips contain the same binary: widescreen is a runtime
+setting. Without it the game is the authentic 4:3 recomp — verified
+byte-identical to the emulator reference with widescreen off.
+
 ## Controls
 
 | NES Button | Keyboard |
