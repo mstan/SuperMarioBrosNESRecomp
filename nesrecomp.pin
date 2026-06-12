@@ -23,5 +23,5 @@
 #   2. re-run the setup script (or manually: git -C nesrecomp checkout <sha>)
 #   3. commit this file change
 
-branch = master
-sha    = 549d45d3e66d3cb8f61ec14ff26c56a02e824162
+branch = feat/widescreen-sidecar
+sha    = ad3559f363113eea55c140492fde8cb9ce82c137

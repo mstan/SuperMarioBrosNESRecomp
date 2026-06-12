@@ -58,6 +58,154 @@ static void get_exe_relative_path(const char *filename, char *out, int max_len) 
 #endif
 }
 
+/* =====================================================================
+ * Widescreen (opt-in enhancement, default OFF — see WIDESCREEN.md)
+ *
+ * Three coordinated layers, all gated at runtime on s_ws_enabled plus the
+ * gameplay-mode discriminator (OperMode $0770 == 1 game / 2 victory; the
+ * title screen and its attract demo run under mode 0 and stay fully
+ * vanilla, in simulation and presentation):
+ *
+ *  1. Presentation — g_widescreen_left/right widen the runner's BG render
+ *     (SMB's two vertically-mirrored nametables hold 512px; the column
+ *     writer leads ScreenRight by ~98-117px, capping the right margin at
+ *     96; the left margin shows just-scrolled-out columns, capped at 128).
+ *     Non-gameplay modes pillarbox via g_ws_eff_left/right = 0.
+ *
+ *  2. Sprite-X sidecar — SMB computes sprite X with 8-bit math, so any
+ *     object whose screen X leaves [0,255] wraps and would teleport to
+ *     the opposite edge.  At GetObjRelativePosition's SBC ScreenLeft_X
+ *     ($F179) we publish the object's true 16-bit screen X (g_cpu.X is
+ *     the SprObject index for player/enemy/fireball/bubble/misc/block
+ *     alike); the runner unwraps every subsequent shadow-OAM X write.
+ *
+ *  3. Window widening — the game's own draw-cull, despawn, and spawn
+ *     decisions are widened by shifting the screen-edge values they read,
+ *     at exactly the PCs that implement each decision (the hook receives
+ *     the reading PC).  16-bit edges are read low-byte-then-page; a
+ *     pending carry propagates between the paired reads.  Every shift is
+ *     ±margin, so spawn/despawn hysteresis gaps stay vanilla-sized, and
+ *     margin = 0 reduces exactly to vanilla.
+ *
+ * Complete classification of all $071A-$071D readers (PC → policy):
+ *   $F179            GetObjRelativePosition   → sidecar bias capture
+ *   $F1FA/$F202      GetXOffscreenBits edges  → widen ±margin (indexed)
+ *   $D680/$D693      OffscreenBoundsCheck L   → widen -left
+ *   $D69A/$D6A1      OffscreenBoundsCheck R   → widen +right
+ *   $C164/$C16E      CheckRightBounds base    → widen +right (spawn window end)
+ *   $C1B6/$C1BB      spawn raw-edge compare   → widen +right (spawn window start)
+ *   $C5DA/$C5E2      frenzy spawn at R edge   → widen +right
+ *   $C73C/$C741      group spawn, page-first  → widen +right (page read first!)
+ *   $B013/$B01C      player screen-edge clamp → VANILLA (repositions the player)
+ *   $C09C/$C0A5      loop command rewind      → VANILLA (castle maze logic)
+ *   $9206            area parser page gate    → VANILLA (terrain write-ahead)
+ *   $908B/$9131      area/player init         → VANILLA
+ *   $83B0/$83D4/$85E2 victory mode logic      → VANILLA (watch star flag pop-in)
+ *   $DDE4/$DE96/$DEB3 enemy-specific logic    → VANILLA (page-0/player checks)
+ *   $E255/$E25C      bounding-box screen-rel  → VANILLA (collision = vanilla)
+ *   $E2DE/$E2E6      camera+0x80 midpoint     → VANILLA
+ *   $EC8C            platform draw rel        → VANILLA (sidecar covers draw)
+ *   $AFD1/$AFDA/$B038/$B041 scroll bookkeeping → VANILLA (no hook configured)
+ * ===================================================================== */
+
+#define SMB_WS_MAX_LEFT  128  /* just-scrolled-out columns stay valid this far */
+#define SMB_WS_MAX_RIGHT 96   /* SMB column writer leads ScreenRight by ~98px min */
+
+static int s_ws_enabled = 0;
+static int s_ws_left = 0, s_ws_right = 0;   /* configured margins */
+
+/* Pending page-carry per hooked read pair (low byte read sets it, the
+ * page read consumes it).  Separate vars per pair — SMB's logic runs
+ * inside the NMI handler, so pairs never interleave, but isolation is
+ * free and removes the assumption. */
+static int     s_ws_pend_bits    = 0;
+static int     s_ws_pend_despawn = 0;
+static int     s_ws_pend_spawnb  = 0;
+static int     s_ws_pend_spawnc  = 0;
+static int     s_ws_pend_frenzy  = 0;
+static uint8_t s_ws_c73c_lo      = 0;  /* $C73C pair reads page FIRST */
+
+/* Shift an 8-bit edge value by ±margin, recording the page carry. */
+static uint8_t ws_shift_lo(uint8_t val, int shift, int *pend) {
+    int wide = (int)val + shift;
+    *pend = (wide < 0) ? -1 : (wide > 0xFF ? 1 : 0);
+    return (uint8_t)(wide & 0xFF);
+}
+static uint8_t ws_shift_hi(uint8_t val, int *pend) {
+    uint8_t r = (uint8_t)((int)val + *pend);
+    *pend = 0;
+    return r;
+}
+
+/* In widened-simulation mode this frame?  Game (1) and victory (2) modes
+ * widen; title/demo (0) and game-over (3) stay vanilla + pillarboxed. */
+static int ws_sim_active(void) {
+    if (!s_ws_enabled) return 0;
+    uint8_t mode = g_ram[0x0770];
+    return mode == 1 || mode == 2;
+}
+
+/* Parse "16:9" / "21:9" style aspect, or "WxH" margins like "85x85". */
+static void ws_set_margins_from_spec(const char *spec) {
+    int a = 0, b = 0;
+    if (sscanf(spec, "%d:%d", &a, &b) == 2 && a > 0 && b > 0) {
+        int target = (240 * a + b / 2) / b;     /* width at 240 lines */
+        int extra  = (target - 256 + 1) / 2;
+        if (extra < 0) extra = 0;
+        s_ws_left = s_ws_right = extra;
+    } else if (sscanf(spec, "%dx%d", &a, &b) == 2 && a >= 0 && b >= 0) {
+        s_ws_left = a; s_ws_right = b;
+    }
+    if (s_ws_left  > SMB_WS_MAX_LEFT)  s_ws_left  = SMB_WS_MAX_LEFT;
+    if (s_ws_right > SMB_WS_MAX_RIGHT) s_ws_right = SMB_WS_MAX_RIGHT;
+    s_ws_enabled = (s_ws_left + s_ws_right) > 0;
+}
+
+/* widescreen.ini next to the exe:
+ *   enabled = 1
+ *   aspect = 16:9        (or: margins = 85x85)
+ * Absent file or enabled=0 → fully vanilla. */
+static void ws_load_config(void) {
+    char path[512];
+    get_exe_relative_path("widescreen.ini", path, sizeof(path));
+    FILE *f = fopen(path, "r");
+    if (!f) return;
+    int enabled = 0;
+    char aspect[32] = "16:9";
+    char line[128];
+    while (fgets(line, sizeof(line), f)) {
+        char key[32], val[64];
+        if (sscanf(line, " %31[A-Za-z_] = %63s", key, val) == 2) {
+            if (strcmp(key, "enabled") == 0) enabled = atoi(val);
+            else if (strcmp(key, "aspect") == 0 || strcmp(key, "margins") == 0)
+                snprintf(aspect, sizeof(aspect), "%s", val);
+        }
+    }
+    fclose(f);
+    if (enabled) ws_set_margins_from_spec(aspect);
+}
+
+static void ws_apply_init(void) {
+    if (!s_ws_enabled) return;
+    g_widescreen_left  = s_ws_left;
+    g_widescreen_right = s_ws_right;
+    g_render_width     = 256 + s_ws_left + s_ws_right;
+    g_ws_oam_sidecar   = 1;
+    /* Start pillarboxed; the per-frame gate opens the margins in gameplay. */
+    g_ws_eff_left = g_ws_eff_right = 0;
+    printf("[Widescreen] %dpx (%dL + 256 + %dR), sidecar on\n",
+           g_render_width, s_ws_left, s_ws_right);
+}
+
+/* Per-frame presentation gate, called from game_post_nmi (before render). */
+static void ws_update_frame_gate(void) {
+    if (!s_ws_enabled) return;
+    int wide = ws_sim_active();
+    g_ws_eff_left  = wide ? s_ws_left  : 0;
+    g_ws_eff_right = wide ? s_ws_right : 0;
+    if (!wide) g_ws_obj_ctx_valid = 0;
+}
+
 /* ---- game_extras.h implementation ---- */
 
 uint32_t game_get_expected_crc32(void) { return 0xD445F698u; }
@@ -65,6 +213,9 @@ uint32_t game_get_expected_crc32(void) { return 0xD445F698u; }
 const char *game_get_name(void) { return "Super Mario Bros."; }
 
 void game_on_init(void) {
+    ws_load_config();
+    ws_apply_init();
+
     s_debug_enabled = check_debug_ini();
 
     if (s_debug_enabled) {
@@ -96,12 +247,20 @@ void game_on_frame(uint64_t frame_count) {
 
 void game_post_nmi(uint64_t frame_count) {
     (void)frame_count;
+    ws_update_frame_gate();
     if (s_debug_enabled) {
         debug_server_record_frame();
     }
 }
 
 int game_handle_arg(const char *key, const char *val) {
+    if (strcmp(key, "--widescreen") == 0 && val) {
+        /* Overrides widescreen.ini.  "off" disables; "16:9" or "85x85". */
+        s_ws_enabled = 0; s_ws_left = s_ws_right = 0;
+        if (strcmp(val, "off") != 0)
+            ws_set_margins_from_spec(val);
+        return 1;
+    }
     if (strcmp(key, "--tcp-port") == 0 && val) {
         s_tcp_port = atoi(val);
         printf("[Debug] TCP port set to %d\n", s_tcp_port);
@@ -121,7 +280,8 @@ int game_handle_arg(const char *key, const char *val) {
 }
 
 const char *game_arg_usage(void) {
-    return "  --tcp-port PORT     TCP debug server port (default 4370)\n"
+    return "  --widescreen SPEC   Widescreen: \"16:9\", \"85x85\" (LxR margins), or \"off\"\n"
+           "  --tcp-port PORT     TCP debug server port (default 4370)\n"
            "  --verify            Enable dual-execution verify mode (Nestopia oracle)\n"
            "  --emulated          Run purely via Nestopia emulator (no recompiled code)\n";
 }
@@ -203,7 +363,83 @@ void game_run_main(void) {
 int game_dispatch_override(uint16_t addr) { (void)addr; return 0; }
 
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
-    (void)pc; (void)addr; return val;
+    if (!ws_sim_active()) return val;
+
+    switch (pc) {
+
+    /* ---- Sidecar bias capture: GetObjRelativePosition ($F171) ----
+     * $F179: SBC ScreenLeft_X_Pos, with g_cpu.X = SprObject index for
+     * every object class (player 0, enemies 1.., fireballs, misc, ...).
+     * Publish the object's true 16-bit screen X; the runner unwraps the
+     * OAM X writes of the draw that follows.  Return val unchanged —
+     * the game's own 8-bit math stays vanilla. */
+    case 0xF179: {
+        int world = ((int)g_ram[(0x6D + g_cpu.X) & 0xFF] << 8)
+                  |       g_ram[(0x86 + g_cpu.X) & 0xFF];
+        int cam   = ((int)g_ram[0x071A] << 8) | g_ram[0x071C];
+        int rel   = (int)(int16_t)(uint16_t)(world - cam);
+        g_ws_obj_true_rel  = (int16_t)rel;
+        g_ws_obj_rel8      = (uint8_t)(rel & 0xFF);
+        g_ws_obj_ctx_valid = 1;
+        return val;
+    }
+
+    /* ---- Draw-cull: GetXOffscreenBits edge reads (indexed) ----
+     * $F1FA: LDA ScreenEdge_X_Pos,y  → addr $071D (right) / $071C (left)
+     * $F202: LDA ScreenEdge_PageLoc,y → addr $071B / $071A
+     * Widening both edges makes the game's own column-cull algebra treat
+     * the margins as on-screen, so sprites there are neither parked at
+     * Y=$F8 nor column-suppressed. */
+    case 0xF1FA:
+        if (addr == 0x071D) return ws_shift_lo(val, +s_ws_right, &s_ws_pend_bits);
+        if (addr == 0x071C) return ws_shift_lo(val, -s_ws_left,  &s_ws_pend_bits);
+        return val;
+    case 0xF202:
+        if (addr == 0x071B || addr == 0x071A)
+            return ws_shift_hi(val, &s_ws_pend_bits);
+        return val;
+
+    /* ---- Despawn: OffscreenBoundsCheck ($D67A) ----
+     * Left bound camera-72 shifts left by the left margin; right bound
+     * ScreenRight+72 shifts right by the right margin.  The vanilla 72px
+     * cushion is preserved on both sides. */
+    case 0xD680: return ws_shift_lo(val, -s_ws_left,  &s_ws_pend_despawn);
+    case 0xD693: return ws_shift_hi(val, &s_ws_pend_despawn);
+    case 0xD69A: return ws_shift_lo(val, +s_ws_right, &s_ws_pend_despawn);
+    case 0xD6A1: return ws_shift_hi(val, &s_ws_pend_despawn);
+
+    /* ---- Enemy spawn window: CheckRightBounds ($C164) ----
+     * Spawn window is [ScreenRight, ScreenRight+0x30).  Shift both the
+     * +0x30 lookahead base ($C164/$C16E) and the raw-edge compare
+     * ($C1B6/$C1BB) by the right margin: enemies materialize just past
+     * the widened edge instead of popping in mid-margin, and the gap to
+     * the +72 despawn bound stays vanilla. */
+    case 0xC164: return ws_shift_lo(val, +s_ws_right, &s_ws_pend_spawnb);
+    case 0xC16E: return ws_shift_hi(val, &s_ws_pend_spawnb);
+    case 0xC1B6: return ws_shift_lo(val, +s_ws_right, &s_ws_pend_spawnc);
+    case 0xC1BB: return ws_shift_hi(val, &s_ws_pend_spawnc);
+
+    /* ---- Frenzy spawns at the right edge ($C5DA: enemy X = edge+0x20) ---- */
+    case 0xC5DA: return ws_shift_lo(val, +s_ws_right, &s_ws_pend_frenzy);
+    case 0xC5E2: return ws_shift_hi(val, &s_ws_pend_frenzy);
+
+    /* ---- Group spawn ($C73C): page is read BEFORE the low byte, so
+     * compute the widened 16-bit edge at the page read and serve the
+     * cached low byte at $C741. */
+    case 0xC73C: {
+        int wide = ((((int)val << 8) | g_ram[0x071D]) + s_ws_right) & 0xFFFF;
+        s_ws_c73c_lo = (uint8_t)(wide & 0xFF);
+        return (uint8_t)(wide >> 8);
+    }
+    case 0xC741:
+        return s_ws_c73c_lo;
+
+    /* Every other hooked read — player edge clamp ($B013/$B01C), loop
+     * rewind ($C09C/$C0A5), parser gates, victory logic, bounding boxes —
+     * stays vanilla by falling through. */
+    default:
+        return val;
+    }
 }
 
 /* ---- Watchdog globals (set by watchdog.c, read by debug server) ---- */
@@ -266,6 +502,30 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
             player_x, player_y,
             score_hi, score_mid, score_lo,
             lives, frame_ctr);
+        return 1;
+    }
+
+    if (strcmp(cmd, "smb_ws_state") == 0) {
+        /* Widescreen probe: config, gate, camera, and per-enemy true
+         * screen X vs what the sidecar recorded. */
+        int cam = ((int)g_ram[0x071A] << 8) | g_ram[0x071C];
+        char enemies[512]; int ep = 0;
+        enemies[0] = 0;
+        for (int i = 0; i < 5; i++) {
+            int world = ((int)g_ram[0x6E + i] << 8) | g_ram[0x87 + i];
+            ep += snprintf(enemies + ep, sizeof(enemies) - ep,
+                "%s{\"slot\":%d,\"flag\":%d,\"id\":%d,\"screen_x\":%d}",
+                i ? "," : "", i, g_ram[0x0F + i], g_ram[0x16 + i],
+                g_ram[0x0F + i] ? (int)(int16_t)(uint16_t)(world - cam) : 0);
+        }
+        debug_server_send_fmt(
+            "{\"id\":%d,\"cmd\":\"smb_ws_state\","
+            "\"enabled\":%d,\"left\":%d,\"right\":%d,"
+            "\"eff_left\":%d,\"eff_right\":%d,\"sim_active\":%d,"
+            "\"oper_mode\":%d,\"camera_x\":%d,\"enemies\":[%s]}\n",
+            id, s_ws_enabled, s_ws_left, s_ws_right,
+            g_ws_eff_left, g_ws_eff_right, ws_sim_active(),
+            g_ram[0x0770], cam, enemies);
         return 1;
     }
 

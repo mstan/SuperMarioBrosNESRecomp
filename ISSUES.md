@@ -295,6 +295,52 @@ must come from timing differences between frames.
 
 ---
 
+## ISSUE #11 — Block-bounce / particle / sprite placement misbehavior
+
+**Status:** OPEN — likely PRE-EXISTING (not widescreen): reproduces in the attract
+demo, and similar issues are reported in 4:3 on the Mac ARM build
+
+### Symptoms (observed 2026-06-12 on the widescreen worktree build, 16:9)
+1. **Falling brick on fresh load-in.** Entering 1-1 from the title, a brick sprite
+   near the top-left of the screen falls top-to-bottom continuously, wrapping
+   vertically and repeating quickly. It disappeared after the first Goomba stomp,
+   but recurs on every fresh load into the level.
+2. **Coin ?-block bounce broken.** Hitting a coin ?-block makes the block vanish
+   entirely during the bounce, then reappear in its inactive (used) state. On one
+   hit the bouncing block appeared momentarily at the far RIGHT edge of the screen
+   — consistent with an 8-bit X wraparound in sprite placement.
+3. **Mushroom ?-block particles misplaced.** Hitting a ?-block containing a
+   mushroom spawns the brick-chunk particles far off to the left/right of where
+   they should be, and the block that should appear inactive afterwards is
+   invisible instead.
+4. **Koopa sprite placement issues** (details not yet characterized).
+
+### Classification evidence
+- Reproduces in the **attract demo**, where the widescreen gate (OperMode 0)
+  forces fully vanilla simulation AND presentation — widescreen code contributes
+  nothing there.
+- User reports similar misbehavior in **4:3 on Mac ARM** (no widescreen at all).
+- Together these strongly suggest a pre-existing recomp/runner bug — plausibly in
+  the OAM/sprite presentation path, which the `--verify` CPU-state oracle would
+  not catch. A same-machine vanilla A/B run is still pending to confirm.
+
+### If it does turn out widescreen-related (secondary suspect)
+The OAM X16 sidecar uses a single global draw-context (true_rel/rel8 captured at
+`$F179` GetObjRelativePosition). `RelativeBlockPosition` computes rel positions
+for BOTH block slots back-to-back before any drawing, so the context for block
+slot 0 is clobbered by slot 1; Misc (particle) objects have a similar shape. A
+stale context that lands inside the delta window would bias sprite X wrongly.
+
+### Next steps
+1. Vanilla A/B on this machine (no `--widescreen`, no widescreen.ini): observe
+   load-in brick, coin-block bounce, mushroom-block particles, koopas.
+2. If pre-existing: frame-level OAM diff vs the oracle emulator over a
+   block-bounce window (always-on ring buffers / NESFrameRecord oam_x16).
+3. If widescreen: rework sidecar draw-context to be keyed per rel-var slot
+   instead of one global pending context.
+
+---
+
 ## ROM / config facts
 - SMB ROM: `F:/Projects/nesrecomp/Super Mario Bros. (World).nes`
 - Mapper 0 (NROM-256), 2 PRG banks × 16KB, 1 CHR bank × 8KB (CHR ROM, read-only)

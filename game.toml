@@ -4,6 +4,24 @@
 output_prefix = "super-mario-bros"
 symbol_file = "symbols.sym"
 
+# Widescreen: route screen-edge reads ($071A-$071D ScreenEdge PageLoc/X_Pos)
+# through game_ram_read_hook so extras.c can widen spawn/despawn/draw-cull
+# decisions at specific PCs.  `indexed = true` on the two base addresses
+# also hooks GetXOffscreenBits' LDA ScreenEdge_*,y reads.  The default hook
+# returns the value unchanged, and extras.c gates every shift on the
+# widescreen config + gameplay mode, so faithful behavior is preserved
+# whenever widescreen is off.
+[[ram_read_hook]]
+addr = 0x071A           # ScreenLeft_PageLoc (indexed base: ScreenEdge_PageLoc,y)
+indexed = true
+[[ram_read_hook]]
+addr = 0x071B           # ScreenRight_PageLoc
+[[ram_read_hook]]
+addr = 0x071C           # ScreenLeft_X_Pos (indexed base: ScreenEdge_X_Pos,y)
+indexed = true
+[[ram_read_hook]]
+addr = 0x071D           # ScreenRight_X_Pos
+
 # SMB inline indexed dispatch: JSR $8E04 pops return address to find a
 # 2-byte LE address table immediately after the JSR. Dispatches via A register.
 [[inline_dispatch]]
