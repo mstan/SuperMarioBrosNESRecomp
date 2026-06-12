@@ -297,8 +297,9 @@ must come from timing differences between frames.
 
 ## ISSUE #11 — Block-bounce / particle / sprite placement misbehavior
 
-**Status:** OPEN — likely PRE-EXISTING (not widescreen): reproduces in the attract
-demo, and similar issues are reported in 4:3 on the Mac ARM build
+**Status:** FIXED — pre-existing recompiler bug (nesrecomp), NOT widescreen.
+Root cause found via `--verify` oracle first-divergence; fix in
+`recompiler/src/code_generator.c` (see Root cause & fix below)
 
 ### Symptoms (observed 2026-06-12 on the widescreen worktree build, 16:9)
 1. **Falling brick on fresh load-in.** Entering 1-1 from the title, a brick sprite
@@ -331,13 +332,48 @@ for BOTH block slots back-to-back before any drawing, so the context for block
 slot 0 is clobbered by slot 1; Misc (particle) objects have a similar shape. A
 stale context that lands inside the delta window would bias sprite X wrongly.
 
-### Next steps
-1. Vanilla A/B on this machine (no `--widescreen`, no widescreen.ini): observe
-   load-in brick, coin-block bounce, mushroom-block particles, koopas.
-2. If pre-existing: frame-level OAM diff vs the oracle emulator over a
-   block-bounce window (always-on ring buffers / NESFrameRecord oam_x16).
-3. If widescreen: rework sidecar draw-context to be keyed per rel-var slot
-   instead of one global pending context.
+### Root cause & fix (2026-06-12)
+
+Vanilla A/B confirmed the bug with widescreen fully off (?-block shattered
+like a brick instead of bumping to a used block). `--verify` oracle run over
+the attract demo showed a persistent first divergence: `$0028 native=0x18
+emu=0x00` plus `$0004-$0007 native=0x00` where the emulator had real pointer
+values.
+
+The recompiler's inline_dispatch emission (nesrecomp commit 09d5cbb)
+hardcoded the trampoline side effects as `STX $27 / STY $28` — a pattern
+adapted from **Gumshoe's** dispatcher. SMB's JumpEngine at `$8E04` does
+nothing of the sort; it writes the pulled return address to `$04/$05`, the
+dispatch target to `$06/$07`, and exits with `Y=2*A+2`, `A=target hi`.
+In SMB's SprObject state layout `$27` is **Block_State[1]** and `$28` is
+**Misc_State[0]**, so every JumpEngine dispatch (dozens per frame) stomped
+the bounced-block object and the first Misc (brick chunk / coin particle)
+slot:
+
+- `$28 = 0x18` stuck → phantom Misc object simulated forever → the
+  falling-brick-from-the-sky on level load
+- `$27` stomped mid-bounce → coin-block bounce object vanishing /
+  far-right X wrap / wrong shatter-vs-bump behavior
+- particle misplacement and assorted sprite glitches (incl. koopa
+  observations) from the same per-frame corruption
+
+**Fix (nesrecomp `recompiler/src/code_generator.c`):** removed the
+hardcoded writes; the codegen now **symbolically executes the trampoline
+body** from ROM at codegen time (concrete per dispatch case: A = case
+selector, pulled return address = JSR site + 2, table reads from ROM) and
+emits the trampoline's true side effects — RAM stores, final registers,
+flags, and exact cycle count (43, not the hardcoded 57) — per case. Any
+unsupported construct fails the derivation loudly and emits no side
+effects. Works for any game's trampoline shape (SMB JumpEngine, Gumshoe
+STX/STY style, RTS-dispatch) with no game-specific constants.
+
+**Verification:** `--verify` oracle over 8000 frames (title + full attract
+demo loops): work-RAM divergence dropped from 100-400 bytes during demo
+gameplay to a flat 22 bytes, all in the un-mirrored 6502 stack page
+($01E9-$01FF, expected — SMB config doesn't enable push_all_jsr), plus a
+1-frame verify-harness comparison skew at the title↔demo frame-counter
+reset (5 of 8000 frames, recovers immediately). The demo now plays
+byte-identical to the Nestopia oracle.
 
 ---
 

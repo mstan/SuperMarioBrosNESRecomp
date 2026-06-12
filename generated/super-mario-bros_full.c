@@ -7453,13 +7453,11 @@ label_8212:; /* OperModeExecutionTree */
     /* $8212: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0770); FLAG_NZ(g_cpu.A);
 label_8215:;
     /* $8215: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 4 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_8231_b0(); return;
-  case 1: func_AEDC_b0(); return;
-  case 2: func_838B_b0(); return;
-  case 3: func_9218_b0(); return;
+  case 0: nes_write(0x0004, 0x17); nes_write(0x0005, 0x82); nes_write(0x0006, 0x31); nes_write(0x0007, 0x82); g_cpu.A = 0x82; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_8231_b0(); return;
+  case 1: nes_write(0x0004, 0x17); nes_write(0x0005, 0x82); nes_write(0x0006, 0xDC); nes_write(0x0007, 0xAE); g_cpu.A = 0xAE; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_AEDC_b0(); return;
+  case 2: nes_write(0x0004, 0x17); nes_write(0x0005, 0x82); nes_write(0x0006, 0x8B); nes_write(0x0007, 0x83); g_cpu.A = 0x83; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_838B_b0(); return;
+  case 3: nes_write(0x0004, 0x17); nes_write(0x0005, 0x82); nes_write(0x0006, 0x18); nes_write(0x0007, 0x92); g_cpu.A = 0x92; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9218_b0(); return;
   default: nes_log_inline_miss(0x8215, g_cpu.A); return;
 }
 label_8220:; /* MoveAllSpritesOffscreen */
@@ -9332,13 +9330,11 @@ label_8231:; /* TitleScreenMode */
     /* $8231: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0772); FLAG_NZ(g_cpu.A);
 label_8234:;
     /* $8234: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 4 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_8FCF_b0(); return;
-  case 1: func_8567_b0(); return;
-  case 2: func_9061_b0(); return;
-  case 3: func_8245_b0(); return;
+  case 0: nes_write(0x0004, 0x36); nes_write(0x0005, 0x82); nes_write(0x0006, 0xCF); nes_write(0x0007, 0x8F); g_cpu.A = 0x8F; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_8FCF_b0(); return;
+  case 1: nes_write(0x0004, 0x36); nes_write(0x0005, 0x82); nes_write(0x0006, 0x67); nes_write(0x0007, 0x85); g_cpu.A = 0x85; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_8567_b0(); return;
+  case 2: nes_write(0x0004, 0x36); nes_write(0x0005, 0x82); nes_write(0x0006, 0x61); nes_write(0x0007, 0x90); g_cpu.A = 0x90; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9061_b0(); return;
+  case 3: nes_write(0x0004, 0x36); nes_write(0x0005, 0x82); nes_write(0x0006, 0x45); nes_write(0x0007, 0x82); g_cpu.A = 0x82; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_8245_b0(); return;
   default: nes_log_inline_miss(0x8234, g_cpu.A); return;
 }
 label_823F:; /* WSelectBufferTemplate */
@@ -9357,13 +9353,11 @@ label_AEDC:; /* GameMode */
     /* $AEDC: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0772); FLAG_NZ(g_cpu.A);
 label_AEDF:;
     /* $AEDF: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 4 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_8FE4_b0(); return;
-  case 1: func_8567_b0(); return;
-  case 2: func_9071_b0(); return;
-  case 3: func_AEEA_b0(); return;
+  case 0: nes_write(0x0004, 0xE1); nes_write(0x0005, 0xAE); nes_write(0x0006, 0xE4); nes_write(0x0007, 0x8F); g_cpu.A = 0x8F; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_8FE4_b0(); return;
+  case 1: nes_write(0x0004, 0xE1); nes_write(0x0005, 0xAE); nes_write(0x0006, 0x67); nes_write(0x0007, 0x85); g_cpu.A = 0x85; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_8567_b0(); return;
+  case 2: nes_write(0x0004, 0xE1); nes_write(0x0005, 0xAE); nes_write(0x0006, 0x71); nes_write(0x0007, 0x90); g_cpu.A = 0x90; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9071_b0(); return;
+  case 3: nes_write(0x0004, 0xE1); nes_write(0x0005, 0xAE); nes_write(0x0006, 0xEA); nes_write(0x0007, 0xAE); g_cpu.A = 0xAE; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_AEEA_b0(); return;
   default: nes_log_inline_miss(0xAEDF, g_cpu.A); return;
 }
 label_AEEA:; /* GameCoreRoutine */
@@ -9554,12 +9548,10 @@ label_9218:; /* GameOverMode */
     /* $9218: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0772); FLAG_NZ(g_cpu.A);
 label_921B:;
     /* $921B: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 3 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_9224_b0(); return;
-  case 1: func_8567_b0(); return;
-  case 2: func_9237_b0(); return;
+  case 0: nes_write(0x0004, 0x1D); nes_write(0x0005, 0x92); nes_write(0x0006, 0x24); nes_write(0x0007, 0x92); g_cpu.A = 0x92; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9224_b0(); return;
+  case 1: nes_write(0x0004, 0x1D); nes_write(0x0005, 0x92); nes_write(0x0006, 0x67); nes_write(0x0007, 0x85); g_cpu.A = 0x85; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_8567_b0(); return;
+  case 2: nes_write(0x0004, 0x1D); nes_write(0x0005, 0x92); nes_write(0x0006, 0x37); nes_write(0x0007, 0x92); g_cpu.A = 0x92; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9237_b0(); return;
   default: nes_log_inline_miss(0x921B, g_cpu.A); return;
 }
 label_9224:; /* SetupGameOver */
@@ -19452,24 +19444,22 @@ label_8567:; /* ScreenRoutines */
     /* $8567: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x073C); FLAG_NZ(g_cpu.A);
 label_856A:;
     /* $856A: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 15 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_858B_b0(); return;
-  case 1: func_859B_b0(); return;
-  case 2: func_8652_b0(); return;
-  case 3: func_865A_b0(); return;
-  case 4: func_8693_b0(); return;
-  case 5: func_889D_b0(); return;
-  case 6: func_86A8_b0(); return;
-  case 7: func_889D_b0(); return;
-  case 8: func_86E6_b0(); return;
-  case 9: func_85BF_b0(); return;
-  case 10: func_85E3_b0(); return;
-  case 11: func_8643_b0(); return;
-  case 12: func_86FF_b0(); return;
-  case 13: func_8732_b0(); return;
-  case 14: func_8749_b0(); return;
+  case 0: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0x8B); nes_write(0x0007, 0x85); g_cpu.A = 0x85; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_858B_b0(); return;
+  case 1: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0x9B); nes_write(0x0007, 0x85); g_cpu.A = 0x85; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_859B_b0(); return;
+  case 2: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0x52); nes_write(0x0007, 0x86); g_cpu.A = 0x86; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_8652_b0(); return;
+  case 3: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0x5A); nes_write(0x0007, 0x86); g_cpu.A = 0x86; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_865A_b0(); return;
+  case 4: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0x93); nes_write(0x0007, 0x86); g_cpu.A = 0x86; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_8693_b0(); return;
+  case 5: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0x9D); nes_write(0x0007, 0x88); g_cpu.A = 0x88; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_889D_b0(); return;
+  case 6: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0xA8); nes_write(0x0007, 0x86); g_cpu.A = 0x86; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_86A8_b0(); return;
+  case 7: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0x9D); nes_write(0x0007, 0x88); g_cpu.A = 0x88; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_889D_b0(); return;
+  case 8: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0xE6); nes_write(0x0007, 0x86); g_cpu.A = 0x86; g_cpu.Y = 0x12; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_86E6_b0(); return;
+  case 9: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0xBF); nes_write(0x0007, 0x85); g_cpu.A = 0x85; g_cpu.Y = 0x14; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_85BF_b0(); return;
+  case 10: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0xE3); nes_write(0x0007, 0x85); g_cpu.A = 0x85; g_cpu.Y = 0x16; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_85E3_b0(); return;
+  case 11: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0x43); nes_write(0x0007, 0x86); g_cpu.A = 0x86; g_cpu.Y = 0x18; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_8643_b0(); return;
+  case 12: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0xFF); nes_write(0x0007, 0x86); g_cpu.A = 0x86; g_cpu.Y = 0x1A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_86FF_b0(); return;
+  case 13: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0x32); nes_write(0x0007, 0x87); g_cpu.A = 0x87; g_cpu.Y = 0x1C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_8732_b0(); return;
+  case 14: nes_write(0x0004, 0x6C); nes_write(0x0005, 0x85); nes_write(0x0006, 0x49); nes_write(0x0007, 0x87); g_cpu.A = 0x87; g_cpu.Y = 0x1E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_8749_b0(); return;
   default: nes_log_inline_miss(0x856A, g_cpu.A); return;
 }
 label_858B:; /* InitScreen */
@@ -20258,22 +20248,20 @@ label_B04A:; /* GameRoutines */
     /* $B04A: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0E); FLAG_NZ(g_cpu.A);
 label_B04C:;
     /* $B04C: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 13 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_9131_b0(); return;
-  case 1: func_B1C7_b0(); return;
-  case 2: func_B206_b0(); return;
-  case 3: func_B1E5_b0(); return;
-  case 4: func_B2A4_b0(); return;
-  case 5: func_B2CA_b0(); return;
-  case 6: func_91CD_b0(); return;
-  case 7: func_B069_b0(); return;
-  case 8: func_B0E9_b0(); return;
-  case 9: func_B233_b0(); return;
-  case 10: func_B245_b0(); return;
-  case 11: func_B269_b0(); return;
-  case 12: func_B27D_b0(); return;
+  case 0: nes_write(0x0004, 0x4E); nes_write(0x0005, 0xB0); nes_write(0x0006, 0x31); nes_write(0x0007, 0x91); g_cpu.A = 0x91; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9131_b0(); return;
+  case 1: nes_write(0x0004, 0x4E); nes_write(0x0005, 0xB0); nes_write(0x0006, 0xC7); nes_write(0x0007, 0xB1); g_cpu.A = 0xB1; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B1C7_b0(); return;
+  case 2: nes_write(0x0004, 0x4E); nes_write(0x0005, 0xB0); nes_write(0x0006, 0x06); nes_write(0x0007, 0xB2); g_cpu.A = 0xB2; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B206_b0(); return;
+  case 3: nes_write(0x0004, 0x4E); nes_write(0x0005, 0xB0); nes_write(0x0006, 0xE5); nes_write(0x0007, 0xB1); g_cpu.A = 0xB1; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B1E5_b0(); return;
+  case 4: nes_write(0x0004, 0x4E); nes_write(0x0005, 0xB0); nes_write(0x0006, 0xA4); nes_write(0x0007, 0xB2); g_cpu.A = 0xB2; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B2A4_b0(); return;
+  case 5: nes_write(0x0004, 0x4E); nes_write(0x0005, 0xB0); nes_write(0x0006, 0xCA); nes_write(0x0007, 0xB2); g_cpu.A = 0xB2; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B2CA_b0(); return;
+  case 6: nes_write(0x0004, 0x4E); nes_write(0x0005, 0xB0); nes_write(0x0006, 0xCD); nes_write(0x0007, 0x91); g_cpu.A = 0x91; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_91CD_b0(); return;
+  case 7: nes_write(0x0004, 0x4E); nes_write(0x0005, 0xB0); nes_write(0x0006, 0x69); nes_write(0x0007, 0xB0); g_cpu.A = 0xB0; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B069_b0(); return;
+  case 8: nes_write(0x0004, 0x4E); nes_write(0x0005, 0xB0); nes_write(0x0006, 0xE9); nes_write(0x0007, 0xB0); g_cpu.A = 0xB0; g_cpu.Y = 0x12; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B0E9_b0(); return;
+  case 9: nes_write(0x0004, 0x4E); nes_write(0x0005, 0xB0); nes_write(0x0006, 0x33); nes_write(0x0007, 0xB2); g_cpu.A = 0xB2; g_cpu.Y = 0x14; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B233_b0(); return;
+  case 10: nes_write(0x0004, 0x4E); nes_write(0x0005, 0xB0); nes_write(0x0006, 0x45); nes_write(0x0007, 0xB2); g_cpu.A = 0xB2; g_cpu.Y = 0x16; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B245_b0(); return;
+  case 11: nes_write(0x0004, 0x4E); nes_write(0x0005, 0xB0); nes_write(0x0006, 0x69); nes_write(0x0007, 0xB2); g_cpu.A = 0xB2; g_cpu.Y = 0x18; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B269_b0(); return;
+  case 12: nes_write(0x0004, 0x4E); nes_write(0x0005, 0xB0); nes_write(0x0006, 0x7D); nes_write(0x0007, 0xB2); g_cpu.A = 0xB2; g_cpu.Y = 0x1A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B27D_b0(); return;
   default: nes_log_inline_miss(0xB04C, g_cpu.A); return;
 }
 label_B069:; /* PlayerEntrance */
@@ -22451,14 +22439,12 @@ label_83A0:; /* VictoryModeSubroutines */
     /* $83A0: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0772); FLAG_NZ(g_cpu.A);
 label_83A3:;
     /* $83A3: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 5 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_CFEC(); return;
-  case 1: func_83B0_b0(); return;
-  case 2: func_83BD_b0(); return;
-  case 3: func_83F6_b0(); return;
-  case 4: func_8461_b0(); return;
+  case 0: nes_write(0x0004, 0xA5); nes_write(0x0005, 0x83); nes_write(0x0006, 0xEC); nes_write(0x0007, 0xCF); g_cpu.A = 0xCF; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CFEC(); return;
+  case 1: nes_write(0x0004, 0xA5); nes_write(0x0005, 0x83); nes_write(0x0006, 0xB0); nes_write(0x0007, 0x83); g_cpu.A = 0x83; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_83B0_b0(); return;
+  case 2: nes_write(0x0004, 0xA5); nes_write(0x0005, 0x83); nes_write(0x0006, 0xBD); nes_write(0x0007, 0x83); g_cpu.A = 0x83; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_83BD_b0(); return;
+  case 3: nes_write(0x0004, 0xA5); nes_write(0x0005, 0x83); nes_write(0x0006, 0xF6); nes_write(0x0007, 0x83); g_cpu.A = 0x83; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_83F6_b0(); return;
+  case 4: nes_write(0x0004, 0xA5); nes_write(0x0005, 0x83); nes_write(0x0006, 0x61); nes_write(0x0007, 0x84); g_cpu.A = 0x84; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_8461_b0(); return;
   default: nes_log_inline_miss(0x83A3, g_cpu.A); return;
 }
 label_83B0:; /* SetupVictoryMode */
@@ -26648,13 +26634,11 @@ label_B34B:;
     /* $B34B: 8C */ maybe_trigger_vblank(4); nes_write(0x0789, g_cpu.Y);
 label_B34E:; /* MoveSubs */
     /* $B34E: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 4 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_B35A_b0(); return;
-  case 1: func_B376_b0(); return;
-  case 2: func_B36D_b0(); return;
-  case 3: func_B3CF_b0(); return;
+  case 0: nes_write(0x0004, 0x50); nes_write(0x0005, 0xB3); nes_write(0x0006, 0x5A); nes_write(0x0007, 0xB3); g_cpu.A = 0xB3; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B35A_b0(); return;
+  case 1: nes_write(0x0004, 0x50); nes_write(0x0005, 0xB3); nes_write(0x0006, 0x76); nes_write(0x0007, 0xB3); g_cpu.A = 0xB3; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B376_b0(); return;
+  case 2: nes_write(0x0004, 0x50); nes_write(0x0005, 0xB3); nes_write(0x0006, 0x6D); nes_write(0x0007, 0xB3); g_cpu.A = 0xB3; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B36D_b0(); return;
+  case 3: nes_write(0x0004, 0x50); nes_write(0x0005, 0xB3); nes_write(0x0006, 0xCF); nes_write(0x0007, 0xB3); g_cpu.A = 0xB3; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_B3CF_b0(); return;
   default: nes_log_inline_miss(0xB34E, g_cpu.A); return;
 }
 label_B359:; /* NoMoveSub */
@@ -27738,43 +27722,41 @@ label_C88D:;
     /* $C88D: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x14; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_C88F:; /* JmpEO */
     /* $C88F: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 34 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_C8E0(); return;
-  case 1: func_C935(); return;
-  case 2: func_D295(); return;
-  case 3: func_C8D6(); return;
-  case 4: func_C8D6(); return;
-  case 5: func_C8D6(); return;
-  case 6: func_C8D6(); return;
-  case 7: func_C947(); return;
-  case 8: func_C947(); return;
-  case 9: func_C947(); return;
-  case 10: func_C947(); return;
-  case 11: func_C947(); return;
-  case 12: func_C947(); return;
-  case 13: func_C947(); return;
-  case 14: func_C947(); return;
-  case 15: func_C8D6(); return;
-  case 16: func_C965(); return;
-  case 17: func_C965(); return;
-  case 18: func_C965(); return;
-  case 19: func_C965(); return;
-  case 20: func_C965(); return;
-  case 21: func_C965(); return;
-  case 22: func_C965(); return;
-  case 23: func_C94D(); return;
-  case 24: func_C94D(); return;
-  case 25: func_D065(); return;
-  case 26: call_by_address(0xBC85); return;
-  case 27: call_by_address(0xB94B); return;
-  case 28: func_C8D6(); return;
-  case 29: func_D2D9(); return;
-  case 30: call_by_address(0xB8BA); return;
-  case 31: func_C8D6(); return;
-  case 32: call_by_address(0xB7A4); return;
-  case 33: func_C8D7(); return;
+  case 0: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xE0); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8E0(); return;
+  case 1: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x35); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C935(); return;
+  case 2: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x95); nes_write(0x0007, 0xD2); g_cpu.A = 0xD2; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D295(); return;
+  case 3: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 4: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 5: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 6: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 7: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 8: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x12; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 9: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x14; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 10: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x16; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 11: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x18; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 12: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x1A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 13: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x1C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 14: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x1E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 15: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x20; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 16: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x22; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 17: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x24; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 18: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x26; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 19: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x28; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 20: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x2A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 21: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x2C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 22: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x2E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 23: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x4D); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x30; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C94D(); return;
+  case 24: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x4D); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x32; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C94D(); return;
+  case 25: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xD0); g_cpu.A = 0xD0; g_cpu.Y = 0x34; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D065(); return;
+  case 26: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x85); nes_write(0x0007, 0xBC); g_cpu.A = 0xBC; g_cpu.Y = 0x36; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xBC85); return;
+  case 27: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x4B); nes_write(0x0007, 0xB9); g_cpu.A = 0xB9; g_cpu.Y = 0x38; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xB94B); return;
+  case 28: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x3A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 29: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD9); nes_write(0x0007, 0xD2); g_cpu.A = 0xD2; g_cpu.Y = 0x3C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D2D9(); return;
+  case 30: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xBA); nes_write(0x0007, 0xB8); g_cpu.A = 0xB8; g_cpu.Y = 0x3E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xB8BA); return;
+  case 31: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x40; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 32: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xA4); nes_write(0x0007, 0xB7); g_cpu.A = 0xB7; g_cpu.Y = 0x42; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xB7A4); return;
+  case 33: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD7); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x44; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D7(); return;
   default: nes_log_inline_miss(0xC88F, g_cpu.A); return;
 }
 label_C8D6:; /* NoRunCode */
@@ -33616,17 +33598,15 @@ void func_92C8_b0(void) { /* AreaParserTasks */
 #endif
 label_92C8:; /* AreaParserTasks */
     /* $92C8: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 8 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_92DB_b0(); return;
-  case 1: func_88AE_b0(); return;
-  case 2: func_88AE_b0(); return;
-  case 3: func_93FC_b0(); return;
-  case 4: func_92DB_b0(); return;
-  case 5: func_88AE_b0(); return;
-  case 6: func_88AE_b0(); return;
-  case 7: func_93FC_b0(); return;
+  case 0: nes_write(0x0004, 0xCA); nes_write(0x0005, 0x92); nes_write(0x0006, 0xDB); nes_write(0x0007, 0x92); g_cpu.A = 0x92; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_92DB_b0(); return;
+  case 1: nes_write(0x0004, 0xCA); nes_write(0x0005, 0x92); nes_write(0x0006, 0xAE); nes_write(0x0007, 0x88); g_cpu.A = 0x88; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_88AE_b0(); return;
+  case 2: nes_write(0x0004, 0xCA); nes_write(0x0005, 0x92); nes_write(0x0006, 0xAE); nes_write(0x0007, 0x88); g_cpu.A = 0x88; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_88AE_b0(); return;
+  case 3: nes_write(0x0004, 0xCA); nes_write(0x0005, 0x92); nes_write(0x0006, 0xFC); nes_write(0x0007, 0x93); g_cpu.A = 0x93; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_93FC_b0(); return;
+  case 4: nes_write(0x0004, 0xCA); nes_write(0x0005, 0x92); nes_write(0x0006, 0xDB); nes_write(0x0007, 0x92); g_cpu.A = 0x92; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_92DB_b0(); return;
+  case 5: nes_write(0x0004, 0xCA); nes_write(0x0005, 0x92); nes_write(0x0006, 0xAE); nes_write(0x0007, 0x88); g_cpu.A = 0x88; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_88AE_b0(); return;
+  case 6: nes_write(0x0004, 0xCA); nes_write(0x0005, 0x92); nes_write(0x0006, 0xAE); nes_write(0x0007, 0x88); g_cpu.A = 0x88; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_88AE_b0(); return;
+  case 7: nes_write(0x0004, 0xCA); nes_write(0x0005, 0x92); nes_write(0x0006, 0xFC); nes_write(0x0007, 0x93); g_cpu.A = 0x93; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_93FC_b0(); return;
   default: nes_log_inline_miss(0x92C8, g_cpu.A); return;
 }
 label_92DB:; /* IncrementColumnPos */
@@ -38562,14 +38542,12 @@ label_D2E3:;
     /* $D2E3: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_D311;
 label_D2E5:;
     /* $D2E5: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 5 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_D311(); return;
-  case 1: func_D2F2(); return;
-  case 2: func_D312(); return;
-  case 3: func_D34E(); return;
-  case 4: func_D3A2(); return;
+  case 0: nes_write(0x0004, 0xE7); nes_write(0x0005, 0xD2); nes_write(0x0006, 0x11); nes_write(0x0007, 0xD3); g_cpu.A = 0xD3; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D311(); return;
+  case 1: nes_write(0x0004, 0xE7); nes_write(0x0005, 0xD2); nes_write(0x0006, 0xF2); nes_write(0x0007, 0xD2); g_cpu.A = 0xD2; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D2F2(); return;
+  case 2: nes_write(0x0004, 0xE7); nes_write(0x0005, 0xD2); nes_write(0x0006, 0x12); nes_write(0x0007, 0xD3); g_cpu.A = 0xD3; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D312(); return;
+  case 3: nes_write(0x0004, 0xE7); nes_write(0x0005, 0xD2); nes_write(0x0006, 0x4E); nes_write(0x0007, 0xD3); g_cpu.A = 0xD3; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D34E(); return;
+  case 4: nes_write(0x0004, 0xE7); nes_write(0x0005, 0xD2); nes_write(0x0006, 0xA2); nes_write(0x0007, 0xD3); g_cpu.A = 0xD3; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D3A2(); return;
   default: nes_log_inline_miss(0xD2E5, g_cpu.A); return;
 }
 label_D2F2:; /* GameTimerFireworks */
@@ -39023,64 +39001,62 @@ label_C27E:;
     /* $C27E: 98 */ maybe_trigger_vblank(2); g_cpu.A = g_cpu.Y; FLAG_NZ(g_cpu.A);
 label_C27F:; /* InitEnemyRoutines */
     /* $C27F: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 55 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_C30E(); return;
-  case 1: func_C30E(); return;
-  case 2: func_C30E(); return;
-  case 3: func_C31E(); return;
-  case 4: func_C2F0(); return;
-  case 5: func_C328(); return;
-  case 6: func_C2F1(); return;
-  case 7: func_C342(); return;
-  case 8: func_C36B(); return;
-  case 9: func_C2F0(); return;
-  case 10: func_C375(); return;
-  case 11: func_C375(); return;
-  case 12: func_C2F7(); return;
-  case 13: func_C787(); return;
-  case 14: func_C7D1(); return;
-  case 15: func_C34A(); return;
-  case 16: func_C33D(); return;
-  case 17: func_C385(); return;
-  case 18: func_C7A0(); return;
-  case 19: func_C2F0(); return;
-  case 20: func_C7A0(); return;
-  case 21: func_C7A0(); return;
-  case 22: func_C7A0(); return;
-  case 23: func_C7A0(); return;
-  case 24: func_C7B8(); return;
-  case 25: func_C2F0(); return;
-  case 26: func_C2F0(); return;
-  case 27: func_C45C(); return;
-  case 28: func_C45C(); return;
-  case 29: func_C45C(); return;
-  case 30: func_C45C(); return;
-  case 31: func_C459(); return;
-  case 32: func_C2F0(); return;
-  case 33: func_C2F0(); return;
-  case 34: func_C2F0(); return;
-  case 35: func_C2F0(); return;
-  case 36: func_C7DF(); return;
-  case 37: func_C812(); return;
-  case 38: func_C83F(); return;
-  case 39: func_C845(); return;
-  case 40: func_C80B(); return;
-  case 41: func_C803(); return;
-  case 42: func_C80B(); return;
-  case 43: func_C84B(); return;
-  case 44: func_C857(); return;
-  case 45: func_C549(); return;
-  case 46: call_by_address(0xBC60); return;
-  case 47: call_by_address(0xB91E); return;
-  case 48: func_C2F0(); return;
-  case 49: func_C2F0(); return;
-  case 50: func_C2F0(); return;
-  case 51: func_C2F0(); return;
-  case 52: func_C2F0(); return;
-  case 53: func_C307(); return;
-  case 54: func_C881(); return;
+  case 0: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x0E); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C30E(); return;
+  case 1: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x0E); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C30E(); return;
+  case 2: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x0E); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C30E(); return;
+  case 3: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x1E); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C31E(); return;
+  case 4: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 5: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x28); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C328(); return;
+  case 6: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF1); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F1(); return;
+  case 7: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x42); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C342(); return;
+  case 8: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x6B); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x12; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C36B(); return;
+  case 9: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x14; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 10: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x75); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x16; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C375(); return;
+  case 11: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x75); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x18; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C375(); return;
+  case 12: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF7); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x1A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F7(); return;
+  case 13: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x87); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x1C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C787(); return;
+  case 14: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xD1); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x1E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7D1(); return;
+  case 15: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x4A); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x20; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C34A(); return;
+  case 16: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x3D); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x22; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C33D(); return;
+  case 17: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x85); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x24; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C385(); return;
+  case 18: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xA0); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x26; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7A0(); return;
+  case 19: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x28; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 20: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xA0); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x2A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7A0(); return;
+  case 21: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xA0); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x2C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7A0(); return;
+  case 22: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xA0); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x2E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7A0(); return;
+  case 23: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xA0); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x30; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7A0(); return;
+  case 24: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xB8); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x32; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7B8(); return;
+  case 25: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x34; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 26: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x36; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 27: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x5C); nes_write(0x0007, 0xC4); g_cpu.A = 0xC4; g_cpu.Y = 0x38; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C45C(); return;
+  case 28: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x5C); nes_write(0x0007, 0xC4); g_cpu.A = 0xC4; g_cpu.Y = 0x3A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C45C(); return;
+  case 29: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x5C); nes_write(0x0007, 0xC4); g_cpu.A = 0xC4; g_cpu.Y = 0x3C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C45C(); return;
+  case 30: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x5C); nes_write(0x0007, 0xC4); g_cpu.A = 0xC4; g_cpu.Y = 0x3E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C45C(); return;
+  case 31: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x59); nes_write(0x0007, 0xC4); g_cpu.A = 0xC4; g_cpu.Y = 0x40; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C459(); return;
+  case 32: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x42; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 33: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x44; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 34: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x46; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 35: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x48; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 36: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xDF); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x4A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7DF(); return;
+  case 37: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x12); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x4C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C812(); return;
+  case 38: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x3F); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x4E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C83F(); return;
+  case 39: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x45); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x50; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C845(); return;
+  case 40: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x0B); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x52; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C80B(); return;
+  case 41: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x03); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x54; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C803(); return;
+  case 42: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x0B); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x56; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C80B(); return;
+  case 43: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x4B); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x58; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C84B(); return;
+  case 44: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x57); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x5A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C857(); return;
+  case 45: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x49); nes_write(0x0007, 0xC5); g_cpu.A = 0xC5; g_cpu.Y = 0x5C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C549(); return;
+  case 46: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x60); nes_write(0x0007, 0xBC); g_cpu.A = 0xBC; g_cpu.Y = 0x5E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xBC60); return;
+  case 47: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x1E); nes_write(0x0007, 0xB9); g_cpu.A = 0xB9; g_cpu.Y = 0x60; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xB91E); return;
+  case 48: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x62; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 49: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x64; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 50: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x66; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 51: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x68; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 52: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x6A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 53: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x07); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x6C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C307(); return;
+  case 54: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x81); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x6E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C881(); return;
   default: nes_log_inline_miss(0xC27F, g_cpu.A); return;
 }
 label_C2F0:; /* NoInitCode */
@@ -51321,18 +51297,16 @@ label_BDBB:;
     /* $BDBB: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x05; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_BDBD:; /* BlockCode */
     /* $BDBD: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 9 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_BDD2_b0(); return;
-  case 1: func_BB38_b0(); return;
-  case 2: func_BB38_b0(); return;
-  case 3: func_BDD8_b0(); return;
-  case 4: func_BDD2_b0(); return;
-  case 5: func_BDDF_b0(); return;
-  case 6: func_BDD5_b0(); return;
-  case 7: func_BB38_b0(); return;
-  case 8: func_BDD8_b0(); return;
+  case 0: nes_write(0x0004, 0xBF); nes_write(0x0005, 0xBD); nes_write(0x0006, 0xD2); nes_write(0x0007, 0xBD); g_cpu.A = 0xBD; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_BDD2_b0(); return;
+  case 1: nes_write(0x0004, 0xBF); nes_write(0x0005, 0xBD); nes_write(0x0006, 0x38); nes_write(0x0007, 0xBB); g_cpu.A = 0xBB; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_BB38_b0(); return;
+  case 2: nes_write(0x0004, 0xBF); nes_write(0x0005, 0xBD); nes_write(0x0006, 0x38); nes_write(0x0007, 0xBB); g_cpu.A = 0xBB; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_BB38_b0(); return;
+  case 3: nes_write(0x0004, 0xBF); nes_write(0x0005, 0xBD); nes_write(0x0006, 0xD8); nes_write(0x0007, 0xBD); g_cpu.A = 0xBD; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_BDD8_b0(); return;
+  case 4: nes_write(0x0004, 0xBF); nes_write(0x0005, 0xBD); nes_write(0x0006, 0xD2); nes_write(0x0007, 0xBD); g_cpu.A = 0xBD; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_BDD2_b0(); return;
+  case 5: nes_write(0x0004, 0xBF); nes_write(0x0005, 0xBD); nes_write(0x0006, 0xDF); nes_write(0x0007, 0xBD); g_cpu.A = 0xBD; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_BDDF_b0(); return;
+  case 6: nes_write(0x0004, 0xBF); nes_write(0x0005, 0xBD); nes_write(0x0006, 0xD5); nes_write(0x0007, 0xBD); g_cpu.A = 0xBD; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_BDD5_b0(); return;
+  case 7: nes_write(0x0004, 0xBF); nes_write(0x0005, 0xBD); nes_write(0x0006, 0x38); nes_write(0x0007, 0xBB); g_cpu.A = 0xBB; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_BB38_b0(); return;
+  case 8: nes_write(0x0004, 0xBF); nes_write(0x0005, 0xBD); nes_write(0x0006, 0xD8); nes_write(0x0007, 0xBD); g_cpu.A = 0xBD; g_cpu.Y = 0x12; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_BDD8_b0(); return;
   default: nes_log_inline_miss(0xBDBD, g_cpu.A); return;
 }
 label_BDD2:; /* MushFlowerBlock */
@@ -52475,30 +52449,28 @@ label_C905:; /* EnemyMovementSubs */
     /* $C905: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x16 + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_C907:;
     /* $C907: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 21 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_CA77(); return;
-  case 1: func_CA77(); return;
-  case 2: func_CA77(); return;
-  case 3: func_CA77(); return;
-  case 4: func_CA77(); return;
-  case 5: func_C9D8(); return;
-  case 6: func_CA77(); return;
-  case 7: func_CB89(); return;
-  case 8: func_CC36(); return;
-  case 9: func_C934(); return;
-  case 10: func_CC4A(); return;
-  case 11: func_CC4A(); return;
-  case 12: func_C9B0(); return;
-  case 13: func_D3B0(); return;
-  case 14: func_CAF9(); return;
-  case 15: func_CAFF(); return;
-  case 16: func_CB25(); return;
-  case 17: func_CF28(); return;
-  case 18: func_CA77(); return;
-  case 19: func_C934(); return;
-  case 20: func_CEDF(); return;
+  case 0: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 1: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 2: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 3: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 4: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 5: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xD8); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C9D8(); return;
+  case 6: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 7: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x89); nes_write(0x0007, 0xCB); g_cpu.A = 0xCB; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CB89(); return;
+  case 8: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x36); nes_write(0x0007, 0xCC); g_cpu.A = 0xCC; g_cpu.Y = 0x12; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CC36(); return;
+  case 9: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x34); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x14; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C934(); return;
+  case 10: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x4A); nes_write(0x0007, 0xCC); g_cpu.A = 0xCC; g_cpu.Y = 0x16; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CC4A(); return;
+  case 11: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x4A); nes_write(0x0007, 0xCC); g_cpu.A = 0xCC; g_cpu.Y = 0x18; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CC4A(); return;
+  case 12: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xB0); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x1A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C9B0(); return;
+  case 13: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xB0); nes_write(0x0007, 0xD3); g_cpu.A = 0xD3; g_cpu.Y = 0x1C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D3B0(); return;
+  case 14: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xF9); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x1E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CAF9(); return;
+  case 15: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xFF); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x20; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CAFF(); return;
+  case 16: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x25); nes_write(0x0007, 0xCB); g_cpu.A = 0xCB; g_cpu.Y = 0x22; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CB25(); return;
+  case 17: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x28); nes_write(0x0007, 0xCF); g_cpu.A = 0xCF; g_cpu.Y = 0x24; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CF28(); return;
+  case 18: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x26; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 19: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x34); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x28; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C934(); return;
+  case 20: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xDF); nes_write(0x0007, 0xCE); g_cpu.A = 0xCE; g_cpu.Y = 0x2A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CEDF(); return;
   default: nes_log_inline_miss(0xC907, g_cpu.A); return;
 }
 label_C934:; /* NoMoveCode */
@@ -53076,16 +53048,14 @@ label_C985:;
     /* $C985: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x24; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_C987:;
     /* $C987: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 7 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_D432(); return;
-  case 1: func_D5D3(); return;
-  case 2: func_D64F(); return;
-  case 3: func_D64F(); return;
-  case 4: func_D607(); return;
-  case 5: func_D631(); return;
-  case 6: func_D63D(); return;
+  case 0: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x32); nes_write(0x0007, 0xD4); g_cpu.A = 0xD4; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D432(); return;
+  case 1: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xD3); nes_write(0x0007, 0xD5); g_cpu.A = 0xD5; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D5D3(); return;
+  case 2: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x4F); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D64F(); return;
+  case 3: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x4F); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D64F(); return;
+  case 4: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x07); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D607(); return;
+  case 5: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x31); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D631(); return;
+  case 6: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x3D); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D63D(); return;
   default: nes_log_inline_miss(0xC987, g_cpu.A); return;
 }
 label_C998:; /* EraseEnemyObject */
@@ -55343,17 +55313,15 @@ label_C7A6:;
     /* $C7A6: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x12; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_C7A8:;
     /* $C7A8: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 8 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_C3A4(); return;
-  case 1: func_C7B7(); return;
-  case 2: func_C4A8(); return;
-  case 3: func_C5A3(); return;
-  case 4: func_C63D(); return;
-  case 5: func_C69C(); return;
-  case 6: call_by_address(0xA060); return;
-  case 7: call_by_address(0xB905); return;
+  case 0: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0xA4); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C3A4(); return;
+  case 1: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0xB7); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7B7(); return;
+  case 2: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0xA8); nes_write(0x0007, 0xC4); g_cpu.A = 0xC4; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C4A8(); return;
+  case 3: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0xA3); nes_write(0x0007, 0xC5); g_cpu.A = 0xC5; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C5A3(); return;
+  case 4: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0x3D); nes_write(0x0007, 0xC6); g_cpu.A = 0xC6; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C63D(); return;
+  case 5: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0x9C); nes_write(0x0007, 0xC6); g_cpu.A = 0xC6; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C69C(); return;
+  case 6: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0x60); nes_write(0x0007, 0xA0); g_cpu.A = 0xA0; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xA060); return;
+  case 7: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0x05); nes_write(0x0007, 0xB9); g_cpu.A = 0xB9; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xB905); return;
   default: nes_log_inline_miss(0xC7A8, g_cpu.A); return;
 }
 label_C7BB:;
@@ -63749,14 +63717,12 @@ label_D2E3:;
     /* $D2E3: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_D311;
 label_D2E5:;
     /* $D2E5: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 5 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_D311(); return;
-  case 1: func_D2F2(); return;
-  case 2: func_D312(); return;
-  case 3: func_D34E(); return;
-  case 4: func_D3A2(); return;
+  case 0: nes_write(0x0004, 0xE7); nes_write(0x0005, 0xD2); nes_write(0x0006, 0x11); nes_write(0x0007, 0xD3); g_cpu.A = 0xD3; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D311(); return;
+  case 1: nes_write(0x0004, 0xE7); nes_write(0x0005, 0xD2); nes_write(0x0006, 0xF2); nes_write(0x0007, 0xD2); g_cpu.A = 0xD2; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D2F2(); return;
+  case 2: nes_write(0x0004, 0xE7); nes_write(0x0005, 0xD2); nes_write(0x0006, 0x12); nes_write(0x0007, 0xD3); g_cpu.A = 0xD3; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D312(); return;
+  case 3: nes_write(0x0004, 0xE7); nes_write(0x0005, 0xD2); nes_write(0x0006, 0x4E); nes_write(0x0007, 0xD3); g_cpu.A = 0xD3; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D34E(); return;
+  case 4: nes_write(0x0004, 0xE7); nes_write(0x0005, 0xD2); nes_write(0x0006, 0xA2); nes_write(0x0007, 0xD3); g_cpu.A = 0xD3; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D3A2(); return;
   default: nes_log_inline_miss(0xD2E5, g_cpu.A); return;
 }
 label_D2F2:; /* GameTimerFireworks */
@@ -72950,56 +72916,54 @@ label_9662:;
     /* $9662: 65 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x07); uint16_t r=g_cpu.A+m+g_cpu.C; FLAG_NZC_ADD(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_9664:;
     /* $9664: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 47 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_98E5_b0(); return;
-  case 1: func_9740_b0(); return;
-  case 2: func_9A2E_b0(); return;
-  case 3: func_9A3E_b0(); return;
-  case 4: func_99F2_b0(); return;
-  case 5: func_9A50_b0(); return;
-  case 6: func_9A59_b0(); return;
-  case 7: func_98E5_b0(); return;
-  case 8: func_9B41_b0(); return;
-  case 9: func_97BA_b0(); return;
-  case 10: func_9979_b0(); return;
-  case 11: func_997C_b0(); return;
-  case 12: func_997F_b0(); return;
-  case 13: func_9957_b0(); return;
-  case 14: func_9968_b0(); return;
-  case 15: func_996B_b0(); return;
-  case 16: func_99D0_b0(); return;
-  case 17: func_99D7_b0(); return;
-  case 18: func_9806_b0(); return;
-  case 19: func_9AB7_b0(); return;
-  case 20: func_98AB_b0(); return;
-  case 21: func_9994_b0(); return;
-  case 22: func_9B0E_b0(); return;
-  case 23: func_9B0E_b0(); return;
-  case 24: func_9B0E_b0(); return;
-  case 25: func_9B01_b0(); return;
-  case 26: func_9B19_b0(); return;
-  case 27: func_9B19_b0(); return;
-  case 28: func_9B19_b0(); return;
-  case 29: func_9B14_b0(); return;
-  case 30: func_9B19_b0(); return;
-  case 31: func_986F_b0(); return;
-  case 32: func_9A19_b0(); return;
-  case 33: func_9AD3_b0(); return;
-  case 34: func_9882_b0(); return;
-  case 35: func_999E_b0(); return;
-  case 36: func_9A09_b0(); return;
-  case 37: func_9A0E_b0(); return;
-  case 38: func_9A01_b0(); return;
-  case 39: func_96F2_b0(); return;
-  case 40: func_970D_b0(); return;
-  case 41: func_970D_b0(); return;
-  case 42: func_972B_b0(); return;
-  case 43: func_972B_b0(); return;
-  case 44: func_972B_b0(); return;
-  case 45: func_9645_b0(); return;
-  case 46: func_96C5_b0(); return;
+  case 0: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xE5); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_98E5_b0(); return;
+  case 1: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x40); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9740_b0(); return;
+  case 2: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x2E); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A2E_b0(); return;
+  case 3: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x3E); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A3E_b0(); return;
+  case 4: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xF2); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_99F2_b0(); return;
+  case 5: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x50); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A50_b0(); return;
+  case 6: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x59); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A59_b0(); return;
+  case 7: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xE5); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_98E5_b0(); return;
+  case 8: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x41); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x12; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B41_b0(); return;
+  case 9: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xBA); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x14; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_97BA_b0(); return;
+  case 10: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x79); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x16; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9979_b0(); return;
+  case 11: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x7C); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x18; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_997C_b0(); return;
+  case 12: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x7F); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x1A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_997F_b0(); return;
+  case 13: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x57); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x1C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9957_b0(); return;
+  case 14: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x68); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x1E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9968_b0(); return;
+  case 15: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x6B); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x20; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_996B_b0(); return;
+  case 16: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xD0); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x22; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_99D0_b0(); return;
+  case 17: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xD7); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x24; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_99D7_b0(); return;
+  case 18: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x06); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x26; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9806_b0(); return;
+  case 19: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xB7); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x28; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9AB7_b0(); return;
+  case 20: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xAB); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x2A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_98AB_b0(); return;
+  case 21: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x94); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x2C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9994_b0(); return;
+  case 22: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0E); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x2E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B0E_b0(); return;
+  case 23: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0E); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x30; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B0E_b0(); return;
+  case 24: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0E); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x32; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B0E_b0(); return;
+  case 25: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x01); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x34; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B01_b0(); return;
+  case 26: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x36; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B19_b0(); return;
+  case 27: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x38; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B19_b0(); return;
+  case 28: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x3A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B19_b0(); return;
+  case 29: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x14); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x3C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B14_b0(); return;
+  case 30: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x3E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B19_b0(); return;
+  case 31: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x6F); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x40; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_986F_b0(); return;
+  case 32: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x42; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A19_b0(); return;
+  case 33: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xD3); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x44; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9AD3_b0(); return;
+  case 34: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x82); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x46; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9882_b0(); return;
+  case 35: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x9E); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x48; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_999E_b0(); return;
+  case 36: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x09); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x4A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A09_b0(); return;
+  case 37: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0E); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x4C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A0E_b0(); return;
+  case 38: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x01); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x4E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A01_b0(); return;
+  case 39: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xF2); nes_write(0x0007, 0x96); g_cpu.A = 0x96; g_cpu.Y = 0x50; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_96F2_b0(); return;
+  case 40: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0D); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x52; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_970D_b0(); return;
+  case 41: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0D); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x54; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_970D_b0(); return;
+  case 42: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x2B); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x56; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_972B_b0(); return;
+  case 43: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x2B); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x58; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_972B_b0(); return;
+  case 44: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x2B); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x5A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_972B_b0(); return;
+  case 45: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x45); nes_write(0x0007, 0x96); g_cpu.A = 0x96; g_cpu.Y = 0x5C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9645_b0(); return;
+  case 46: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xC5); nes_write(0x0007, 0x96); g_cpu.A = 0x96; g_cpu.Y = 0x5E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_96C5_b0(); return;
   default: nes_log_inline_miss(0x9664, g_cpu.A); return;
 }
 label_96C5:; /* AlterAreaAttributes */
@@ -79502,56 +79466,54 @@ label_9662:;
     /* $9662: 65 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x07); uint16_t r=g_cpu.A+m+g_cpu.C; FLAG_NZC_ADD(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_9664:;
     /* $9664: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 47 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_98E5_b0(); return;
-  case 1: func_9740_b0(); return;
-  case 2: func_9A2E_b0(); return;
-  case 3: func_9A3E_b0(); return;
-  case 4: func_99F2_b0(); return;
-  case 5: func_9A50_b0(); return;
-  case 6: func_9A59_b0(); return;
-  case 7: func_98E5_b0(); return;
-  case 8: func_9B41_b0(); return;
-  case 9: func_97BA_b0(); return;
-  case 10: func_9979_b0(); return;
-  case 11: func_997C_b0(); return;
-  case 12: func_997F_b0(); return;
-  case 13: func_9957_b0(); return;
-  case 14: func_9968_b0(); return;
-  case 15: func_996B_b0(); return;
-  case 16: func_99D0_b0(); return;
-  case 17: func_99D7_b0(); return;
-  case 18: func_9806_b0(); return;
-  case 19: func_9AB7_b0(); return;
-  case 20: func_98AB_b0(); return;
-  case 21: func_9994_b0(); return;
-  case 22: func_9B0E_b0(); return;
-  case 23: func_9B0E_b0(); return;
-  case 24: func_9B0E_b0(); return;
-  case 25: func_9B01_b0(); return;
-  case 26: func_9B19_b0(); return;
-  case 27: func_9B19_b0(); return;
-  case 28: func_9B19_b0(); return;
-  case 29: func_9B14_b0(); return;
-  case 30: func_9B19_b0(); return;
-  case 31: func_986F_b0(); return;
-  case 32: func_9A19_b0(); return;
-  case 33: func_9AD3_b0(); return;
-  case 34: func_9882_b0(); return;
-  case 35: func_999E_b0(); return;
-  case 36: func_9A09_b0(); return;
-  case 37: func_9A0E_b0(); return;
-  case 38: func_9A01_b0(); return;
-  case 39: func_96F2_b0(); return;
-  case 40: func_970D_b0(); return;
-  case 41: func_970D_b0(); return;
-  case 42: func_972B_b0(); return;
-  case 43: func_972B_b0(); return;
-  case 44: func_972B_b0(); return;
-  case 45: func_9645_b0(); return;
-  case 46: func_96C5_b0(); return;
+  case 0: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xE5); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_98E5_b0(); return;
+  case 1: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x40); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9740_b0(); return;
+  case 2: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x2E); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A2E_b0(); return;
+  case 3: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x3E); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A3E_b0(); return;
+  case 4: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xF2); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_99F2_b0(); return;
+  case 5: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x50); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A50_b0(); return;
+  case 6: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x59); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A59_b0(); return;
+  case 7: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xE5); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_98E5_b0(); return;
+  case 8: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x41); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x12; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B41_b0(); return;
+  case 9: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xBA); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x14; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_97BA_b0(); return;
+  case 10: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x79); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x16; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9979_b0(); return;
+  case 11: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x7C); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x18; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_997C_b0(); return;
+  case 12: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x7F); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x1A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_997F_b0(); return;
+  case 13: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x57); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x1C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9957_b0(); return;
+  case 14: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x68); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x1E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9968_b0(); return;
+  case 15: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x6B); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x20; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_996B_b0(); return;
+  case 16: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xD0); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x22; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_99D0_b0(); return;
+  case 17: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xD7); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x24; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_99D7_b0(); return;
+  case 18: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x06); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x26; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9806_b0(); return;
+  case 19: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xB7); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x28; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9AB7_b0(); return;
+  case 20: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xAB); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x2A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_98AB_b0(); return;
+  case 21: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x94); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x2C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9994_b0(); return;
+  case 22: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0E); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x2E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B0E_b0(); return;
+  case 23: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0E); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x30; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B0E_b0(); return;
+  case 24: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0E); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x32; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B0E_b0(); return;
+  case 25: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x01); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x34; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B01_b0(); return;
+  case 26: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x36; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B19_b0(); return;
+  case 27: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x38; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B19_b0(); return;
+  case 28: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x3A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B19_b0(); return;
+  case 29: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x14); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x3C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B14_b0(); return;
+  case 30: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x3E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B19_b0(); return;
+  case 31: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x6F); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x40; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_986F_b0(); return;
+  case 32: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x42; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A19_b0(); return;
+  case 33: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xD3); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x44; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9AD3_b0(); return;
+  case 34: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x82); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x46; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9882_b0(); return;
+  case 35: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x9E); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x48; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_999E_b0(); return;
+  case 36: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x09); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x4A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A09_b0(); return;
+  case 37: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0E); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x4C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A0E_b0(); return;
+  case 38: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x01); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x4E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A01_b0(); return;
+  case 39: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xF2); nes_write(0x0007, 0x96); g_cpu.A = 0x96; g_cpu.Y = 0x50; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_96F2_b0(); return;
+  case 40: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0D); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x52; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_970D_b0(); return;
+  case 41: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0D); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x54; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_970D_b0(); return;
+  case 42: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x2B); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x56; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_972B_b0(); return;
+  case 43: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x2B); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x58; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_972B_b0(); return;
+  case 44: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x2B); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x5A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_972B_b0(); return;
+  case 45: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x45); nes_write(0x0007, 0x96); g_cpu.A = 0x96; g_cpu.Y = 0x5C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9645_b0(); return;
+  case 46: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xC5); nes_write(0x0007, 0x96); g_cpu.A = 0x96; g_cpu.Y = 0x5E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_96C5_b0(); return;
   default: nes_log_inline_miss(0x9664, g_cpu.A); return;
 }
 label_96C5:; /* AlterAreaAttributes */
@@ -79716,56 +79678,54 @@ label_9662:;
     /* $9662: 65 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x07); uint16_t r=g_cpu.A+m+g_cpu.C; FLAG_NZC_ADD(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_9664:;
     /* $9664: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 47 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_98E5_b0(); return;
-  case 1: func_9740_b0(); return;
-  case 2: func_9A2E_b0(); return;
-  case 3: func_9A3E_b0(); return;
-  case 4: func_99F2_b0(); return;
-  case 5: func_9A50_b0(); return;
-  case 6: func_9A59_b0(); return;
-  case 7: func_98E5_b0(); return;
-  case 8: func_9B41_b0(); return;
-  case 9: func_97BA_b0(); return;
-  case 10: func_9979_b0(); return;
-  case 11: func_997C_b0(); return;
-  case 12: func_997F_b0(); return;
-  case 13: func_9957_b0(); return;
-  case 14: func_9968_b0(); return;
-  case 15: func_996B_b0(); return;
-  case 16: func_99D0_b0(); return;
-  case 17: func_99D7_b0(); return;
-  case 18: func_9806_b0(); return;
-  case 19: func_9AB7_b0(); return;
-  case 20: func_98AB_b0(); return;
-  case 21: func_9994_b0(); return;
-  case 22: func_9B0E_b0(); return;
-  case 23: func_9B0E_b0(); return;
-  case 24: func_9B0E_b0(); return;
-  case 25: func_9B01_b0(); return;
-  case 26: func_9B19_b0(); return;
-  case 27: func_9B19_b0(); return;
-  case 28: func_9B19_b0(); return;
-  case 29: func_9B14_b0(); return;
-  case 30: func_9B19_b0(); return;
-  case 31: func_986F_b0(); return;
-  case 32: func_9A19_b0(); return;
-  case 33: func_9AD3_b0(); return;
-  case 34: func_9882_b0(); return;
-  case 35: func_999E_b0(); return;
-  case 36: func_9A09_b0(); return;
-  case 37: func_9A0E_b0(); return;
-  case 38: func_9A01_b0(); return;
-  case 39: func_96F2_b0(); return;
-  case 40: func_970D_b0(); return;
-  case 41: func_970D_b0(); return;
-  case 42: func_972B_b0(); return;
-  case 43: func_972B_b0(); return;
-  case 44: func_972B_b0(); return;
-  case 45: func_9645_b0(); return;
-  case 46: func_96C5_b0(); return;
+  case 0: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xE5); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_98E5_b0(); return;
+  case 1: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x40); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9740_b0(); return;
+  case 2: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x2E); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A2E_b0(); return;
+  case 3: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x3E); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A3E_b0(); return;
+  case 4: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xF2); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_99F2_b0(); return;
+  case 5: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x50); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A50_b0(); return;
+  case 6: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x59); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A59_b0(); return;
+  case 7: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xE5); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_98E5_b0(); return;
+  case 8: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x41); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x12; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B41_b0(); return;
+  case 9: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xBA); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x14; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_97BA_b0(); return;
+  case 10: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x79); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x16; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9979_b0(); return;
+  case 11: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x7C); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x18; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_997C_b0(); return;
+  case 12: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x7F); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x1A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_997F_b0(); return;
+  case 13: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x57); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x1C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9957_b0(); return;
+  case 14: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x68); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x1E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9968_b0(); return;
+  case 15: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x6B); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x20; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_996B_b0(); return;
+  case 16: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xD0); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x22; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_99D0_b0(); return;
+  case 17: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xD7); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x24; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_99D7_b0(); return;
+  case 18: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x06); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x26; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9806_b0(); return;
+  case 19: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xB7); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x28; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9AB7_b0(); return;
+  case 20: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xAB); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x2A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_98AB_b0(); return;
+  case 21: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x94); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x2C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9994_b0(); return;
+  case 22: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0E); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x2E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B0E_b0(); return;
+  case 23: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0E); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x30; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B0E_b0(); return;
+  case 24: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0E); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x32; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B0E_b0(); return;
+  case 25: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x01); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x34; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B01_b0(); return;
+  case 26: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x36; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B19_b0(); return;
+  case 27: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x38; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B19_b0(); return;
+  case 28: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x3A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B19_b0(); return;
+  case 29: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x14); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x3C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B14_b0(); return;
+  case 30: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9B); g_cpu.A = 0x9B; g_cpu.Y = 0x3E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9B19_b0(); return;
+  case 31: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x6F); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x40; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_986F_b0(); return;
+  case 32: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x19); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x42; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A19_b0(); return;
+  case 33: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xD3); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x44; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9AD3_b0(); return;
+  case 34: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x82); nes_write(0x0007, 0x98); g_cpu.A = 0x98; g_cpu.Y = 0x46; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9882_b0(); return;
+  case 35: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x9E); nes_write(0x0007, 0x99); g_cpu.A = 0x99; g_cpu.Y = 0x48; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_999E_b0(); return;
+  case 36: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x09); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x4A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A09_b0(); return;
+  case 37: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0E); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x4C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A0E_b0(); return;
+  case 38: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x01); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x4E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A01_b0(); return;
+  case 39: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xF2); nes_write(0x0007, 0x96); g_cpu.A = 0x96; g_cpu.Y = 0x50; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_96F2_b0(); return;
+  case 40: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0D); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x52; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_970D_b0(); return;
+  case 41: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x0D); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x54; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_970D_b0(); return;
+  case 42: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x2B); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x56; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_972B_b0(); return;
+  case 43: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x2B); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x58; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_972B_b0(); return;
+  case 44: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x2B); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x5A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_972B_b0(); return;
+  case 45: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0x45); nes_write(0x0007, 0x96); g_cpu.A = 0x96; g_cpu.Y = 0x5C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9645_b0(); return;
+  case 46: nes_write(0x0004, 0x66); nes_write(0x0005, 0x96); nes_write(0x0006, 0xC5); nes_write(0x0007, 0x96); g_cpu.A = 0x96; g_cpu.Y = 0x5E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_96C5_b0(); return;
   default: nes_log_inline_miss(0x9664, g_cpu.A); return;
 }
 label_96C5:; /* AlterAreaAttributes */
@@ -79927,14 +79887,12 @@ label_9740:; /* AreaStyleObject */
     /* $9740: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0733); FLAG_NZ(g_cpu.A);
 label_9743:;
     /* $9743: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 5 entries (bank=0) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_974C_b0(); return;
-  case 1: func_9778_b0(); return;
-  case 2: func_9A69_b0(); return;
-  case 3: func_BB20_b0(); return;
-  case 4: func_BD9B_b0(); return;
+  case 0: nes_write(0x0004, 0x45); nes_write(0x0005, 0x97); nes_write(0x0006, 0x4C); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_974C_b0(); return;
+  case 1: nes_write(0x0004, 0x45); nes_write(0x0005, 0x97); nes_write(0x0006, 0x78); nes_write(0x0007, 0x97); g_cpu.A = 0x97; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9778_b0(); return;
+  case 2: nes_write(0x0004, 0x45); nes_write(0x0005, 0x97); nes_write(0x0006, 0x69); nes_write(0x0007, 0x9A); g_cpu.A = 0x9A; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_9A69_b0(); return;
+  case 3: nes_write(0x0004, 0x45); nes_write(0x0005, 0x97); nes_write(0x0006, 0x20); nes_write(0x0007, 0xBB); g_cpu.A = 0xBB; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_BB20_b0(); return;
+  case 4: nes_write(0x0004, 0x45); nes_write(0x0005, 0x97); nes_write(0x0006, 0x9B); nes_write(0x0007, 0xBD); g_cpu.A = 0xBD; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_BD9B_b0(); return;
   default: nes_log_inline_miss(0x9743, g_cpu.A); return;
 }
 label_9750:;
@@ -88884,30 +88842,28 @@ void func_C907(void) {
 #endif
 label_C907:;
     /* $C907: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 21 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_CA77(); return;
-  case 1: func_CA77(); return;
-  case 2: func_CA77(); return;
-  case 3: func_CA77(); return;
-  case 4: func_CA77(); return;
-  case 5: func_C9D8(); return;
-  case 6: func_CA77(); return;
-  case 7: func_CB89(); return;
-  case 8: func_CC36(); return;
-  case 9: func_C934(); return;
-  case 10: func_CC4A(); return;
-  case 11: func_CC4A(); return;
-  case 12: func_C9B0(); return;
-  case 13: func_D3B0(); return;
-  case 14: func_CAF9(); return;
-  case 15: func_CAFF(); return;
-  case 16: func_CB25(); return;
-  case 17: func_CF28(); return;
-  case 18: func_CA77(); return;
-  case 19: func_C934(); return;
-  case 20: func_CEDF(); return;
+  case 0: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 1: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 2: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 3: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 4: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 5: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xD8); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C9D8(); return;
+  case 6: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 7: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x89); nes_write(0x0007, 0xCB); g_cpu.A = 0xCB; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CB89(); return;
+  case 8: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x36); nes_write(0x0007, 0xCC); g_cpu.A = 0xCC; g_cpu.Y = 0x12; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CC36(); return;
+  case 9: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x34); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x14; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C934(); return;
+  case 10: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x4A); nes_write(0x0007, 0xCC); g_cpu.A = 0xCC; g_cpu.Y = 0x16; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CC4A(); return;
+  case 11: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x4A); nes_write(0x0007, 0xCC); g_cpu.A = 0xCC; g_cpu.Y = 0x18; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CC4A(); return;
+  case 12: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xB0); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x1A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C9B0(); return;
+  case 13: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xB0); nes_write(0x0007, 0xD3); g_cpu.A = 0xD3; g_cpu.Y = 0x1C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D3B0(); return;
+  case 14: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xF9); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x1E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CAF9(); return;
+  case 15: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xFF); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x20; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CAFF(); return;
+  case 16: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x25); nes_write(0x0007, 0xCB); g_cpu.A = 0xCB; g_cpu.Y = 0x22; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CB25(); return;
+  case 17: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x28); nes_write(0x0007, 0xCF); g_cpu.A = 0xCF; g_cpu.Y = 0x24; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CF28(); return;
+  case 18: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x77); nes_write(0x0007, 0xCA); g_cpu.A = 0xCA; g_cpu.Y = 0x26; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CA77(); return;
+  case 19: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x34); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x28; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C934(); return;
+  case 20: nes_write(0x0004, 0x09); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xDF); nes_write(0x0007, 0xCE); g_cpu.A = 0xCE; g_cpu.Y = 0x2A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_CEDF(); return;
   default: nes_log_inline_miss(0xC907, g_cpu.A); return;
 }
 label_C934:; /* NoMoveCode */
@@ -91445,43 +91401,41 @@ label_C88D:;
     /* $C88D: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x14; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_C88F:; /* JmpEO */
     /* $C88F: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 34 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_C8E0(); return;
-  case 1: func_C935(); return;
-  case 2: func_D295(); return;
-  case 3: func_C8D6(); return;
-  case 4: func_C8D6(); return;
-  case 5: func_C8D6(); return;
-  case 6: func_C8D6(); return;
-  case 7: func_C947(); return;
-  case 8: func_C947(); return;
-  case 9: func_C947(); return;
-  case 10: func_C947(); return;
-  case 11: func_C947(); return;
-  case 12: func_C947(); return;
-  case 13: func_C947(); return;
-  case 14: func_C947(); return;
-  case 15: func_C8D6(); return;
-  case 16: func_C965(); return;
-  case 17: func_C965(); return;
-  case 18: func_C965(); return;
-  case 19: func_C965(); return;
-  case 20: func_C965(); return;
-  case 21: func_C965(); return;
-  case 22: func_C965(); return;
-  case 23: func_C94D(); return;
-  case 24: func_C94D(); return;
-  case 25: func_D065(); return;
-  case 26: call_by_address(0xBC85); return;
-  case 27: call_by_address(0xB94B); return;
-  case 28: func_C8D6(); return;
-  case 29: func_D2D9(); return;
-  case 30: call_by_address(0xB8BA); return;
-  case 31: func_C8D6(); return;
-  case 32: call_by_address(0xB7A4); return;
-  case 33: func_C8D7(); return;
+  case 0: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xE0); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8E0(); return;
+  case 1: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x35); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C935(); return;
+  case 2: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x95); nes_write(0x0007, 0xD2); g_cpu.A = 0xD2; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D295(); return;
+  case 3: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 4: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 5: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 6: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 7: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 8: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x12; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 9: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x14; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 10: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x16; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 11: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x18; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 12: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x1A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 13: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x1C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 14: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x1E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 15: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x20; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 16: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x22; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 17: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x24; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 18: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x26; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 19: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x28; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 20: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x2A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 21: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x2C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 22: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x2E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 23: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x4D); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x30; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C94D(); return;
+  case 24: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x4D); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x32; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C94D(); return;
+  case 25: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xD0); g_cpu.A = 0xD0; g_cpu.Y = 0x34; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D065(); return;
+  case 26: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x85); nes_write(0x0007, 0xBC); g_cpu.A = 0xBC; g_cpu.Y = 0x36; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xBC85); return;
+  case 27: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x4B); nes_write(0x0007, 0xB9); g_cpu.A = 0xB9; g_cpu.Y = 0x38; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xB94B); return;
+  case 28: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x3A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 29: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD9); nes_write(0x0007, 0xD2); g_cpu.A = 0xD2; g_cpu.Y = 0x3C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D2D9(); return;
+  case 30: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xBA); nes_write(0x0007, 0xB8); g_cpu.A = 0xB8; g_cpu.Y = 0x3E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xB8BA); return;
+  case 31: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x40; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 32: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xA4); nes_write(0x0007, 0xB7); g_cpu.A = 0xB7; g_cpu.Y = 0x42; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xB7A4); return;
+  case 33: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD7); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x44; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D7(); return;
   default: nes_log_inline_miss(0xC88F, g_cpu.A); return;
 }
 label_C8D6:; /* NoRunCode */
@@ -102159,64 +102113,62 @@ label_C27E:;
     /* $C27E: 98 */ maybe_trigger_vblank(2); g_cpu.A = g_cpu.Y; FLAG_NZ(g_cpu.A);
 label_C27F:; /* InitEnemyRoutines */
     /* $C27F: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 55 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_C30E(); return;
-  case 1: func_C30E(); return;
-  case 2: func_C30E(); return;
-  case 3: func_C31E(); return;
-  case 4: func_C2F0(); return;
-  case 5: func_C328(); return;
-  case 6: func_C2F1(); return;
-  case 7: func_C342(); return;
-  case 8: func_C36B(); return;
-  case 9: func_C2F0(); return;
-  case 10: func_C375(); return;
-  case 11: func_C375(); return;
-  case 12: func_C2F7(); return;
-  case 13: func_C787(); return;
-  case 14: func_C7D1(); return;
-  case 15: func_C34A(); return;
-  case 16: func_C33D(); return;
-  case 17: func_C385(); return;
-  case 18: func_C7A0(); return;
-  case 19: func_C2F0(); return;
-  case 20: func_C7A0(); return;
-  case 21: func_C7A0(); return;
-  case 22: func_C7A0(); return;
-  case 23: func_C7A0(); return;
-  case 24: func_C7B8(); return;
-  case 25: func_C2F0(); return;
-  case 26: func_C2F0(); return;
-  case 27: func_C45C(); return;
-  case 28: func_C45C(); return;
-  case 29: func_C45C(); return;
-  case 30: func_C45C(); return;
-  case 31: func_C459(); return;
-  case 32: func_C2F0(); return;
-  case 33: func_C2F0(); return;
-  case 34: func_C2F0(); return;
-  case 35: func_C2F0(); return;
-  case 36: func_C7DF(); return;
-  case 37: func_C812(); return;
-  case 38: func_C83F(); return;
-  case 39: func_C845(); return;
-  case 40: func_C80B(); return;
-  case 41: func_C803(); return;
-  case 42: func_C80B(); return;
-  case 43: func_C84B(); return;
-  case 44: func_C857(); return;
-  case 45: func_C549(); return;
-  case 46: call_by_address(0xBC60); return;
-  case 47: call_by_address(0xB91E); return;
-  case 48: func_C2F0(); return;
-  case 49: func_C2F0(); return;
-  case 50: func_C2F0(); return;
-  case 51: func_C2F0(); return;
-  case 52: func_C2F0(); return;
-  case 53: func_C307(); return;
-  case 54: func_C881(); return;
+  case 0: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x0E); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C30E(); return;
+  case 1: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x0E); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C30E(); return;
+  case 2: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x0E); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C30E(); return;
+  case 3: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x1E); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C31E(); return;
+  case 4: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 5: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x28); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C328(); return;
+  case 6: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF1); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F1(); return;
+  case 7: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x42); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C342(); return;
+  case 8: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x6B); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x12; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C36B(); return;
+  case 9: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x14; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 10: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x75); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x16; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C375(); return;
+  case 11: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x75); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x18; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C375(); return;
+  case 12: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF7); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x1A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F7(); return;
+  case 13: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x87); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x1C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C787(); return;
+  case 14: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xD1); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x1E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7D1(); return;
+  case 15: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x4A); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x20; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C34A(); return;
+  case 16: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x3D); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x22; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C33D(); return;
+  case 17: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x85); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x24; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C385(); return;
+  case 18: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xA0); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x26; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7A0(); return;
+  case 19: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x28; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 20: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xA0); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x2A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7A0(); return;
+  case 21: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xA0); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x2C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7A0(); return;
+  case 22: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xA0); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x2E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7A0(); return;
+  case 23: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xA0); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x30; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7A0(); return;
+  case 24: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xB8); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x32; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7B8(); return;
+  case 25: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x34; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 26: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x36; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 27: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x5C); nes_write(0x0007, 0xC4); g_cpu.A = 0xC4; g_cpu.Y = 0x38; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C45C(); return;
+  case 28: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x5C); nes_write(0x0007, 0xC4); g_cpu.A = 0xC4; g_cpu.Y = 0x3A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C45C(); return;
+  case 29: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x5C); nes_write(0x0007, 0xC4); g_cpu.A = 0xC4; g_cpu.Y = 0x3C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C45C(); return;
+  case 30: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x5C); nes_write(0x0007, 0xC4); g_cpu.A = 0xC4; g_cpu.Y = 0x3E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C45C(); return;
+  case 31: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x59); nes_write(0x0007, 0xC4); g_cpu.A = 0xC4; g_cpu.Y = 0x40; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C459(); return;
+  case 32: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x42; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 33: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x44; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 34: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x46; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 35: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x48; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 36: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xDF); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x4A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7DF(); return;
+  case 37: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x12); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x4C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C812(); return;
+  case 38: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x3F); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x4E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C83F(); return;
+  case 39: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x45); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x50; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C845(); return;
+  case 40: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x0B); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x52; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C80B(); return;
+  case 41: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x03); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x54; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C803(); return;
+  case 42: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x0B); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x56; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C80B(); return;
+  case 43: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x4B); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x58; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C84B(); return;
+  case 44: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x57); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x5A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C857(); return;
+  case 45: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x49); nes_write(0x0007, 0xC5); g_cpu.A = 0xC5; g_cpu.Y = 0x5C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C549(); return;
+  case 46: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x60); nes_write(0x0007, 0xBC); g_cpu.A = 0xBC; g_cpu.Y = 0x5E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xBC60); return;
+  case 47: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x1E); nes_write(0x0007, 0xB9); g_cpu.A = 0xB9; g_cpu.Y = 0x60; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xB91E); return;
+  case 48: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x62; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 49: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x64; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 50: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x66; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 51: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x68; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 52: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0xF0); nes_write(0x0007, 0xC2); g_cpu.A = 0xC2; g_cpu.Y = 0x6A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C2F0(); return;
+  case 53: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x07); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x6C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C307(); return;
+  case 54: nes_write(0x0004, 0x81); nes_write(0x0005, 0xC2); nes_write(0x0006, 0x81); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x6E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C881(); return;
   default: nes_log_inline_miss(0xC27F, g_cpu.A); return;
 }
 label_C2F0:; /* NoInitCode */
@@ -107153,17 +107105,15 @@ label_C7A6:;
     /* $C7A6: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x12; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_C7A8:;
     /* $C7A8: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 8 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_C3A4(); return;
-  case 1: func_C7B7(); return;
-  case 2: func_C4A8(); return;
-  case 3: func_C5A3(); return;
-  case 4: func_C63D(); return;
-  case 5: func_C69C(); return;
-  case 6: call_by_address(0xA060); return;
-  case 7: call_by_address(0xB905); return;
+  case 0: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0xA4); nes_write(0x0007, 0xC3); g_cpu.A = 0xC3; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C3A4(); return;
+  case 1: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0xB7); nes_write(0x0007, 0xC7); g_cpu.A = 0xC7; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C7B7(); return;
+  case 2: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0xA8); nes_write(0x0007, 0xC4); g_cpu.A = 0xC4; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C4A8(); return;
+  case 3: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0xA3); nes_write(0x0007, 0xC5); g_cpu.A = 0xC5; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C5A3(); return;
+  case 4: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0x3D); nes_write(0x0007, 0xC6); g_cpu.A = 0xC6; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C63D(); return;
+  case 5: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0x9C); nes_write(0x0007, 0xC6); g_cpu.A = 0xC6; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C69C(); return;
+  case 6: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0x60); nes_write(0x0007, 0xA0); g_cpu.A = 0xA0; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xA060); return;
+  case 7: nes_write(0x0004, 0xAA); nes_write(0x0005, 0xC7); nes_write(0x0006, 0x05); nes_write(0x0007, 0xB9); g_cpu.A = 0xB9; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xB905); return;
   default: nes_log_inline_miss(0xC7A8, g_cpu.A); return;
 }
 label_C7BB:;
@@ -134102,16 +134052,14 @@ label_C985:;
     /* $C985: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x24; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_C987:;
     /* $C987: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 7 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_D432(); return;
-  case 1: func_D5D3(); return;
-  case 2: func_D64F(); return;
-  case 3: func_D64F(); return;
-  case 4: func_D607(); return;
-  case 5: func_D631(); return;
-  case 6: func_D63D(); return;
+  case 0: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x32); nes_write(0x0007, 0xD4); g_cpu.A = 0xD4; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D432(); return;
+  case 1: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xD3); nes_write(0x0007, 0xD5); g_cpu.A = 0xD5; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D5D3(); return;
+  case 2: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x4F); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D64F(); return;
+  case 3: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x4F); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D64F(); return;
+  case 4: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x07); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D607(); return;
+  case 5: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x31); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D631(); return;
+  case 6: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x3D); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D63D(); return;
   default: nes_log_inline_miss(0xC987, g_cpu.A); return;
 }
 label_C998:; /* EraseEnemyObject */
@@ -208947,16 +208895,14 @@ label_C985:;
     /* $C985: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x24; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_C987:;
     /* $C987: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 7 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_D432(); return;
-  case 1: func_D5D3(); return;
-  case 2: func_D64F(); return;
-  case 3: func_D64F(); return;
-  case 4: func_D607(); return;
-  case 5: func_D631(); return;
-  case 6: func_D63D(); return;
+  case 0: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x32); nes_write(0x0007, 0xD4); g_cpu.A = 0xD4; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D432(); return;
+  case 1: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0xD3); nes_write(0x0007, 0xD5); g_cpu.A = 0xD5; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D5D3(); return;
+  case 2: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x4F); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D64F(); return;
+  case 3: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x4F); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D64F(); return;
+  case 4: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x07); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D607(); return;
+  case 5: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x31); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D631(); return;
+  case 6: nes_write(0x0004, 0x89); nes_write(0x0005, 0xC9); nes_write(0x0006, 0x3D); nes_write(0x0007, 0xD6); g_cpu.A = 0xD6; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D63D(); return;
   default: nes_log_inline_miss(0xC987, g_cpu.A); return;
 }
 label_C998:; /* EraseEnemyObject */
@@ -242876,43 +242822,41 @@ label_C88D:;
     /* $C88D: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x14; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_C88F:; /* JmpEO */
     /* $C88F: 20 */ maybe_trigger_vblank(6); /* inline_dispatch $8E04: 34 entries (bank=-1) */
-nes_write(0x27, g_cpu.X); nes_write(0x28, g_cpu.Y); /* trampoline side effects */
-maybe_trigger_vblank(57); /* trampoline body cycles */
 switch(g_cpu.A) {
-  case 0: func_C8E0(); return;
-  case 1: func_C935(); return;
-  case 2: func_D295(); return;
-  case 3: func_C8D6(); return;
-  case 4: func_C8D6(); return;
-  case 5: func_C8D6(); return;
-  case 6: func_C8D6(); return;
-  case 7: func_C947(); return;
-  case 8: func_C947(); return;
-  case 9: func_C947(); return;
-  case 10: func_C947(); return;
-  case 11: func_C947(); return;
-  case 12: func_C947(); return;
-  case 13: func_C947(); return;
-  case 14: func_C947(); return;
-  case 15: func_C8D6(); return;
-  case 16: func_C965(); return;
-  case 17: func_C965(); return;
-  case 18: func_C965(); return;
-  case 19: func_C965(); return;
-  case 20: func_C965(); return;
-  case 21: func_C965(); return;
-  case 22: func_C965(); return;
-  case 23: func_C94D(); return;
-  case 24: func_C94D(); return;
-  case 25: func_D065(); return;
-  case 26: call_by_address(0xBC85); return;
-  case 27: call_by_address(0xB94B); return;
-  case 28: func_C8D6(); return;
-  case 29: func_D2D9(); return;
-  case 30: call_by_address(0xB8BA); return;
-  case 31: func_C8D6(); return;
-  case 32: call_by_address(0xB7A4); return;
-  case 33: func_C8D7(); return;
+  case 0: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xE0); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x02; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8E0(); return;
+  case 1: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x35); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x04; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C935(); return;
+  case 2: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x95); nes_write(0x0007, 0xD2); g_cpu.A = 0xD2; g_cpu.Y = 0x06; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D295(); return;
+  case 3: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x08; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 4: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x0A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 5: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x0C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 6: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x0E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 7: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x10; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 8: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x12; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 9: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x14; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 10: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x16; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 11: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x18; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 12: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x1A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 13: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x1C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 14: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x47); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x1E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C947(); return;
+  case 15: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x20; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 16: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x22; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 17: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x24; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 18: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x26; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 19: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x28; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 20: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x2A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 21: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x2C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 22: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x2E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C965(); return;
+  case 23: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x4D); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x30; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C94D(); return;
+  case 24: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x4D); nes_write(0x0007, 0xC9); g_cpu.A = 0xC9; g_cpu.Y = 0x32; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C94D(); return;
+  case 25: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x65); nes_write(0x0007, 0xD0); g_cpu.A = 0xD0; g_cpu.Y = 0x34; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D065(); return;
+  case 26: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x85); nes_write(0x0007, 0xBC); g_cpu.A = 0xBC; g_cpu.Y = 0x36; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xBC85); return;
+  case 27: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0x4B); nes_write(0x0007, 0xB9); g_cpu.A = 0xB9; g_cpu.Y = 0x38; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xB94B); return;
+  case 28: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x3A; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 29: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD9); nes_write(0x0007, 0xD2); g_cpu.A = 0xD2; g_cpu.Y = 0x3C; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_D2D9(); return;
+  case 30: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xBA); nes_write(0x0007, 0xB8); g_cpu.A = 0xB8; g_cpu.Y = 0x3E; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xB8BA); return;
+  case 31: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD6); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x40; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D6(); return;
+  case 32: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xA4); nes_write(0x0007, 0xB7); g_cpu.A = 0xB7; g_cpu.Y = 0x42; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); call_by_address(0xB7A4); return;
+  case 33: nes_write(0x0004, 0x91); nes_write(0x0005, 0xC8); nes_write(0x0006, 0xD7); nes_write(0x0007, 0xC8); g_cpu.A = 0xC8; g_cpu.Y = 0x44; g_cpu.C = 0; g_cpu.Z = 0; g_cpu.N = 1; maybe_trigger_vblank(43); func_C8D7(); return;
   default: nes_log_inline_miss(0xC88F, g_cpu.A); return;
 }
 label_C8D6:; /* NoRunCode */
