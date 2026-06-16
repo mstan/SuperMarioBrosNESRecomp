@@ -9,6 +9,7 @@
  */
 #include "game_extras.h"
 #include "nes_runtime.h"
+#include "config.h"
 #include "input_script.h"
 #include "debug_server.h"
 #include "verify_mode.h"
@@ -185,6 +186,10 @@ static void ws_set_margins_from_spec(const char *spec) {
  *   aspect = 16:9        (or: margins = 85x85)
  * Absent file or enabled=0 → fully vanilla. */
 static void ws_load_config(void) {
+    /* Launcher toggle: config.ini "Widescreen = 1" enables widescreen with a 16:9
+     * default. A widescreen.ini below can still override the margins. */
+    if (g_nes_config.widescreen) ws_set_margins_from_spec("16:9");
+
     char path[512];
     get_exe_relative_path("widescreen.ini", path, sizeof(path));
     FILE *f = fopen(path, "r");

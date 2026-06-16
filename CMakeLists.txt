@@ -145,3 +145,8 @@ if(MSVC)
     target_compile_options(SuperMarioBrosRecomp PRIVATE /W3 /WX-)
     target_compile_options(SuperMarioBrosRecomp PRIVATE /wd4102)
 endif()
+
+# ---- Pre-boot GUI launcher (RmlUi) ----
+include(${NESRECOMP_ROOT}/runner/launcher.cmake)
+nesrecomp_add_launcher(SuperMarioBrosRecomp)
+target_compile_definitions(SuperMarioBrosRecomp PRIVATE NESRECOMP_GAME_WIDESCREEN=1)
