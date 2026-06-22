@@ -9,5 +9,6 @@ while b"\n" not in b:
 ws = json.loads(b.split(b"\n", 1)[0])
 print("oper_mode", ws["oper_mode"], "camera", ws["camera_x"])
 print("guard_frames", ws.get("guard_frames"),
+      "corr_applied", ws.get("corr_applied"),
       "embed_detect", ws.get("embed_detect"))
 print("enemies", [(e["slot"], e["flag"], e["id"], e["screen_x"]) for e in ws["enemies"]])

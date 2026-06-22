@@ -4,10 +4,12 @@ ws_guard_monitor.py — READ-ONLY widescreen guard monitor.
 
 Watches the live TCP debug server while a human plays.  Does NOT touch
 input.  Logs:
-  * every change in the engine's embed_detect counter (the split-edge
-    invariant tripping — should never move),
-  * any ACTIVE enemy embedded in solid geometry for >~0.3s (the bug —
-    spawn placed into geometry), with world pos / on-screen X / frame,
+  * every change in corr_applied (mode-B birth-quarantine corrector
+    nudging a group spawn out of geometry — expected, benign),
+  * every change in embed_detect (a torso-embed that slipped PAST the
+    quarantine — the residual-bug signal, should stay ~0),
+  * any ACTIVE enemy torso-embedded in solid geometry for >~0.3s, with
+    world pos / on-screen X / frame,
   * any ACTIVE, alive enemy that sits world-stationary >~1.4s while
     on screen (behavioural "stuck" signal).
 Heartbeat every 5s with totals.  Run while the game is up:
@@ -65,8 +67,8 @@ def solid(bb, wx, y):
 
 
 def embedded(bb, wx, y):
-    """Body centre + four 16x16 corners (inset 1px) — matches the C detector."""
-    pts = ((8, 8), (1, 1), (14, 1), (1, 14), (14, 14))
+    """Torso/side overlap (NOT feet) — matches the C ws_torso_embedded test."""
+    pts = ((2, 4), (13, 4), (2, 8), (13, 8), (2, 12), (13, 12), (8, 8))
     return any(solid(bb, (wx + dx) & 0xFFFF, (y + dy) & 0xFF) for dx, dy in pts)
 
 
@@ -85,16 +87,20 @@ def main():
     ws = d.call("smb_ws_state")
     log(f"monitor up — margins {ws['left']}L/{ws['right']}R, "
         f"detect field={'embed_detect' in ws}. Watching {dur:.0f}s. Play now.")
-    det = ws.get("embed_detect", 0)
+    det = ws.get("embed_detect", 0); corr = ws.get("corr_applied", 0)
     emb = {}; still = {}; lastwx = {}; reported_emb = set(); reported_stuck = set()
     last_hb = 0
     start = time.time()
     try:
         while time.time() - start < dur:
             ws = d.call("smb_ws_state")
+            if ws.get("corr_applied", 0) != corr:
+                corr = ws.get("corr_applied", 0)
+                log(f".. CORRECTOR nudged spawn -> corr_applied={corr} "
+                    f"(oper_mode={ws['oper_mode']}, frame={d.frame()})")
             if ws.get("embed_detect", 0) != det:
                 det = ws.get("embed_detect", 0)
-                log(f"!! ENGINE DETECT embed_detect={det} "
+                log(f"!! RESIDUAL EMBED (past quarantine) embed_detect={det} "
                     f"(oper_mode={ws['oper_mode']}, frame={d.frame()})")
             if ws["oper_mode"] == 1:
                 pages = d.read(0x6E, 5); xlos = d.read(0x87, 5); ys = d.read(0xCF, 5)
@@ -109,6 +115,16 @@ def main():
                         reported_emb.add((i, wx))
                         log(f"!! EMBEDDED slot{i} id={ws['enemies'][i].get('id')} "
                             f"world=({wx:#06x},{y}) screenX={wx-cam} frame={d.frame()}")
+                        # Clearance analysis: is the vanilla-equivalent X (wx-right)
+                        # clear at this Y, and how far left must we go to clear?
+                        rt = ws['right']
+                        van = (wx - rt) & 0xFFFF
+                        clr = next((dx for dx in range(0, rt + 33, 16)
+                                    if not embedded(bb, (wx - dx) & 0xFFFF, y)), None)
+                        log(f"   CLEAR-SCAN y={y} right={rt} vanilla_x={van:#06x} "
+                            f"emb@vanilla={int(embedded(bb, van, y))} "
+                            f"first_clear_dx={clr} "
+                            f"(0=already clear, None=no clear within margin)")
                     if i in lastwx and abs(wx - lastwx[i]) <= 1 and not dead:
                         still[i] = still.get(i, 0) + 1
                         if still[i] == 18 and -ws['left'] < (wx-cam) < 256+ws['right'] \
@@ -122,12 +138,12 @@ def main():
             if time.time() - last_hb > 5:
                 last_hb = time.time()
                 log(f"... mode={ws['oper_mode']} cam={ws['camera_x']} "
-                    f"embed_detect={det} embedded_seen={len(reported_emb)} "
-                    f"stuck_seen={len(reported_stuck)}")
+                    f"corr_applied={corr} embed_detect={det} "
+                    f"embedded_seen={len(reported_emb)} stuck_seen={len(reported_stuck)}")
             time.sleep(0.1)
     except (RuntimeError, OSError) as e:
         log(f"connection ended ({e}) — game closed?")
-    log(f"DONE — engine embed_detect={det} "
+    log(f"DONE — corr_applied={corr} embed_detect={det} "
         f"embedded_seen={len(reported_emb)} stuck_seen={len(reported_stuck)}")
 
 
