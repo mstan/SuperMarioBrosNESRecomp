@@ -99,8 +99,8 @@ static void get_exe_relative_path(const char *filename, char *out, int max_len) 
  *   $D69A/$D6A1      OffscreenBoundsCheck R   → widen +right
  *   $C164/$C16E      CheckRightBounds base    → widen +right (spawn window end)
  *   $C1B6/$C1BB      spawn raw-edge compare   → widen +right (spawn window start)
- *   $C5DA/$C5E2      frenzy spawn at R edge   → widen +right
- *   $C73C/$C741      group spawn, page-first  → widen +right (page read first!)
+ *   $C5DA/$C5E2      frenzy spawn placement   → VANILLA (widening embeds it)
+ *   $C73C/$C741      group spawn placement    → VANILLA (widening embeds it)
  *   $B013/$B01C      player screen-edge clamp → VANILLA (repositions the player)
  *   $C09C/$C0A5      loop command rewind      → VANILLA (castle maze logic)
  *   $9206            area parser page gate    → VANILLA (terrain write-ahead)
@@ -127,8 +127,6 @@ static int     s_ws_pend_bits    = 0;
 static int     s_ws_pend_despawn = 0;
 static int     s_ws_pend_spawnb  = 0;
 static int     s_ws_pend_spawnc  = 0;
-static int     s_ws_pend_frenzy  = 0;
-static uint8_t s_ws_c73c_lo      = 0;  /* $C73C pair reads page FIRST */
 
 /* Per-rel-slot sidecar bias table.  GetObjRelativePosition stores rel X
  * into SprObject_Rel_XPos ($03AD,Y); Y is the rel slot (0 player, 1 enemy,
@@ -163,6 +161,92 @@ static int ws_sim_active(void) {
     if (!s_ws_enabled) return 0;
     uint8_t mode = g_ram[0x0770];
     return mode == 1 || mode == 2;
+}
+
+/* =====================================================================
+ * Enemy spawn geometry guard (ISSUE #12)
+ *
+ * Group ($C73C) and frenzy ($C5DA) spawners place an enemy at
+ * (screen-edge + offset).  The window-widening hooks shift that edge by
+ * +right, so an edge-relative spawn lands up to `right` px deeper in the
+ * world — sometimes INSIDE solid geometry (pipe/brick), where the enemy
+ * has no collision to escape and is stuck forever.  Authored enemies
+ * ($C1AB PositionEnemyObj) take their position from level data, not the
+ * edge, so they are never mis-placed — only these two edge-relative
+ * classes are.
+ *
+ * Guard: on the frame an enemy first goes active, if its body cell is
+ * solid, pull it left one metatile at a time until it clears.  When the
+ * widened edge is already empty the enemy stays at the 16:9 edge (no
+ * pop-in); only embedded spawns are nudged, worst case toward the 4:3
+ * edge (clear by vanilla design).  The block buffer is valid this far
+ * right because SMB's column writer leads ScreenRight by ~98px and the
+ * right margin is capped at 96.
+ *
+ * ws_block_metatile/ws_world_solid are a read-only reimplementation of
+ * SMB BlockBufferCollision + ChkForNonSolids (no game state touched). */
+
+/* Metatile id at world (page*256 + x_lo, y).  Block_Buffer_1 @ $0500,
+ * Block_Buffer_2 @ $05D0 (13 cols x 16 rows each); page bit0 selects the
+ * buffer, X high-nibble the column, (Y&0xF0)-0x20 the row (8-bit wrap). */
+static uint8_t ws_block_metatile(uint8_t page, uint8_t x_lo, uint8_t y) {
+    uint16_t base = (page & 1) ? 0x05D0 : 0x0500;
+    uint8_t  col  = (uint8_t)(x_lo >> 4);
+    uint8_t  rowo = (uint8_t)((y & 0xF0) - 0x20);
+    return g_ram[(uint16_t)(base + (uint8_t)(col + rowo))];
+}
+/* SMB enemy solidity: a nonzero metatile that isn't a known passable id
+ * (climb $26, coins $C2/$C3, water/decor $5F/$60). */
+static int ws_world_solid(uint16_t world_x, uint8_t y) {
+    uint8_t m = ws_block_metatile((uint8_t)(world_x >> 8), (uint8_t)world_x, y);
+    if (m == 0x00) return 0;
+    if (m == 0x26 || m == 0xC2 || m == 0xC3 || m == 0x5F || m == 0x60) return 0;
+    return 1;
+}
+
+#define SMB_ENEMY_SLOTS 5
+#define SMB_ENEMY_ID_PIRANHA 0x0D   /* lives inside pipes — never count it */
+static unsigned s_ws_embed_detect = 0;  /* slot-frames an enemy sat in solid geom */
+static unsigned s_ws_guard_frames = 0;  /* frames the detector swept */
+
+/* Footprint solidity: "embedded" if the body centre OR any of the four
+ * 16x16 corners (inset 1px) lands on a solid metatile.  Centre-only
+ * misses side/lip embedding — a Goomba wedged against a pipe can have an
+ * air centre while its lower corners overlap the column. */
+static int ws_enemy_embedded(uint16_t world_x, uint8_t y) {
+    static const int8_t sx[5] = { 8,  1, 14,  1, 14 };
+    static const int8_t sy[5] = { 8,  1,  1, 14, 14 };
+    for (int k = 0; k < 5; k++)
+        if (ws_world_solid((uint16_t)(world_x + sx[k]), (uint8_t)(y + sy[k])))
+            return 1;
+    return 0;
+}
+
+/* Always-on spawn-geometry INVARIANT CHECK (observe, never mutate).
+ *
+ * With the split-edge placement fix (edge-relative spawns served vanilla
+ * ScreenRight, authored spawns already edge-independent) no enemy can be
+ * placed into solid geometry by widescreen, so s_ws_embed_detect must
+ * stay 0 in play — it is the live invariant we validate against, queried
+ * via smb_ws_state.  We deliberately do NOT move or drop enemies: a
+ * per-frame position mutator risks corrupting legit vanilla behaviour
+ * (stairs, pipe lips, frenzy flyers, Lakitu/Spiny, slot recycling), and
+ * the real fix is upstream in the placement reads.  Piranha Plants (live
+ * in pipes by design) and defeated/dying enemies are not counted.
+ * Widescreen gameplay only — vanilla/oracle builds never enter here. */
+static void ws_guard_embedded(void) {
+    if (!ws_sim_active()) return;
+    s_ws_guard_frames++;
+
+    for (int i = 0; i < SMB_ENEMY_SLOTS; i++) {
+        if (!g_ram[0x0F + i]) continue;                 /* inactive slot     */
+        if (g_ram[0x16 + i] == SMB_ENEMY_ID_PIRANHA) continue;
+        if (g_ram[0x1E + i] & 0xE0) continue;           /* defeated/dying    */
+
+        uint16_t wx = (uint16_t)((g_ram[0x6E + i] << 8) | g_ram[0x87 + i]);
+        if (ws_enemy_embedded(wx, g_ram[0xCF + i]))
+            s_ws_embed_detect++;
+    }
 }
 
 /* Parse "16:9" / "21:9" style aspect, or "WxH" margins like "85x85". */
@@ -272,6 +356,7 @@ void game_on_frame(uint64_t frame_count) {
 void game_post_nmi(uint64_t frame_count) {
     (void)frame_count;
     ws_update_frame_gate();
+    ws_guard_embedded();
     if (s_debug_enabled) {
         debug_server_record_frame();
     }
@@ -465,20 +550,25 @@ uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     case 0xC1B6: return ws_shift_lo(val, +s_ws_right, &s_ws_pend_spawnc);
     case 0xC1BB: return ws_shift_hi(val, &s_ws_pend_spawnc);
 
-    /* ---- Frenzy spawns at the right edge ($C5DA: enemy X = edge+0x20) ---- */
-    case 0xC5DA: return ws_shift_lo(val, +s_ws_right, &s_ws_pend_frenzy);
-    case 0xC5E2: return ws_shift_hi(val, &s_ws_pend_frenzy);
-
-    /* ---- Group spawn ($C73C): page is read BEFORE the low byte, so
-     * compute the widened 16-bit edge at the page read and serve the
-     * cached low byte at $C741. */
-    case 0xC73C: {
-        int wide = ((((int)val << 8) | g_ram[0x071D]) + s_ws_right) & 0xFFFF;
-        s_ws_c73c_lo = (uint8_t)(wide & 0xFF);
-        return (uint8_t)(wide >> 8);
-    }
+    /* ---- Enemy spawn PLACEMENT reads: serve VANILLA, never widened ----
+     * $C5DA/$C5E2  frenzy:  Enemy_X = ScreenRight + 0x20, Enemy_Page = +carry
+     * $C73C/$C741  group:   ScreenRight page/X -> temp $02/$03, copied into
+     *                        every group member's PageLoc/X_Position.
+     * Both compute WHERE an edge-relative enemy is born.  Widening
+     * ScreenRight here pushed the spawn up to +right px deeper into the
+     * world, sometimes inside a pipe/brick where the enemy has no
+     * collision to escape and is stuck forever.  The 16:9 view is still
+     * populated by the *eligibility* window reads ($C164/$C1B6, kept
+     * widened above); placement must match vanilla so the enemy lands
+     * exactly where the level's geometry allows — its 4:3 world position.
+     * Verified pure-placement: each read flows only into an Enemy_X /
+     * Enemy_PageLoc store, never a spawn-or-cull branch (super-mario-bros
+     * _full.c $C5D8-$C5E9 PutAtRightExtent, $C73A-$C744 SetYGp). */
+    case 0xC5DA:
+    case 0xC5E2:
+    case 0xC73C:
     case 0xC741:
-        return s_ws_c73c_lo;
+        return val;
 
     /* Every other hooked read — player edge clamp ($B013/$B01C), loop
      * rewind ($C09C/$C0A5), parser gates, victory logic, bounding boxes —
@@ -568,9 +658,11 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
             "{\"id\":%d,\"cmd\":\"smb_ws_state\","
             "\"enabled\":%d,\"left\":%d,\"right\":%d,"
             "\"eff_left\":%d,\"eff_right\":%d,\"sim_active\":%d,"
+            "\"embed_detect\":%u,\"guard_frames\":%u,"
             "\"oper_mode\":%d,\"camera_x\":%d,\"enemies\":[%s]}\n",
             id, s_ws_enabled, s_ws_left, s_ws_right,
             g_ws_eff_left, g_ws_eff_right, ws_sim_active(),
+            s_ws_embed_detect, s_ws_guard_frames,
             g_ram[0x0770], cam, enemies);
         return 1;
     }
