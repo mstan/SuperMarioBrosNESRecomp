@@ -45,6 +45,17 @@ addr = 0x03B2           # Bubble_Rel_XPos
 [[ram_read_hook]]
 addr = 0x03B3           # Misc_Rel_XPos
 
+# Widescreen collision gate: Enemy_OffscreenBits ($03D1) read in
+# GetMaskedOffScrBits ($E268).  Widening GetXOffscreenBits keeps margin
+# enemies on-screen for rendering, which also zeroes this read so the game
+# builds an 8-bit collision box (BoundingBoxCore) that wraps to the opposite
+# side — a phantom hitbox the player can stomp/hit.  extras.c reports a
+# margin enemy as offscreen at this one PC so the vanilla MoveBoundBoxOffscreen
+# parks its box at $FF,$FF.  Off (returns unchanged) whenever widescreen is
+# off or the enemy is on-screen, so the --verify oracle stays byte-exact.
+[[ram_read_hook]]
+addr = 0x03D1           # Enemy_OffscreenBits (GetMaskedOffScrBits collision gate)
+
 # SMB inline indexed dispatch: JSR $8E04 pops return address to find a
 # 2-byte LE address table immediately after the JSR. Dispatches via A register.
 [[inline_dispatch]]

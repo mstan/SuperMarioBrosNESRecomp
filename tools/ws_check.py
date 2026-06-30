@@ -9,10 +9,18 @@ historical widescreen failure modes never occur:
   1. WRAP GHOST — a sprite belonging to an enemy whose true screen X is in
      a margin renders inside the vanilla viewport at (true & 0xFF), i.e.
      teleports to the opposite edge.
-  2. SPAWN POP — an enemy materializes at a screen X already visible inside
-     the widened viewport (must spawn at/right of the widened right edge).
-  3. DESPAWN POP — an enemy vanishes while visible in the widened viewport
-     without being in a defeat state.
+  2. SPAWN ANOMALY — under the 4:3-spawns/16:9-cull design enemies spawn on
+     the vanilla 4:3 timeline, so a right-side spawn legitimately appears at
+     the 4:3 edge (screen X ~256), inside the visible right margin — that is
+     the accepted pop-in, NOT a bug.  What IS a bug is an enemy materializing
+     well inside the 4:3 viewport (screen X comfortably left of the 4:3 edge),
+     which means it spawned in the playfield instead of at the edge.
+  3. DESPAWN POP — an enemy vanishes while visible in a MARGIN without being
+     in a defeat state.  Scoped to the margins on purpose: the widened
+     despawn bound keeps enemies alive far past the visible margins, so a
+     margin despawn is a real culling failure; despawns inside the vanilla
+     0..256 viewport (stomps, pit falls, transition slot clears) are vanilla
+     gameplay the widescreen layer does not govern and are not counted.
 
 Run the game first:
   build_debug\\SuperMarioBrosRecomp.exe baserom.nes --widescreen 16:9
@@ -82,7 +90,9 @@ def main():
 
     wrap_ghosts = []
     spawn_pops = []
-    despawn_pops = []
+    despawn_pops = []         # isolated margin despawns (real culling bugs)
+    margin_despawn_cand = []  # (frame, slot, psx, pstate) margin despawns, pre-filter
+    all_despawn_frames = []   # every flag 1->0, any position (for cluster detect)
     margin_draws = 0          # sprites correctly drawn in margins
     margin_alive_frames = 0   # enemy-frames alive in margins
     prev = {}                 # slot -> (flag, screen_x, state)
@@ -143,24 +153,59 @@ def main():
             if p is not None:
                 pflag, psx, pstate = p
                 if flag and not pflag:
-                    # spawn: must not appear already visible inside the widened view
-                    if sx < 256 + right - 8 and sx > -left:
+                    # 4:3 spawns: a right-side spawn should appear at/near the
+                    # vanilla 4:3 edge (screen X ~256), not deep inside the
+                    # 4:3 viewport.  Flag only spawns that materialize well
+                    # left of the 4:3 edge while still on-screen (a genuine
+                    # in-playfield placement bug).  Appearing in the right
+                    # margin at the 4:3 edge is the accepted, intended pop-in.
+                    if -left + 8 < sx < 256 - 24:
                         spawn_pops.append((d.frame(), slot, e["id"], sx))
                 if pflag and not flag:
-                    # despawn while visible & not defeated (state bit 5 = $20 dead/stomped... report raw)
-                    if -left + 8 < psx < 256 + right - 8 and not (pstate & 0xE0):
-                        despawn_pops.append((d.frame(), slot, psx, pstate))
+                    fr = d.frame()
+                    all_despawn_frames.append(fr)
+                    # Despawn pop = a culling failure the WIDESCREEN feature
+                    # is responsible for: an enemy vanishing while visible in
+                    # a MARGIN.  The widened OffscreenBoundsCheck keeps enemies
+                    # alive out to camera-158 / ScreenRight+158 (screen X ~-158
+                    # / ~414), both well past the visible margins, so nothing
+                    # should ever despawn inside a margin.
+                    #
+                    # Despawns inside the vanilla 0..256 viewport (stomps, pit
+                    # falls) are governed by the game's untouched vanilla logic
+                    # — the widescreen layer neither causes nor can fix them,
+                    # they fire identically with widescreen off — so they are
+                    # not counted.  Area-transition and death slot-clears wipe
+                    # several slots at once (including any that happen to sit in
+                    # a margin); those are filtered post-run as clusters below.
+                    in_left_margin  = -left < psx < 0
+                    in_right_margin = 256 < psx < 256 + right
+                    if (in_left_margin or in_right_margin) and not (pstate & 0xE0):
+                        margin_despawn_cand.append((fr, slot, psx, pstate))
             prev[slot] = (flag, sx, states[slot] if slot < 5 else 0)
 
         time.sleep(0.08)
 
     d.call("clear_input")
 
+    # Filter margin despawns: a transition/death slot-clear wipes several
+    # slots within a few frames, so a margin candidate that coincides with
+    # another despawn in a +/-6 frame window is a batch clear, not a culling
+    # pop-out.  Only ISOLATED margin despawns count as real bugs.
+    CLUSTER_W = 6
+    for cand in margin_despawn_cand:
+        fr = cand[0]
+        coincident = sum(1 for f in all_despawn_frames if abs(f - fr) <= CLUSTER_W)
+        if coincident <= 1:           # only this despawn in the window
+            despawn_pops.append(cand)
+    batch_clears = len(margin_despawn_cand) - len(despawn_pops)
+
     print(f"\nsampled ~{int(45/0.08)} ticks")
     print(f"margin enemy-frames: {margin_alive_frames}, drawn correctly: {margin_draws}")
     print(f"wrap ghosts:  {len(wrap_ghosts)}  {wrap_ghosts[:5]}")
     print(f"spawn pops:   {len(spawn_pops)}  {spawn_pops[:5]}")
-    print(f"despawn pops: {len(despawn_pops)}  {despawn_pops[:5]}")
+    print(f"despawn pops (isolated, real): {len(despawn_pops)}  {despawn_pops[:5]}")
+    print(f"  (filtered {batch_clears} margin despawn(s) as transition/death batch clears)")
 
     ok = not wrap_ghosts and not spawn_pops and not despawn_pops
     if margin_alive_frames == 0:

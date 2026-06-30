@@ -31,7 +31,7 @@ to the Nestopia reference in work RAM with widescreen off.
 
 ## How it works
 
-Three coordinated layers, all gated at runtime on the config AND the
+Four coordinated layers, all gated at runtime on the config AND the
 gameplay mode (OperMode 1 = game, 2 = victory; the title screen, attract
 demo, and game-over screens stay fully vanilla and pillarboxed):
 
@@ -43,16 +43,35 @@ demo, and game-over screens stay fully vanilla and pillarboxed):
    16-bit sidecar, keyed per rel-position slot at `GetObjRelativePosition`
    and re-armed on every rel-var read, unwraps OAM X writes so sprites
    render correctly inside the margins.
-3. **Window widening** — the game's own draw-cull, despawn, and spawn
-   decisions are widened by shifting the screen-edge values they read at
-   exactly the PCs that implement each decision (`game.toml`
-   `[[ram_read_hook]]` + the policy table in `extras.c`). Player edge
-   clamping, loop-command rewind, and the area parser remain vanilla —
-   they are dual-purpose state, not draw logic.
+3. **Window widening** — the game's own draw-cull and despawn decisions
+   are widened by shifting the screen-edge values they read at exactly the
+   PCs that implement each decision (`game.toml` `[[ram_read_hook]]` + the
+   policy table in `extras.c`). Player edge clamping, loop-command rewind,
+   and the area parser remain vanilla — they are dual-purpose state, not
+   draw logic.
 
-The simulation itself stays vanilla-exact; only *when* spawn/despawn
-windows trigger changes (by the margin width), which is what makes the
-margins free of pop-in.
+   **Spawns stay vanilla 4:3.** The spawn-window PCs (`$C164/$C16E`,
+   `$C1B6/$C1BB`, `$C5DA/$C5E2`, `$C73C/$C741`) are deliberately *not*
+   widened: enemies spawn at the authentic 4:3 edge, with vanilla position
+   and timing. The widened draw-cull/despawn then keep those objects
+   visible across the full 16:9 width. This is **4:3 spawns + 16:9
+   culling** — see "Spawn behavior" below.
+4. **Collision offscreen gate** — keeping margin enemies "on-screen" for
+   rendering (layer 3) also makes the game build a *collision* bounding box
+   for them, and that box is 8-bit screen-relative, so it wraps to the
+   opposite side of the screen — a phantom hitbox the player can stomp/hit
+   even though the enemy renders correctly in the margin. At
+   `GetMaskedOffScrBits` (`$E268`) the runner reports any enemy whose true
+   screen X is in a margin as offscreen, so the vanilla `MoveBoundBoxOffscreen`
+   parks its box at `$FF,$FF`. The player is always clamped on-screen and can
+   never reach a margin, so a margin enemy never truly touches it — this is
+   the collision analogue of the sprite-X sidecar. On-screen enemies are
+   untouched, so collision stays byte-for-byte vanilla.
+
+The simulation itself stays vanilla-exact; only *when* the draw-cull and
+despawn windows trigger changes (by the margin width), which is what keeps
+the margins free of despawn pop-out, plus the collision gate that keeps
+margin enemies from forming phantom hitboxes.
 
 ## Caps (load-bearing — do not raise)
 
@@ -61,14 +80,24 @@ margins free of pop-in.
 - **Left ≤ 128**: the left margin shows just-scrolled-out columns, valid
   until the column writer wraps the nametable (512 px total).
 
+## Spawn behavior (4:3 spawns + 16:9 culling)
+
+Enemies spawn on the **vanilla 4:3 timeline and position**, not at the
+widened 16:9 edge. The earlier "widen the spawn window too" approach
+caused serious spawn-area bugs — frenzy/group spawners derive an enemy's
+X straight from the screen edge, so a widened edge dropped enemies *inside*
+pipes and blocks with no collision to escape, and authored enemies
+activated early enough to drift off their walk/fall pattern. Holding the
+spawn PCs at 4:3 removes those bugs entirely.
+
+The trade-off is a **spawn pop-in at the 4:3 edge line**: an enemy
+materializes inside the right margin (where the 4:3 edge falls on the wider
+screen) rather than at the very screen edge. Once spawned it is fully
+covered by the widened draw-cull and despawn, so it never pops *out*. This
+is the intended, accepted behavior.
+
 ## Known issues (why this is experimental)
 
-- **Enemy spawn-timeline drift** (ISSUES.md #12, deferred): enemies spawn
-  up to `right-margin` px of camera travel earlier, so their walk/fall
-  phase differs from the vanilla timeline on approach — different
-  patterns, enemies meeting each other, and occasionally an enemy visibly
-  overlapping geometry in the margin (vanilla produces the same spawn
-  states, but guarantees they happen offscreen).
 - Occasional sprite placement glitches in and near the margins are still
   being found; HUD-row margin rendering on non-sky palettes is untested,
   as are parts of later worlds (lifts, frenzy spawners, flagpole edge

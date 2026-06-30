@@ -15,6 +15,11 @@ debug.ini
 *.mlbl
 *.cht
 
+# Recompiler regen audit byproducts (regenerated on every NESRecomp run)
+generated/*_coverage.txt
+*_auto_entries.csv
+*_finder_audit.csv
+
 # HD texture pack (user-supplied Mesen HD pack dropped in <exe>/hdpack)
 hdpack/
 

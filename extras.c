@@ -84,33 +84,51 @@ static void get_exe_relative_path(const char *filename, char *out, int max_len) 
  *     (e.g. both block slots) can't clobber each other's draw context.
  *     The runner unwraps every subsequent shadow-OAM X write.
  *
- *  3. Window widening — the game's own draw-cull, despawn, and spawn
- *     decisions are widened by shifting the screen-edge values they read,
- *     at exactly the PCs that implement each decision (the hook receives
- *     the reading PC).  16-bit edges are read low-byte-then-page; a
- *     pending carry propagates between the paired reads.  Every shift is
- *     ±margin, so spawn/despawn hysteresis gaps stay vanilla-sized, and
- *     margin = 0 reduces exactly to vanilla.
+ *  3. Window widening — the game's own draw-cull and despawn decisions are
+ *     widened by shifting the screen-edge values they read, at exactly the
+ *     PCs that implement each decision (the hook receives the reading PC).
+ *     16-bit edges are read low-byte-then-page; a pending carry propagates
+ *     between the paired reads.  Every shift is ±margin, so the despawn
+ *     hysteresis gap stays vanilla-sized, and margin = 0 reduces exactly to
+ *     vanilla.
+ *
+ *     SPAWN decisions are deliberately LEFT VANILLA (4:3 spawns + 16:9
+ *     culling).  Widening the spawn window placed enemies up to right-margin
+ *     px deeper into the world the instant they activated — frenzy/group
+ *     spawners derive an enemy's X straight from the widened edge, landing
+ *     it inside pipes/blocks with no collision to escape, and authored
+ *     enemies activated early enough to drift off their vanilla walk/fall
+ *     timeline.  Keeping spawns at the vanilla 4:3 edge restores the
+ *     authentic spawn position and timeline; the widened draw-cull/despawn
+ *     then keep those vanilla-spawned objects visible across the full 16:9
+ *     width instead of popping in/out at the 4:3 edge.  The only cost is a
+ *     pop-in at the 4:3 edge line (an enemy materializes mid-margin rather
+ *     than at the screen edge) — an accepted trade vs. the spawn-area bugs.
  *
  * Complete classification of all $071A-$071D readers (PC → policy):
  *   $F179            GetObjRelativePosition   → sidecar bias capture
  *   $F1FA/$F202      GetXOffscreenBits edges  → widen ±margin (indexed)
  *   $D680/$D693      OffscreenBoundsCheck L   → widen -left
  *   $D69A/$D6A1      OffscreenBoundsCheck R   → widen +right
- *   $C164/$C16E      spawn lookahead UPPER     → widen +right (16:9 population)
- *   $C1B6/$C1BB      spawn LOWER/skip-behind   → VANILLA (keeps margin spawns; 1-2)
- *   $C5DA/$C5E2      frenzy spawn placement   → widen +right (mode B; airborne)
- *   $C73C/$C741      group spawn placement    → widen +right (mode B; arms corrector)
+ *   $C164/$C16E      CheckRightBounds base    → VANILLA (4:3 spawn window end)
+ *   $C1B6/$C1BB      spawn raw-edge compare   → VANILLA (4:3 spawn window start)
+ *   $C5DA/$C5E2      frenzy spawn at R edge   → VANILLA (4:3 spawn position)
+ *   $C73C/$C741      group spawn, page-first  → VANILLA (4:3 spawn position)
  *   $B013/$B01C      player screen-edge clamp → VANILLA (repositions the player)
  *   $C09C/$C0A5      loop command rewind      → VANILLA (castle maze logic)
  *   $9206            area parser page gate    → VANILLA (terrain write-ahead)
  *   $908B/$9131      area/player init         → VANILLA
  *   $83B0/$83D4/$85E2 victory mode logic      → VANILLA (watch star flag pop-in)
  *   $DDE4/$DE96/$DEB3 enemy-specific logic    → VANILLA (page-0/player checks)
- *   $E255/$E25C      bounding-box screen-rel  → VANILLA (collision = vanilla)
+ *   $E255/$E25C      bounding-box screen-rel  → VANILLA (rel calc stays vanilla)
  *   $E2DE/$E2E6      camera+0x80 midpoint     → VANILLA
  *   $EC8C            platform draw rel        → VANILLA (sidecar covers draw)
  *   $AFD1/$AFDA/$B038/$B041 scroll bookkeeping → VANILLA (no hook configured)
+ *
+ * Collision-box gate (reads Enemy_OffscreenBits $03D1, not a $071x edge):
+ *   $E268            GetMaskedOffScrBits gate → force margin enemies offscreen
+ *                    so the 8-bit collision box can't wrap to a phantom hitbox
+ *                    (see the case below; mirrors the OAM sidecar, for collision)
  * ===================================================================== */
 
 #define SMB_WS_MAX_LEFT  128  /* just-scrolled-out columns stay valid this far */
@@ -125,9 +143,9 @@ static int s_ws_left = 0, s_ws_right = 0;   /* configured margins */
  * free and removes the assumption. */
 static int     s_ws_pend_bits    = 0;
 static int     s_ws_pend_despawn = 0;
-static int     s_ws_pend_spawnb  = 0;
-static int     s_ws_pend_frenzy  = 0;
-static uint8_t s_ws_c73c_lo      = 0;  /* $C73C pair reads page FIRST */
+/* Spawn-window pending-carry vars removed: spawns are now vanilla 4:3
+ * (see the policy block above), so the $C164/$C1B6/$C5DA/$C73C edge reads
+ * fall through unshifted. */
 
 /* Per-rel-slot sidecar bias table.  GetObjRelativePosition stores rel X
  * into SprObject_Rel_XPos ($03AD,Y); Y is the rel slot (0 player, 1 enemy,
@@ -162,144 +180,6 @@ static int ws_sim_active(void) {
     if (!s_ws_enabled) return 0;
     uint8_t mode = g_ram[0x0770];
     return mode == 1 || mode == 2;
-}
-
-/* =====================================================================
- * Mode-B enemy spawn handling (ISSUE #12): widened placement + corrector
- *
- * Group ($C73C) and frenzy ($C5DA) spawners place an enemy at
- * (screen-edge + offset).  We serve the WIDENED edge to those placement
- * reads so the spawn keeps its stock relationship to the visible-right
- * edge — measured from the 16:9 edge instead of 4:3 — which preserves the
- * vanilla trajectory and lets the spawn-window logic stay coherent
- * (eligibility and placement share one clock again).  Authored enemies
- * ($C1AB PositionEnemyObj) take their position from level data and are
- * never edge-placed.
- *
- * The one failure mode of widened placement is a group member that spawns
- * in the AIR at the widened edge (Y=$B0) and FALLS into a pipe/brick a few
- * frames later, with no collision to escape.  The birth-quarantine
- * corrector (ws_spawn_correct) handles exactly that: it arms a short
- * per-slot window on the members of each $C73C group and, while armed,
- * nudges a member left toward — never past — its vanilla-equivalent X if
- * its TORSO enters geometry.  Worst case is the stock-safe position.
- *
- * ws_block_metatile/ws_world_solid are a read-only reimplementation of
- * SMB BlockBufferCollision + ChkForNonSolids (no game state touched). */
-
-/* Metatile id at world (page*256 + x_lo, y).  Block_Buffer_1 @ $0500,
- * Block_Buffer_2 @ $05D0 (13 cols x 16 rows each); page bit0 selects the
- * buffer, X high-nibble the column, (Y&0xF0)-0x20 the row (8-bit wrap). */
-static uint8_t ws_block_metatile(uint8_t page, uint8_t x_lo, uint8_t y) {
-    uint16_t base = (page & 1) ? 0x05D0 : 0x0500;
-    uint8_t  col  = (uint8_t)(x_lo >> 4);
-    uint8_t  rowo = (uint8_t)((y & 0xF0) - 0x20);
-    return g_ram[(uint16_t)(base + (uint8_t)(col + rowo))];
-}
-/* SMB enemy solidity: a nonzero metatile that isn't a known passable id
- * (climb $26, coins $C2/$C3, water/decor $5F/$60). */
-static int ws_world_solid(uint16_t world_x, uint8_t y) {
-    uint8_t m = ws_block_metatile((uint8_t)(world_x >> 8), (uint8_t)world_x, y);
-    if (m == 0x00) return 0;
-    if (m == 0x26 || m == 0xC2 || m == 0xC3 || m == 0x5F || m == 0x60) return 0;
-    return 1;
-}
-
-#define SMB_ENEMY_SLOTS 5
-#define SMB_ENEMY_ID_PIRANHA 0x0D   /* lives inside pipes — never correct/count */
-#define SMB_WS_QWIN_GROUP   40      /* birth-quarantine frames for a group spawn */
-
-static unsigned s_ws_corr_applied = 0;  /* leftward placement nudges applied */
-static unsigned s_ws_embed_detect = 0;  /* residual torso-embeds OUTSIDE quarantine */
-static unsigned s_ws_guard_frames = 0;  /* frames the corrector swept */
-
-static int      s_ws_group_pending = 0; /* $C73C hook: a group spawned this frame */
-static uint8_t  s_ws_prev_flag[SMB_ENEMY_SLOTS];  /* slot active last frame? */
-static uint8_t  s_ws_q_frames[SMB_ENEMY_SLOTS];   /* quarantine frames left (0 = none) */
-static uint16_t s_ws_q_floor[SMB_ENEMY_SLOTS];    /* min world X = vanilla-equivalent */
-
-/* Torso/side overlap test (NOT feet): "embedded" if any torso sample lands
- * on solid geometry.  Samples the 16x16 body at x insets 2/13, y rows 4/8/12
- * plus the centre — and deliberately omits the y+15 foot row, so an enemy
- * standing on the ground / a stair / a pipe lip reads CLEAR.  Bottom-foot
- * contact is normal; torso-in-block is the embed we must fix. */
-static int ws_torso_embedded(uint16_t wx, uint8_t y) {
-    static const int8_t sx[7] = { 2, 13,  2, 13,  2, 13,  8 };
-    static const int8_t sy[7] = { 4,  4,  8,  8, 12, 12,  8 };
-    for (int k = 0; k < 7; k++)
-        if (ws_world_solid((uint16_t)(wx + sx[k]), (uint8_t)(y + sy[k])))
-            return 1;
-    return 0;
-}
-
-/* Spawn-correction eligibility.  Piranha Plants live inside pipes by design
- * (always "embedded"), so never correct them.  Airborne frenzy enemies
- * (Cheep-Cheep / Bullet Bill / etc.) never torso-embed, so the embed test
- * already excludes them — only Piranha needs an explicit skip. */
-static int ws_correctable(uint8_t id) {
-    return id != SMB_ENEMY_ID_PIRANHA;
-}
-
-/* Birth-quarantine corrector (mode B).  Runs once per frame in
- * game_post_nmi, after the loader and enemy mover have settled.
- *
- * When $C73C spawns a group this frame (s_ws_group_pending), arm a short
- * quarantine on each newly-active member and record its vanilla-equivalent
- * floor X (wide_x - right_margin = where stock placement lands, clear by
- * level design).  While armed, if the member's TORSO is in geometry, walk
- * it left one metatile at a time toward — never past — that floor; if it
- * cannot clear before the floor, clamp it to the floor (stock-safe).  Never
- * a drop, never an arbitrary move, never more than `right` px.  Authored
- * enemies are never armed (not group-spawned) and aren't embedded anyway;
- * Piranha/defeated are excluded.  Outside the quarantine window we only
- * OBSERVE: a torso-embed there means a spawn slipped past us and bumps
- * s_ws_embed_detect (should stay ~0).  Widescreen gameplay only. */
-static void ws_spawn_correct(void) {
-    if (!ws_sim_active()) { s_ws_group_pending = 0; return; }
-    s_ws_guard_frames++;
-
-    for (int i = 0; i < SMB_ENEMY_SLOTS; i++) {
-        uint8_t flag = g_ram[0x0F + i];
-        if (!flag) { s_ws_q_frames[i] = 0; s_ws_prev_flag[i] = 0; continue; }
-
-        uint8_t  id = g_ram[0x16 + i];
-        uint16_t wx = (uint16_t)((g_ram[0x6E + i] << 8) | g_ram[0x87 + i]);
-        uint8_t  y  = g_ram[0xCF + i];
-
-        /* Newly-active member of this frame's group → arm birth quarantine. */
-        if (!s_ws_prev_flag[i]) {
-            if (s_ws_group_pending && s_ws_right > 0 && ws_correctable(id)) {
-                s_ws_q_frames[i] = SMB_WS_QWIN_GROUP;
-                s_ws_q_floor[i]  = (wx >= (uint16_t)s_ws_right)
-                                 ? (uint16_t)(wx - s_ws_right) : 0;
-            } else {
-                s_ws_q_frames[i] = 0;
-            }
-        }
-        s_ws_prev_flag[i] = 1;
-
-        if (g_ram[0x1E + i] & 0xE0) { s_ws_q_frames[i] = 0; continue; } /* dying */
-
-        if (s_ws_q_frames[i] > 0) {
-            if (ws_correctable(id) && ws_torso_embedded(wx, y)) {
-                uint16_t nx = wx;
-                while (ws_torso_embedded(nx, y) &&
-                       (int)nx - 0x10 >= (int)s_ws_q_floor[i])
-                    nx = (uint16_t)(nx - 0x10);
-                if (ws_torso_embedded(nx, y) && nx > s_ws_q_floor[i])
-                    nx = s_ws_q_floor[i];          /* clamp to stock-safe X */
-                if (nx != wx) {
-                    g_ram[0x6E + i] = (uint8_t)(nx >> 8);
-                    g_ram[0x87 + i] = (uint8_t)nx;
-                    s_ws_corr_applied++;
-                }
-            }
-            s_ws_q_frames[i]--;
-        } else if (ws_correctable(id) && ws_torso_embedded(wx, y)) {
-            s_ws_embed_detect++;   /* residual: slipped past the quarantine */
-        }
-    }
-    s_ws_group_pending = 0;        /* consume this frame's group-spawn signal */
 }
 
 /* Parse "16:9" / "21:9" style aspect, or "WxH" margins like "85x85". */
@@ -409,7 +289,6 @@ void game_on_frame(uint64_t frame_count) {
 void game_post_nmi(uint64_t frame_count) {
     (void)frame_count;
     ws_update_frame_gate();
-    ws_spawn_correct();
     if (s_debug_enabled) {
         debug_server_record_frame();
     }
@@ -592,49 +471,55 @@ uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     case 0xD69A: return ws_shift_lo(val, +s_ws_right, &s_ws_pend_despawn);
     case 0xD6A1: return ws_shift_hi(val, &s_ws_pend_despawn);
 
-    /* ---- Enemy spawn lookahead UPPER bound: CheckRightBounds ($C164) ----
-     * $C164/$C16E compute $06/$07 = ScreenRight + 0x30, the far edge of the
-     * spawn lookahead window ($C1CB gates the actual spawn against it).
-     * Widen it so enemies materialize at the 16:9 edge, not mid-margin. */
-    case 0xC164: return ws_shift_lo(val, +s_ws_right, &s_ws_pend_spawnb);
-    case 0xC16E: return ws_shift_hi(val, &s_ws_pend_spawnb);
-
-    /* ---- Enemy spawn LOWER bound / skip-if-behind: $C1B6 ----
-     * $C1B6/$C1BB compare a positioned enemy's world X against ScreenRight
-     * (BCS $C1CB to evaluate the spawn; else the record is consumed as
-     * "behind the edge").  This is the DESTRUCTIVE skip gate, so it must use
-     * VANILLA ScreenRight: with the widened edge, a level-start enemy whose
-     * column sits inside the extra 16:9 margin is already "behind" at load
-     * and gets scanned past, never spawning (the 1-2 start Goombas).  Vanilla
-     * here = skip only once truly behind the 4:3 edge; the widened UPPER
-     * bound above still spawns it early, so 16:9 population is preserved. */
-    case 0xC1B6:
-    case 0xC1BB:
+    /* ---- Enemy spawn windows: VANILLA 4:3 (deliberately NOT widened) ----
+     * These PCs all read ScreenRight ($071D/$071B) to decide when/where an
+     * enemy spawns.  Widening them is what produced the spawn-area bugs:
+     * frenzy ($C5DA: enemy X = edge+0x20) and group ($C73C: page read first)
+     * spawners derive an enemy's X straight from the edge, so a widened edge
+     * dropped them inside terrain; CheckRightBounds ($C164/$C16E) and the
+     * raw-edge compare ($C1B6/$C1BB) gate the [ScreenRight, +0x30) authored
+     * spawn window, so widening activated authored enemies early and drifted
+     * their walk/fall phase off the vanilla timeline.  Leaving all four at
+     * the vanilla 4:3 edge restores authentic spawn position + timing; the
+     * widened draw-cull/despawn above keep the resulting objects visible
+     * across the full 16:9 width.  Listed explicitly (rather than relying on
+     * the default) to document that these are spawn PCs held at 4:3 by
+     * design — do not re-add a +s_ws_right shift here. */
+    case 0xC164: case 0xC16E:   /* CheckRightBounds base / page */
+    case 0xC1B6: case 0xC1BB:   /* spawn raw-edge compare low / page */
+    case 0xC5DA: case 0xC5E2:   /* frenzy spawn edge low / page */
+    case 0xC73C: case 0xC741:   /* group spawn page / low */
         return val;
 
-    /* ---- Enemy spawn PLACEMENT reads: serve WIDENED (mode B) ----
-     * $C5DA/$C5E2  frenzy:  Enemy_X = ScreenRight + 0x20, Enemy_Page = +carry
-     * $C73C/$C741  group:   ScreenRight page/X -> temp $02/$03, copied into
-     *                        every group member's PageLoc/X_Position.
-     * Placing from the WIDENED edge keeps the spawn's stock relationship to
-     * the visible-right edge (now the 16:9 edge), preserving trajectory and
-     * keeping eligibility + placement on one clock.  The only risk — a
-     * group member spawning in the air and falling into geometry — is
-     * cleaned up by ws_spawn_correct's birth quarantine, which $C73C arms. */
-    case 0xC5DA: return ws_shift_lo(val, +s_ws_right, &s_ws_pend_frenzy);
-    case 0xC5E2: return ws_shift_hi(val, &s_ws_pend_frenzy);
-
-    /* Group spawn ($C73C) reads page FIRST, then the low byte at $C741, so
-     * compute the widened 16-bit edge at the page read and cache the low
-     * byte.  Flag the group spawn so the corrector quarantines its members. */
-    case 0xC73C: {
-        int wide = ((((int)val << 8) | g_ram[0x071D]) + s_ws_right) & 0xFFFF;
-        s_ws_c73c_lo = (uint8_t)(wide & 0xFF);
-        s_ws_group_pending = 1;
-        return (uint8_t)(wide >> 8);
+    /* ---- Collision offscreen gate: GetMaskedOffScrBits ($E268) ----
+     * This is the collision analogue of the OAM sidecar.  We widen
+     * GetXOffscreenBits so margin enemies still RENDER; the side effect is
+     * that this read of Enemy_OffscreenBits ($03D1) returns 0 (on-screen),
+     * so the gate runs BoundingBoxCore instead of MoveBoundBoxOffscreen.
+     * BoundingBoxCore's X math is 8-bit (UL = relX+off, LR = relX+off): for
+     * an object whose TRUE screen X is in a margin (outside the vanilla
+     * 0..255 viewport) the box wraps to the opposite side, and
+     * SprObjectCollisionCore — which only rejects a box when it is the
+     * degenerate $FF,$FF that MoveBoundBoxOffscreen writes — then reports a
+     * phantom overlap.  Concretely: an enemy on the right (screen X 256..341)
+     * gets a box on the LEFT, so the player stomping/walking there triggers a
+     * hit while the enemy renders correctly on the right.  The player is
+     * always clamped on-screen and can never reach a margin, so a margin
+     * enemy never truly touches it: report the enemy as fully offscreen here
+     * ($FF) and let the vanilla MoveBoundBoxOffscreen park its box at $FF,$FF.
+     * The AND operand at $E268 is the box offset Y ($44/$48, always nonzero),
+     * so $FF here always trips the branch to MoveBoundBoxOffscreen.  On-screen
+     * enemies (rel 0..255) fall through to the real value, so collision stays
+     * byte-for-byte vanilla (and widescreen-off no-ops at the top of this
+     * function, keeping the --verify oracle exact).  X = enemy slot 0..4. */
+    case 0xE268: {
+        int slot  = g_cpu.X;
+        int world = ((int)g_ram[(0x6E + slot) & 0xFF] << 8) | g_ram[(0x87 + slot) & 0xFF];
+        int cam   = ((int)g_ram[0x071A] << 8) | g_ram[0x071C];
+        int rel   = world - cam;            /* true 16-bit screen X */
+        if (rel < 0 || rel > 255) return 0xFF;   /* margin → offscreen box */
+        return val;
     }
-    case 0xC741:
-        return s_ws_c73c_lo;
 
     /* Every other hooked read — player edge clamp ($B013/$B01C), loop
      * rewind ($C09C/$C0A5), parser gates, victory logic, bounding boxes —
@@ -724,11 +609,9 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
             "{\"id\":%d,\"cmd\":\"smb_ws_state\","
             "\"enabled\":%d,\"left\":%d,\"right\":%d,"
             "\"eff_left\":%d,\"eff_right\":%d,\"sim_active\":%d,"
-            "\"corr_applied\":%u,\"embed_detect\":%u,\"guard_frames\":%u,"
             "\"oper_mode\":%d,\"camera_x\":%d,\"enemies\":[%s]}\n",
             id, s_ws_enabled, s_ws_left, s_ws_right,
             g_ws_eff_left, g_ws_eff_right, ws_sim_active(),
-            s_ws_corr_applied, s_ws_embed_detect, s_ws_guard_frames,
             g_ram[0x0770], cam, enemies);
         return 1;
     }
