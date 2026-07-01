@@ -99,7 +99,6 @@ find_package(SDL2 REQUIRED)
 add_executable(SuperMarioBrosRecomp
     ${NESRECOMP_RUNNER_SOURCES}
     extras.c
-    recomp_stack.c
     nes_snapshot.c
     verify_mode.c
     watchdog.c
