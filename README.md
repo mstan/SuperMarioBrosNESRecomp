@@ -101,3 +101,13 @@ has been translated to C by [NESRecomp](nesrecomp/) and compiled to native x64.
 | `generated/super-mario-bros_full.c` | Recompiled 6502 code (committed) |
 | `generated/super-mario-bros_dispatch.c` | Dispatch table (committed) |
 | `ISSUES.md` | Detailed issue tracker with root-cause analysis |
+
+---
+
+<p align="center">
+  <sub><b>R.A.I.D. — Retro AI Development</b> · a Discord for AI-assisted retro reverse-engineering, decomp &amp; recomp</sub>
+</p>
+
+<p align="center">
+  <a href="https://discord.gg/Ad9BwSzctP"><img src=".github/raid-discord.png" alt="Join the Retro AI Development (R.A.I.D.) Discord" width="200"></a>
+</p>
