@@ -2,6 +2,9 @@
 #include "nes_runtime.h"
 extern int g_current_bank;
 
+/* Interpreter-fallback precondition flag (see runner/src/interp.c). */
+int g_recomp_push_all_jsr = 0;
+
 /* Forward declarations */
 void func_8000_b0(void); /* Start */
 void func_8082_b0(void); /* NonMaskableInterrupt */
@@ -3243,8 +3246,8 @@ void func_B3FF_b1(void);
 void func_B3F9_b1(void);
 void func_BC90_b1(void);
 
-int call_by_address(uint16_t addr) {
-    if (addr < 0x8000) { nes_log_dispatch_miss(addr); return 0; }
+int call_by_address_cb(uint16_t addr, int _caller_bank) {
+    if (addr < 0x8000) { return nes_interp_dispatch(addr); }
 _dispatch_retry:
     switch (addr) {
         case 0x8000:
@@ -5497,7 +5500,7 @@ _dispatch_retry:
             switch (g_current_bank) {
                 case 0: func_B5C5_b0(); break;
                 case 1: func_B5C5_b1(); break;
-                default: nes_log_dispatch_miss(addr); return 0;
+                default: return nes_interp_dispatch(addr);
             }
             break;
         case 0xB620:
@@ -9729,8 +9732,11 @@ _dispatch_retry:
         case 0xBC90:
             func_BC90_b1(); break;
         default:
-            nes_log_dispatch_miss(addr);
-            return 0;
+            return nes_interp_dispatch(addr);
     }
     return 1;
 }
+
+/* Legacy entry: no caller-bank hint (JMP-indirect, interp, debug server).
+ * Depth-counted so deferred JMP-tail targets get driven (see runtime.c). */
+int call_by_address(uint16_t addr) { return nes_dispatch_call(addr, -1); }
