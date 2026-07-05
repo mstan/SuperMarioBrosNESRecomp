@@ -1,4 +1,4 @@
-# nesrecomp.pin — pins this game's expected nesrecomp version.
+# nesrecomp.pin ??? pins this game's expected nesrecomp version.
 #
 # Two optional fields:
 #   branch = <ref>   ref to resolve when `sha` is unset.
@@ -24,4 +24,4 @@
 #   3. commit this file change
 
 branch = master
-sha    = ce18ead728e923811f78bb7d228124d260ae713b
+sha    = 63c162a3d9203dba635bc49424c57a3d67a49466
