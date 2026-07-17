@@ -85,9 +85,4 @@ endif()
 # launcher.c's main(), and stages the launcher assets next to the exe.
 include(${CMAKE_SOURCE_DIR}/recomp-ui/recomp_ui.cmake)
 recomp_target_launcher_ui(SuperMarioBrosRecomp BOXART ${CMAKE_SOURCE_DIR}/boxart.tga)
-if(WIN32)
-    # OpenGL for the ImGui GL3 backend (previously pulled in by the RmlUi
-    # launcher.cmake via OpenGL::GL).
-    target_link_libraries(SuperMarioBrosRecomp PRIVATE opengl32)
-endif()
 target_compile_definitions(SuperMarioBrosRecomp PRIVATE NESRECOMP_GAME_WIDESCREEN=1)
