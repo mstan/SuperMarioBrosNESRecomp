@@ -1,5 +1,13 @@
 # SuperMarioBrosRecomp
 
+> _This recompilation is a **byproduct of developing
+> [nesrecomp](https://github.com/mstan/nesrecomp)** — the games are the proving ground, the framework is the
+> goal, and depth will keep landing over months, not days. My time for any one
+> title is limited, so I ask for your patience. Contributions are welcome —
+> testing, issues, and PRs to the game or framework all help and will
+> accelerate this game's polish. More on the why at:
+> [Recomp + AI: 5 Months Later »](https://1379.tech/recomp-ai-5-months-later/)_
+
 Static recompilation of Super Mario Bros. (NES) for native PC.
 Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 
