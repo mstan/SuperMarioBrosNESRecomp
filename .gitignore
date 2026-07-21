@@ -24,3 +24,5 @@ generated/*_coverage.txt
 hdpack/
 
 nestopia-core
+
+build_ui/
