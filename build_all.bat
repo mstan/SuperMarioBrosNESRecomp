@@ -1,15 +1,10 @@
 @echo off
 setlocal enabledelayedexpansion
 
-rem build_all.bat — Release (non-debug) build.
+rem build_all.bat — Release build.
 rem
 rem Produces: build_release\SuperMarioBrosRecomp.exe  (~3.0 MiB)
-rem Flags:    ENABLE_NESTOPIA_ORACLE=OFF, NESRECOMP_REVERSE_DEBUG=OFF
-rem Regen:   plain (no --reverse-debug)
-rem
-rem Coexists with the debug build in build_debug\ from build_rdb.bat.
-rem Switching between them does NOT require rebuilding — just run the
-rem other .exe.  Different output dirs keep CMake caches isolated.
+rem Regen:   plain
 
 call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64 >nul 2>&1
 
@@ -42,7 +37,7 @@ if !ERRORLEVEL! NEQ 0 ( echo REGEN FAILED & exit /b 2 )
 
 echo === STEP 3: Configure + build non-debug ===
 if not exist build_release (
-    cmake -S . -B build_release -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_NESTOPIA_ORACLE=OFF -DNESRECOMP_REVERSE_DEBUG=OFF
+    cmake -S . -B build_release -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
     if !ERRORLEVEL! NEQ 0 ( echo CMAKE FAILED & exit /b 3 )
 )
 cmake --build build_release

@@ -102,14 +102,14 @@ is the intended, accepted behavior.
   being found; HUD-row margin rendering on non-sky palettes is untested,
   as are parts of later worlds (lifts, frenzy spawners, flagpole edge
   content).
-- Sprite-0 timing, scores, physics, and RNG are unaffected — the
-  `--verify` oracle gate is run on every change.
+- Sprite-0 timing, scores, physics, and RNG are checked with the standalone
+  `nesref`/Mesen co-sim workflow.
 
 ## Verification tooling
 
 - `tools/ws_check.py` — drives 1-1 over the TCP debug server and asserts
   the three historical failure modes never occur (wrap ghosts, spawn
-  pops, despawn pops). Requires a debug build (`build_rdb.bat`) and
-  `debug.ini` next to the exe.
-- `--verify` — dual-execution lockstep against the Nestopia oracle
-  (debug build), comparing all 2 KB of work RAM every frame.
+  pops, despawn pops). Requires a trace-enabled build and `debug.ini` next
+  to the exe.
+- `nesrecomp/tools/nes_cosim.py` — compares RAM, PPU state, cycles, video,
+  and audio against standalone `nesref`/Mesen runs.
