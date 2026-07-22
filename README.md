@@ -14,6 +14,19 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 
 > **Status:** The game is fully playable. All worlds and levels are believed to be completable, though not every path has been exhaustively tested. If you find a game-breaking bug, please [open an issue](../../issues).
 
+## Netplay
+
+The launcher includes two-player delay-sync netplay for SMB's alternating
+Mario/Luigi mode. Open **Netplay** to host or join a room; local lobbies use a
+direct LAN connection and Internet rooms negotiate an ICE connection through
+the configured lobby service. The host's widescreen choice and input delay are
+used by both peers.
+
+During a match, F6/F7 quick save/load are disabled because they would break
+determinism. Press Escape to leave the match and return to the room for a
+rematch. A controller-input mismatch, state-digest mismatch, or disconnected
+peer also returns both players to the lobby.
+
 ## Known Issues
 
 - **Demo sequence non-determinism** — the title screen auto-play demo may behave
@@ -21,8 +34,6 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
   missed on another. This is a minor frame-timing inconsistency in real-time mode
   (turbo/fast-forward mode is fully deterministic).
   Gameplay is unaffected.
-- **2-player mode non-functional** — controller 2 input is not bound; Luigi cannot
-  move when play switches to him after Mario dies.
 
 ## Quick Start
 
