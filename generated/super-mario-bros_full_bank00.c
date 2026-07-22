@@ -1,6 +1,12 @@
-/* super-mario-bros_full_bank00.c — PRG bank 0 function bodies.
- * Generated part of super-mario-bros_full.c: #included by the umbrella; NOT a
- * standalone translation unit. Do not compile or edit directly. */
+/* super-mario-bros_full_bank00_part00.c — PRG bank 0 function bodies (sub-part 0).
+ * STANDALONE translation unit — compiled independently (in
+ * parallel with every other bank part/sub-part and the
+ * umbrella super-mario-bros_full.c). Do not compile as part of another TU or
+ * edit directly; the source of truth is the recompiler's
+ * code_generator.c. Renamed to drop the _partNN suffix if
+ * this bank turned out to fit in a single sub-part. */
+
+#include "super-mario-bros_full_decls.h"
 
 void func_8000_b0(void) { /* Start */
 #ifdef RECOMP_STACK_TRACKING
@@ -23,7 +29,7 @@ label_800A:; /* VBlank1 */
     /* $800A: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x2002); FLAG_NZ(g_cpu.A);
 label_800D:;
     /* $800D: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -33,7 +39,7 @@ label_800F:; /* VBlank2 */
     /* $800F: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x2002); FLAG_NZ(g_cpu.A);
 label_8012:;
     /* $8012: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -48,12 +54,12 @@ label_8018:; /* WBootCheck */
 label_801B:;
     /* $801B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0A; g_cpu.C=(g_cpu.A>=0x0A)?1:0; FLAG_NZ(r&0xFF); }
 label_801D:;
-    /* $801D: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_802B;
+    /* $801D: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_802B; }
 label_801F:;
     /* $801F: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8020:;
     /* $8020: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -64,7 +70,7 @@ label_8022:;
 label_8025:;
     /* $8025: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xA5; g_cpu.C=(g_cpu.A>=0xA5)?1:0; FLAG_NZ(r&0xFF); }
 label_8027:;
-    /* $8027: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_802B;
+    /* $8027: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_802B; }
 label_8029:;
     /* $8029: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0xD6; FLAG_NZ(g_cpu.Y);
 label_802B:; /* ColdBoot */
@@ -125,7 +131,7 @@ label_8092:;
 label_8094:;
     /* $8094: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0774); FLAG_NZ(g_cpu.Y);
 label_8097:;
-    /* $8097: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_809E;
+    /* $8097: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_809E; }
 label_8099:;
     /* $8099: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0779); FLAG_NZ(g_cpu.A);
 label_809C:;
@@ -167,7 +173,7 @@ label_80C8:;
 label_80CB:;
     /* $80CB: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x06; g_cpu.C=(g_cpu.X>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_80CD:;
-    /* $80CD: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_80D0;
+    /* $80CD: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_80D0; }
 label_80CF:;
     /* $80CF: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_80D0:; /* InitBuffer */
@@ -197,21 +203,21 @@ label_80F0:;
 label_80F3:;
     /* $80F3: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_80F4:;
-    /* $80F4: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_811B;
+    /* $80F4: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(2); goto label_811B; }
 label_80F6:;
     /* $80F6: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0747); FLAG_NZ(g_cpu.A);
 label_80F9:;
-    /* $80F9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8100;
+    /* $80F9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_8100; }
 label_80FB:;
     /* $80FB: CE */ maybe_trigger_vblank(6); { uint16_t a=0x0747; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_80FE:;
-    /* $80FE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8119;
+    /* $80FE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8119; }
 label_8100:; /* DecTimers */
     /* $8100: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x14; FLAG_NZ(g_cpu.X);
 label_8102:;
     /* $8102: CE */ maybe_trigger_vblank(6); { uint16_t a=0x077F; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_8105:;
-    /* $8105: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_810E;
+    /* $8105: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_810E; }
 label_8107:;
     /* $8107: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x14; FLAG_NZ(g_cpu.A);
 label_8109:;
@@ -221,14 +227,14 @@ label_810C:;
 label_810E:; /* DecTimersLoop */
     /* $810E: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0780 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_8111:;
-    /* $8111: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8116;
+    /* $8111: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8116; }
 label_8113:;
     /* $8113: DE */ maybe_trigger_vblank(7); { uint16_t a=(0x0780 + g_cpu.X) & 0xFFFF; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_8116:; /* SkipExpTimer */
     /* $8116: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8117:;
     /* $8117: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -255,7 +261,7 @@ label_812B:;
 label_812D:;
     /* $812D: 18 */ maybe_trigger_vblank(2); g_cpu.C = 0;
 label_812E:;
-    /* $812E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8131;
+    /* $812E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8131; }
 label_8130:;
     /* $8130: 38 */ maybe_trigger_vblank(2); g_cpu.C = 1;
 label_8131:; /* RotPRandomBit */
@@ -266,7 +272,7 @@ label_8135:;
     /* $8135: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8136:;
     /* $8136: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -275,14 +281,14 @@ label_8136:;
 label_8138:;
     /* $8138: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0722); FLAG_NZ(g_cpu.A);
 label_813B:;
-    /* $813B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_815C;
+    /* $813B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_815C; }
 label_813D:; /* Sprite0Clr */
     /* $813D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x2002); FLAG_NZ(g_cpu.A);
 label_8140:;
     /* $8140: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_8142:;
     /* $8142: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -293,7 +299,7 @@ label_8144:;
 label_8147:;
     /* $8147: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_8148:;
-    /* $8148: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8150;
+    /* $8148: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8150; }
 label_814A:;
     /* $814A: 20 */ maybe_trigger_vblank(6); func_8223_b0();
 label_814D:;
@@ -304,7 +310,7 @@ label_8153:;
     /* $8153: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_8155:;
     /* $8155: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -316,7 +322,7 @@ label_8159:; /* HBlankDelay */
     /* $8159: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_815A:;
     /* $815A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -341,7 +347,7 @@ label_816F:;
 label_8172:;
     /* $8172: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_8173:;
-    /* $8173: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8178;
+    /* $8173: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8178; }
 label_8175:;
     /* $8175: 20 */ maybe_trigger_vblank(6); func_8212_b0();
 label_8178:; /* SkipMainOper */
@@ -353,7 +359,7 @@ label_817C:;
 label_817E:;
     /* $817E: 8D */ maybe_trigger_vblank(4); nes_write(0x2000, g_cpu.A);
 label_8181:;
-    /* $8181: 40 */ maybe_trigger_vblank(6); /* RTI */ g_cpu.S++; { uint8_t p=g_ram[0x100+g_cpu.S]; g_cpu.N=(p>>7)&1; g_cpu.V=(p>>6)&1; g_cpu.D=(p>>3)&1; g_cpu.I=(p>>2)&1; g_cpu.Z=(p>>1)&1; g_cpu.C=p&1; }
+    /* $8181: 40 */ maybe_trigger_vblank(6); /* RTI */ g_rti_source = 0x8181; g_rti_bank = 0; g_cpu.S++; { uint8_t p=g_ram[0x100+g_cpu.S]; g_cpu.N=(p>>7)&1; g_cpu.V=(p>>6)&1; g_cpu.D=(p>>3)&1; g_cpu.I=(p>>2)&1; g_cpu.Z=(p>>1)&1; g_cpu.C=p&1; }
     g_cpu.S++; { uint8_t _rti_lo = g_ram[0x100+g_cpu.S];
     g_cpu.S++; uint8_t _rti_hi = g_ram[0x100+g_cpu.S];
     g_rti_target = (_rti_hi << 8) | _rti_lo; }
@@ -378,11 +384,11 @@ label_90D2:; /* InitPageLoop */
 label_90D4:; /* InitByteLoop */
     /* $90D4: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x01; g_cpu.C=(g_cpu.X>=0x01)?1:0; FLAG_NZ(r&0xFF); }
 label_90D6:;
-    /* $90D6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_90DC;
+    /* $90D6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_90DC; }
 label_90D8:;
     /* $90D8: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x60; g_cpu.C=(g_cpu.Y>=0x60)?1:0; FLAG_NZ(r&0xFF); }
 label_90DA:;
-    /* $90DA: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_90DE;
+    /* $90DA: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_90DE; }
 label_90DC:; /* InitByte */
     /* $90DC: 91 */ maybe_trigger_vblank(6); nes_write((nes_read16zp(0x06) + g_cpu.Y) & 0xFFFF, g_cpu.A);
 label_90DE:; /* SkipByte */
@@ -391,7 +397,7 @@ label_90DF:;
     /* $90DF: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0xFF; g_cpu.C=(g_cpu.Y>=0xFF)?1:0; FLAG_NZ(r&0xFF); }
 label_90E1:;
     /* $90E1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -401,7 +407,7 @@ label_90E3:;
     /* $90E3: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_90E4:;
     /* $90E4: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -437,7 +443,7 @@ label_822D:;
     /* $822D: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_822E:;
     /* $822E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -489,7 +495,7 @@ label_8E3E:;
     /* $8E3E: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8E3F:;
     /* $8E3F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -499,7 +505,7 @@ label_8E41:;
     /* $8E41: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8E42:;
     /* $8E42: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -519,7 +525,7 @@ label_8E50:;
     /* $8E50: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8E51:;
     /* $8E51: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -1130,25 +1136,6 @@ label_8591:; return;
 label_8594:; return;
 label_8596:; return;
 label_8598:; return;
-label_859B:; return;
-label_859E:; return;
-label_859F:; return;
-label_85A2:; return;
-label_85A3:; return;
-label_85A5:; return;
-label_85A8:; return;
-label_85AA:; return;
-label_85AD:; return;
-label_85B0:; return;
-label_85B1:; return;
-label_85B4:; return;
-label_85B5:; return;
-label_85B8:; return;
-label_85BB:; return;
-label_85BD:; return;
-label_85BF:; return;
-label_85C2:; return;
-label_85C5:; return;
 label_85C8:; return;
 label_85CB:; return;
 label_85CC:; return;
@@ -1305,18 +1292,6 @@ label_8729:; return;
 label_872B:; return;
 label_872D:; return;
 label_872F:; return;
-label_8732:; return;
-label_8735:; return;
-label_8737:; return;
-label_8739:; return;
-label_873C:; return;
-label_873F:; return;
-label_8740:; return;
-label_8742:; return;
-label_8745:; return;
-label_8748:; return;
-label_8749:; return;
-label_874B:; return;
 label_874E:; return;
 label_8751:; return;
 label_8752:; return;
@@ -2602,6 +2577,37 @@ label_91C1:; return;
 label_91C3:; return;
 label_91C5:; return;
 label_91C7:; return;
+label_91C9:; return;
+label_91CB:; return;
+label_91CC:; return;
+label_91CD:; return;
+label_91D0:; return;
+label_91D2:; return;
+label_91D5:; return;
+label_91D7:; return;
+label_91D9:; return;
+label_91DC:; return;
+label_91DE:; return;
+label_91E0:; return;
+label_91E3:; return;
+label_91E5:; return;
+label_91E8:; return;
+label_91E9:; return;
+label_91EC:; return;
+label_91ED:; return;
+label_91EE:; return;
+label_91F1:; return;
+label_91F3:; return;
+label_91F5:; return;
+label_91F6:; return;
+label_91F9:; return;
+label_91FC:; return;
+label_91FD:; return;
+label_91FE:; return;
+label_9200:; return;
+label_9201:; return;
+label_9202:; return;
+label_9203:; return;
 }
 
 void func_8EE6_b0(void) { /* InitScroll */
@@ -2631,7 +2637,7 @@ label_8EE0:;
 label_8EE2:;
     /* $8EE2: B1 */ maybe_trigger_vblank(5); g_cpu.A = nes_read((nes_read16zp(0x00) + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_8EE4:;
-    /* $8EE4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { call_by_address(0x8E92); return; }
+    /* $8EE4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); call_by_address(0x8E92); return; }
 label_8EE6:; /* InitScroll */
     /* $8EE6: 8D */ maybe_trigger_vblank(4); nes_write(0x2005, g_cpu.A);
 label_8EE9:;
@@ -2684,7 +2690,7 @@ label_8E78:;
     /* $8E78: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8E79:;
     /* $8E79: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -2699,7 +2705,7 @@ label_8E7F:;
 label_8E81:;
     /* $8E81: 3D */ maybe_trigger_vblank(4); g_cpu.A &= nes_read((0x074A + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_8E84:;
-    /* $8E84: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8E8D;
+    /* $8E84: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8E8D; }
 label_8E86:;
     /* $8E86: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
 label_8E87:;
@@ -2733,21 +2739,21 @@ label_8182:; /* PauseRoutine */
 label_8185:;
     /* $8185: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_8187:;
-    /* $8187: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8194;
+    /* $8187: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8194; }
 label_8189:;
     /* $8189: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x01; g_cpu.C=(g_cpu.A>=0x01)?1:0; FLAG_NZ(r&0xFF); }
 label_818B:;
-    /* $818B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_81C5;
+    /* $818B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_81C5; }
 label_818D:;
     /* $818D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0772); FLAG_NZ(g_cpu.A);
 label_8190:;
     /* $8190: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_8192:;
-    /* $8192: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_81C5;
+    /* $8192: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_81C5; }
 label_8194:; /* ChkPauseTimer */
     /* $8194: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0777); FLAG_NZ(g_cpu.A);
 label_8197:;
-    /* $8197: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_819D;
+    /* $8197: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_819D; }
 label_8199:;
     /* $8199: CE */ maybe_trigger_vblank(6); { uint16_t a=0x0777; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_819C:;
@@ -2761,13 +2767,13 @@ label_819D:; /* ChkStart */
 label_81A0:;
     /* $81A0: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x10; FLAG_NZ(g_cpu.A);
 label_81A2:;
-    /* $81A2: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_81BD;
+    /* $81A2: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_81BD; }
 label_81A4:;
     /* $81A4: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0776); FLAG_NZ(g_cpu.A);
 label_81A7:;
     /* $81A7: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x80; FLAG_NZ(g_cpu.A);
 label_81A9:;
-    /* $81A9: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_81C5;
+    /* $81A9: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_81C5; }
 label_81AB:;
     /* $81AB: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x2B; FLAG_NZ(g_cpu.A);
 label_81AD:;
@@ -2785,7 +2791,7 @@ label_81B7:;
 label_81B9:;
     /* $81B9: 09 */ maybe_trigger_vblank(2); g_cpu.A |= 0x80; FLAG_NZ(g_cpu.A);
 label_81BB:;
-    /* $81BB: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_81C2;
+    /* $81BB: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_81C2; }
 label_81BD:; /* ClrPauseTimer */
     /* $81BD: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0776); FLAG_NZ(g_cpu.A);
 label_81C0:;
@@ -2824,14 +2830,14 @@ label_8FA8:;
     /* $8FA8: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8FA9:;
     /* $8FA9: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
     goto label_8FA1;
     }
 label_8FAB:;
-    /* $8FAB: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8FBB;
+    /* $8FAB: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8FBB; }
 label_8FAD:;
     /* $8FAD: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8FAE:;
@@ -2848,7 +2854,7 @@ label_8FB7:;
     /* $8FB7: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x06; g_cpu.C=(g_cpu.Y>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_8FB9:;
     /* $8FB9: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -2882,7 +2888,7 @@ label_822D:;
     /* $822D: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_822E:;
     /* $822E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -2896,7 +2902,7 @@ label_8230:;
     return;
 }
 
-static void func_81C6_b0_body(int _entry) { /* SpriteShuffler */
+void func_81C6_b0_body(int _entry) { /* SpriteShuffler */
     switch (_entry) {
         case 1: goto label_8200;
         case 2: goto label_81F9;
@@ -2914,7 +2920,7 @@ label_81CF:; /* ShuffleLoop */
 label_81D2:;
     /* $81D2: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x00); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_81D4:;
-    /* $81D4: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_81E5;
+    /* $81D4: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_81E5; }
 label_81D6:;
     /* $81D6: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x06E0); FLAG_NZ(g_cpu.Y);
 label_81D9:;
@@ -2922,7 +2928,7 @@ label_81D9:;
 label_81DA:;
     /* $81DA: 79 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0x06E1 + g_cpu.Y) & 0xFFFF); uint16_t r=g_cpu.A+m+g_cpu.C; FLAG_NZC_ADD(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_81DD:;
-    /* $81DD: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_81E2;
+    /* $81DD: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_81E2; }
 label_81DF:;
     /* $81DF: 18 */ maybe_trigger_vblank(2); g_cpu.C = 0;
 label_81E0:;
@@ -2933,7 +2939,7 @@ label_81E5:; /* NextSprOffset */
     /* $81E5: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_81E6:;
     /* $81E6: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -2946,7 +2952,7 @@ label_81EB:;
 label_81EC:;
     /* $81EC: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x03; g_cpu.C=(g_cpu.X>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_81EE:;
-    /* $81EE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_81F2;
+    /* $81EE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_81F2; }
 label_81F0:;
     /* $81F0: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x00; FLAG_NZ(g_cpu.X);
 label_81F2:; /* SetAmtOffset */
@@ -3025,7 +3031,7 @@ void func_81F9_b0(void) { /* SetMiscOffset */
 #endif
 }
 
-static void func_8212_b0_body(int _entry) { /* OperModeExecutionTree */
+void func_8212_b0_body(int _entry) { /* OperModeExecutionTree */
     switch (_entry) {
         case 1: goto label_8222;
     }
@@ -3058,7 +3064,7 @@ label_822D:;
     /* $822D: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_822E:;
     /* $822E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -3114,7 +3120,7 @@ label_8E3E:;
     /* $8E3E: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8E3F:;
     /* $8E3F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -3124,7 +3130,7 @@ label_8E41:;
     /* $8E41: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8E42:;
     /* $8E42: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -3144,7 +3150,7 @@ label_8E50:;
     /* $8E50: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8E51:;
     /* $8E51: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -3183,7 +3189,7 @@ label_8EA0:;
 label_8EA3:;
     /* $8EA3: 09 */ maybe_trigger_vblank(2); g_cpu.A |= 0x04; FLAG_NZ(g_cpu.A);
 label_8EA5:;
-    /* $8EA5: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8EA9;
+    /* $8EA5: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8EA9; }
 label_8EA7:;
     /* $8EA7: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0xFB; FLAG_NZ(g_cpu.A);
 label_8EA9:; /* SetupWrites */
@@ -3193,7 +3199,7 @@ label_8EAC:;
 label_8EAD:;
     /* $8EAD: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_8EAE:;
-    /* $8EAE: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8EB3;
+    /* $8EAE: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8EB3; }
 label_8EB0:;
     /* $8EB0: 09 */ maybe_trigger_vblank(2); g_cpu.A |= 0x02; FLAG_NZ(g_cpu.A);
 label_8EB2:;
@@ -3205,7 +3211,7 @@ label_8EB4:;
 label_8EB5:;
     /* $8EB5: AA */ maybe_trigger_vblank(2); g_cpu.X = g_cpu.A; FLAG_NZ(g_cpu.X);
 label_8EB6:; /* OutputToVRAM */
-    /* $8EB6: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8EB9;
+    /* $8EB6: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8EB9; }
 label_8EB8:;
     /* $8EB8: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8EB9:; /* RepeatByte */
@@ -3216,7 +3222,7 @@ label_8EBE:;
     /* $8EBE: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8EBF:;
     /* $8EBF: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -3256,7 +3262,7 @@ label_8EE2:;
     /* $8EE2: B1 */ maybe_trigger_vblank(5); g_cpu.A = nes_read((nes_read16zp(0x00) + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_8EE4:;
     /* $8EE4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -3300,7 +3306,7 @@ label_8E78:;
     /* $8E78: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8E79:;
     /* $8E79: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -3315,7 +3321,7 @@ label_8E7F:;
 label_8E81:;
     /* $8E81: 3D */ maybe_trigger_vblank(4); g_cpu.A &= nes_read((0x074A + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_8E84:;
-    /* $8E84: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8E8D;
+    /* $8E84: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8E8D; }
 label_8E86:;
     /* $8E86: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
 label_8E87:;
@@ -3358,14 +3364,14 @@ label_8FA8:;
     /* $8FA8: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8FA9:;
     /* $8FA9: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
     goto label_8FA1;
     }
 label_8FAB:;
-    /* $8FAB: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8FBB;
+    /* $8FAB: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8FBB; }
 label_8FAD:;
     /* $8FAD: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8FAE:;
@@ -3382,7 +3388,7 @@ label_8FB7:;
     /* $8FB7: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x06; g_cpu.C=(g_cpu.Y>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_8FB9:;
     /* $8FB9: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -3447,7 +3453,7 @@ label_AEF6:;
 label_AEF9:;
     /* $AEF9: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_AEFB:;
-    /* $AEFB: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_AEFE;
+    /* $AEFB: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_AEFE; }
 label_AEFD:;
     /* $AEFD: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -3470,7 +3476,7 @@ label_AF0C:;
     /* $AF0C: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x06; g_cpu.C=(g_cpu.X>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_AF0E:;
     /* $AF0E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -3513,19 +3519,19 @@ label_AF3B:;
 label_AF3D:;
     /* $AF3D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_AF3F:;
-    /* $AF3F: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_AF52;
+    /* $AF3F: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_AF52; }
 label_AF41:;
     /* $AF41: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x079F); FLAG_NZ(g_cpu.A);
 label_AF44:;
-    /* $AF44: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_AF64;
+    /* $AF44: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF64; }
 label_AF46:;
     /* $AF46: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_AF48:;
-    /* $AF48: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_AF52;
+    /* $AF48: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF52; }
 label_AF4A:;
     /* $AF4A: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x077F); FLAG_NZ(g_cpu.A);
 label_AF4D:;
-    /* $AF4D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_AF52;
+    /* $AF4D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF52; }
 label_AF4F:;
     /* $AF4F: 20 */ maybe_trigger_vblank(6); func_90ED_b0();
 label_AF52:; /* NoChgMus */
@@ -3535,7 +3541,7 @@ label_AF55:;
 label_AF57:;
     /* $AF57: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x08; g_cpu.C=(g_cpu.Y>=0x08)?1:0; FLAG_NZ(r&0xFF); }
 label_AF59:;
-    /* $AF59: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_AF5D;
+    /* $AF59: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_AF5D; }
 label_AF5B:;
     /* $AF5B: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_AF5C:;
@@ -3561,17 +3567,17 @@ label_AF6F:; /* UpdScrollVar */
 label_AF72:;
     /* $AF72: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_AF74:;
-    /* $AF74: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_AF92;
+    /* $AF74: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF92; }
 label_AF76:;
     /* $AF76: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x071F); FLAG_NZ(g_cpu.A);
 label_AF79:;
-    /* $AF79: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_AF8F;
+    /* $AF79: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF8F; }
 label_AF7B:;
     /* $AF7B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x073D); FLAG_NZ(g_cpu.A);
 label_AF7E:;
     /* $AF7E: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x20; g_cpu.C=(g_cpu.A>=0x20)?1:0; FLAG_NZ(r&0xFF); }
 label_AF80:;
-    /* $AF80: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_AF92;
+    /* $AF80: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_AF92; }
 label_AF82:;
     /* $AF82: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x073D); FLAG_NZ(g_cpu.A);
 label_AF85:;
@@ -3601,7 +3607,7 @@ label_838B:; /* VictoryMode */
 label_838E:;
     /* $838E: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0772); FLAG_NZ(g_cpu.A);
 label_8391:;
-    /* $8391: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_839A;
+    /* $8391: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_839A; }
 label_8393:;
     /* $8393: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x00; FLAG_NZ(g_cpu.X);
 label_8395:;
@@ -3666,7 +3672,7 @@ label_8FD9:;
     /* $8FD9: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8FDA:;
     /* $8FDA: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -3692,7 +3698,7 @@ label_8FF0:;
     /* $8FF0: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8FF1:;
     /* $8FF1: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -3703,7 +3709,7 @@ label_8FF3:;
 label_8FF6:;
     /* $8FF6: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0752); FLAG_NZ(g_cpu.Y);
 label_8FF9:;
-    /* $8FF9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8FFE;
+    /* $8FF9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8FFE; }
 label_8FFB:;
     /* $8FFB: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0751); FLAG_NZ(g_cpu.A);
 label_8FFE:; /* StartPage */
@@ -3719,7 +3725,7 @@ label_900A:;
 label_900C:;
     /* $900C: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x01; FLAG_NZ(g_cpu.A);
 label_900E:;
-    /* $900E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9012;
+    /* $900E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9012; }
 label_9010:;
     /* $9010: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x24; FLAG_NZ(g_cpu.Y);
 label_9012:; /* SetInitNTHigh */
@@ -3753,27 +3759,27 @@ label_902F:;
 label_9032:;
     /* $9032: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x076A); FLAG_NZ(g_cpu.A);
 label_9035:;
-    /* $9035: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9047;
+    /* $9035: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9047; }
 label_9037:;
     /* $9037: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075F); FLAG_NZ(g_cpu.A);
 label_903A:;
     /* $903A: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_903C:;
-    /* $903C: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_904A;
+    /* $903C: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_904A; }
 label_903E:;
-    /* $903E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9047;
+    /* $903E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9047; }
 label_9040:;
     /* $9040: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075C); FLAG_NZ(g_cpu.A);
 label_9043:;
     /* $9043: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_9045:;
-    /* $9045: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_904A;
+    /* $9045: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_904A; }
 label_9047:; /* SetSecHard */
     /* $9047: EE */ maybe_trigger_vblank(6); { uint16_t a=0x06CC; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_904A:; /* CheckHalfway */
     /* $904A: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075B); FLAG_NZ(g_cpu.A);
 label_904D:;
-    /* $904D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9054;
+    /* $904D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9054; }
 label_904F:;
     /* $904F: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x02; FLAG_NZ(g_cpu.A);
 label_9051:;
@@ -3796,10 +3802,10 @@ label_9060:;
     return;
 }
 
-static void func_8567_b0_body(int _entry) { /* ScreenRoutines */
-    switch (_entry) {
-        case 1: goto label_85AD;
-    }
+void func_8567_b0(void) { /* ScreenRoutines */
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_8567_b0");
+#endif
 label_8567:; /* ScreenRoutines */
     /* $8567: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x073C); FLAG_NZ(g_cpu.A);
 label_856A:;
@@ -3829,71 +3835,13 @@ label_858E:;
 label_8591:;
     /* $8591: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0770); FLAG_NZ(g_cpu.A);
 label_8594:;
-    /* $8594: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_85C8;
+    /* $8594: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_85C8; }
 label_8596:;
     /* $8596: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x03; FLAG_NZ(g_cpu.X);
 label_8598:;
     /* $8598: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_85C5_b0(); return;
-label_859B:; /* SetupIntermediate */
-    /* $859B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0744); FLAG_NZ(g_cpu.A);
-label_859E:;
-    /* $859E: 48 */ maybe_trigger_vblank(3); g_ram[0x100 + g_cpu.S] = g_cpu.A; g_cpu.S--;
-label_859F:;
-    /* $859F: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0756); FLAG_NZ(g_cpu.A);
-label_85A2:;
-    /* $85A2: 48 */ maybe_trigger_vblank(3); g_ram[0x100 + g_cpu.S] = g_cpu.A; g_cpu.S--;
-label_85A3:;
-    /* $85A3: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
-label_85A5:;
-    /* $85A5: 8D */ maybe_trigger_vblank(4); nes_write(0x0756, g_cpu.A);
-label_85A8:;
-    /* $85A8: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x02; FLAG_NZ(g_cpu.A);
-label_85AA:;
-    /* $85AA: 8D */ maybe_trigger_vblank(4); nes_write(0x0744, g_cpu.A);
-label_85AD:;
-    /* $85AD: 20 */ maybe_trigger_vblank(6); func_85F1_b0();
-label_85B0:;
-    /* $85B0: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
-label_85B1:;
-    /* $85B1: 8D */ maybe_trigger_vblank(4); nes_write(0x0756, g_cpu.A);
-label_85B4:;
-    /* $85B4: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
-label_85B5:;
-    /* $85B5: 8D */ maybe_trigger_vblank(4); nes_write(0x0744, g_cpu.A);
-label_85B8:;
-    /* $85B8: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_8745_b0(); return;
-label_85BB:; /* AreaPalette */
-    /* $85BB: 01 */ maybe_trigger_vblank(6); g_cpu.A |= nes_read(nes_read16zp((0x02 + g_cpu.X) & 0xFF)); FLAG_NZ(g_cpu.A);
-label_85BD:;
-    /* $85BD: 03 */ maybe_trigger_vblank(8); { uint16_t a=nes_read16zp((0x04 + g_cpu.X) & 0xFF); uint8_t v=nes_read(a); g_cpu.C=(v>>7)&1; v=(v<<1)&0xFF; nes_write(a,v); g_cpu.A|=v; FLAG_NZ(g_cpu.A); }
-label_85BF:; /* GetAreaPalette */
-    /* $85BF: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x074E); FLAG_NZ(g_cpu.Y);
-label_85C2:;
-    /* $85C2: BE */ maybe_trigger_vblank(4); g_cpu.X = nes_read((0x85BB + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.X);
-label_85C5:; /* SetVRAMAddr_A */
-    /* $85C5: 8E */ maybe_trigger_vblank(4); nes_write(0x0773, g_cpu.X);
 label_85C8:; /* NextSubtask */
     /* $85C8: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_8745_b0(); return;
-}
-
-void func_8567_b0(void) { /* ScreenRoutines */
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_push("func_8567_b0");
-#endif
-    func_8567_b0_body(0);
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_pop();
-#endif
-}
-
-void func_85AD_b0(void) {
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_push("func_85AD_b0");
-#endif
-    func_8567_b0_body(1);
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_pop();
-#endif
 }
 
 void func_9061_b0(void) { /* PrimaryGameSetup */
@@ -3924,7 +3872,7 @@ label_907A:;
     /* $907A: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_907B:;
     /* $907B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -3974,7 +3922,7 @@ label_90B1:;
     /* $90B1: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_90B2:;
     /* $90B2: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -3990,7 +3938,7 @@ label_90BC:;
     /* $90BC: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_90BD:;
     /* $90BD: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -4025,43 +3973,43 @@ label_824A:;
 label_824D:;
     /* $824D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x10; g_cpu.C=(g_cpu.A>=0x10)?1:0; FLAG_NZ(r&0xFF); }
 label_824F:;
-    /* $824F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8255;
+    /* $824F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8255; }
 label_8251:;
     /* $8251: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x90; g_cpu.C=(g_cpu.A>=0x90)?1:0; FLAG_NZ(r&0xFF); }
 label_8253:;
-    /* $8253: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8258;
+    /* $8253: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8258; }
 label_8255:; /* StartGame */
     /* $8255: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_82D8_b0(); return;
 label_8258:; /* ChkSelect */
     /* $8258: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x20; g_cpu.C=(g_cpu.A>=0x20)?1:0; FLAG_NZ(r&0xFF); }
 label_825A:;
-    /* $825A: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8276;
+    /* $825A: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8276; }
 label_825C:;
     /* $825C: AE */ maybe_trigger_vblank(4); g_cpu.X = nes_read(0x07A2); FLAG_NZ(g_cpu.X);
 label_825F:;
-    /* $825F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_826C;
+    /* $825F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_826C; }
 label_8261:;
     /* $8261: 8D */ maybe_trigger_vblank(4); nes_write(0x0780, g_cpu.A);
 label_8264:;
     /* $8264: 20 */ maybe_trigger_vblank(6); func_836B_b0();
 label_8267:;
-    /* $8267: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_82C9;
+    /* $8267: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_82C9; }
 label_8269:;
     /* $8269: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_82C0_b0(); return;
 label_826C:; /* ChkWorldSel */
     /* $826C: AE */ maybe_trigger_vblank(4); g_cpu.X = nes_read(0x07FC); FLAG_NZ(g_cpu.X);
 label_826F:;
-    /* $826F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_82BB;
+    /* $826F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_82BB; }
 label_8271:;
     /* $8271: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x40; g_cpu.C=(g_cpu.A>=0x40)?1:0; FLAG_NZ(r&0xFF); }
 label_8273:;
-    /* $8273: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_82BB;
+    /* $8273: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_82BB; }
 label_8275:;
     /* $8275: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8276:; /* SelectBLogic */
     /* $8276: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x07A2); FLAG_NZ(g_cpu.A);
 label_8279:;
-    /* $8279: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_82C9;
+    /* $8279: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_82C9; }
 label_827B:;
     /* $827B: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x18; FLAG_NZ(g_cpu.A);
 label_827D:;
@@ -4069,7 +4017,7 @@ label_827D:;
 label_8280:;
     /* $8280: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0780); FLAG_NZ(g_cpu.A);
 label_8283:;
-    /* $8283: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_82BB;
+    /* $8283: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_82BB; }
 label_8285:;
     /* $8285: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x10; FLAG_NZ(g_cpu.A);
 label_8287:;
@@ -4077,7 +4025,7 @@ label_8287:;
 label_828A:;
     /* $828A: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x01; g_cpu.C=(g_cpu.Y>=0x01)?1:0; FLAG_NZ(r&0xFF); }
 label_828C:;
-    /* $828C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_829C;
+    /* $828C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_829C; }
 label_828E:;
     /* $828E: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x077A); FLAG_NZ(g_cpu.A);
 label_8291:;
@@ -4110,7 +4058,7 @@ label_82B0:;
     /* $82B0: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x06; g_cpu.C=(g_cpu.X>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_82B2:;
     /* $82B2: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -4133,7 +4081,7 @@ label_82C3:;
 label_82C5:;
     /* $82C5: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_82C7:;
-    /* $82C7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_830D;
+    /* $82C7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_830D; }
 label_82C9:; /* ResetTitle */
     /* $82C9: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_82CB:;
@@ -4154,7 +4102,7 @@ label_82D8:; /* ChkContinue */
     /* $82D8: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x07A2); FLAG_NZ(g_cpu.Y);
 label_82DB:;
     /* $82DB: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -4163,7 +4111,7 @@ label_82DB:;
 label_82DD:;
     /* $82DD: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_82DE:;
-    /* $82DE: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_82E6;
+    /* $82DE: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_82E6; }
 label_82E0:;
     /* $82E0: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x07FD); FLAG_NZ(g_cpu.A);
 label_82E3:;
@@ -4198,7 +4146,7 @@ label_830A:;
     /* $830A: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_830B:;
     /* $830B: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -4230,7 +4178,7 @@ label_8FF0:;
     /* $8FF0: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8FF1:;
     /* $8FF1: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -4241,7 +4189,7 @@ label_8FF3:;
 label_8FF6:;
     /* $8FF6: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0752); FLAG_NZ(g_cpu.Y);
 label_8FF9:;
-    /* $8FF9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8FFE;
+    /* $8FF9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8FFE; }
 label_8FFB:;
     /* $8FFB: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0751); FLAG_NZ(g_cpu.A);
 label_8FFE:; /* StartPage */
@@ -4257,7 +4205,7 @@ label_900A:;
 label_900C:;
     /* $900C: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x01; FLAG_NZ(g_cpu.A);
 label_900E:;
-    /* $900E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9012;
+    /* $900E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9012; }
 label_9010:;
     /* $9010: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x24; FLAG_NZ(g_cpu.Y);
 label_9012:; /* SetInitNTHigh */
@@ -4291,27 +4239,27 @@ label_902F:;
 label_9032:;
     /* $9032: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x076A); FLAG_NZ(g_cpu.A);
 label_9035:;
-    /* $9035: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9047;
+    /* $9035: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9047; }
 label_9037:;
     /* $9037: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075F); FLAG_NZ(g_cpu.A);
 label_903A:;
     /* $903A: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_903C:;
-    /* $903C: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_904A;
+    /* $903C: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_904A; }
 label_903E:;
-    /* $903E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9047;
+    /* $903E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9047; }
 label_9040:;
     /* $9040: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075C); FLAG_NZ(g_cpu.A);
 label_9043:;
     /* $9043: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_9045:;
-    /* $9045: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_904A;
+    /* $9045: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_904A; }
 label_9047:; /* SetSecHard */
     /* $9047: EE */ maybe_trigger_vblank(6); { uint16_t a=0x06CC; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_904A:; /* CheckHalfway */
     /* $904A: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075B); FLAG_NZ(g_cpu.A);
 label_904D:;
-    /* $904D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9054;
+    /* $904D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9054; }
 label_904F:;
     /* $904F: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x02; FLAG_NZ(g_cpu.A);
 label_9051:;
@@ -4350,7 +4298,7 @@ label_907A:;
     /* $907A: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_907B:;
     /* $907B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -4400,7 +4348,7 @@ label_90B1:;
     /* $90B1: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_90B2:;
     /* $90B2: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -4416,7 +4364,7 @@ label_90BC:;
     /* $90BC: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_90BD:;
     /* $90BD: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -4455,7 +4403,7 @@ label_AEF6:;
 label_AEF9:;
     /* $AEF9: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_AEFB:;
-    /* $AEFB: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_AEFE;
+    /* $AEFB: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_AEFE; }
 label_AEFD:;
     /* $AEFD: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -4478,7 +4426,7 @@ label_AF0C:;
     /* $AF0C: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x06; g_cpu.C=(g_cpu.X>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_AF0E:;
     /* $AF0E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -4521,19 +4469,19 @@ label_AF3B:;
 label_AF3D:;
     /* $AF3D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_AF3F:;
-    /* $AF3F: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_AF52;
+    /* $AF3F: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_AF52; }
 label_AF41:;
     /* $AF41: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x079F); FLAG_NZ(g_cpu.A);
 label_AF44:;
-    /* $AF44: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_AF64;
+    /* $AF44: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF64; }
 label_AF46:;
     /* $AF46: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_AF48:;
-    /* $AF48: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_AF52;
+    /* $AF48: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF52; }
 label_AF4A:;
     /* $AF4A: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x077F); FLAG_NZ(g_cpu.A);
 label_AF4D:;
-    /* $AF4D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_AF52;
+    /* $AF4D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF52; }
 label_AF4F:;
     /* $AF4F: 20 */ maybe_trigger_vblank(6); func_90ED_b0();
 label_AF52:; /* NoChgMus */
@@ -4543,7 +4491,7 @@ label_AF55:;
 label_AF57:;
     /* $AF57: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x08; g_cpu.C=(g_cpu.Y>=0x08)?1:0; FLAG_NZ(r&0xFF); }
 label_AF59:;
-    /* $AF59: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_AF5D;
+    /* $AF59: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_AF5D; }
 label_AF5B:;
     /* $AF5B: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_AF5C:;
@@ -4569,17 +4517,17 @@ label_AF6F:; /* UpdScrollVar */
 label_AF72:;
     /* $AF72: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_AF74:;
-    /* $AF74: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_AF92;
+    /* $AF74: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF92; }
 label_AF76:;
     /* $AF76: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x071F); FLAG_NZ(g_cpu.A);
 label_AF79:;
-    /* $AF79: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_AF8F;
+    /* $AF79: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF8F; }
 label_AF7B:;
     /* $AF7B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x073D); FLAG_NZ(g_cpu.A);
 label_AF7E:;
     /* $AF7E: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x20; g_cpu.C=(g_cpu.A>=0x20)?1:0; FLAG_NZ(r&0xFF); }
 label_AF80:;
-    /* $AF80: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_AF92;
+    /* $AF80: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_AF92; }
 label_AF82:;
     /* $AF82: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x073D); FLAG_NZ(g_cpu.A);
 label_AF85:;
@@ -4629,7 +4577,7 @@ label_B069:; /* PlayerEntrance */
 label_B06C:;
     /* $B06C: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_B06E:;
-    /* $B06E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B09B;
+    /* $B06E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B09B; }
 label_B070:;
     /* $B070: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B072:;
@@ -4637,21 +4585,21 @@ label_B072:;
 label_B074:;
     /* $B074: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x30; g_cpu.C=(g_cpu.Y>=0x30)?1:0; FLAG_NZ(r&0xFF); }
 label_B076:;
-    /* $B076: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B0E6;
+    /* $B076: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B0E6; }
 label_B078:;
     /* $B078: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0710); FLAG_NZ(g_cpu.A);
 label_B07B:;
     /* $B07B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_B07D:;
-    /* $B07D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B083;
+    /* $B07D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B083; }
 label_B07F:;
     /* $B07F: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_B081:;
-    /* $B081: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B0D3;
+    /* $B081: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B0D3; }
 label_B083:; /* ChkBehPipe */
     /* $B083: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x03C4); FLAG_NZ(g_cpu.A);
 label_B086:;
-    /* $B086: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B08D;
+    /* $B086: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B08D; }
 label_B088:;
     /* $B088: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x01; FLAG_NZ(g_cpu.A);
 label_B08A:;
@@ -4661,7 +4609,7 @@ label_B08D:; /* IntroEntr */
 label_B090:;
     /* $B090: CE */ maybe_trigger_vblank(6); { uint16_t a=0x06DE; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B093:;
-    /* $B093: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B0E5;
+    /* $B093: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B0E5; }
 label_B095:;
     /* $B095: EE */ maybe_trigger_vblank(6); { uint16_t a=0x0769; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B098:;
@@ -4669,7 +4617,7 @@ label_B098:;
 label_B09B:; /* EntrMode2 */
     /* $B09B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0758); FLAG_NZ(g_cpu.A);
 label_B09E:;
-    /* $B09E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B0AC;
+    /* $B09E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B0AC; }
 label_B0A0:;
     /* $B0A0: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0xFF; FLAG_NZ(g_cpu.A);
 label_B0A2:;
@@ -4679,7 +4627,7 @@ label_B0A5:;
 label_B0A7:;
     /* $B0A7: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x91; g_cpu.C=(g_cpu.A>=0x91)?1:0; FLAG_NZ(r&0xFF); }
 label_B0A9:;
-    /* $B0A9: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B0D3;
+    /* $B0A9: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B0D3; }
 label_B0AB:;
     /* $B0AB: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -4691,7 +4639,7 @@ label_B0AC:; /* VineEntr */
 label_B0AF:;
     /* $B0AF: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x60; g_cpu.C=(g_cpu.A>=0x60)?1:0; FLAG_NZ(r&0xFF); }
 label_B0B1:;
-    /* $B0B1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B0E5;
+    /* $B0B1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B0E5; }
 label_B0B3:;
     /* $B0B3: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0xCE); FLAG_NZ(g_cpu.A);
 label_B0B5:;
@@ -4701,7 +4649,7 @@ label_B0B7:;
 label_B0B9:;
     /* $B0B9: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x01; FLAG_NZ(g_cpu.A);
 label_B0BB:;
-    /* $B0BB: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B0C7;
+    /* $B0BB: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B0C7; }
 label_B0BD:;
     /* $B0BD: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x03; FLAG_NZ(g_cpu.A);
 label_B0BF:;
@@ -4721,7 +4669,7 @@ label_B0CD:;
 label_B0CF:;
     /* $B0CF: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x48; g_cpu.C=(g_cpu.A>=0x48)?1:0; FLAG_NZ(r&0xFF); }
 label_B0D1:;
-    /* $B0D1: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B0E5;
+    /* $B0D1: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B0E5; }
 label_B0D3:; /* PlayerRdy */
     /* $B0D3: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x08; FLAG_NZ(g_cpu.A);
 label_B0D5:;
@@ -4751,23 +4699,23 @@ label_B0E9:; /* PlayerCtrlRoutine */
 label_B0EB:;
     /* $B0EB: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0B; g_cpu.C=(g_cpu.A>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_B0ED:;
-    /* $B0ED: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B12B;
+    /* $B0ED: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_B12B; }
 label_B0EF:;
     /* $B0EF: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_B0F2:;
-    /* $B0F2: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B104;
+    /* $B0F2: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_B104; }
 label_B0F4:;
     /* $B0F4: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0xB5); FLAG_NZ(g_cpu.Y);
 label_B0F6:;
     /* $B0F6: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B0F7:;
-    /* $B0F7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B0FF;
+    /* $B0F7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B0FF; }
 label_B0F9:;
     /* $B0F9: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0xCE); FLAG_NZ(g_cpu.A);
 label_B0FB:;
     /* $B0FB: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xD0; g_cpu.C=(g_cpu.A>=0xD0)?1:0; FLAG_NZ(r&0xFF); }
 label_B0FD:;
-    /* $B0FD: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B104;
+    /* $B0FD: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(2); goto label_B104; }
 label_B0FF:; /* DisJoyp */
     /* $B0FF: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B101:;
@@ -4793,15 +4741,15 @@ label_B117:;
 label_B119:;
     /* $B119: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x04; FLAG_NZ(g_cpu.A);
 label_B11B:;
-    /* $B11B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B12B;
+    /* $B11B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B12B; }
 label_B11D:;
     /* $B11D: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x1D); FLAG_NZ(g_cpu.A);
 label_B11F:;
-    /* $B11F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B12B;
+    /* $B11F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B12B; }
 label_B121:;
     /* $B121: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x0C); FLAG_NZ(g_cpu.Y);
 label_B123:;
-    /* $B123: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B12B;
+    /* $B123: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B12B; }
 label_B125:;
     /* $B125: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B127:;
@@ -4815,13 +4763,13 @@ label_B12E:;
 label_B130:;
     /* $B130: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0754); FLAG_NZ(g_cpu.A);
 label_B133:;
-    /* $B133: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B13E;
+    /* $B133: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B13E; }
 label_B135:;
     /* $B135: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x00; FLAG_NZ(g_cpu.Y);
 label_B137:;
     /* $B137: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0714); FLAG_NZ(g_cpu.A);
 label_B13A:;
-    /* $B13A: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B13E;
+    /* $B13A: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B13E; }
 label_B13C:;
     /* $B13C: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x02; FLAG_NZ(g_cpu.Y);
 label_B13E:; /* ChkMoveDir */
@@ -4831,9 +4779,9 @@ label_B141:;
 label_B143:;
     /* $B143: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x57); FLAG_NZ(g_cpu.Y);
 label_B145:;
-    /* $B145: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B14C;
+    /* $B145: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B14C; }
 label_B147:;
-    /* $B147: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_B14A;
+    /* $B147: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_B14A; }
 label_B149:;
     /* $B149: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_B14A:; /* SetMoveDir */
@@ -4855,21 +4803,21 @@ label_B15D:;
 label_B15F:;
     /* $B15F: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x40; g_cpu.C=(g_cpu.A>=0x40)?1:0; FLAG_NZ(r&0xFF); }
 label_B161:;
-    /* $B161: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B179;
+    /* $B161: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B179; }
 label_B163:;
     /* $B163: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0E); FLAG_NZ(g_cpu.A);
 label_B165:;
     /* $B165: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x05; g_cpu.C=(g_cpu.A>=0x05)?1:0; FLAG_NZ(r&0xFF); }
 label_B167:;
-    /* $B167: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B179;
+    /* $B167: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B179; }
 label_B169:;
     /* $B169: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_B16B:;
-    /* $B16B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B179;
+    /* $B16B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B179; }
 label_B16D:;
     /* $B16D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_B16F:;
-    /* $B16F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B179;
+    /* $B16F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B179; }
 label_B171:;
     /* $B171: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x03C4); FLAG_NZ(g_cpu.A);
 label_B174:;
@@ -4881,7 +4829,7 @@ label_B179:; /* PlayerHole */
 label_B17B:;
     /* $B17B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_B17D:;
-    /* $B17D: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B1BA;
+    /* $B17D: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B1BA; }
 label_B17F:;
     /* $B17F: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x01; FLAG_NZ(g_cpu.X);
 label_B181:;
@@ -4895,11 +4843,11 @@ label_B188:;
 label_B18A:;
     /* $B18A: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0759); FLAG_NZ(g_cpu.Y);
 label_B18D:;
-    /* $B18D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B194;
+    /* $B18D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B194; }
 label_B18F:;
     /* $B18F: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0743); FLAG_NZ(g_cpu.Y);
 label_B192:;
-    /* $B192: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B1AA;
+    /* $B192: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1AA; }
 label_B194:; /* HoleDie */
     /* $B194: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_B195:;
@@ -4907,11 +4855,11 @@ label_B195:;
 label_B197:;
     /* $B197: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x0B; g_cpu.C=(g_cpu.Y>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_B199:;
-    /* $B199: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B1AA;
+    /* $B199: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1AA; }
 label_B19B:;
     /* $B19B: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0712); FLAG_NZ(g_cpu.Y);
 label_B19E:;
-    /* $B19E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B1A6;
+    /* $B19E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1A6; }
 label_B1A0:;
     /* $B1A0: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B1A1:;
@@ -4925,15 +4873,15 @@ label_B1A8:;
 label_B1AA:; /* ChkHoleX */
     /* $B1AA: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x07); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B1AC:;
-    /* $B1AC: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B1BA;
+    /* $B1AC: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B1BA; }
 label_B1AE:;
     /* $B1AE: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_B1AF:;
-    /* $B1AF: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B1BB;
+    /* $B1AF: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B1BB; }
 label_B1B1:;
     /* $B1B1: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x07B1); FLAG_NZ(g_cpu.Y);
 label_B1B4:;
-    /* $B1B4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B1BA;
+    /* $B1B4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1BA; }
 label_B1B6:;
     /* $B1B6: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x06; FLAG_NZ(g_cpu.A);
 label_B1B8:;
@@ -4969,17 +4917,17 @@ label_B624:; /* ProcFireball_Bubble */
 label_B627:;
     /* $B627: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_B629:;
-    /* $B629: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B66E;
+    /* $B629: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B66E; }
 label_B62B:;
     /* $B62B: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0A); FLAG_NZ(g_cpu.A);
 label_B62D:;
     /* $B62D: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_B62F:;
-    /* $B62F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B664;
+    /* $B62F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B664; }
 label_B631:;
     /* $B631: 25 */ maybe_trigger_vblank(3); g_cpu.A &= nes_read(0x0D); FLAG_NZ(g_cpu.A);
 label_B633:;
-    /* $B633: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B664;
+    /* $B633: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B664; }
 label_B635:;
     /* $B635: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x06CE); FLAG_NZ(g_cpu.A);
 label_B638:;
@@ -4989,23 +4937,23 @@ label_B63A:;
 label_B63B:;
     /* $B63B: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x24 + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_B63D:;
-    /* $B63D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B664;
+    /* $B63D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B664; }
 label_B63F:;
     /* $B63F: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0xB5); FLAG_NZ(g_cpu.Y);
 label_B641:;
     /* $B641: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B642:;
-    /* $B642: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B664;
+    /* $B642: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B664; }
 label_B644:;
     /* $B644: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0714); FLAG_NZ(g_cpu.A);
 label_B647:;
-    /* $B647: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B664;
+    /* $B647: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B664; }
 label_B649:;
     /* $B649: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x1D); FLAG_NZ(g_cpu.A);
 label_B64B:;
     /* $B64B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_B64D:;
-    /* $B64D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B664;
+    /* $B64D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B664; }
 label_B64F:;
     /* $B64F: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x20; FLAG_NZ(g_cpu.A);
 label_B651:;
@@ -5035,7 +4983,7 @@ label_B66B:;
 label_B66E:; /* ProcAirBubbles */
     /* $B66E: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_B671:;
-    /* $B671: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B686;
+    /* $B671: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B686; }
 label_B673:;
     /* $B673: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x02; FLAG_NZ(g_cpu.X);
 label_B675:; /* BublLoop */
@@ -5052,7 +5000,7 @@ label_B683:;
     /* $B683: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_B684:;
     /* $B684: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -5066,18 +5014,18 @@ label_B686:; /* BublExit */
     return;
 }
 
-static void func_84C3_b0_body(int _entry) { /* FloateyNumbersRoutine */
+void func_84C3_b0_body(int _entry) { /* FloateyNumbersRoutine */
     switch (_entry) {
         case 1: goto label_8534;
     }
 label_84C3:; /* FloateyNumbersRoutine */
     /* $84C3: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0110 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_84C6:;
-    /* $84C6: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { call_by_address(0x8486); return; }
+    /* $84C6: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); call_by_address(0x8486); return; }
 label_84C8:;
     /* $84C8: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0B; g_cpu.C=(g_cpu.A>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_84CA:;
-    /* $84CA: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_84D1;
+    /* $84CA: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_84D1; }
 label_84CC:;
     /* $84CC: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x0B; FLAG_NZ(g_cpu.A);
 label_84CE:;
@@ -5087,7 +5035,7 @@ label_84D1:; /* ChkNumTimer */
 label_84D2:;
     /* $84D2: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x012C + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_84D5:;
-    /* $84D5: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_84DB;
+    /* $84D5: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_84DB; }
 label_84D7:;
     /* $84D7: 9D */ maybe_trigger_vblank(5); nes_write((0x0110 + g_cpu.X) & 0xFFFF, g_cpu.A);
 label_84DA:;
@@ -5101,11 +5049,11 @@ label_84DB:; /* DecNumTimer */
 label_84DE:;
     /* $84DE: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x2B; g_cpu.C=(g_cpu.A>=0x2B)?1:0; FLAG_NZ(r&0xFF); }
 label_84E0:;
-    /* $84E0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8500;
+    /* $84E0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_8500; }
 label_84E2:;
     /* $84E2: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x0B; g_cpu.C=(g_cpu.Y>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_84E4:;
-    /* $84E4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_84ED;
+    /* $84E4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_84ED; }
 label_84E6:;
     /* $84E6: EE */ maybe_trigger_vblank(6); { uint16_t a=0x075A; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_84E9:;
@@ -5139,33 +5087,33 @@ label_8503:;
 label_8505:;
     /* $8505: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x12; g_cpu.C=(g_cpu.A>=0x12)?1:0; FLAG_NZ(r&0xFF); }
 label_8507:;
-    /* $8507: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_852B;
+    /* $8507: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_852B; }
 label_8509:;
     /* $8509: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0D; g_cpu.C=(g_cpu.A>=0x0D)?1:0; FLAG_NZ(r&0xFF); }
 label_850B:;
-    /* $850B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_852B;
+    /* $850B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_852B; }
 label_850D:;
     /* $850D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x05; g_cpu.C=(g_cpu.A>=0x05)?1:0; FLAG_NZ(r&0xFF); }
 label_850F:;
-    /* $850F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8523;
+    /* $850F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8523; }
 label_8511:;
     /* $8511: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0A; g_cpu.C=(g_cpu.A>=0x0A)?1:0; FLAG_NZ(r&0xFF); }
 label_8513:;
-    /* $8513: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_852B;
+    /* $8513: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_852B; }
 label_8515:;
     /* $8515: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0B; g_cpu.C=(g_cpu.A>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_8517:;
-    /* $8517: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_852B;
+    /* $8517: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_852B; }
 label_8519:;
     /* $8519: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x09; g_cpu.C=(g_cpu.A>=0x09)?1:0; FLAG_NZ(r&0xFF); }
 label_851B:;
-    /* $851B: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8523;
+    /* $851B: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8523; }
 label_851D:;
     /* $851D: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x1E + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_851F:;
     /* $851F: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_8521:;
-    /* $8521: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_852B;
+    /* $8521: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_852B; }
 label_8523:; /* GetAltOffset */
     /* $8523: AE */ maybe_trigger_vblank(4); g_cpu.X = nes_read(0x03EE); FLAG_NZ(g_cpu.X);
 label_8526:;
@@ -5177,7 +5125,7 @@ label_852B:; /* FloateyPart */
 label_852E:;
     /* $852E: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x18; g_cpu.C=(g_cpu.A>=0x18)?1:0; FLAG_NZ(r&0xFF); }
 label_8530:;
-    /* $8530: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8537;
+    /* $8530: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8537; }
 label_8532:;
     /* $8532: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x01; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_8534:;
@@ -5259,11 +5207,11 @@ label_BED6:; /* UpdateLoop */
 label_BED8:;
     /* $BED8: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0301); FLAG_NZ(g_cpu.A);
 label_BEDB:;
-    /* $BEDB: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BEFE;
+    /* $BEDB: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BEFE; }
 label_BEDD:;
     /* $BEDD: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x03EC + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_BEE0:;
-    /* $BEE0: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BEFE;
+    /* $BEE0: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BEFE; }
 label_BEE2:;
     /* $BEE2: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x03E6 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_BEE5:;
@@ -5313,7 +5261,7 @@ void func_BE70_b0(void) { /* BlockObjectsCore */
 label_BE70:; /* BlockObjectsCore */
     /* $BE70: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x26 + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_BE72:;
-    /* $BE72: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BED1;
+    /* $BE72: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BED1; }
 label_BE74:;
     /* $BE74: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x0F; FLAG_NZ(g_cpu.A);
 label_BE76:;
@@ -5331,7 +5279,7 @@ label_BE7C:;
 label_BE7D:;
     /* $BE7D: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_BE7E:;
-    /* $BE7E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BEB3;
+    /* $BE7E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BEB3; }
 label_BE80:;
     /* $BE80: 20 */ maybe_trigger_vblank(6); func_BFA4_b0();
 label_BE83:;
@@ -5361,7 +5309,7 @@ label_BE9C:;
 label_BE9D:;
     /* $BE9D: B4 */ maybe_trigger_vblank(4); g_cpu.Y = nes_read((0xBE + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.Y);
 label_BE9F:;
-    /* $BE9F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BED1;
+    /* $BE9F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BED1; }
 label_BEA1:;
     /* $BEA1: 48 */ maybe_trigger_vblank(3); g_ram[0x100 + g_cpu.S] = g_cpu.A; g_cpu.S--;
 label_BEA2:;
@@ -5369,7 +5317,7 @@ label_BEA2:;
 label_BEA4:;
     /* $BEA4: D5 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0xD9 + g_cpu.X) & 0xFF); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_BEA6:;
-    /* $BEA6: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_BEAA;
+    /* $BEA6: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_BEAA; }
 label_BEA8:;
     /* $BEA8: 95 */ maybe_trigger_vblank(4); nes_write((0xD9 + g_cpu.X) & 0xFF, g_cpu.A);
 label_BEAA:; /* ChkTop */
@@ -5379,9 +5327,9 @@ label_BEAC:;
 label_BEAE:;
     /* $BEAE: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
 label_BEAF:;
-    /* $BEAF: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BED1;
+    /* $BEAF: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BED1; }
 label_BEB1:;
-    /* $BEB1: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_BECF;
+    /* $BEB1: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_BECF; }
 label_BEB3:; /* BouncingBlockHandler */
     /* $BEB3: 20 */ maybe_trigger_vblank(6); func_BFA4_b0();
 label_BEB6:;
@@ -5401,7 +5349,7 @@ label_BEC5:;
 label_BEC7:;
     /* $BEC7: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
 label_BEC8:;
-    /* $BEC8: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_BED1;
+    /* $BEC8: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_BED1; }
 label_BECA:;
     /* $BECA: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x01; FLAG_NZ(g_cpu.A);
 label_BECC:;
@@ -5429,11 +5377,11 @@ label_BB98:; /* MiscLoop */
 label_BB9A:;
     /* $BB9A: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x2A + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_BB9C:;
-    /* $BB9C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BBF4;
+    /* $BB9C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BBF4; }
 label_BB9E:;
     /* $BB9E: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_BB9F:;
-    /* $BB9F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BBA7;
+    /* $BB9F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BBA7; }
 label_BBA1:;
     /* $BBA1: 20 */ maybe_trigger_vblank(6); func_BAC3_b0();
 label_BBA4:;
@@ -5443,7 +5391,7 @@ label_BBA7:; /* ProcJumpCoin */
 label_BBA9:;
     /* $BBA9: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_BBAA:;
-    /* $BBAA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BBC9;
+    /* $BBAA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BBC9; }
 label_BBAC:;
     /* $BBAC: F6 */ maybe_trigger_vblank(6); { uint16_t a=(0x2A + g_cpu.X) & 0xFF; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_BBAE:;
@@ -5465,7 +5413,7 @@ label_BBBC:;
 label_BBBE:;
     /* $BBBE: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x30; g_cpu.C=(g_cpu.A>=0x30)?1:0; FLAG_NZ(r&0xFF); }
 label_BBC0:;
-    /* $BBC0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BBE8;
+    /* $BBC0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BBE8; }
 label_BBC2:;
     /* $BBC2: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_BBC4:;
@@ -5503,7 +5451,7 @@ label_BBE0:;
 label_BBE2:;
     /* $BBE2: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x05; g_cpu.C=(g_cpu.A>=0x05)?1:0; FLAG_NZ(r&0xFF); }
 label_BBE4:;
-    /* $BBE4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BBE8;
+    /* $BBE4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BBE8; }
 label_BBE6:;
     /* $BBE6: F6 */ maybe_trigger_vblank(6); { uint16_t a=(0x2A + g_cpu.X) & 0xFF; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_BBE8:; /* RunJCSubs */
@@ -5518,7 +5466,7 @@ label_BBF4:; /* MiscLoopBack */
     /* $BBF4: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_BBF5:;
     /* $BBF5: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -5539,7 +5487,7 @@ void func_B9BC_b0(void) { /* ProcessCannons */
 label_B9BC:; /* ProcessCannons */
     /* $B9BC: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_B9BF:;
-    /* $B9BF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BA30;
+    /* $B9BF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_BA30; }
 label_B9C1:;
     /* $B9C1: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x02; FLAG_NZ(g_cpu.X);
 label_B9C3:; /* ThreeSChk */
@@ -5547,7 +5495,7 @@ label_B9C3:; /* ThreeSChk */
 label_B9C5:;
     /* $B9C5: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0F + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_B9C7:;
-    /* $B9C7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BA1A;
+    /* $B9C7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_BA1A; }
 label_B9C9:;
     /* $B9C9: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x07A8 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_B9CC:;
@@ -5557,17 +5505,17 @@ label_B9CF:;
 label_B9D2:;
     /* $B9D2: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_B9D4:;
-    /* $B9D4: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_BA1A;
+    /* $B9D4: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(2); goto label_BA1A; }
 label_B9D6:;
     /* $B9D6: A8 */ maybe_trigger_vblank(2); g_cpu.Y = g_cpu.A; FLAG_NZ(g_cpu.Y);
 label_B9D7:;
     /* $B9D7: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x046B + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_B9DA:;
-    /* $B9DA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BA1A;
+    /* $B9DA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_BA1A; }
 label_B9DC:;
     /* $B9DC: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x047D + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_B9DF:;
-    /* $B9DF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B9E9;
+    /* $B9DF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B9E9; }
 label_B9E1:;
     /* $B9E1: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x00; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_B9E3:;
@@ -5577,7 +5525,7 @@ label_B9E6:;
 label_B9E9:; /* FireCannon */
     /* $B9E9: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0747); FLAG_NZ(g_cpu.A);
 label_B9EC:;
-    /* $B9EC: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BA1A;
+    /* $B9EC: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_BA1A; }
 label_B9EE:;
     /* $B9EE: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x0E; FLAG_NZ(g_cpu.A);
 label_B9F0:;
@@ -5623,13 +5571,13 @@ label_BA1A:; /* Chk_BB */
 label_BA1C:;
     /* $BA1C: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x33; g_cpu.C=(g_cpu.A>=0x33)?1:0; FLAG_NZ(r&0xFF); }
 label_BA1E:;
-    /* $BA1E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BA2D;
+    /* $BA1E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BA2D; }
 label_BA20:;
     /* $BA20: 20 */ maybe_trigger_vblank(6); func_D67A();
 label_BA23:;
     /* $BA23: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0F + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_BA25:;
-    /* $BA25: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BA2D;
+    /* $BA25: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BA2D; }
 label_BA27:;
     /* $BA27: 20 */ maybe_trigger_vblank(6); func_F1AF();
 label_BA2A:;
@@ -5659,13 +5607,13 @@ void func_B7B8_b0(void) { /* ProcessWhirlpools */
 label_B7B8:; /* ProcessWhirlpools */
     /* $B7B8: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_B7BB:;
-    /* $B7BB: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B7F4;
+    /* $B7BB: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B7F4; }
 label_B7BD:;
     /* $B7BD: 8D */ maybe_trigger_vblank(4); nes_write(0x047D, g_cpu.A);
 label_B7C0:;
     /* $B7C0: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0747); FLAG_NZ(g_cpu.A);
 label_B7C3:;
-    /* $B7C3: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B7F4;
+    /* $B7C3: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B7F4; }
 label_B7C5:;
     /* $B7C5: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x04; FLAG_NZ(g_cpu.Y);
 label_B7C7:; /* WhLoop */
@@ -5679,7 +5627,7 @@ label_B7CE:;
 label_B7D0:;
     /* $B7D0: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x046B + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_B7D3:;
-    /* $B7D3: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B7F1;
+    /* $B7D3: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B7F1; }
 label_B7D5:;
     /* $B7D5: 69 */ maybe_trigger_vblank(2); { uint16_t r = g_cpu.A + 0x00 + g_cpu.C; FLAG_NZC_ADD(r,g_cpu.A,0x00); g_cpu.A=r&0xFF; }
 label_B7D7:;
@@ -5695,7 +5643,7 @@ label_B7DF:;
 label_B7E1:;
     /* $B7E1: F9 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0x046B + g_cpu.Y) & 0xFFFF); int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_B7E4:;
-    /* $B7E4: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B7F1;
+    /* $B7E4: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B7F1; }
 label_B7E6:;
     /* $B7E6: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x02); FLAG_NZ(g_cpu.A);
 label_B7E8:;
@@ -5707,12 +5655,12 @@ label_B7EB:;
 label_B7ED:;
     /* $B7ED: E5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x6D); int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_B7EF:;
-    /* $B7EF: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_B7F5;
+    /* $B7EF: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_B7F5; }
 label_B7F1:; /* NextWh */
     /* $B7F1: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B7F2:;
     /* $B7F2: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -5749,7 +5697,7 @@ label_B80A:;
 label_B80C:;
     /* $B80C: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_B80D:;
-    /* $B80D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B83B;
+    /* $B80D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B83B; }
 label_B80F:;
     /* $B80F: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x01); FLAG_NZ(g_cpu.A);
 label_B811:;
@@ -5761,7 +5709,7 @@ label_B814:;
 label_B816:;
     /* $B816: E5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x6D); int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_B818:;
-    /* $B818: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_B828;
+    /* $B818: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_B828; }
 label_B81A:;
     /* $B81A: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x86); FLAG_NZ(g_cpu.A);
 label_B81C:;
@@ -5781,7 +5729,7 @@ label_B828:; /* LeftWh */
 label_B82B:;
     /* $B82B: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_B82C:;
-    /* $B82C: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B83B;
+    /* $B82C: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B83B; }
 label_B82E:;
     /* $B82E: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x86); FLAG_NZ(g_cpu.A);
 label_B830:;
@@ -5827,31 +5775,31 @@ label_B859:;
 label_B85B:;
     /* $B85B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x30; g_cpu.C=(g_cpu.A>=0x30)?1:0; FLAG_NZ(r&0xFF); }
 label_B85D:;
-    /* $B85D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B8B5;
+    /* $B85D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B8B5; }
 label_B85F:;
     /* $B85F: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0E); FLAG_NZ(g_cpu.A);
 label_B861:;
     /* $B861: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_B863:;
-    /* $B863: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B896;
+    /* $B863: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B896; }
 label_B865:;
     /* $B865: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x1D); FLAG_NZ(g_cpu.A);
 label_B867:;
     /* $B867: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_B869:;
-    /* $B869: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B896;
+    /* $B869: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B896; }
 label_B86B:;
     /* $B86B: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0xCF + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_B86D:;
     /* $B86D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xAA; g_cpu.C=(g_cpu.A>=0xAA)?1:0; FLAG_NZ(r&0xFF); }
 label_B86F:;
-    /* $B86F: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B899;
+    /* $B86F: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B899; }
 label_B871:;
     /* $B871: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0xCE); FLAG_NZ(g_cpu.A);
 label_B873:;
     /* $B873: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xA2; g_cpu.C=(g_cpu.A>=0xA2)?1:0; FLAG_NZ(r&0xFF); }
 label_B875:;
-    /* $B875: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B899;
+    /* $B875: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B899; }
 label_B877:;
     /* $B877: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0417 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_B87A:;
@@ -5908,34 +5856,34 @@ label_B8B5:; /* ExitFlagP */
     return;
 }
 
-static void func_B74F_b0_body(int _entry) { /* RunGameTimer */
+void func_B74F_b0_body(int _entry) { /* RunGameTimer */
     switch (_entry) {
         case 1: goto label_B7A3;
     }
 label_B74F:; /* RunGameTimer */
     /* $B74F: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0770); FLAG_NZ(g_cpu.A);
 label_B752:;
-    /* $B752: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B7A3;
+    /* $B752: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B7A3; }
 label_B754:;
     /* $B754: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0E); FLAG_NZ(g_cpu.A);
 label_B756:;
     /* $B756: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x08; g_cpu.C=(g_cpu.A>=0x08)?1:0; FLAG_NZ(r&0xFF); }
 label_B758:;
-    /* $B758: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B7A3;
+    /* $B758: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B7A3; }
 label_B75A:;
     /* $B75A: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0B; g_cpu.C=(g_cpu.A>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_B75C:;
-    /* $B75C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B7A3;
+    /* $B75C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B7A3; }
 label_B75E:;
     /* $B75E: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0xB5); FLAG_NZ(g_cpu.A);
 label_B760:;
     /* $B760: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_B762:;
-    /* $B762: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B7A3;
+    /* $B762: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B7A3; }
 label_B764:;
     /* $B764: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0787); FLAG_NZ(g_cpu.A);
 label_B767:;
-    /* $B767: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B7A3;
+    /* $B767: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B7A3; }
 label_B769:;
     /* $B769: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x07F8); FLAG_NZ(g_cpu.A);
 label_B76C:;
@@ -5943,19 +5891,19 @@ label_B76C:;
 label_B76F:;
     /* $B76F: 0D */ maybe_trigger_vblank(4); g_cpu.A |= nes_read(0x07FA); FLAG_NZ(g_cpu.A);
 label_B772:;
-    /* $B772: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B79A;
+    /* $B772: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B79A; }
 label_B774:;
     /* $B774: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x07F8); FLAG_NZ(g_cpu.Y);
 label_B777:;
     /* $B777: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B778:;
-    /* $B778: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B786;
+    /* $B778: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B786; }
 label_B77A:;
     /* $B77A: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x07F9); FLAG_NZ(g_cpu.A);
 label_B77D:;
     /* $B77D: 0D */ maybe_trigger_vblank(4); g_cpu.A |= nes_read(0x07FA); FLAG_NZ(g_cpu.A);
 label_B780:;
-    /* $B780: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B786;
+    /* $B780: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B786; }
 label_B782:;
     /* $B782: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x40; FLAG_NZ(g_cpu.A);
 label_B784:;
@@ -6019,13 +5967,13 @@ label_89E1:; /* ColorRotation */
 label_89E3:;
     /* $89E3: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x07; FLAG_NZ(g_cpu.A);
 label_89E5:;
-    /* $89E5: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8A38;
+    /* $89E5: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_8A38; }
 label_89E7:;
     /* $89E7: AE */ maybe_trigger_vblank(4); g_cpu.X = nes_read(0x0300); FLAG_NZ(g_cpu.X);
 label_89EA:;
     /* $89EA: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x31; g_cpu.C=(g_cpu.X>=0x31)?1:0; FLAG_NZ(r&0xFF); }
 label_89EC:;
-    /* $89EC: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8A38;
+    /* $89EC: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(2); goto label_8A38; }
 label_89EE:;
     /* $89EE: A8 */ maybe_trigger_vblank(2); g_cpu.Y = g_cpu.A; FLAG_NZ(g_cpu.Y);
 label_89EF:; /* GetBlankPal */
@@ -6040,7 +5988,7 @@ label_89F7:;
     /* $89F7: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x08; g_cpu.C=(g_cpu.Y>=0x08)?1:0; FLAG_NZ(r&0xFF); }
 label_89F9:;
     /* $89F9: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -6072,7 +6020,7 @@ label_8A10:;
     /* $8A10: C6 */ maybe_trigger_vblank(5); { uint16_t a=0x00; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_8A12:;
     /* $8A12: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -6101,7 +6049,7 @@ label_8A2C:;
 label_8A2F:;
     /* $8A2F: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_8A31:;
-    /* $8A31: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8A38;
+    /* $8A31: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8A38; }
 label_8A33:;
     /* $8A33: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_8A35:;
@@ -6114,20 +6062,20 @@ label_8A38:; /* ExitColorRot */
     return;
 }
 
-static void func_90ED_b0_body(int _entry) { /* GetAreaMusic */
+void func_90ED_b0_body(int _entry) { /* GetAreaMusic */
     switch (_entry) {
         case 1: goto label_9100;
     }
 label_90ED:; /* GetAreaMusic */
     /* $90ED: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0770); FLAG_NZ(g_cpu.A);
 label_90F0:;
-    /* $90F0: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9115;
+    /* $90F0: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_9115; }
 label_90F2:;
     /* $90F2: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0752); FLAG_NZ(g_cpu.A);
 label_90F5:;
     /* $90F5: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_90F7:;
-    /* $90F7: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9106;
+    /* $90F7: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_9106; }
 label_90F9:;
     /* $90F9: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x05; FLAG_NZ(g_cpu.Y);
 label_90FB:;
@@ -6135,17 +6083,17 @@ label_90FB:;
 label_90FE:;
     /* $90FE: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_9100:;
-    /* $9100: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9110;
+    /* $9100: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9110; }
 label_9102:;
     /* $9102: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_9104:;
-    /* $9104: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9110;
+    /* $9104: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9110; }
 label_9106:; /* ChkAreaType */
     /* $9106: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x074E); FLAG_NZ(g_cpu.Y);
 label_9109:;
     /* $9109: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0743); FLAG_NZ(g_cpu.A);
 label_910C:;
-    /* $910C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9110;
+    /* $910C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9110; }
 label_910E:;
     /* $910E: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x04; FLAG_NZ(g_cpu.Y);
 label_9110:; /* StoreMusic */
@@ -6221,17 +6169,17 @@ label_AF6F:; /* UpdScrollVar */
 label_AF72:;
     /* $AF72: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_AF74:;
-    /* $AF74: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_AF92;
+    /* $AF74: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF92; }
 label_AF76:;
     /* $AF76: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x071F); FLAG_NZ(g_cpu.A);
 label_AF79:;
-    /* $AF79: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_AF8F;
+    /* $AF79: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF8F; }
 label_AF7B:;
     /* $AF7B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x073D); FLAG_NZ(g_cpu.A);
 label_AF7E:;
     /* $AF7E: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x20; g_cpu.C=(g_cpu.A>=0x20)?1:0; FLAG_NZ(r&0xFF); }
 label_AF80:;
-    /* $AF80: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_AF92;
+    /* $AF80: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_AF92; }
 label_AF82:;
     /* $AF82: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x073D); FLAG_NZ(g_cpu.A);
 label_AF85:;
@@ -6277,7 +6225,7 @@ void func_92B0_b0(void) { /* AreaParserTaskHandler */
 label_92B0:; /* AreaParserTaskHandler */
     /* $92B0: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x071F); FLAG_NZ(g_cpu.Y);
 label_92B3:;
-    /* $92B3: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_92BA;
+    /* $92B3: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_92BA; }
 label_92B5:;
     /* $92B5: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x08; FLAG_NZ(g_cpu.Y);
 label_92B7:;
@@ -6291,7 +6239,7 @@ label_92BC:;
 label_92BF:;
     /* $92BF: CE */ maybe_trigger_vblank(6); { uint16_t a=0x071F; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_92C2:;
-    /* $92C2: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_92C7;
+    /* $92C2: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_92C7; }
 label_92C4:;
     /* $92C4: 20 */ maybe_trigger_vblank(6); func_896A_b0();
 label_92C7:; /* SkipATRender */
@@ -6371,11 +6319,11 @@ label_923C:;
 label_923F:;
     /* $923F: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x10; FLAG_NZ(g_cpu.A);
 label_9241:;
-    /* $9241: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9248;
+    /* $9241: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9248; }
 label_9243:;
     /* $9243: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x07A0); FLAG_NZ(g_cpu.A);
 label_9246:;
-    /* $9246: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9281;
+    /* $9246: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9281; }
 label_9248:; /* TerminateGame */
     /* $9248: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x80; FLAG_NZ(g_cpu.A);
 label_924A:;
@@ -6383,7 +6331,7 @@ label_924A:;
 label_924C:;
     /* $924C: 20 */ maybe_trigger_vblank(6); func_9282_b0();
 label_924F:;
-    /* $924F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_9264;
+    /* $924F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_9264; }
 label_9251:;
     /* $9251: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075F); FLAG_NZ(g_cpu.A);
 label_9254:;
@@ -6549,7 +6497,7 @@ label_9C5D:;
 label_9C5F:;
     /* $9C5F: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_9C61:;
-    /* $9C61: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_9C68;
+    /* $9C61: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_9C68; }
 label_9C63:;
     /* $9C63: 8D */ maybe_trigger_vblank(4); nes_write(0x0744, g_cpu.A);
 label_9C66:;
@@ -6625,7 +6573,7 @@ label_9C99:;
 label_9C9A:;
     /* $9C9A: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_9C9C:;
-    /* $9C9C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9CA3;
+    /* $9C9C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9CA3; }
 label_9C9E:;
     /* $9C9E: 8D */ maybe_trigger_vblank(4); nes_write(0x0743, g_cpu.A);
 label_9CA1:;
@@ -6665,11 +6613,19 @@ label_858E:;
 label_8591:;
     /* $8591: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0770); FLAG_NZ(g_cpu.A);
 label_8594:;
-    /* $8594: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_85C8;
+    /* $8594: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_85C8; }
 label_8596:;
     /* $8596: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x03; FLAG_NZ(g_cpu.X);
 label_8598:;
     /* $8598: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_85C5_b0(); return;
+label_85C8:; /* NextSubtask */
+    /* $85C8: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_8745_b0(); return;
+}
+
+void func_859B_b0_body(int _entry) { /* SetupIntermediate */
+    switch (_entry) {
+        case 1: goto label_85AD;
+    }
 label_859B:; /* SetupIntermediate */
     /* $859B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0744); FLAG_NZ(g_cpu.A);
 label_859E:;
@@ -6698,52 +6654,26 @@ label_85B5:;
     /* $85B5: 8D */ maybe_trigger_vblank(4); nes_write(0x0744, g_cpu.A);
 label_85B8:;
     /* $85B8: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_8745_b0(); return;
-label_85BB:; /* AreaPalette */
-    /* $85BB: 01 */ maybe_trigger_vblank(6); g_cpu.A |= nes_read(nes_read16zp((0x02 + g_cpu.X) & 0xFF)); FLAG_NZ(g_cpu.A);
-label_85BD:;
-    /* $85BD: 03 */ maybe_trigger_vblank(8); { uint16_t a=nes_read16zp((0x04 + g_cpu.X) & 0xFF); uint8_t v=nes_read(a); g_cpu.C=(v>>7)&1; v=(v<<1)&0xFF; nes_write(a,v); g_cpu.A|=v; FLAG_NZ(g_cpu.A); }
-label_85BF:; /* GetAreaPalette */
-    /* $85BF: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x074E); FLAG_NZ(g_cpu.Y);
-label_85C2:;
-    /* $85C2: BE */ maybe_trigger_vblank(4); g_cpu.X = nes_read((0x85BB + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.X);
-label_85C5:; /* SetVRAMAddr_A */
-    /* $85C5: 8E */ maybe_trigger_vblank(4); nes_write(0x0773, g_cpu.X);
-label_85C8:; /* NextSubtask */
-    /* $85C8: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_8745_b0(); return;
 }
 
 void func_859B_b0(void) { /* SetupIntermediate */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_859B_b0");
 #endif
-label_859B:; /* SetupIntermediate */
-    /* $859B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0744); FLAG_NZ(g_cpu.A);
-label_859E:;
-    /* $859E: 48 */ maybe_trigger_vblank(3); g_ram[0x100 + g_cpu.S] = g_cpu.A; g_cpu.S--;
-label_859F:;
-    /* $859F: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0756); FLAG_NZ(g_cpu.A);
-label_85A2:;
-    /* $85A2: 48 */ maybe_trigger_vblank(3); g_ram[0x100 + g_cpu.S] = g_cpu.A; g_cpu.S--;
-label_85A3:;
-    /* $85A3: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
-label_85A5:;
-    /* $85A5: 8D */ maybe_trigger_vblank(4); nes_write(0x0756, g_cpu.A);
-label_85A8:;
-    /* $85A8: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x02; FLAG_NZ(g_cpu.A);
-label_85AA:;
-    /* $85AA: 8D */ maybe_trigger_vblank(4); nes_write(0x0744, g_cpu.A);
-label_85AD:;
-    /* $85AD: 20 */ maybe_trigger_vblank(6); func_85F1_b0();
-label_85B0:;
-    /* $85B0: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
-label_85B1:;
-    /* $85B1: 8D */ maybe_trigger_vblank(4); nes_write(0x0756, g_cpu.A);
-label_85B4:;
-    /* $85B4: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
-label_85B5:;
-    /* $85B5: 8D */ maybe_trigger_vblank(4); nes_write(0x0744, g_cpu.A);
-label_85B8:;
-    /* $85B8: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_8745_b0(); return;
+    func_859B_b0_body(0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_85AD_b0(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_85AD_b0");
+#endif
+    func_859B_b0_body(1);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
 }
 
 void func_8652_b0(void) { /* WriteTopStatusLine */
@@ -6821,7 +6751,7 @@ void func_8693_b0(void) { /* DisplayTimeUp */
 label_8693:; /* DisplayTimeUp */
     /* $8693: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0759); FLAG_NZ(g_cpu.A);
 label_8696:;
-    /* $8696: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_86A2;
+    /* $8696: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_86A2; }
 label_8698:;
     /* $8698: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_869A:;
@@ -6843,7 +6773,7 @@ void func_889D_b0(void) { /* ResetSpritesAndScreenTimer */
 label_889D:; /* ResetSpritesAndScreenTimer */
     /* $889D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x07A0); FLAG_NZ(g_cpu.A);
 label_88A0:;
-    /* $88A0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_88AD;
+    /* $88A0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_88AD; }
 label_88A2:;
     /* $88A2: 20 */ maybe_trigger_vblank(6); func_8220_b0();
 label_88A5:; /* ResetScreenTimer */
@@ -6867,25 +6797,25 @@ void func_86A8_b0(void) { /* DisplayIntermediate */
 label_86A8:; /* DisplayIntermediate */
     /* $86A8: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0770); FLAG_NZ(g_cpu.A);
 label_86AB:;
-    /* $86AB: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_86E0;
+    /* $86AB: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_86E0; }
 label_86AD:;
     /* $86AD: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_86AF:;
-    /* $86AF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_86D3;
+    /* $86AF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_86D3; }
 label_86B1:;
     /* $86B1: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0752); FLAG_NZ(g_cpu.A);
 label_86B4:;
-    /* $86B4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_86E0;
+    /* $86B4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_86E0; }
 label_86B6:;
     /* $86B6: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x074E); FLAG_NZ(g_cpu.Y);
 label_86B9:;
     /* $86B9: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x03; g_cpu.C=(g_cpu.Y>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_86BB:;
-    /* $86BB: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_86C2;
+    /* $86BB: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_86C2; }
 label_86BD:;
     /* $86BD: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0769); FLAG_NZ(g_cpu.A);
 label_86C0:;
-    /* $86C0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_86E0;
+    /* $86C0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_86E0; }
 label_86C2:; /* PlayerInter */
     /* $86C2: 20 */ maybe_trigger_vblank(6); func_EFA4();
 label_86C5:;
@@ -6938,7 +6868,7 @@ label_86EC:;
     /* $86EC: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x071F); FLAG_NZ(g_cpu.A);
 label_86EF:;
     /* $86EF: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -6947,7 +6877,7 @@ label_86EF:;
 label_86F1:;
     /* $86F1: CE */ maybe_trigger_vblank(6); { uint16_t a=0x071E; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_86F4:;
-    /* $86F4: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_86F9;
+    /* $86F4: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_86F9; }
 label_86F6:;
     /* $86F6: EE */ maybe_trigger_vblank(6); { uint16_t a=0x073C; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_86F9:; /* OutputCol */
@@ -6976,14 +6906,14 @@ label_85C8:; /* NextSubtask */
     /* $85C8: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_8745_b0(); return;
 }
 
-static void func_85E3_b0_body(int _entry) { /* GetBackgroundColor */
+void func_85E3_b0_body(int _entry) { /* GetBackgroundColor */
     switch (_entry) {
         case 1: goto label_862E;
     }
 label_85E3:; /* GetBackgroundColor */
     /* $85E3: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0744); FLAG_NZ(g_cpu.Y);
 label_85E6:;
-    /* $85E6: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_85EE;
+    /* $85E6: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_85EE; }
 label_85E8:;
     /* $85E8: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x85C7 + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_85EB:;
@@ -6997,7 +6927,7 @@ label_85F4:;
 label_85F6:;
     /* $85F6: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0753); FLAG_NZ(g_cpu.A);
 label_85F9:;
-    /* $85F9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_85FD;
+    /* $85F9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_85FD; }
 label_85FB:;
     /* $85FB: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x04; FLAG_NZ(g_cpu.Y);
 label_85FD:; /* ChkFiery */
@@ -7005,7 +6935,7 @@ label_85FD:; /* ChkFiery */
 label_8600:;
     /* $8600: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_8602:;
-    /* $8602: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8606;
+    /* $8602: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8606; }
 label_8604:;
     /* $8604: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x08; FLAG_NZ(g_cpu.Y);
 label_8606:; /* StartClrGet */
@@ -7024,7 +6954,7 @@ label_8612:;
     /* $8612: C6 */ maybe_trigger_vblank(5); { uint16_t a=0x00; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_8614:;
     /* $8614: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -7035,7 +6965,7 @@ label_8616:;
 label_8619:;
     /* $8619: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0744); FLAG_NZ(g_cpu.Y);
 label_861C:;
-    /* $861C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8621;
+    /* $861C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8621; }
 label_861E:;
     /* $861E: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x074E); FLAG_NZ(g_cpu.Y);
 label_8621:; /* SetBGColor */
@@ -7103,7 +7033,7 @@ label_8643:; /* GetAlternatePalette1 */
 label_8646:;
     /* $8646: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x01; g_cpu.C=(g_cpu.A>=0x01)?1:0; FLAG_NZ(r&0xFF); }
 label_8648:;
-    /* $8648: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_864F;
+    /* $8648: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_864F; }
 label_864A:;
     /* $864A: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x0B; FLAG_NZ(g_cpu.A);
 label_864C:; /* SetVRAMAddr_B */
@@ -7119,7 +7049,7 @@ void func_86FF_b0(void) { /* DrawTitleScreen */
 label_86FF:; /* DrawTitleScreen */
     /* $86FF: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0770); FLAG_NZ(g_cpu.A);
 label_8702:;
-    /* $8702: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_874E;
+    /* $8702: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_874E; }
 label_8704:;
     /* $8704: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x1E; FLAG_NZ(g_cpu.A);
 label_8706:;
@@ -7145,7 +7075,7 @@ label_871C:;
 label_871E:;
     /* $871E: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_871F:;
-    /* $871F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8723;
+    /* $871F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8723; }
 label_8721:;
     /* $8721: E6 */ maybe_trigger_vblank(5); { uint16_t a=0x01; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_8723:; /* ChkHiByte */
@@ -7154,7 +7084,7 @@ label_8725:;
     /* $8725: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_8727:;
     /* $8727: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -7164,7 +7094,7 @@ label_8729:;
     /* $8729: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x3A; g_cpu.C=(g_cpu.Y>=0x3A)?1:0; FLAG_NZ(r&0xFF); }
 label_872B:;
     /* $872B: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -7174,40 +7104,6 @@ label_872D:;
     /* $872D: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x05; FLAG_NZ(g_cpu.A);
 label_872F:;
     /* $872F: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_864C_b0(); return;
-label_8732:; /* ClearBuffersDrawIcon */
-    /* $8732: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0770); FLAG_NZ(g_cpu.A);
-label_8735:;
-    /* $8735: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_874E;
-label_8737:;
-    /* $8737: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x00; FLAG_NZ(g_cpu.X);
-label_8739:; /* TScrClear */
-    /* $8739: 9D */ maybe_trigger_vblank(5); nes_write((0x0300 + g_cpu.X) & 0xFFFF, g_cpu.A);
-label_873C:;
-    /* $873C: 9D */ maybe_trigger_vblank(5); nes_write((0x0400 + g_cpu.X) & 0xFFFF, g_cpu.A);
-label_873F:;
-    /* $873F: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
-label_8740:;
-    /* $8740: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
-#ifdef WATCHDOG_ENABLED
-    watchdog_check();
-#endif
-    goto label_8739;
-    }
-label_8742:;
-    /* $8742: 20 */ maybe_trigger_vblank(6); func_8325_b0();
-label_8745:; /* IncSubtask */
-    /* $8745: EE */ maybe_trigger_vblank(6); { uint16_t a=0x073C; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
-label_8748:;
-    /* $8748: 60 */ maybe_trigger_vblank(6); 
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_pop();
-#endif
-    return;
-label_8749:; /* WriteTopScore */
-    /* $8749: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0xFA; FLAG_NZ(g_cpu.A);
-label_874B:;
-    /* $874B: 20 */ maybe_trigger_vblank(6); func_BC36_b0();
 label_874E:; /* IncModeTask_B */
     /* $874E: EE */ maybe_trigger_vblank(6); { uint16_t a=0x0772; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_8751:;
@@ -7225,7 +7121,7 @@ void func_8732_b0(void) { /* ClearBuffersDrawIcon */
 label_8732:; /* ClearBuffersDrawIcon */
     /* $8732: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0770); FLAG_NZ(g_cpu.A);
 label_8735:;
-    /* $8735: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_874E;
+    /* $8735: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_874E; }
 label_8737:;
     /* $8737: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x00; FLAG_NZ(g_cpu.X);
 label_8739:; /* TScrClear */
@@ -7236,7 +7132,7 @@ label_873F:;
     /* $873F: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8740:;
     /* $8740: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -7305,7 +7201,7 @@ label_85F4:;
 label_85F6:;
     /* $85F6: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0753); FLAG_NZ(g_cpu.A);
 label_85F9:;
-    /* $85F9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_85FD;
+    /* $85F9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_85FD; }
 label_85FB:;
     /* $85FB: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x04; FLAG_NZ(g_cpu.Y);
 label_85FD:; /* ChkFiery */
@@ -7313,7 +7209,7 @@ label_85FD:; /* ChkFiery */
 label_8600:;
     /* $8600: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_8602:;
-    /* $8602: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8606;
+    /* $8602: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8606; }
 label_8604:;
     /* $8604: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x08; FLAG_NZ(g_cpu.Y);
 label_8606:; /* StartClrGet */
@@ -7332,7 +7228,7 @@ label_8612:;
     /* $8612: C6 */ maybe_trigger_vblank(5); { uint16_t a=0x00; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_8614:;
     /* $8614: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -7343,7 +7239,7 @@ label_8616:;
 label_8619:;
     /* $8619: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0744); FLAG_NZ(g_cpu.Y);
 label_861C:;
-    /* $861C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8621;
+    /* $861C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8621; }
 label_861E:;
     /* $861E: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x074E); FLAG_NZ(g_cpu.Y);
 label_8621:; /* SetBGColor */
@@ -7396,7 +7292,7 @@ label_8748:;
     return;
 }
 
-static void func_92AA_b0_body(int _entry) { /* DoNothing1 */
+void func_92AA_b0_body(int _entry) { /* DoNothing1 */
     switch (_entry) {
         case 1: goto label_92AF;
     }
@@ -7439,11 +7335,11 @@ void func_82D8_b0(void) { /* ChkContinue */
 label_82D8:; /* ChkContinue */
     /* $82D8: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x07A2); FLAG_NZ(g_cpu.Y);
 label_82DB:;
-    /* $82DB: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { call_by_address(0x82C9); return; }
+    /* $82DB: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); call_by_address(0x82C9); return; }
 label_82DD:;
     /* $82DD: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_82DE:;
-    /* $82DE: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_82E6;
+    /* $82DE: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_82E6; }
 label_82E0:;
     /* $82E0: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x07FD); FLAG_NZ(g_cpu.A);
 label_82E3:;
@@ -7478,7 +7374,7 @@ label_830A:;
     /* $830A: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_830B:;
     /* $830B: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -7501,7 +7397,7 @@ label_836B:; /* DemoEngine */
 label_836E:;
     /* $836E: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0718); FLAG_NZ(g_cpu.A);
 label_8371:;
-    /* $8371: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8380;
+    /* $8371: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8380; }
 label_8373:;
     /* $8373: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8374:;
@@ -7513,7 +7409,7 @@ label_8378:;
 label_837B:;
     /* $837B: 8D */ maybe_trigger_vblank(4); nes_write(0x0718, g_cpu.A);
 label_837E:;
-    /* $837E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_838A;
+    /* $837E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_838A; }
 label_8380:; /* DoAction */
     /* $8380: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x833F + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_8383:;
@@ -7541,7 +7437,7 @@ label_82C3:;
 label_82C5:;
     /* $82C5: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_82C7:;
-    /* $82C7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_830D;
+    /* $82C7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_830D; }
 label_82C9:; /* ResetTitle */
     /* $82C9: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_82CB:;
@@ -7562,7 +7458,7 @@ label_82D8:; /* ChkContinue */
     /* $82D8: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x07A2); FLAG_NZ(g_cpu.Y);
 label_82DB:;
     /* $82DB: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -7571,7 +7467,7 @@ label_82DB:;
 label_82DD:;
     /* $82DD: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_82DE:;
-    /* $82DE: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_82E6;
+    /* $82DE: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_82E6; }
 label_82E0:;
     /* $82E0: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x07FD); FLAG_NZ(g_cpu.A);
 label_82E3:;
@@ -7606,7 +7502,7 @@ label_830A:;
     /* $830A: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_830B:;
     /* $830B: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -7620,7 +7516,7 @@ label_830D:; /* ExitMenu */
     return;
 }
 
-static void func_8325_b0_body(int _entry) { /* DrawMushroomIcon */
+void func_8325_b0_body(int _entry) { /* DrawMushroomIcon */
     switch (_entry) {
         case 1: goto label_8330;
     }
@@ -7634,7 +7530,7 @@ label_832D:;
     /* $832D: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_832E:;
     /* $832E: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -7643,7 +7539,7 @@ label_832E:;
 label_8330:;
     /* $8330: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x077A); FLAG_NZ(g_cpu.A);
 label_8333:;
-    /* $8333: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_833F;
+    /* $8333: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_833F; }
 label_8335:;
     /* $8335: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x24; FLAG_NZ(g_cpu.A);
 label_8337:;
@@ -7695,7 +7591,7 @@ label_82C3:;
 label_82C5:;
     /* $82C5: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_82C7:;
-    /* $82C7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_830D;
+    /* $82C7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_830D; }
 label_82C9:; /* ResetTitle */
     /* $82C9: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_82CB:;
@@ -7716,7 +7612,7 @@ label_82D8:; /* ChkContinue */
     /* $82D8: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x07A2); FLAG_NZ(g_cpu.Y);
 label_82DB:;
     /* $82DB: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -7725,7 +7621,7 @@ label_82DB:;
 label_82DD:;
     /* $82DD: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_82DE:;
-    /* $82DE: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_82E6;
+    /* $82DE: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_82E6; }
 label_82E0:;
     /* $82E0: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x07FD); FLAG_NZ(g_cpu.A);
 label_82E3:;
@@ -7760,7 +7656,7 @@ label_830A:;
     /* $830A: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_830B:;
     /* $830B: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -7827,7 +7723,7 @@ label_914A:;
 label_914D:;
     /* $914D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_9150:;
-    /* $9150: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9153;
+    /* $9150: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9153; }
 label_9152:;
     /* $9152: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9153:; /* ChkStPos */
@@ -7837,11 +7733,11 @@ label_9156:;
 label_9159:;
     /* $9159: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0752); FLAG_NZ(g_cpu.Y);
 label_915C:;
-    /* $915C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9165;
+    /* $915C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9165; }
 label_915E:;
     /* $915E: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x01; g_cpu.C=(g_cpu.Y>=0x01)?1:0; FLAG_NZ(r&0xFF); }
 label_9160:;
-    /* $9160: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9165;
+    /* $9160: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9165; }
 label_9162:;
     /* $9162: BE */ maybe_trigger_vblank(4); g_cpu.X = nes_read((0x9118 + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.X);
 label_9165:; /* SetStPos */
@@ -7861,11 +7757,11 @@ label_9175:;
 label_9178:;
     /* $9178: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0715); FLAG_NZ(g_cpu.Y);
 label_917B:;
-    /* $917B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9197;
+    /* $917B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9197; }
 label_917D:;
     /* $917D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0757); FLAG_NZ(g_cpu.A);
 label_9180:;
-    /* $9180: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9197;
+    /* $9180: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9197; }
 label_9182:;
     /* $9182: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x912D + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_9185:;
@@ -7885,7 +7781,7 @@ label_9194:;
 label_9197:; /* ChkOverR */
     /* $9197: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0758); FLAG_NZ(g_cpu.Y);
 label_919A:;
-    /* $919A: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_91B0;
+    /* $919A: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_91B0; }
 label_919C:;
     /* $919C: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x03; FLAG_NZ(g_cpu.A);
 label_919E:;
@@ -7907,7 +7803,7 @@ label_91AD:;
 label_91B0:; /* ChkSwimE */
     /* $91B0: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x074E); FLAG_NZ(g_cpu.Y);
 label_91B3:;
-    /* $91B3: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_91B8;
+    /* $91B3: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_91B8; }
 label_91B5:;
     /* $91B5: 20 */ maybe_trigger_vblank(6); func_B70B_b0();
 label_91B8:; /* SetPESub */
@@ -7929,13 +7825,13 @@ void func_B1C7_b0(void) { /* Vine_AutoClimb */
 label_B1C7:; /* Vine_AutoClimb */
     /* $B1C7: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0xB5); FLAG_NZ(g_cpu.A);
 label_B1C9:;
-    /* $B1C9: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B1D1;
+    /* $B1C9: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1D1; }
 label_B1CB:;
     /* $B1CB: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0xCE); FLAG_NZ(g_cpu.A);
 label_B1CD:;
     /* $B1CD: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xE4; g_cpu.C=(g_cpu.A>=0xE4)?1:0; FLAG_NZ(r&0xFF); }
 label_B1CF:;
-    /* $B1CF: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B1DD;
+    /* $B1CF: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B1DD; }
 label_B1D1:; /* AutoClimb */
     /* $B1D1: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x08; FLAG_NZ(g_cpu.A);
 label_B1D3:;
@@ -7965,7 +7861,7 @@ label_B209:;
 label_B20B:; /* ChgAreaPipe */
     /* $B20B: CE */ maybe_trigger_vblank(6); { uint16_t a=0x06DE; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B20E:;
-    /* $B20E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B21E;
+    /* $B20E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B21E; }
 label_B210:;
     /* $B210: 8C */ maybe_trigger_vblank(4); nes_write(0x0752, g_cpu.Y);
 label_B213:; /* ChgAreaMode */
@@ -7999,7 +7895,7 @@ label_B1ED:;
 label_B1EF:;
     /* $B1EF: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x06D6); FLAG_NZ(g_cpu.A);
 label_B1F2:;
-    /* $B1F2: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B20B;
+    /* $B1F2: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_B20B; }
 label_B1F4:;
     /* $B1F4: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B1F5:;
@@ -8007,31 +7903,15 @@ label_B1F5:;
 label_B1F8:;
     /* $B1F8: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_B1FA:;
-    /* $B1FA: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B20B;
+    /* $B1FA: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_B20B; }
 label_B1FC:;
     /* $B1FC: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B1FD:;
     /* $B1FD: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_B20B_b0(); return;
-label_B200:; /* MovePlayerYAxis */
-    /* $B200: 18 */ maybe_trigger_vblank(2); g_cpu.C = 0;
-label_B201:;
-    /* $B201: 65 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0xCE); uint16_t r=g_cpu.A+m+g_cpu.C; FLAG_NZC_ADD(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
-label_B203:;
-    /* $B203: 85 */ maybe_trigger_vblank(3); nes_write(0xCE, g_cpu.A);
-label_B205:;
-    /* $B205: 60 */ maybe_trigger_vblank(6); 
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_pop();
-#endif
-    return;
-label_B206:; /* SideExitPipeEntry */
-    /* $B206: 20 */ maybe_trigger_vblank(6); func_B21F_b0();
-label_B209:;
-    /* $B209: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x02; FLAG_NZ(g_cpu.Y);
 label_B20B:; /* ChgAreaPipe */
     /* $B20B: CE */ maybe_trigger_vblank(6); { uint16_t a=0x06DE; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B20E:;
-    /* $B20E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B21E;
+    /* $B20E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B21E; }
 label_B210:;
     /* $B210: 8C */ maybe_trigger_vblank(4); nes_write(0x0752, g_cpu.Y);
 label_B213:; /* ChgAreaMode */
@@ -8059,7 +7939,7 @@ label_B2A4:; /* FlagpoleSlide */
 label_B2A6:;
     /* $B2A6: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x30; g_cpu.C=(g_cpu.A>=0x30)?1:0; FLAG_NZ(r&0xFF); }
 label_B2A8:;
-    /* $B2A8: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B2BF;
+    /* $B2A8: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B2BF; }
 label_B2AA:;
     /* $B2AA: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0713); FLAG_NZ(g_cpu.A);
 label_B2AD:;
@@ -8073,7 +7953,7 @@ label_B2B4:;
 label_B2B6:;
     /* $B2B6: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x9E; g_cpu.C=(g_cpu.Y>=0x9E)?1:0; FLAG_NZ(r&0xFF); }
 label_B2B8:;
-    /* $B2B8: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B2BC;
+    /* $B2B8: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B2BC; }
 label_B2BA:;
     /* $B2BA: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x04; FLAG_NZ(g_cpu.A);
 label_B2BC:; /* SlidePlayer */
@@ -8101,11 +7981,11 @@ label_B2CF:;
 label_B2D1:;
     /* $B2D1: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xAE; g_cpu.C=(g_cpu.A>=0xAE)?1:0; FLAG_NZ(r&0xFF); }
 label_B2D3:;
-    /* $B2D3: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B2E3;
+    /* $B2D3: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B2E3; }
 label_B2D5:;
     /* $B2D5: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0723); FLAG_NZ(g_cpu.A);
 label_B2D8:;
-    /* $B2D8: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B2E3;
+    /* $B2D8: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B2E3; }
 label_B2DA:;
     /* $B2DA: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x20; FLAG_NZ(g_cpu.A);
 label_B2DC:;
@@ -8119,11 +7999,11 @@ label_B2E3:; /* ChkStop */
 label_B2E6:;
     /* $B2E6: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_B2E7:;
-    /* $B2E7: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B2F6;
+    /* $B2E7: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B2F6; }
 label_B2E9:;
     /* $B2E9: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0746); FLAG_NZ(g_cpu.A);
 label_B2EC:;
-    /* $B2EC: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B2F1;
+    /* $B2EC: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B2F1; }
 label_B2EE:;
     /* $B2EE: EE */ maybe_trigger_vblank(6); { uint16_t a=0x0746; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B2F1:; /* InCastle */
@@ -8135,7 +8015,7 @@ label_B2F6:; /* RdyNextA */
 label_B2F9:;
     /* $B2F9: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x05; g_cpu.C=(g_cpu.A>=0x05)?1:0; FLAG_NZ(r&0xFF); }
 label_B2FB:;
-    /* $B2FB: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B328;
+    /* $B2FB: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_B328; }
 label_B2FD:;
     /* $B2FD: EE */ maybe_trigger_vblank(6); { uint16_t a=0x075C; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B300:;
@@ -8143,7 +8023,7 @@ label_B300:;
 label_B303:;
     /* $B303: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_B305:;
-    /* $B305: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B315;
+    /* $B305: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B315; }
 label_B307:;
     /* $B307: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x075F); FLAG_NZ(g_cpu.Y);
 label_B30A:;
@@ -8151,7 +8031,7 @@ label_B30A:;
 label_B30D:;
     /* $B30D: D9 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0xB2C2 + g_cpu.Y) & 0xFFFF); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B310:;
-    /* $B310: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B315;
+    /* $B310: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B315; }
 label_B312:;
     /* $B312: EE */ maybe_trigger_vblank(6); { uint16_t a=0x075D; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B315:; /* NextArea */
@@ -8193,7 +8073,7 @@ label_91D7:;
 label_91D9:;
     /* $91D9: CE */ maybe_trigger_vblank(6); { uint16_t a=0x075A; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_91DC:;
-    /* $91DC: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_91E9;
+    /* $91DC: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_91E9; }
 label_91DE:;
     /* $91DE: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_91E0:;
@@ -8219,7 +8099,7 @@ label_91EE:;
 label_91F1:;
     /* $91F1: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x02; FLAG_NZ(g_cpu.A);
 label_91F3:;
-    /* $91F3: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_91F6;
+    /* $91F3: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_91F6; }
 label_91F5:;
     /* $91F5: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_91F6:; /* GetHalfway */
@@ -8231,7 +8111,7 @@ label_91FC:;
 label_91FD:;
     /* $91FD: 98 */ maybe_trigger_vblank(2); g_cpu.A = g_cpu.Y; FLAG_NZ(g_cpu.A);
 label_91FE:;
-    /* $91FE: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_9204;
+    /* $91FE: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_9204; }
 label_9200:;
     /* $9200: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_9201:;
@@ -8245,9 +8125,9 @@ label_9204:; /* MaskHPNyb */
 label_9206:;
     /* $9206: CD */ maybe_trigger_vblank(4); { uint8_t m=nes_read_hooked(0x9206, 0x071A); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_9209:;
-    /* $9209: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_920F;
+    /* $9209: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_920F; }
 label_920B:;
-    /* $920B: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_920F;
+    /* $920B: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_920F; }
 label_920D:;
     /* $920D: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_920F:; /* SetHalfway */
@@ -8267,7 +8147,7 @@ label_B069:; /* PlayerEntrance */
 label_B06C:;
     /* $B06C: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_B06E:;
-    /* $B06E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B09B;
+    /* $B06E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B09B; }
 label_B070:;
     /* $B070: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B072:;
@@ -8275,21 +8155,21 @@ label_B072:;
 label_B074:;
     /* $B074: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x30; g_cpu.C=(g_cpu.Y>=0x30)?1:0; FLAG_NZ(r&0xFF); }
 label_B076:;
-    /* $B076: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B0E6;
+    /* $B076: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B0E6; }
 label_B078:;
     /* $B078: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0710); FLAG_NZ(g_cpu.A);
 label_B07B:;
     /* $B07B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_B07D:;
-    /* $B07D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B083;
+    /* $B07D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B083; }
 label_B07F:;
     /* $B07F: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_B081:;
-    /* $B081: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B0D3;
+    /* $B081: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B0D3; }
 label_B083:; /* ChkBehPipe */
     /* $B083: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x03C4); FLAG_NZ(g_cpu.A);
 label_B086:;
-    /* $B086: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B08D;
+    /* $B086: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B08D; }
 label_B088:;
     /* $B088: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x01; FLAG_NZ(g_cpu.A);
 label_B08A:;
@@ -8299,7 +8179,7 @@ label_B08D:; /* IntroEntr */
 label_B090:;
     /* $B090: CE */ maybe_trigger_vblank(6); { uint16_t a=0x06DE; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B093:;
-    /* $B093: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B0E5;
+    /* $B093: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B0E5; }
 label_B095:;
     /* $B095: EE */ maybe_trigger_vblank(6); { uint16_t a=0x0769; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B098:;
@@ -8307,7 +8187,7 @@ label_B098:;
 label_B09B:; /* EntrMode2 */
     /* $B09B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0758); FLAG_NZ(g_cpu.A);
 label_B09E:;
-    /* $B09E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B0AC;
+    /* $B09E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B0AC; }
 label_B0A0:;
     /* $B0A0: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0xFF; FLAG_NZ(g_cpu.A);
 label_B0A2:;
@@ -8317,7 +8197,7 @@ label_B0A5:;
 label_B0A7:;
     /* $B0A7: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x91; g_cpu.C=(g_cpu.A>=0x91)?1:0; FLAG_NZ(r&0xFF); }
 label_B0A9:;
-    /* $B0A9: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B0D3;
+    /* $B0A9: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B0D3; }
 label_B0AB:;
     /* $B0AB: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -8329,7 +8209,7 @@ label_B0AC:; /* VineEntr */
 label_B0AF:;
     /* $B0AF: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x60; g_cpu.C=(g_cpu.A>=0x60)?1:0; FLAG_NZ(r&0xFF); }
 label_B0B1:;
-    /* $B0B1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B0E5;
+    /* $B0B1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B0E5; }
 label_B0B3:;
     /* $B0B3: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0xCE); FLAG_NZ(g_cpu.A);
 label_B0B5:;
@@ -8339,7 +8219,7 @@ label_B0B7:;
 label_B0B9:;
     /* $B0B9: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x01; FLAG_NZ(g_cpu.A);
 label_B0BB:;
-    /* $B0BB: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B0C7;
+    /* $B0BB: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B0C7; }
 label_B0BD:;
     /* $B0BD: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x03; FLAG_NZ(g_cpu.A);
 label_B0BF:;
@@ -8359,7 +8239,7 @@ label_B0CD:;
 label_B0CF:;
     /* $B0CF: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x48; g_cpu.C=(g_cpu.A>=0x48)?1:0; FLAG_NZ(r&0xFF); }
 label_B0D1:;
-    /* $B0D1: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B0E5;
+    /* $B0D1: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B0E5; }
 label_B0D3:; /* PlayerRdy */
     /* $B0D3: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x08; FLAG_NZ(g_cpu.A);
 label_B0D5:;
@@ -8389,23 +8269,23 @@ label_B0E9:; /* PlayerCtrlRoutine */
 label_B0EB:;
     /* $B0EB: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0B; g_cpu.C=(g_cpu.A>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_B0ED:;
-    /* $B0ED: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B12B;
+    /* $B0ED: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_B12B; }
 label_B0EF:;
     /* $B0EF: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_B0F2:;
-    /* $B0F2: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B104;
+    /* $B0F2: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_B104; }
 label_B0F4:;
     /* $B0F4: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0xB5); FLAG_NZ(g_cpu.Y);
 label_B0F6:;
     /* $B0F6: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B0F7:;
-    /* $B0F7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B0FF;
+    /* $B0F7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B0FF; }
 label_B0F9:;
     /* $B0F9: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0xCE); FLAG_NZ(g_cpu.A);
 label_B0FB:;
     /* $B0FB: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xD0; g_cpu.C=(g_cpu.A>=0xD0)?1:0; FLAG_NZ(r&0xFF); }
 label_B0FD:;
-    /* $B0FD: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B104;
+    /* $B0FD: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(2); goto label_B104; }
 label_B0FF:; /* DisJoyp */
     /* $B0FF: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B101:;
@@ -8431,15 +8311,15 @@ label_B117:;
 label_B119:;
     /* $B119: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x04; FLAG_NZ(g_cpu.A);
 label_B11B:;
-    /* $B11B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B12B;
+    /* $B11B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B12B; }
 label_B11D:;
     /* $B11D: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x1D); FLAG_NZ(g_cpu.A);
 label_B11F:;
-    /* $B11F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B12B;
+    /* $B11F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B12B; }
 label_B121:;
     /* $B121: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x0C); FLAG_NZ(g_cpu.Y);
 label_B123:;
-    /* $B123: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B12B;
+    /* $B123: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B12B; }
 label_B125:;
     /* $B125: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B127:;
@@ -8453,13 +8333,13 @@ label_B12E:;
 label_B130:;
     /* $B130: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0754); FLAG_NZ(g_cpu.A);
 label_B133:;
-    /* $B133: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B13E;
+    /* $B133: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B13E; }
 label_B135:;
     /* $B135: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x00; FLAG_NZ(g_cpu.Y);
 label_B137:;
     /* $B137: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0714); FLAG_NZ(g_cpu.A);
 label_B13A:;
-    /* $B13A: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B13E;
+    /* $B13A: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B13E; }
 label_B13C:;
     /* $B13C: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x02; FLAG_NZ(g_cpu.Y);
 label_B13E:; /* ChkMoveDir */
@@ -8469,9 +8349,9 @@ label_B141:;
 label_B143:;
     /* $B143: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x57); FLAG_NZ(g_cpu.Y);
 label_B145:;
-    /* $B145: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B14C;
+    /* $B145: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B14C; }
 label_B147:;
-    /* $B147: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_B14A;
+    /* $B147: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_B14A; }
 label_B149:;
     /* $B149: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_B14A:; /* SetMoveDir */
@@ -8493,21 +8373,21 @@ label_B15D:;
 label_B15F:;
     /* $B15F: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x40; g_cpu.C=(g_cpu.A>=0x40)?1:0; FLAG_NZ(r&0xFF); }
 label_B161:;
-    /* $B161: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B179;
+    /* $B161: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B179; }
 label_B163:;
     /* $B163: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0E); FLAG_NZ(g_cpu.A);
 label_B165:;
     /* $B165: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x05; g_cpu.C=(g_cpu.A>=0x05)?1:0; FLAG_NZ(r&0xFF); }
 label_B167:;
-    /* $B167: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B179;
+    /* $B167: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B179; }
 label_B169:;
     /* $B169: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_B16B:;
-    /* $B16B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B179;
+    /* $B16B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B179; }
 label_B16D:;
     /* $B16D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_B16F:;
-    /* $B16F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B179;
+    /* $B16F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B179; }
 label_B171:;
     /* $B171: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x03C4); FLAG_NZ(g_cpu.A);
 label_B174:;
@@ -8519,7 +8399,7 @@ label_B179:; /* PlayerHole */
 label_B17B:;
     /* $B17B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_B17D:;
-    /* $B17D: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B1BA;
+    /* $B17D: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B1BA; }
 label_B17F:;
     /* $B17F: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x01; FLAG_NZ(g_cpu.X);
 label_B181:;
@@ -8533,11 +8413,11 @@ label_B188:;
 label_B18A:;
     /* $B18A: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0759); FLAG_NZ(g_cpu.Y);
 label_B18D:;
-    /* $B18D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B194;
+    /* $B18D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B194; }
 label_B18F:;
     /* $B18F: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0743); FLAG_NZ(g_cpu.Y);
 label_B192:;
-    /* $B192: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B1AA;
+    /* $B192: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1AA; }
 label_B194:; /* HoleDie */
     /* $B194: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_B195:;
@@ -8545,11 +8425,11 @@ label_B195:;
 label_B197:;
     /* $B197: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x0B; g_cpu.C=(g_cpu.Y>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_B199:;
-    /* $B199: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B1AA;
+    /* $B199: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1AA; }
 label_B19B:;
     /* $B19B: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0712); FLAG_NZ(g_cpu.Y);
 label_B19E:;
-    /* $B19E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B1A6;
+    /* $B19E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1A6; }
 label_B1A0:;
     /* $B1A0: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B1A1:;
@@ -8563,15 +8443,15 @@ label_B1A8:;
 label_B1AA:; /* ChkHoleX */
     /* $B1AA: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x07); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B1AC:;
-    /* $B1AC: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B1BA;
+    /* $B1AC: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B1BA; }
 label_B1AE:;
     /* $B1AE: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_B1AF:;
-    /* $B1AF: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B1BB;
+    /* $B1AF: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B1BB; }
 label_B1B1:;
     /* $B1B1: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x07B1); FLAG_NZ(g_cpu.Y);
 label_B1B4:;
-    /* $B1B4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B1BA;
+    /* $B1B4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1BA; }
 label_B1B6:;
     /* $B1B6: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x06; FLAG_NZ(g_cpu.A);
 label_B1B8:;
@@ -8607,23 +8487,23 @@ label_B0E9:; /* PlayerCtrlRoutine */
 label_B0EB:;
     /* $B0EB: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0B; g_cpu.C=(g_cpu.A>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_B0ED:;
-    /* $B0ED: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B12B;
+    /* $B0ED: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_B12B; }
 label_B0EF:;
     /* $B0EF: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_B0F2:;
-    /* $B0F2: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B104;
+    /* $B0F2: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_B104; }
 label_B0F4:;
     /* $B0F4: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0xB5); FLAG_NZ(g_cpu.Y);
 label_B0F6:;
     /* $B0F6: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B0F7:;
-    /* $B0F7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B0FF;
+    /* $B0F7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B0FF; }
 label_B0F9:;
     /* $B0F9: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0xCE); FLAG_NZ(g_cpu.A);
 label_B0FB:;
     /* $B0FB: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xD0; g_cpu.C=(g_cpu.A>=0xD0)?1:0; FLAG_NZ(r&0xFF); }
 label_B0FD:;
-    /* $B0FD: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B104;
+    /* $B0FD: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(2); goto label_B104; }
 label_B0FF:; /* DisJoyp */
     /* $B0FF: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B101:;
@@ -8649,15 +8529,15 @@ label_B117:;
 label_B119:;
     /* $B119: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x04; FLAG_NZ(g_cpu.A);
 label_B11B:;
-    /* $B11B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B12B;
+    /* $B11B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B12B; }
 label_B11D:;
     /* $B11D: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x1D); FLAG_NZ(g_cpu.A);
 label_B11F:;
-    /* $B11F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B12B;
+    /* $B11F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B12B; }
 label_B121:;
     /* $B121: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x0C); FLAG_NZ(g_cpu.Y);
 label_B123:;
-    /* $B123: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B12B;
+    /* $B123: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B12B; }
 label_B125:;
     /* $B125: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B127:;
@@ -8671,13 +8551,13 @@ label_B12E:;
 label_B130:;
     /* $B130: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0754); FLAG_NZ(g_cpu.A);
 label_B133:;
-    /* $B133: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B13E;
+    /* $B133: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B13E; }
 label_B135:;
     /* $B135: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x00; FLAG_NZ(g_cpu.Y);
 label_B137:;
     /* $B137: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0714); FLAG_NZ(g_cpu.A);
 label_B13A:;
-    /* $B13A: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B13E;
+    /* $B13A: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B13E; }
 label_B13C:;
     /* $B13C: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x02; FLAG_NZ(g_cpu.Y);
 label_B13E:; /* ChkMoveDir */
@@ -8687,9 +8567,9 @@ label_B141:;
 label_B143:;
     /* $B143: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x57); FLAG_NZ(g_cpu.Y);
 label_B145:;
-    /* $B145: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B14C;
+    /* $B145: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B14C; }
 label_B147:;
-    /* $B147: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_B14A;
+    /* $B147: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_B14A; }
 label_B149:;
     /* $B149: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_B14A:; /* SetMoveDir */
@@ -8711,21 +8591,21 @@ label_B15D:;
 label_B15F:;
     /* $B15F: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x40; g_cpu.C=(g_cpu.A>=0x40)?1:0; FLAG_NZ(r&0xFF); }
 label_B161:;
-    /* $B161: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B179;
+    /* $B161: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B179; }
 label_B163:;
     /* $B163: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0E); FLAG_NZ(g_cpu.A);
 label_B165:;
     /* $B165: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x05; g_cpu.C=(g_cpu.A>=0x05)?1:0; FLAG_NZ(r&0xFF); }
 label_B167:;
-    /* $B167: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B179;
+    /* $B167: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B179; }
 label_B169:;
     /* $B169: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_B16B:;
-    /* $B16B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B179;
+    /* $B16B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B179; }
 label_B16D:;
     /* $B16D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_B16F:;
-    /* $B16F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B179;
+    /* $B16F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B179; }
 label_B171:;
     /* $B171: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x03C4); FLAG_NZ(g_cpu.A);
 label_B174:;
@@ -8737,7 +8617,7 @@ label_B179:; /* PlayerHole */
 label_B17B:;
     /* $B17B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_B17D:;
-    /* $B17D: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B1BA;
+    /* $B17D: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B1BA; }
 label_B17F:;
     /* $B17F: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x01; FLAG_NZ(g_cpu.X);
 label_B181:;
@@ -8751,11 +8631,11 @@ label_B188:;
 label_B18A:;
     /* $B18A: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0759); FLAG_NZ(g_cpu.Y);
 label_B18D:;
-    /* $B18D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B194;
+    /* $B18D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B194; }
 label_B18F:;
     /* $B18F: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0743); FLAG_NZ(g_cpu.Y);
 label_B192:;
-    /* $B192: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B1AA;
+    /* $B192: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1AA; }
 label_B194:; /* HoleDie */
     /* $B194: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_B195:;
@@ -8763,11 +8643,11 @@ label_B195:;
 label_B197:;
     /* $B197: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x0B; g_cpu.C=(g_cpu.Y>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_B199:;
-    /* $B199: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B1AA;
+    /* $B199: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1AA; }
 label_B19B:;
     /* $B19B: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0712); FLAG_NZ(g_cpu.Y);
 label_B19E:;
-    /* $B19E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B1A6;
+    /* $B19E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1A6; }
 label_B1A0:;
     /* $B1A0: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B1A1:;
@@ -8781,15 +8661,15 @@ label_B1A8:;
 label_B1AA:; /* ChkHoleX */
     /* $B1AA: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x07); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B1AC:;
-    /* $B1AC: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B1BA;
+    /* $B1AC: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B1BA; }
 label_B1AE:;
     /* $B1AE: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_B1AF:;
-    /* $B1AF: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B1BB;
+    /* $B1AF: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B1BB; }
 label_B1B1:;
     /* $B1B1: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x07B1); FLAG_NZ(g_cpu.Y);
 label_B1B4:;
-    /* $B1B4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B1BA;
+    /* $B1B4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1BA; }
 label_B1B6:;
     /* $B1B6: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x06; FLAG_NZ(g_cpu.A);
 label_B1B8:;
@@ -8825,13 +8705,13 @@ label_B233:; /* PlayerChangeSize */
 label_B236:;
     /* $B236: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xF8; g_cpu.C=(g_cpu.A>=0xF8)?1:0; FLAG_NZ(r&0xFF); }
 label_B238:;
-    /* $B238: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B23D;
+    /* $B238: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B23D; }
 label_B23A:;
     /* $B23A: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_B255_b0(); return;
 label_B23D:; /* EndChgSize */
     /* $B23D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xC4; g_cpu.C=(g_cpu.A>=0xC4)?1:0; FLAG_NZ(r&0xFF); }
 label_B23F:;
-    /* $B23F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B244;
+    /* $B23F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B244; }
 label_B241:;
     /* $B241: 20 */ maybe_trigger_vblank(6); func_B273_b0();
 label_B244:; /* ExitChgSize */
@@ -8851,19 +8731,19 @@ label_B245:; /* PlayerInjuryBlink */
 label_B248:;
     /* $B248: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xF0; g_cpu.C=(g_cpu.A>=0xF0)?1:0; FLAG_NZ(r&0xFF); }
 label_B24A:;
-    /* $B24A: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B253;
+    /* $B24A: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B253; }
 label_B24C:;
     /* $B24C: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xC8; g_cpu.C=(g_cpu.A>=0xC8)?1:0; FLAG_NZ(r&0xFF); }
 label_B24E:;
-    /* $B24E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B273;
+    /* $B24E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B273; }
 label_B250:;
     /* $B250: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_B0E9_b0(); return;
 label_B253:; /* ExitBlink */
-    /* $B253: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B268;
+    /* $B253: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B268; }
 label_B255:; /* InitChangeSize */
     /* $B255: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x070B); FLAG_NZ(g_cpu.Y);
 label_B258:;
-    /* $B258: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B268;
+    /* $B258: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B268; }
 label_B25A:;
     /* $B25A: 8C */ maybe_trigger_vblank(4); nes_write(0x070D, g_cpu.Y);
 label_B25D:;
@@ -8885,7 +8765,7 @@ label_B269:; /* PlayerDeath */
 label_B26C:;
     /* $B26C: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xF0; g_cpu.C=(g_cpu.A>=0xF0)?1:0; FLAG_NZ(r&0xFF); }
 label_B26E:;
-    /* $B26E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B2A3;
+    /* $B26E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B2A3; }
 label_B270:;
     /* $B270: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_B0E9_b0(); return;
 label_B273:; /* DonePlayerTask */
@@ -8907,7 +8787,7 @@ label_B27D:; /* PlayerFireFlower */
 label_B280:;
     /* $B280: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xC0; g_cpu.C=(g_cpu.A>=0xC0)?1:0; FLAG_NZ(r&0xFF); }
 label_B282:;
-    /* $B282: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B297;
+    /* $B282: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B297; }
 label_B284:;
     /* $B284: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x09); FLAG_NZ(g_cpu.A);
 label_B286:;
@@ -8963,67 +8843,9 @@ label_B269:; /* PlayerDeath */
 label_B26C:;
     /* $B26C: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xF0; g_cpu.C=(g_cpu.A>=0xF0)?1:0; FLAG_NZ(r&0xFF); }
 label_B26E:;
-    /* $B26E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B2A3;
+    /* $B26E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B2A3; }
 label_B270:;
     /* $B270: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_B0E9_b0(); return;
-label_B273:; /* DonePlayerTask */
-    /* $B273: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
-label_B275:;
-    /* $B275: 8D */ maybe_trigger_vblank(4); nes_write(0x0747, g_cpu.A);
-label_B278:;
-    /* $B278: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x08; FLAG_NZ(g_cpu.A);
-label_B27A:;
-    /* $B27A: 85 */ maybe_trigger_vblank(3); nes_write(0x0E, g_cpu.A);
-label_B27C:;
-    /* $B27C: 60 */ maybe_trigger_vblank(6); 
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_pop();
-#endif
-    return;
-label_B27D:; /* PlayerFireFlower */
-    /* $B27D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0747); FLAG_NZ(g_cpu.A);
-label_B280:;
-    /* $B280: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xC0; g_cpu.C=(g_cpu.A>=0xC0)?1:0; FLAG_NZ(r&0xFF); }
-label_B282:;
-    /* $B282: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B297;
-label_B284:;
-    /* $B284: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x09); FLAG_NZ(g_cpu.A);
-label_B286:;
-    /* $B286: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
-label_B287:;
-    /* $B287: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
-label_B288:; /* CyclePlayerPalette */
-    /* $B288: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x03; FLAG_NZ(g_cpu.A);
-label_B28A:;
-    /* $B28A: 85 */ maybe_trigger_vblank(3); nes_write(0x00, g_cpu.A);
-label_B28C:;
-    /* $B28C: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x03C4); FLAG_NZ(g_cpu.A);
-label_B28F:;
-    /* $B28F: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0xFC; FLAG_NZ(g_cpu.A);
-label_B291:;
-    /* $B291: 05 */ maybe_trigger_vblank(3); g_cpu.A |= nes_read(0x00); FLAG_NZ(g_cpu.A);
-label_B293:;
-    /* $B293: 8D */ maybe_trigger_vblank(4); nes_write(0x03C4, g_cpu.A);
-label_B296:;
-    /* $B296: 60 */ maybe_trigger_vblank(6); 
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_pop();
-#endif
-    return;
-label_B297:; /* ResetPalFireFlower */
-    /* $B297: 20 */ maybe_trigger_vblank(6); func_B273_b0();
-label_B29A:; /* ResetPalStar */
-    /* $B29A: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x03C4); FLAG_NZ(g_cpu.A);
-label_B29D:;
-    /* $B29D: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0xFC; FLAG_NZ(g_cpu.A);
-label_B29F:;
-    /* $B29F: 8D */ maybe_trigger_vblank(4); nes_write(0x03C4, g_cpu.A);
-label_B2A2:;
-    /* $B2A2: 60 */ maybe_trigger_vblank(6); 
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_pop();
-#endif
-    return;
 label_B2A3:; /* ExitDeath */
     /* $B2A3: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -9041,7 +8863,7 @@ label_B27D:; /* PlayerFireFlower */
 label_B280:;
     /* $B280: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xC0; g_cpu.C=(g_cpu.A>=0xC0)?1:0; FLAG_NZ(r&0xFF); }
 label_B282:;
-    /* $B282: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B297;
+    /* $B282: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B297; }
 label_B284:;
     /* $B284: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x09); FLAG_NZ(g_cpu.A);
 label_B286:;
@@ -9093,23 +8915,23 @@ label_B0E9:; /* PlayerCtrlRoutine */
 label_B0EB:;
     /* $B0EB: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0B; g_cpu.C=(g_cpu.A>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_B0ED:;
-    /* $B0ED: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B12B;
+    /* $B0ED: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_B12B; }
 label_B0EF:;
     /* $B0EF: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_B0F2:;
-    /* $B0F2: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B104;
+    /* $B0F2: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_B104; }
 label_B0F4:;
     /* $B0F4: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0xB5); FLAG_NZ(g_cpu.Y);
 label_B0F6:;
     /* $B0F6: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B0F7:;
-    /* $B0F7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B0FF;
+    /* $B0F7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B0FF; }
 label_B0F9:;
     /* $B0F9: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0xCE); FLAG_NZ(g_cpu.A);
 label_B0FB:;
     /* $B0FB: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xD0; g_cpu.C=(g_cpu.A>=0xD0)?1:0; FLAG_NZ(r&0xFF); }
 label_B0FD:;
-    /* $B0FD: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B104;
+    /* $B0FD: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(2); goto label_B104; }
 label_B0FF:; /* DisJoyp */
     /* $B0FF: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B101:;
@@ -9135,15 +8957,15 @@ label_B117:;
 label_B119:;
     /* $B119: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x04; FLAG_NZ(g_cpu.A);
 label_B11B:;
-    /* $B11B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B12B;
+    /* $B11B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B12B; }
 label_B11D:;
     /* $B11D: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x1D); FLAG_NZ(g_cpu.A);
 label_B11F:;
-    /* $B11F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B12B;
+    /* $B11F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B12B; }
 label_B121:;
     /* $B121: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x0C); FLAG_NZ(g_cpu.Y);
 label_B123:;
-    /* $B123: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B12B;
+    /* $B123: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B12B; }
 label_B125:;
     /* $B125: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B127:;
@@ -9157,13 +8979,13 @@ label_B12E:;
 label_B130:;
     /* $B130: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0754); FLAG_NZ(g_cpu.A);
 label_B133:;
-    /* $B133: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B13E;
+    /* $B133: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B13E; }
 label_B135:;
     /* $B135: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x00; FLAG_NZ(g_cpu.Y);
 label_B137:;
     /* $B137: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0714); FLAG_NZ(g_cpu.A);
 label_B13A:;
-    /* $B13A: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B13E;
+    /* $B13A: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B13E; }
 label_B13C:;
     /* $B13C: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x02; FLAG_NZ(g_cpu.Y);
 label_B13E:; /* ChkMoveDir */
@@ -9173,9 +8995,9 @@ label_B141:;
 label_B143:;
     /* $B143: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x57); FLAG_NZ(g_cpu.Y);
 label_B145:;
-    /* $B145: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B14C;
+    /* $B145: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B14C; }
 label_B147:;
-    /* $B147: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_B14A;
+    /* $B147: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_B14A; }
 label_B149:;
     /* $B149: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_B14A:; /* SetMoveDir */
@@ -9197,21 +9019,21 @@ label_B15D:;
 label_B15F:;
     /* $B15F: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x40; g_cpu.C=(g_cpu.A>=0x40)?1:0; FLAG_NZ(r&0xFF); }
 label_B161:;
-    /* $B161: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B179;
+    /* $B161: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B179; }
 label_B163:;
     /* $B163: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0E); FLAG_NZ(g_cpu.A);
 label_B165:;
     /* $B165: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x05; g_cpu.C=(g_cpu.A>=0x05)?1:0; FLAG_NZ(r&0xFF); }
 label_B167:;
-    /* $B167: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B179;
+    /* $B167: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B179; }
 label_B169:;
     /* $B169: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_B16B:;
-    /* $B16B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B179;
+    /* $B16B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B179; }
 label_B16D:;
     /* $B16D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_B16F:;
-    /* $B16F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B179;
+    /* $B16F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B179; }
 label_B171:;
     /* $B171: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x03C4); FLAG_NZ(g_cpu.A);
 label_B174:;
@@ -9223,7 +9045,7 @@ label_B179:; /* PlayerHole */
 label_B17B:;
     /* $B17B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_B17D:;
-    /* $B17D: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B1BA;
+    /* $B17D: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B1BA; }
 label_B17F:;
     /* $B17F: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x01; FLAG_NZ(g_cpu.X);
 label_B181:;
@@ -9237,11 +9059,11 @@ label_B188:;
 label_B18A:;
     /* $B18A: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0759); FLAG_NZ(g_cpu.Y);
 label_B18D:;
-    /* $B18D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B194;
+    /* $B18D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B194; }
 label_B18F:;
     /* $B18F: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0743); FLAG_NZ(g_cpu.Y);
 label_B192:;
-    /* $B192: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B1AA;
+    /* $B192: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1AA; }
 label_B194:; /* HoleDie */
     /* $B194: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_B195:;
@@ -9249,11 +9071,11 @@ label_B195:;
 label_B197:;
     /* $B197: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x0B; g_cpu.C=(g_cpu.Y>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_B199:;
-    /* $B199: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B1AA;
+    /* $B199: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1AA; }
 label_B19B:;
     /* $B19B: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0712); FLAG_NZ(g_cpu.Y);
 label_B19E:;
-    /* $B19E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B1A6;
+    /* $B19E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1A6; }
 label_B1A0:;
     /* $B1A0: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B1A1:;
@@ -9267,15 +9089,15 @@ label_B1A8:;
 label_B1AA:; /* ChkHoleX */
     /* $B1AA: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x07); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B1AC:;
-    /* $B1AC: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B1BA;
+    /* $B1AC: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B1BA; }
 label_B1AE:;
     /* $B1AE: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_B1AF:;
-    /* $B1AF: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B1BB;
+    /* $B1AF: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B1BB; }
 label_B1B1:;
     /* $B1B1: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x07B1); FLAG_NZ(g_cpu.Y);
 label_B1B4:;
-    /* $B1B4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B1BA;
+    /* $B1B4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B1BA; }
 label_B1B6:;
     /* $B1B6: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x06; FLAG_NZ(g_cpu.A);
 label_B1B8:;
@@ -9317,7 +9139,7 @@ label_B225:;
 label_B227:;
     /* $B227: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x0F; FLAG_NZ(g_cpu.A);
 label_B229:;
-    /* $B229: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B22E;
+    /* $B229: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B22E; }
 label_B22B:;
     /* $B22B: 85 */ maybe_trigger_vblank(3); nes_write(0x57, g_cpu.A);
 label_B22D:;
@@ -9387,11 +9209,11 @@ label_B329:; /* PlayerMovementSubs */
 label_B32B:;
     /* $B32B: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0754); FLAG_NZ(g_cpu.Y);
 label_B32E:;
-    /* $B32E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B338;
+    /* $B32E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B338; }
 label_B330:;
     /* $B330: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x1D); FLAG_NZ(g_cpu.A);
 label_B332:;
-    /* $B332: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B33B;
+    /* $B332: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B33B; }
 label_B334:;
     /* $B334: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0B); FLAG_NZ(g_cpu.A);
 label_B336:;
@@ -9403,13 +9225,13 @@ label_B33B:; /* ProcMove */
 label_B33E:;
     /* $B33E: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x070B); FLAG_NZ(g_cpu.A);
 label_B341:;
-    /* $B341: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B359;
+    /* $B341: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B359; }
 label_B343:;
     /* $B343: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x1D); FLAG_NZ(g_cpu.A);
 label_B345:;
     /* $B345: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_B347:;
-    /* $B347: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B34E;
+    /* $B347: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B34E; }
 label_B349:;
     /* $B349: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x18; FLAG_NZ(g_cpu.Y);
 label_B34B:;
@@ -9431,7 +9253,7 @@ label_B359:; /* NoMoveSub */
     return;
 }
 
-static void func_AF93_b0_body(int _entry) { /* ScrollHandler */
+void func_AF93_b0_body(int _entry) { /* ScrollHandler */
     switch (_entry) {
         case 1: goto label_AFB1;
     }
@@ -9446,29 +9268,29 @@ label_AF9A:;
 label_AF9D:;
     /* $AF9D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0723); FLAG_NZ(g_cpu.A);
 label_AFA0:;
-    /* $AFA0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_AFFB;
+    /* $AFA0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_AFFB; }
 label_AFA2:;
     /* $AFA2: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0755); FLAG_NZ(g_cpu.A);
 label_AFA5:;
     /* $AFA5: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x50; g_cpu.C=(g_cpu.A>=0x50)?1:0; FLAG_NZ(r&0xFF); }
 label_AFA7:;
-    /* $AFA7: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_AFFB;
+    /* $AFA7: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_AFFB; }
 label_AFA9:;
     /* $AFA9: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0785); FLAG_NZ(g_cpu.A);
 label_AFAC:;
-    /* $AFAC: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_AFFB;
+    /* $AFAC: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_AFFB; }
 label_AFAE:;
     /* $AFAE: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x06FF); FLAG_NZ(g_cpu.Y);
 label_AFB1:;
     /* $AFB1: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_AFB2:;
-    /* $AFB2: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_AFFB;
+    /* $AFB2: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_AFFB; }
 label_AFB4:;
     /* $AFB4: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_AFB5:;
     /* $AFB5: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x02; g_cpu.C=(g_cpu.Y>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_AFB7:;
-    /* $AFB7: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_AFBA;
+    /* $AFB7: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_AFBA; }
 label_AFB9:;
     /* $AFB9: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_AFBA:; /* ChkNearMid */
@@ -9476,7 +9298,7 @@ label_AFBA:; /* ChkNearMid */
 label_AFBD:;
     /* $AFBD: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x70; g_cpu.C=(g_cpu.A>=0x70)?1:0; FLAG_NZ(r&0xFF); }
 label_AFBF:;
-    /* $AFBF: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_AFC4;
+    /* $AFBF: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_AFC4; }
 label_AFC1:;
     /* $AFC1: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x06FF); FLAG_NZ(g_cpu.Y);
 label_AFC4:; /* ScrollScreen */
@@ -9540,7 +9362,7 @@ label_B007:;
 label_B009:;
     /* $B009: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_B00A:;
-    /* $B00A: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B013;
+    /* $B00A: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B013; }
 label_B00C:;
     /* $B00C: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B00D:;
@@ -9548,7 +9370,7 @@ label_B00D:;
 label_B00F:;
     /* $B00F: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x20; FLAG_NZ(g_cpu.A);
 label_B011:;
-    /* $B011: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B02E;
+    /* $B011: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B02E; }
 label_B013:; /* KeepOnscr */
     /* $B013: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read_hooked(0xB013, (0x071C + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_B016:;
@@ -9568,7 +9390,7 @@ label_B023:;
 label_B025:;
     /* $B025: D9 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0xB036 + g_cpu.Y) & 0xFFFF); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B028:;
-    /* $B028: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B02E;
+    /* $B028: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B02E; }
 label_B02A:;
     /* $B02A: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B02C:;
@@ -9628,15 +9450,15 @@ label_B68B:;
 label_B68D:;
     /* $B68D: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_B68E:;
-    /* $B68E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B6F3;
+    /* $B68E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B6F3; }
 label_B690:;
     /* $B690: B4 */ maybe_trigger_vblank(4); g_cpu.Y = nes_read((0x24 + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.Y);
 label_B692:;
-    /* $B692: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B6F2;
+    /* $B692: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B6F2; }
 label_B694:;
     /* $B694: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B695:;
-    /* $B695: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B6BE;
+    /* $B695: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B6BE; }
 label_B697:;
     /* $B697: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x86); FLAG_NZ(g_cpu.A);
 label_B699:;
@@ -9712,7 +9534,7 @@ label_B6E1:;
 label_B6E4:;
     /* $B6E4: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0xCC; FLAG_NZ(g_cpu.A);
 label_B6E6:;
-    /* $B6E6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B6EE;
+    /* $B6E6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B6EE; }
 label_B6E8:;
     /* $B6E8: 20 */ maybe_trigger_vblank(6); func_D6D9();
 label_B6EB:;
@@ -9748,11 +9570,11 @@ label_B700:;
 label_B702:;
     /* $B702: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xF8; g_cpu.C=(g_cpu.A>=0xF8)?1:0; FLAG_NZ(r&0xFF); }
 label_B704:;
-    /* $B704: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B732;
+    /* $B704: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B732; }
 label_B706:;
     /* $B706: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0792); FLAG_NZ(g_cpu.A);
 label_B709:;
-    /* $B709: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B74A;
+    /* $B709: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B74A; }
 label_B70B:; /* SetupBubble */
     /* $B70B: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x00; FLAG_NZ(g_cpu.Y);
 label_B70D:;
@@ -9760,7 +9582,7 @@ label_B70D:;
 label_B70F:;
     /* $B70F: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_B710:;
-    /* $B710: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B714;
+    /* $B710: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B714; }
 label_B712:;
     /* $B712: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x08; FLAG_NZ(g_cpu.Y);
 label_B714:; /* PosBubl */
@@ -9810,7 +9632,7 @@ label_B740:;
 label_B742:;
     /* $B742: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x20; g_cpu.C=(g_cpu.A>=0x20)?1:0; FLAG_NZ(r&0xFF); }
 label_B744:;
-    /* $B744: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B748;
+    /* $B744: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B748; }
 label_B746:;
     /* $B746: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0xF8; FLAG_NZ(g_cpu.A);
 label_B748:; /* Y_Bubl */
@@ -9844,7 +9666,7 @@ label_BC39:;
 label_BC3C:;
     /* $BC3C: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x02FB + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_BC3F:;
-    /* $BC3F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BC46;
+    /* $BC3F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BC46; }
 label_BC41:;
     /* $BC41: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x24; FLAG_NZ(g_cpu.A);
 label_BC43:;
@@ -9926,7 +9748,7 @@ label_BF1C:;
 label_BF1D:;
     /* $BF1D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x08; g_cpu.C=(g_cpu.A>=0x08)?1:0; FLAG_NZ(r&0xFF); }
 label_BF1F:;
-    /* $BF1F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BF23;
+    /* $BF1F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BF23; }
 label_BF21:;
     /* $BF21: 09 */ maybe_trigger_vblank(2); g_cpu.A |= 0xF0; FLAG_NZ(g_cpu.A);
 label_BF23:; /* SaveXSpd */
@@ -9936,7 +9758,7 @@ label_BF25:;
 label_BF27:;
     /* $BF27: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x00; g_cpu.C=(g_cpu.A>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_BF29:;
-    /* $BF29: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_BF2C;
+    /* $BF29: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_BF2C; }
 label_BF2B:;
     /* $BF2B: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_BF2C:; /* UseAdder */
@@ -9990,7 +9812,7 @@ void func_BAC3_b0(void) { /* ProcHammerObj */
 label_BAC3:; /* ProcHammerObj */
     /* $BAC3: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0747); FLAG_NZ(g_cpu.A);
 label_BAC6:;
-    /* $BAC6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BB2B;
+    /* $BAC6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_BB2B; }
 label_BAC8:;
     /* $BAC8: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x2A + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_BACA:;
@@ -10000,9 +9822,9 @@ label_BACC:;
 label_BACF:;
     /* $BACF: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_BAD1:;
-    /* $BAD1: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BAF3;
+    /* $BAD1: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BAF3; }
 label_BAD3:;
-    /* $BAD3: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_BB09;
+    /* $BAD3: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(2); goto label_BB09; }
 label_BAD5:;
     /* $BAD5: 8A */ maybe_trigger_vblank(2); g_cpu.A = g_cpu.X; FLAG_NZ(g_cpu.A);
 label_BAD6:;
@@ -10082,7 +9904,7 @@ label_BB22:;
 label_BB24:;
     /* $BB24: 95 */ maybe_trigger_vblank(4); nes_write((0xC2 + g_cpu.X) & 0xFF, g_cpu.A);
 label_BB26:;
-    /* $BB26: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BB2B;
+    /* $BB26: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BB2B; }
 label_BB28:; /* RunAllH */
     /* $BB28: 20 */ maybe_trigger_vblank(6); func_D7C4();
 label_BB2B:; /* RunHSubs */
@@ -10108,7 +9930,7 @@ void func_BBF4_b0(void) { /* MiscLoopBack */
 label_BBF4:; /* MiscLoopBack */
     /* $BBF4: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_BBF5:;
-    /* $BBF5: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { call_by_address(0xBB98); return; }
+    /* $BBF5: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); call_by_address(0xBB98); return; }
 label_BBF7:;
     /* $BBF7: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -10136,7 +9958,7 @@ label_BFE2:;
 label_BFE4:;
     /* $BFE4: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x9F + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_BFE6:;
-    /* $BFE6: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_BFE9;
+    /* $BFE6: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_BFE9; }
 label_BFE8:;
     /* $BFE8: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_BFE9:; /* AlterYP */
@@ -10168,13 +9990,13 @@ label_C002:;
 label_C004:;
     /* $C004: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x02); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_C006:;
-    /* $C006: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_C018;
+    /* $C006: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_C018; }
 label_C008:;
     /* $C008: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0433 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_C00B:;
     /* $C00B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x80; g_cpu.C=(g_cpu.A>=0x80)?1:0; FLAG_NZ(r&0xFF); }
 label_C00D:;
-    /* $C00D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_C018;
+    /* $C00D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_C018; }
 label_C00F:;
     /* $C00F: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x02); FLAG_NZ(g_cpu.A);
 label_C011:;
@@ -10186,7 +10008,7 @@ label_C015:;
 label_C018:; /* ChkUpM */
     /* $C018: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
 label_C019:;
-    /* $C019: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_C046;
+    /* $C019: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_C046; }
 label_C01B:;
     /* $C01B: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x02); FLAG_NZ(g_cpu.A);
 label_C01D:;
@@ -10214,13 +10036,13 @@ label_C030:;
 label_C032:;
     /* $C032: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x07); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_C034:;
-    /* $C034: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_C046;
+    /* $C034: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_C046; }
 label_C036:;
     /* $C036: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0433 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_C039:;
     /* $C039: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x80; g_cpu.C=(g_cpu.A>=0x80)?1:0; FLAG_NZ(r&0xFF); }
 label_C03B:;
-    /* $C03B: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_C046;
+    /* $C03B: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_C046; }
 label_C03D:;
     /* $C03D: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x07); FLAG_NZ(g_cpu.A);
 label_C03F:;
@@ -10246,13 +10068,13 @@ label_BA1A:; /* Chk_BB */
 label_BA1C:;
     /* $BA1C: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x33; g_cpu.C=(g_cpu.A>=0x33)?1:0; FLAG_NZ(r&0xFF); }
 label_BA1E:;
-    /* $BA1E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BA2D;
+    /* $BA1E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BA2D; }
 label_BA20:;
     /* $BA20: 20 */ maybe_trigger_vblank(6); func_D67A();
 label_BA23:;
     /* $BA23: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0F + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_BA25:;
-    /* $BA25: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BA2D;
+    /* $BA25: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BA2D; }
 label_BA27:;
     /* $BA27: 20 */ maybe_trigger_vblank(6); func_F1AF();
 label_BA2A:;
@@ -10260,7 +10082,7 @@ label_BA2A:;
 label_BA2D:; /* Next3Slt */
     /* $BA2D: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_BA2E:;
-    /* $BA2E: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { call_by_address(0xB9C3); return; }
+    /* $BA2E: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(2); call_by_address(0xB9C3); return; }
 label_BA30:; /* ExCannon */
     /* $BA30: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -10276,7 +10098,7 @@ void func_BA2D_b0(void) { /* Next3Slt */
 label_BA2D:; /* Next3Slt */
     /* $BA2D: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_BA2E:;
-    /* $BA2E: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { call_by_address(0xB9C3); return; }
+    /* $BA2E: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(2); call_by_address(0xB9C3); return; }
 label_BA30:; /* ExCannon */
     /* $BA30: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -10292,11 +10114,11 @@ void func_BA33_b0(void) { /* BulletBillHandler */
 label_BA33:; /* BulletBillHandler */
     /* $BA33: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0747); FLAG_NZ(g_cpu.A);
 label_BA36:;
-    /* $BA36: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BA76;
+    /* $BA36: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BA76; }
 label_BA38:;
     /* $BA38: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x1E + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_BA3A:;
-    /* $BA3A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BA6A;
+    /* $BA3A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BA6A; }
 label_BA3C:;
     /* $BA3C: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read_hooked(0xBA3C, 0x03D1); FLAG_NZ(g_cpu.A);
 label_BA3F:;
@@ -10304,13 +10126,13 @@ label_BA3F:;
 label_BA41:;
     /* $BA41: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0C; g_cpu.C=(g_cpu.A>=0x0C)?1:0; FLAG_NZ(r&0xFF); }
 label_BA43:;
-    /* $BA43: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BA85;
+    /* $BA43: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BA85; }
 label_BA45:;
     /* $BA45: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x01; FLAG_NZ(g_cpu.Y);
 label_BA47:;
     /* $BA47: 20 */ maybe_trigger_vblank(6); func_E143();
 label_BA4A:;
-    /* $BA4A: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_BA4D;
+    /* $BA4A: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_BA4D; }
 label_BA4C:;
     /* $BA4C: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_BA4D:; /* SetupBB */
@@ -10328,7 +10150,7 @@ label_BA57:;
 label_BA59:;
     /* $BA59: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x50; g_cpu.C=(g_cpu.A>=0x50)?1:0; FLAG_NZ(r&0xFF); }
 label_BA5B:;
-    /* $BA5B: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BA85;
+    /* $BA5B: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BA85; }
 label_BA5D:;
     /* $BA5D: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x01; FLAG_NZ(g_cpu.A);
 label_BA5F:;
@@ -10346,7 +10168,7 @@ label_BA6A:; /* ChkDSte */
 label_BA6C:;
     /* $BA6C: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x20; FLAG_NZ(g_cpu.A);
 label_BA6E:;
-    /* $BA6E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BA73;
+    /* $BA6E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BA73; }
 label_BA70:;
     /* $BA70: 20 */ maybe_trigger_vblank(6); func_BF63_b0();
 label_BA73:; /* BBFly */
@@ -10422,7 +10244,7 @@ label_8F5F:; /* DigitsMathRoutine */
 label_8F62:;
     /* $8F62: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x00; g_cpu.C=(g_cpu.A>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_8F64:;
-    /* $8F64: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8F7C;
+    /* $8F64: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8F7C; }
 label_8F66:;
     /* $8F66: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x05; FLAG_NZ(g_cpu.X);
 label_8F68:; /* AddModLoop */
@@ -10432,11 +10254,11 @@ label_8F6B:;
 label_8F6C:;
     /* $8F6C: 79 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0x07D7 + g_cpu.Y) & 0xFFFF); uint16_t r=g_cpu.A+m+g_cpu.C; FLAG_NZC_ADD(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_8F6F:;
-    /* $8F6F: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_8F87;
+    /* $8F6F: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_8F87; }
 label_8F71:;
     /* $8F71: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0A; g_cpu.C=(g_cpu.A>=0x0A)?1:0; FLAG_NZ(r&0xFF); }
 label_8F73:;
-    /* $8F73: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8F8E;
+    /* $8F73: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8F8E; }
 label_8F75:; /* StoreNewD */
     /* $8F75: 99 */ maybe_trigger_vblank(5); nes_write((0x07D7 + g_cpu.Y) & 0xFFFF, g_cpu.A);
 label_8F78:;
@@ -10445,7 +10267,7 @@ label_8F79:;
     /* $8F79: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8F7A:;
     /* $8F7A: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -10461,7 +10283,7 @@ label_8F83:;
     /* $8F83: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8F84:;
     /* $8F84: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -10479,7 +10301,7 @@ label_8F8A:;
     /* $8F8A: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x09; FLAG_NZ(g_cpu.A);
 label_8F8C:;
     /* $8F8C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -10523,7 +10345,7 @@ label_8F14:;
 label_8F16:;
     /* $8F16: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_8F18:;
-    /* $8F18: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8F5E;
+    /* $8F18: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8F5E; }
 label_8F1A:;
     /* $8F1A: 48 */ maybe_trigger_vblank(3); g_ram[0x100 + g_cpu.S] = g_cpu.A; g_cpu.S--;
 label_8F1B:;
@@ -10537,7 +10359,7 @@ label_8F20:;
 label_8F22:;
     /* $8F22: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x00; g_cpu.C=(g_cpu.Y>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_8F24:;
-    /* $8F24: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8F28;
+    /* $8F24: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8F28; }
 label_8F26:;
     /* $8F26: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x22; FLAG_NZ(g_cpu.A);
 label_8F28:; /* SetupNums */
@@ -10580,7 +10402,7 @@ label_8F4F:;
     /* $8F4F: C6 */ maybe_trigger_vblank(5); { uint16_t a=0x03; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_8F51:;
     /* $8F51: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -10630,7 +10452,7 @@ label_92DE:;
 label_92E1:;
     /* $92E1: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x0F; FLAG_NZ(g_cpu.A);
 label_92E3:;
-    /* $92E3: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_92EB;
+    /* $92E3: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_92EB; }
 label_92E5:;
     /* $92E5: 8D */ maybe_trigger_vblank(4); nes_write(0x0726, g_cpu.A);
 label_92E8:;
@@ -10670,7 +10492,7 @@ label_8974:;
 label_8976:;
     /* $8976: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0720); FLAG_NZ(g_cpu.A);
 label_8979:;
-    /* $8979: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_897D;
+    /* $8979: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_897D; }
 label_897B:;
     /* $897B: 49 */ maybe_trigger_vblank(2); g_cpu.A ^= 0x04; FLAG_NZ(g_cpu.A);
 label_897D:; /* SetATHigh */
@@ -10733,7 +10555,7 @@ label_89B3:;
     /* $89B3: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x07; g_cpu.C=(g_cpu.X>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_89B5:;
     /* $89B5: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -10773,7 +10595,7 @@ label_83BA:;
     /* $83BA: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_874E_b0(); return;
 }
 
-static void func_83BD_b0_body(int _entry) { /* PlayerVictoryWalk */
+void func_83BD_b0_body(int _entry) { /* PlayerVictoryWalk */
     switch (_entry) {
         case 1: goto label_8434;
         case 2: goto label_8436;
@@ -10789,13 +10611,13 @@ label_83C1:;
 label_83C3:;
     /* $83C3: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x34); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_83C5:;
-    /* $83C5: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_83CD;
+    /* $83C5: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_83CD; }
 label_83C7:;
     /* $83C7: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x86); FLAG_NZ(g_cpu.A);
 label_83C9:;
     /* $83C9: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x60; g_cpu.C=(g_cpu.A>=0x60)?1:0; FLAG_NZ(r&0xFF); }
 label_83CB:;
-    /* $83CB: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_83D0;
+    /* $83CB: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_83D0; }
 label_83CD:; /* PerformWalk */
     /* $83CD: E6 */ maybe_trigger_vblank(5); { uint16_t a=0x35; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_83CF:;
@@ -10809,7 +10631,7 @@ label_83D4:;
 label_83D7:;
     /* $83D7: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x34); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_83D9:;
-    /* $83D9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_83F1;
+    /* $83D9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_83F1; }
 label_83DB:;
     /* $83DB: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0768); FLAG_NZ(g_cpu.A);
 label_83DE:;
@@ -10833,7 +10655,7 @@ label_83EF:;
 label_83F1:; /* ExitVWalk */
     /* $83F1: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x35); FLAG_NZ(g_cpu.A);
 label_83F3:;
-    /* $83F3: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_845D;
+    /* $83F3: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_845D; }
 label_83F5:;
     /* $83F5: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -10843,25 +10665,25 @@ label_83F5:;
 label_83F6:; /* PrintVictoryMessages */
     /* $83F6: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0749); FLAG_NZ(g_cpu.A);
 label_83F9:;
-    /* $83F9: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8443;
+    /* $83F9: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_8443; }
 label_83FB:;
     /* $83FB: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0719); FLAG_NZ(g_cpu.A);
 label_83FE:;
-    /* $83FE: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8418;
+    /* $83FE: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8418; }
 label_8400:;
     /* $8400: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x09; g_cpu.C=(g_cpu.A>=0x09)?1:0; FLAG_NZ(r&0xFF); }
 label_8402:;
-    /* $8402: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8443;
+    /* $8402: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8443; }
 label_8404:;
     /* $8404: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x075F); FLAG_NZ(g_cpu.Y);
 label_8407:;
     /* $8407: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x07; g_cpu.C=(g_cpu.Y>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_8409:;
-    /* $8409: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8414;
+    /* $8409: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8414; }
 label_840B:;
     /* $840B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_840D:;
-    /* $840D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8443;
+    /* $840D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8443; }
 label_840F:;
     /* $840F: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x01; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_8411:;
@@ -10869,19 +10691,19 @@ label_8411:;
 label_8414:; /* MRetainerMsg */
     /* $8414: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_8416:;
-    /* $8416: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8443;
+    /* $8416: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8443; }
 label_8418:; /* ThankPlayer */
     /* $8418: A8 */ maybe_trigger_vblank(2); g_cpu.Y = g_cpu.A; FLAG_NZ(g_cpu.Y);
 label_8419:;
-    /* $8419: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8423;
+    /* $8419: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8423; }
 label_841B:;
     /* $841B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0753); FLAG_NZ(g_cpu.A);
 label_841E:;
-    /* $841E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8434;
+    /* $841E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8434; }
 label_8420:;
     /* $8420: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8421:;
-    /* $8421: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8434;
+    /* $8421: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8434; }
 label_8423:; /* SecondPartMsg */
     /* $8423: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8424:;
@@ -10889,21 +10711,21 @@ label_8424:;
 label_8427:;
     /* $8427: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_8429:;
-    /* $8429: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8434;
+    /* $8429: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8434; }
 label_842B:;
     /* $842B: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_842C:;
     /* $842C: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x04; g_cpu.C=(g_cpu.Y>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_842E:;
-    /* $842E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8456;
+    /* $842E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8456; }
 label_8430:;
     /* $8430: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x03; g_cpu.C=(g_cpu.Y>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_8432:;
-    /* $8432: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8443;
+    /* $8432: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8443; }
 label_8434:; /* EvalForMusic */
     /* $8434: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x03; g_cpu.C=(g_cpu.Y>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_8436:;
-    /* $8436: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_843C;
+    /* $8436: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_843C; }
 label_8438:;
     /* $8438: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x04; FLAG_NZ(g_cpu.A);
 label_843A:;
@@ -10933,7 +10755,7 @@ label_8451:;
 label_8454:;
     /* $8454: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_8456:; /* SetEndTimer */
-    /* $8456: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8460;
+    /* $8456: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8460; }
 label_8458:;
     /* $8458: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x06; FLAG_NZ(g_cpu.A);
 label_845A:;
@@ -11005,25 +10827,25 @@ void func_83F6_b0(void) { /* PrintVictoryMessages */
 label_83F6:; /* PrintVictoryMessages */
     /* $83F6: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0749); FLAG_NZ(g_cpu.A);
 label_83F9:;
-    /* $83F9: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8443;
+    /* $83F9: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_8443; }
 label_83FB:;
     /* $83FB: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0719); FLAG_NZ(g_cpu.A);
 label_83FE:;
-    /* $83FE: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8418;
+    /* $83FE: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8418; }
 label_8400:;
     /* $8400: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x09; g_cpu.C=(g_cpu.A>=0x09)?1:0; FLAG_NZ(r&0xFF); }
 label_8402:;
-    /* $8402: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8443;
+    /* $8402: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8443; }
 label_8404:;
     /* $8404: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x075F); FLAG_NZ(g_cpu.Y);
 label_8407:;
     /* $8407: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x07; g_cpu.C=(g_cpu.Y>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_8409:;
-    /* $8409: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8414;
+    /* $8409: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8414; }
 label_840B:;
     /* $840B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_840D:;
-    /* $840D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8443;
+    /* $840D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8443; }
 label_840F:;
     /* $840F: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x01; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_8411:;
@@ -11031,19 +10853,19 @@ label_8411:;
 label_8414:; /* MRetainerMsg */
     /* $8414: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_8416:;
-    /* $8416: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8443;
+    /* $8416: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8443; }
 label_8418:; /* ThankPlayer */
     /* $8418: A8 */ maybe_trigger_vblank(2); g_cpu.Y = g_cpu.A; FLAG_NZ(g_cpu.Y);
 label_8419:;
-    /* $8419: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8423;
+    /* $8419: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8423; }
 label_841B:;
     /* $841B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0753); FLAG_NZ(g_cpu.A);
 label_841E:;
-    /* $841E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8434;
+    /* $841E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8434; }
 label_8420:;
     /* $8420: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8421:;
-    /* $8421: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8434;
+    /* $8421: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8434; }
 label_8423:; /* SecondPartMsg */
     /* $8423: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8424:;
@@ -11051,21 +10873,21 @@ label_8424:;
 label_8427:;
     /* $8427: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_8429:;
-    /* $8429: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8434;
+    /* $8429: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8434; }
 label_842B:;
     /* $842B: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_842C:;
     /* $842C: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x04; g_cpu.C=(g_cpu.Y>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_842E:;
-    /* $842E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8456;
+    /* $842E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8456; }
 label_8430:;
     /* $8430: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x03; g_cpu.C=(g_cpu.Y>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_8432:;
-    /* $8432: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8443;
+    /* $8432: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8443; }
 label_8434:; /* EvalForMusic */
     /* $8434: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x03; g_cpu.C=(g_cpu.Y>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_8436:;
-    /* $8436: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_843C;
+    /* $8436: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_843C; }
 label_8438:;
     /* $8438: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x04; FLAG_NZ(g_cpu.A);
 label_843A:;
@@ -11095,7 +10917,7 @@ label_8451:;
 label_8454:;
     /* $8454: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_8456:; /* SetEndTimer */
-    /* $8456: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8460;
+    /* $8456: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8460; }
 label_8458:;
     /* $8458: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x06; FLAG_NZ(g_cpu.A);
 label_845A:;
@@ -11110,20 +10932,20 @@ label_8460:; /* ExitMsgs */
     return;
 }
 
-static void func_8461_b0_body(int _entry) { /* PlayerEndWorld */
+void func_8461_b0_body(int _entry) { /* PlayerEndWorld */
     switch (_entry) {
         case 1: goto label_8486;
     }
 label_8461:; /* PlayerEndWorld */
     /* $8461: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x07A1); FLAG_NZ(g_cpu.A);
 label_8464:;
-    /* $8464: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8486;
+    /* $8464: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8486; }
 label_8466:;
     /* $8466: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x075F); FLAG_NZ(g_cpu.Y);
 label_8469:;
     /* $8469: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x07; g_cpu.C=(g_cpu.Y>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_846B:;
-    /* $846B: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8487;
+    /* $846B: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8487; }
 label_846D:;
     /* $846D: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_846F:;
@@ -11155,7 +10977,7 @@ label_848A:;
 label_848D:;
     /* $848D: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_848F:;
-    /* $848F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_849E;
+    /* $848F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_849E; }
 label_8491:;
     /* $8491: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x01; FLAG_NZ(g_cpu.A);
 label_8493:;
@@ -11217,11 +11039,11 @@ label_9282:; /* TransposePlayers */
 label_9283:;
     /* $9283: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x077A); FLAG_NZ(g_cpu.A);
 label_9286:;
-    /* $9286: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_92A9;
+    /* $9286: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_92A9; }
 label_9288:;
     /* $9288: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0761); FLAG_NZ(g_cpu.A);
 label_928B:;
-    /* $928B: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_92A9;
+    /* $928B: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_92A9; }
 label_928D:;
     /* $928D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0753); FLAG_NZ(g_cpu.A);
 label_9290:;
@@ -11246,7 +11068,7 @@ label_92A5:;
     /* $92A5: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_92A6:;
     /* $92A6: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -11310,7 +11132,7 @@ label_9C12:;
     return;
 }
 
-static void func_8808_b0_body(int _entry) { /* WriteGameText */
+void func_8808_b0_body(int _entry) { /* WriteGameText */
     switch (_entry) {
         case 1: goto label_8887;
         case 2: goto label_8846;
@@ -11324,17 +11146,17 @@ label_880A:;
 label_880B:;
     /* $880B: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x04; g_cpu.C=(g_cpu.Y>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_880D:;
-    /* $880D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_881B;
+    /* $880D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_881B; }
 label_880F:;
     /* $880F: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x08; g_cpu.C=(g_cpu.Y>=0x08)?1:0; FLAG_NZ(r&0xFF); }
 label_8811:;
-    /* $8811: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8815;
+    /* $8811: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8815; }
 label_8813:;
     /* $8813: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x08; FLAG_NZ(g_cpu.Y);
 label_8815:; /* Chk2Players */
     /* $8815: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x077A); FLAG_NZ(g_cpu.A);
 label_8818:;
-    /* $8818: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_881B;
+    /* $8818: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_881B; }
 label_881A:;
     /* $881A: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_881B:; /* LdGameText */
@@ -11346,7 +11168,7 @@ label_8820:; /* GameTextLoop */
 label_8823:;
     /* $8823: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xFF; g_cpu.C=(g_cpu.A>=0xFF)?1:0; FLAG_NZ(r&0xFF); }
 label_8825:;
-    /* $8825: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_882E;
+    /* $8825: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_882E; }
 label_8827:;
     /* $8827: 99 */ maybe_trigger_vblank(5); nes_write((0x0301 + g_cpu.Y) & 0xFFFF, g_cpu.A);
 label_882A:;
@@ -11355,7 +11177,7 @@ label_882B:;
     /* $882B: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_882C:;
     /* $882C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -11372,11 +11194,11 @@ label_8834:;
 label_8835:;
     /* $8835: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_8837:;
-    /* $8837: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8882;
+    /* $8837: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8882; }
 label_8839:;
     /* $8839: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_883A:;
-    /* $883A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_885F;
+    /* $883A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_885F; }
 label_883C:;
     /* $883C: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075A); FLAG_NZ(g_cpu.A);
 label_883F:;
@@ -11386,7 +11208,7 @@ label_8840:;
 label_8842:;
     /* $8842: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0A; g_cpu.C=(g_cpu.A>=0x0A)?1:0; FLAG_NZ(r&0xFF); }
 label_8844:;
-    /* $8844: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_884D;
+    /* $8844: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_884D; }
 label_8846:;
     /* $8846: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x0A; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_8848:;
@@ -11416,25 +11238,25 @@ label_885E:;
 label_885F:; /* CheckPlayerName */
     /* $885F: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x077A); FLAG_NZ(g_cpu.A);
 label_8862:;
-    /* $8862: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8881;
+    /* $8862: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8881; }
 label_8864:;
     /* $8864: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0753); FLAG_NZ(g_cpu.A);
 label_8867:;
     /* $8867: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8868:;
-    /* $8868: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8873;
+    /* $8868: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8873; }
 label_886A:;
     /* $886A: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0770); FLAG_NZ(g_cpu.Y);
 label_886D:;
     /* $886D: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x03; g_cpu.C=(g_cpu.Y>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_886F:;
-    /* $886F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8873;
+    /* $886F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8873; }
 label_8871:;
     /* $8871: 49 */ maybe_trigger_vblank(2); g_cpu.A ^= 0x01; FLAG_NZ(g_cpu.A);
 label_8873:; /* ChkLuigi */
     /* $8873: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_8874:;
-    /* $8874: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8881;
+    /* $8874: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8881; }
 label_8876:;
     /* $8876: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x04; FLAG_NZ(g_cpu.Y);
 label_8878:; /* NameLoop */
@@ -11445,7 +11267,7 @@ label_887E:;
     /* $887E: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_887F:;
     /* $887F: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -11485,7 +11307,7 @@ label_8894:;
     /* $8894: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x0C; g_cpu.C=(g_cpu.Y>=0x0C)?1:0; FLAG_NZ(r&0xFF); }
 label_8896:;
     /* $8896: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -11542,7 +11364,7 @@ label_BC39:;
 label_BC3C:;
     /* $BC3C: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x02FB + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_BC3F:;
-    /* $BC3F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BC46;
+    /* $BC3F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BC46; }
 label_BC41:;
     /* $BC41: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x24; FLAG_NZ(g_cpu.A);
 label_BC43:;
@@ -11616,7 +11438,7 @@ label_BC39:;
 label_BC3C:;
     /* $BC3C: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x02FB + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_BC3F:;
-    /* $BC3F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BC46;
+    /* $BC3F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BC46; }
 label_BC41:;
     /* $BC41: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x24; FLAG_NZ(g_cpu.A);
 label_BC43:;
@@ -11714,7 +11536,7 @@ label_B933:;
 label_B935:;
     /* $B935: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0398); FLAG_NZ(g_cpu.Y);
 label_B938:;
-    /* $B938: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B93D;
+    /* $B938: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B93D; }
 label_B93A:;
     /* $B93A: 8D */ maybe_trigger_vblank(4); nes_write(0x039D, g_cpu.A);
 label_B93D:; /* NextVO */
@@ -11746,7 +11568,7 @@ label_B70D:;
 label_B70F:;
     /* $B70F: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_B710:;
-    /* $B710: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B714;
+    /* $B710: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B714; }
 label_B712:;
     /* $B712: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x08; FLAG_NZ(g_cpu.Y);
 label_B714:; /* PosBubl */
@@ -11796,7 +11618,7 @@ label_B740:;
 label_B742:;
     /* $B742: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x20; g_cpu.C=(g_cpu.A>=0x20)?1:0; FLAG_NZ(r&0xFF); }
 label_B744:;
-    /* $B744: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B748;
+    /* $B744: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B748; }
 label_B746:;
     /* $B746: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0xF8; FLAG_NZ(g_cpu.A);
 label_B748:; /* Y_Bubl */
@@ -11836,7 +11658,7 @@ void func_B20B_b0(void) { /* ChgAreaPipe */
 label_B20B:; /* ChgAreaPipe */
     /* $B20B: CE */ maybe_trigger_vblank(6); { uint16_t a=0x06DE; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B20E:;
-    /* $B20E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B21E;
+    /* $B20E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B21E; }
 label_B210:;
     /* $B210: 8C */ maybe_trigger_vblank(4); nes_write(0x0752, g_cpu.Y);
 label_B213:; /* ChgAreaMode */
@@ -11896,7 +11718,7 @@ void func_B255_b0(void) { /* InitChangeSize */
 label_B255:; /* InitChangeSize */
     /* $B255: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x070B); FLAG_NZ(g_cpu.Y);
 label_B258:;
-    /* $B258: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B268;
+    /* $B258: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B268; }
 label_B25A:;
     /* $B25A: 8C */ maybe_trigger_vblank(4); nes_write(0x070D, g_cpu.Y);
 label_B25D:;
@@ -11944,7 +11766,7 @@ label_B450:; /* PlayerPhysicsSub */
 label_B452:;
     /* $B452: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_B454:;
-    /* $B454: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B479;
+    /* $B454: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B479; }
 label_B456:;
     /* $B456: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x00; FLAG_NZ(g_cpu.Y);
 label_B458:;
@@ -11952,13 +11774,13 @@ label_B458:;
 label_B45A:;
     /* $B45A: 2D */ maybe_trigger_vblank(4); g_cpu.A &= nes_read(0x0490); FLAG_NZ(g_cpu.A);
 label_B45D:;
-    /* $B45D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B465;
+    /* $B45D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B465; }
 label_B45F:;
     /* $B45F: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B460:;
     /* $B460: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x08; FLAG_NZ(g_cpu.A);
 label_B462:;
-    /* $B462: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B465;
+    /* $B462: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B465; }
 label_B464:;
     /* $B464: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B465:; /* ProcClimb */
@@ -11972,7 +11794,7 @@ label_B46D:;
 label_B470:;
     /* $B470: 86 */ maybe_trigger_vblank(3); nes_write(0x9F, g_cpu.X);
 label_B472:;
-    /* $B472: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B475;
+    /* $B472: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B475; }
 label_B474:;
     /* $B474: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_B475:; /* SetCAnim */
@@ -11986,28 +11808,28 @@ label_B478:;
 label_B479:; /* CheckForJumping */
     /* $B479: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x070E); FLAG_NZ(g_cpu.A);
 label_B47C:;
-    /* $B47C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B488;
+    /* $B47C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B488; }
 label_B47E:;
     /* $B47E: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0A); FLAG_NZ(g_cpu.A);
 label_B480:;
     /* $B480: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x80; FLAG_NZ(g_cpu.A);
 label_B482:;
-    /* $B482: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B488;
+    /* $B482: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B488; }
 label_B484:;
     /* $B484: 25 */ maybe_trigger_vblank(3); g_cpu.A &= nes_read(0x0D); FLAG_NZ(g_cpu.A);
 label_B486:;
-    /* $B486: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B48B;
+    /* $B486: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B48B; }
 label_B488:; /* NoJump */
     /* $B488: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_B51C_b0(); return;
 label_B48B:; /* ProcJumping */
     /* $B48B: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x1D); FLAG_NZ(g_cpu.A);
 label_B48D:;
-    /* $B48D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B4A0;
+    /* $B48D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B4A0; }
 label_B48F:;
     /* $B48F: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0704); FLAG_NZ(g_cpu.A);
 label_B492:;
     /* $B492: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -12016,11 +11838,11 @@ label_B492:;
 label_B494:;
     /* $B494: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0782); FLAG_NZ(g_cpu.A);
 label_B497:;
-    /* $B497: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B4A0;
+    /* $B497: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B4A0; }
 label_B499:;
     /* $B499: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x9F); FLAG_NZ(g_cpu.A);
 label_B49B:;
-    /* $B49B: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_B4A0;
+    /* $B49B: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_B4A0; }
 label_B49D:;
     /* $B49D: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_B51C_b0(); return;
 label_B4A0:; /* InitJS */
@@ -12050,25 +11872,25 @@ label_B4BB:;
 label_B4BE:;
     /* $B4BE: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x09; g_cpu.C=(g_cpu.A>=0x09)?1:0; FLAG_NZ(r&0xFF); }
 label_B4C0:;
-    /* $B4C0: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B4D2;
+    /* $B4C0: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B4D2; }
 label_B4C2:;
     /* $B4C2: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B4C3:;
     /* $B4C3: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x10; g_cpu.C=(g_cpu.A>=0x10)?1:0; FLAG_NZ(r&0xFF); }
 label_B4C5:;
-    /* $B4C5: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B4D2;
+    /* $B4C5: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B4D2; }
 label_B4C7:;
     /* $B4C7: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B4C8:;
     /* $B4C8: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x19; g_cpu.C=(g_cpu.A>=0x19)?1:0; FLAG_NZ(r&0xFF); }
 label_B4CA:;
-    /* $B4CA: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B4D2;
+    /* $B4CA: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B4D2; }
 label_B4CC:;
     /* $B4CC: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B4CD:;
     /* $B4CD: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x1C; g_cpu.C=(g_cpu.A>=0x1C)?1:0; FLAG_NZ(r&0xFF); }
 label_B4CF:;
-    /* $B4CF: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B4D2;
+    /* $B4CF: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B4D2; }
 label_B4D1:;
     /* $B4D1: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B4D2:; /* ChkWtr */
@@ -12078,13 +11900,13 @@ label_B4D4:;
 label_B4D7:;
     /* $B4D7: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0704); FLAG_NZ(g_cpu.A);
 label_B4DA:;
-    /* $B4DA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B4E4;
+    /* $B4DA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B4E4; }
 label_B4DC:;
     /* $B4DC: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x05; FLAG_NZ(g_cpu.Y);
 label_B4DE:;
     /* $B4DE: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x047D); FLAG_NZ(g_cpu.A);
 label_B4E1:;
-    /* $B4E1: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B4E4;
+    /* $B4E1: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B4E4; }
 label_B4E3:;
     /* $B4E3: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B4E4:; /* GetYPhy */
@@ -12106,7 +11928,7 @@ label_B4F9:;
 label_B4FB:;
     /* $B4FB: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0704); FLAG_NZ(g_cpu.A);
 label_B4FE:;
-    /* $B4FE: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B511;
+    /* $B4FE: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B511; }
 label_B500:;
     /* $B500: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x04; FLAG_NZ(g_cpu.A);
 label_B502:;
@@ -12116,7 +11938,7 @@ label_B504:;
 label_B506:;
     /* $B506: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x14; g_cpu.C=(g_cpu.A>=0x14)?1:0; FLAG_NZ(r&0xFF); }
 label_B508:;
-    /* $B508: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B51C;
+    /* $B508: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B51C; }
 label_B50A:;
     /* $B50A: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B50C:;
@@ -12128,7 +11950,7 @@ label_B511:; /* PJumpSnd */
 label_B513:;
     /* $B513: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0754); FLAG_NZ(g_cpu.Y);
 label_B516:;
-    /* $B516: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B51A;
+    /* $B516: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B51A; }
 label_B518:;
     /* $B518: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x80; FLAG_NZ(g_cpu.A);
 label_B51A:; /* SJumpSnd */
@@ -12140,21 +11962,21 @@ label_B51E:;
 label_B520:;
     /* $B520: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x1D); FLAG_NZ(g_cpu.A);
 label_B522:;
-    /* $B522: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B52D;
+    /* $B522: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B52D; }
 label_B524:;
     /* $B524: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0700); FLAG_NZ(g_cpu.A);
 label_B527:;
     /* $B527: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x19; g_cpu.C=(g_cpu.A>=0x19)?1:0; FLAG_NZ(r&0xFF); }
 label_B529:;
-    /* $B529: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B55E;
+    /* $B529: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B55E; }
 label_B52B:;
-    /* $B52B: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B545;
+    /* $B52B: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B545; }
 label_B52D:; /* ProcPRun */
     /* $B52D: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B52E:;
     /* $B52E: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_B531:;
-    /* $B531: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B545;
+    /* $B531: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B545; }
 label_B533:;
     /* $B533: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B534:;
@@ -12162,17 +11984,17 @@ label_B534:;
 label_B536:;
     /* $B536: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x45); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B538:;
-    /* $B538: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B545;
+    /* $B538: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B545; }
 label_B53A:;
     /* $B53A: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0A); FLAG_NZ(g_cpu.A);
 label_B53C:;
     /* $B53C: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_B53E:;
-    /* $B53E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B559;
+    /* $B53E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B559; }
 label_B540:;
     /* $B540: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0783); FLAG_NZ(g_cpu.A);
 label_B543:;
-    /* $B543: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B55E;
+    /* $B543: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B55E; }
 label_B545:; /* ChkRFast */
     /* $B545: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B546:;
@@ -12180,13 +12002,13 @@ label_B546:;
 label_B548:;
     /* $B548: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0703); FLAG_NZ(g_cpu.A);
 label_B54B:;
-    /* $B54B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B554;
+    /* $B54B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B554; }
 label_B54D:;
     /* $B54D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0700); FLAG_NZ(g_cpu.A);
 label_B550:;
     /* $B550: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x21; g_cpu.C=(g_cpu.A>=0x21)?1:0; FLAG_NZ(r&0xFF); }
 label_B552:;
-    /* $B552: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B55E;
+    /* $B552: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B55E; }
 label_B554:; /* FastXSp */
     /* $B554: E6 */ maybe_trigger_vblank(5); { uint16_t a=0x00; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B556:;
@@ -12204,7 +12026,7 @@ label_B564:;
 label_B566:;
     /* $B566: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_B568:;
-    /* $B568: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B56C;
+    /* $B568: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B56C; }
 label_B56A:;
     /* $B56A: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x03; FLAG_NZ(g_cpu.Y);
 label_B56C:; /* GetXPhy2 */
@@ -12226,7 +12048,7 @@ label_B57F:;
 label_B581:;
     /* $B581: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x45); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B583:;
-    /* $B583: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B58B;
+    /* $B583: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B58B; }
 label_B585:;
     /* $B585: 0E */ maybe_trigger_vblank(6); { uint16_t a=0x0702; uint8_t v=nes_read(a); g_cpu.C=(v>>7)&1; v=(v<<1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B588:;
@@ -12248,7 +12070,7 @@ label_B35A:; /* OnGroundStateSub */
 label_B35D:;
     /* $B35D: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0C); FLAG_NZ(g_cpu.A);
 label_B35F:;
-    /* $B35F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B363;
+    /* $B35F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B363; }
 label_B361:;
     /* $B361: 85 */ maybe_trigger_vblank(3); nes_write(0x33, g_cpu.A);
 label_B363:; /* GndMove */
@@ -12272,7 +12094,7 @@ void func_B376_b0(void) { /* JumpSwimSub */
 label_B376:; /* JumpSwimSub */
     /* $B376: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x9F); FLAG_NZ(g_cpu.Y);
 label_B378:;
-    /* $B378: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_B38D;
+    /* $B378: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_B38D; }
 label_B37A:;
     /* $B37A: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0A); FLAG_NZ(g_cpu.A);
 label_B37C:;
@@ -12280,7 +12102,7 @@ label_B37C:;
 label_B37E:;
     /* $B37E: 25 */ maybe_trigger_vblank(3); g_cpu.A &= nes_read(0x0D); FLAG_NZ(g_cpu.A);
 label_B380:;
-    /* $B380: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B393;
+    /* $B380: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B393; }
 label_B382:;
     /* $B382: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0708); FLAG_NZ(g_cpu.A);
 label_B385:;
@@ -12290,7 +12112,7 @@ label_B386:;
 label_B388:;
     /* $B388: CD */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x0706); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B38B:;
-    /* $B38B: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B393;
+    /* $B38B: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B393; }
 label_B38D:; /* DumpFall */
     /* $B38D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x070A); FLAG_NZ(g_cpu.A);
 label_B390:;
@@ -12298,7 +12120,7 @@ label_B390:;
 label_B393:; /* ProcSwim */
     /* $B393: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0704); FLAG_NZ(g_cpu.A);
 label_B396:;
-    /* $B396: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B3AC;
+    /* $B396: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B3AC; }
 label_B398:;
     /* $B398: 20 */ maybe_trigger_vblank(6); func_B58F_b0();
 label_B39B:;
@@ -12306,7 +12128,7 @@ label_B39B:;
 label_B39D:;
     /* $B39D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x14; g_cpu.C=(g_cpu.A>=0x14)?1:0; FLAG_NZ(r&0xFF); }
 label_B39F:;
-    /* $B39F: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B3A6;
+    /* $B39F: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B3A6; }
 label_B3A1:;
     /* $B3A1: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x18; FLAG_NZ(g_cpu.A);
 label_B3A3:;
@@ -12314,13 +12136,13 @@ label_B3A3:;
 label_B3A6:; /* LRWater */
     /* $B3A6: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0C); FLAG_NZ(g_cpu.A);
 label_B3A8:;
-    /* $B3A8: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B3AC;
+    /* $B3A8: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B3AC; }
 label_B3AA:;
     /* $B3AA: 85 */ maybe_trigger_vblank(3); nes_write(0x33, g_cpu.A);
 label_B3AC:; /* LRAir */
     /* $B3AC: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0C); FLAG_NZ(g_cpu.A);
 label_B3AE:;
-    /* $B3AE: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B3B3;
+    /* $B3AE: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B3B3; }
 label_B3B0:;
     /* $B3B0: 20 */ maybe_trigger_vblank(6); func_B5CC_b0();
 label_B3B3:; /* JSMove */
@@ -12332,7 +12154,7 @@ label_B3B9:;
 label_B3BB:;
     /* $B3BB: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0B; g_cpu.C=(g_cpu.A>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_B3BD:;
-    /* $B3BD: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B3C4;
+    /* $B3BD: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B3C4; }
 label_B3BF:;
     /* $B3BF: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x28; FLAG_NZ(g_cpu.A);
 label_B3C1:;
@@ -12370,7 +12192,7 @@ label_B3D9:;
 label_B3DB:;
     /* $B3DB: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x9F); FLAG_NZ(g_cpu.A);
 label_B3DD:;
-    /* $B3DD: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_B3E0;
+    /* $B3DD: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_B3E0; }
 label_B3DF:;
     /* $B3DF: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B3E0:; /* MoveOnVine */
@@ -12390,11 +12212,11 @@ label_B3EC:;
 label_B3EE:;
     /* $B3EE: 2D */ maybe_trigger_vblank(4); g_cpu.A &= nes_read(0x0490); FLAG_NZ(g_cpu.A);
 label_B3F1:;
-    /* $B3F1: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B420;
+    /* $B3F1: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_B420; }
 label_B3F3:;
     /* $B3F3: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0789); FLAG_NZ(g_cpu.Y);
 label_B3F6:;
-    /* $B3F6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B41F;
+    /* $B3F6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_B41F; }
 label_B3F8:;
     /* $B3F8: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x18; FLAG_NZ(g_cpu.Y);
 label_B3FA:;
@@ -12406,7 +12228,7 @@ label_B3FF:;
 label_B401:;
     /* $B401: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_B402:;
-    /* $B402: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B406;
+    /* $B402: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B406; }
 label_B404:;
     /* $B404: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_B405:;
@@ -12414,7 +12236,7 @@ label_B405:;
 label_B406:; /* ClimbFD */
     /* $B406: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B407:;
-    /* $B407: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B40A;
+    /* $B407: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B40A; }
 label_B409:;
     /* $B409: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_B40A:; /* CSetFDir */
@@ -12468,7 +12290,7 @@ label_B007:;
 label_B009:;
     /* $B009: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_B00A:;
-    /* $B00A: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B013;
+    /* $B00A: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B013; }
 label_B00C:;
     /* $B00C: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B00D:;
@@ -12476,7 +12298,7 @@ label_B00D:;
 label_B00F:;
     /* $B00F: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x20; FLAG_NZ(g_cpu.A);
 label_B011:;
-    /* $B011: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B02E;
+    /* $B011: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B02E; }
 label_B013:; /* KeepOnscr */
     /* $B013: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read_hooked(0xB013, (0x071C + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_B016:;
@@ -12496,7 +12318,7 @@ label_B023:;
 label_B025:;
     /* $B025: D9 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0xB036 + g_cpu.Y) & 0xFFFF); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B028:;
-    /* $B028: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B02E;
+    /* $B028: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B02E; }
 label_B02A:;
     /* $B02A: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B02C:;
@@ -12526,7 +12348,7 @@ label_BCF0:;
 label_BCF3:;
     /* $BCF3: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0754); FLAG_NZ(g_cpu.Y);
 label_BCF6:;
-    /* $BCF6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BCFA;
+    /* $BCF6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BCFA; }
 label_BCF8:;
     /* $BCF8: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x12; FLAG_NZ(g_cpu.A);
 label_BCFA:; /* DBlockSte */
@@ -12554,11 +12376,11 @@ label_BD12:;
 label_BD14:;
     /* $BD14: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0754); FLAG_NZ(g_cpu.Y);
 label_BD17:;
-    /* $BD17: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BD1A;
+    /* $BD17: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BD1A; }
 label_BD19:;
     /* $BD19: 98 */ maybe_trigger_vblank(2); g_cpu.A = g_cpu.Y; FLAG_NZ(g_cpu.A);
 label_BD1A:; /* ChkBrick */
-    /* $BD1A: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BD41;
+    /* $BD1A: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BD41; }
 label_BD1C:;
     /* $BD1C: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x11; FLAG_NZ(g_cpu.Y);
 label_BD1E:;
@@ -12570,15 +12392,15 @@ label_BD22:;
 label_BD24:;
     /* $BD24: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x58; g_cpu.C=(g_cpu.Y>=0x58)?1:0; FLAG_NZ(r&0xFF); }
 label_BD26:;
-    /* $BD26: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BD2C;
+    /* $BD26: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BD2C; }
 label_BD28:;
     /* $BD28: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x5D; g_cpu.C=(g_cpu.Y>=0x5D)?1:0; FLAG_NZ(r&0xFF); }
 label_BD2A:;
-    /* $BD2A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BD41;
+    /* $BD2A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BD41; }
 label_BD2C:; /* StartBTmr */
     /* $BD2C: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x06BC); FLAG_NZ(g_cpu.A);
 label_BD2F:;
-    /* $BD2F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BD39;
+    /* $BD2F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BD39; }
 label_BD31:;
     /* $BD31: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x0B; FLAG_NZ(g_cpu.A);
 label_BD33:;
@@ -12588,7 +12410,7 @@ label_BD36:;
 label_BD39:; /* ContBTmr */
     /* $BD39: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x079D); FLAG_NZ(g_cpu.A);
 label_BD3C:;
-    /* $BD3C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BD40;
+    /* $BD3C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BD40; }
 label_BD3E:;
     /* $BD3E: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0xC4; FLAG_NZ(g_cpu.Y);
 label_BD40:; /* PutOldMT */
@@ -12616,11 +12438,11 @@ label_BD55:;
 label_BD57:;
     /* $BD57: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0714); FLAG_NZ(g_cpu.A);
 label_BD5A:;
-    /* $BD5A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BD61;
+    /* $BD5A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BD61; }
 label_BD5C:;
     /* $BD5C: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0754); FLAG_NZ(g_cpu.A);
 label_BD5F:;
-    /* $BD5F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BD62;
+    /* $BD5F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BD62; }
 label_BD61:; /* SmallBP */
     /* $BD61: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_BD62:; /* BigBP */
@@ -12638,7 +12460,7 @@ label_BD6C:;
 label_BD6E:;
     /* $BD6E: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x11; g_cpu.C=(g_cpu.Y>=0x11)?1:0; FLAG_NZ(r&0xFF); }
 label_BD70:;
-    /* $BD70: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BD78;
+    /* $BD70: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BD78; }
 label_BD72:;
     /* $BD72: 20 */ maybe_trigger_vblank(6); func_BE02_b0();
 label_BD75:;
@@ -12680,7 +12502,7 @@ label_BC0F:;
 label_BC12:;
     /* $BC12: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x64; g_cpu.C=(g_cpu.A>=0x64)?1:0; FLAG_NZ(r&0xFF); }
 label_BC14:;
-    /* $BC14: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BC22;
+    /* $BC14: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BC22; }
 label_BC16:;
     /* $BC16: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_BC18:;
@@ -12712,7 +12534,7 @@ label_BC39:;
 label_BC3C:;
     /* $BC3C: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x02FB + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_BC3F:;
-    /* $BC3F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BC46;
+    /* $BC3F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BC46; }
 label_BC41:;
     /* $BC41: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x24; FLAG_NZ(g_cpu.A);
 label_BC43:;
@@ -12738,27 +12560,27 @@ label_BC87:;
 label_BC89:;
     /* $BC89: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x23); FLAG_NZ(g_cpu.A);
 label_BC8B:;
-    /* $BC8B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BCEA;
+    /* $BC8B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BCEA; }
 label_BC8D:;
     /* $BC8D: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_BC8E:;
-    /* $BC8E: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BCB3;
+    /* $BC8E: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BCB3; }
 label_BC90:;
     /* $BC90: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0747); FLAG_NZ(g_cpu.A);
 label_BC93:;
-    /* $BC93: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BCD8;
+    /* $BC93: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BCD8; }
 label_BC95:;
     /* $BC95: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x39); FLAG_NZ(g_cpu.A);
 label_BC97:;
-    /* $BC97: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BCAA;
+    /* $BC97: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BCAA; }
 label_BC99:;
     /* $BC99: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_BC9B:;
-    /* $BC9B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BCAA;
+    /* $BC9B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BCAA; }
 label_BC9D:;
     /* $BC9D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_BC9F:;
-    /* $BC9F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BCD8;
+    /* $BC9F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BCD8; }
 label_BCA1:;
     /* $BCA1: 20 */ maybe_trigger_vblank(6); func_CAF9();
 label_BCA4:;
@@ -12776,7 +12598,7 @@ label_BCB3:; /* GrowThePowerUp */
 label_BCB5:;
     /* $BCB5: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x03; FLAG_NZ(g_cpu.A);
 label_BCB7:;
-    /* $BCB7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BCD2;
+    /* $BCB7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BCD2; }
 label_BCB9:;
     /* $BCB9: C6 */ maybe_trigger_vblank(5); { uint16_t a=0xD4; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_BCBB:;
@@ -12786,7 +12608,7 @@ label_BCBD:;
 label_BCBF:;
     /* $BCBF: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x11; g_cpu.C=(g_cpu.A>=0x11)?1:0; FLAG_NZ(r&0xFF); }
 label_BCC1:;
-    /* $BCC1: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BCD2;
+    /* $BCC1: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BCD2; }
 label_BCC3:;
     /* $BCC3: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x10; FLAG_NZ(g_cpu.A);
 label_BCC5:;
@@ -12808,7 +12630,7 @@ label_BCD2:; /* ChkPUSte */
 label_BCD4:;
     /* $BCD4: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_BCD6:;
-    /* $BCD6: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BCEA;
+    /* $BCD6: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BCEA; }
 label_BCD8:; /* RunPUSubs */
     /* $BCD8: 20 */ maybe_trigger_vblank(6); func_F152();
 label_BCDB:;
@@ -12836,7 +12658,7 @@ void func_B94B_b0(void) { /* VineObjectHandler */
 label_B94B:; /* VineObjectHandler */
     /* $B94B: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x05; g_cpu.C=(g_cpu.X>=0x05)?1:0; FLAG_NZ(r&0xFF); }
 label_B94D:;
-    /* $B94D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B9B7;
+    /* $B94D: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B9B7; }
 label_B94F:;
     /* $B94F: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0398); FLAG_NZ(g_cpu.Y);
 label_B952:;
@@ -12846,7 +12668,7 @@ label_B953:;
 label_B956:;
     /* $B956: D9 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0xB949 + g_cpu.Y) & 0xFFFF); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B959:;
-    /* $B959: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B96A;
+    /* $B959: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B96A; }
 label_B95B:;
     /* $B95B: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x09); FLAG_NZ(g_cpu.A);
 label_B95D:;
@@ -12854,7 +12676,7 @@ label_B95D:;
 label_B95E:;
     /* $B95E: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_B95F:;
-    /* $B95F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B96A;
+    /* $B95F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B96A; }
 label_B961:;
     /* $B961: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0xD4); FLAG_NZ(g_cpu.A);
 label_B963:;
@@ -12868,7 +12690,7 @@ label_B96A:; /* RunVSubs */
 label_B96D:;
     /* $B96D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x08; g_cpu.C=(g_cpu.A>=0x08)?1:0; FLAG_NZ(r&0xFF); }
 label_B96F:;
-    /* $B96F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B9B7;
+    /* $B96F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B9B7; }
 label_B971:;
     /* $B971: 20 */ maybe_trigger_vblank(6); func_F152();
 label_B974:;
@@ -12883,7 +12705,7 @@ label_B97D:;
     /* $B97D: CC */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x0398); int r=g_cpu.Y-m; g_cpu.C=(g_cpu.Y>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B980:;
     /* $B980: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -12894,7 +12716,7 @@ label_B982:;
 label_B985:;
     /* $B985: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x0C; FLAG_NZ(g_cpu.A);
 label_B987:;
-    /* $B987: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B999;
+    /* $B987: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B999; }
 label_B989:;
     /* $B989: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B98A:; /* KillVine */
@@ -12905,7 +12727,7 @@ label_B990:;
     /* $B990: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B991:;
     /* $B991: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -12920,7 +12742,7 @@ label_B999:; /* WrCMTile */
 label_B99C:;
     /* $B99C: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x20; g_cpu.C=(g_cpu.A>=0x20)?1:0; FLAG_NZ(r&0xFF); }
 label_B99E:;
-    /* $B99E: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B9B7;
+    /* $B99E: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B9B7; }
 label_B9A0:;
     /* $B9A0: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x06; FLAG_NZ(g_cpu.X);
 label_B9A2:;
@@ -12934,11 +12756,11 @@ label_B9A9:;
 label_B9AB:;
     /* $B9AB: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0xD0; g_cpu.C=(g_cpu.Y>=0xD0)?1:0; FLAG_NZ(r&0xFF); }
 label_B9AD:;
-    /* $B9AD: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B9B7;
+    /* $B9AD: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B9B7; }
 label_B9AF:;
     /* $B9AF: B1 */ maybe_trigger_vblank(5); g_cpu.A = nes_read((nes_read16zp(0x06) + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_B9B1:;
-    /* $B9B1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B9B7;
+    /* $B9B1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B9B7; }
 label_B9B3:;
     /* $B9B3: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x26; FLAG_NZ(g_cpu.A);
 label_B9B5:;
@@ -12962,11 +12784,11 @@ label_B8BA:; /* JumpspringHandler */
 label_B8BD:;
     /* $B8BD: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0747); FLAG_NZ(g_cpu.A);
 label_B8C0:;
-    /* $B8C0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B902;
+    /* $B8C0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_B902; }
 label_B8C2:;
     /* $B8C2: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x070E); FLAG_NZ(g_cpu.A);
 label_B8C5:;
-    /* $B8C5: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B902;
+    /* $B8C5: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_B902; }
 label_B8C7:;
     /* $B8C7: A8 */ maybe_trigger_vblank(2); g_cpu.Y = g_cpu.A; FLAG_NZ(g_cpu.Y);
 label_B8C8:;
@@ -12976,7 +12798,7 @@ label_B8C9:;
 label_B8CA:;
     /* $B8CA: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x02; FLAG_NZ(g_cpu.A);
 label_B8CC:;
-    /* $B8CC: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B8D5;
+    /* $B8CC: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B8D5; }
 label_B8CE:;
     /* $B8CE: E6 */ maybe_trigger_vblank(5); { uint16_t a=0xCE; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B8D0:;
@@ -12998,17 +12820,17 @@ label_B8DF:;
 label_B8E1:;
     /* $B8E1: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x01; g_cpu.C=(g_cpu.Y>=0x01)?1:0; FLAG_NZ(r&0xFF); }
 label_B8E3:;
-    /* $B8E3: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B8F4;
+    /* $B8E3: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B8F4; }
 label_B8E5:;
     /* $B8E5: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0A); FLAG_NZ(g_cpu.A);
 label_B8E7:;
     /* $B8E7: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x80; FLAG_NZ(g_cpu.A);
 label_B8E9:;
-    /* $B8E9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B8F4;
+    /* $B8E9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B8F4; }
 label_B8EB:;
     /* $B8EB: 25 */ maybe_trigger_vblank(3); g_cpu.A &= nes_read(0x0D); FLAG_NZ(g_cpu.A);
 label_B8ED:;
-    /* $B8ED: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B8F4;
+    /* $B8ED: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B8F4; }
 label_B8EF:;
     /* $B8EF: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0xF4; FLAG_NZ(g_cpu.A);
 label_B8F1:;
@@ -13016,7 +12838,7 @@ label_B8F1:;
 label_B8F4:; /* BounceJS */
     /* $B8F4: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x03; g_cpu.C=(g_cpu.Y>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_B8F6:;
-    /* $B8F6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B902;
+    /* $B8F6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_B902; }
 label_B8F8:;
     /* $B8F8: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x06DB); FLAG_NZ(g_cpu.A);
 label_B8FB:;
@@ -13034,11 +12856,11 @@ label_B908:;
 label_B90B:;
     /* $B90B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x070E); FLAG_NZ(g_cpu.A);
 label_B90E:;
-    /* $B90E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B91D;
+    /* $B90E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B91D; }
 label_B910:;
     /* $B910: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0786); FLAG_NZ(g_cpu.A);
 label_B913:;
-    /* $B913: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B91D;
+    /* $B913: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B91D; }
 label_B915:;
     /* $B915: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x04; FLAG_NZ(g_cpu.A);
 label_B917:;
@@ -13060,13 +12882,13 @@ void func_B7A4_b0(void) { /* WarpZoneObject */
 label_B7A4:; /* WarpZoneObject */
     /* $B7A4: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0723); FLAG_NZ(g_cpu.A);
 label_B7A7:;
-    /* $B7A7: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { call_by_address(0xB7A3); return; }
+    /* $B7A7: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); call_by_address(0xB7A3); return; }
 label_B7A9:;
     /* $B7A9: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0xCE); FLAG_NZ(g_cpu.A);
 label_B7AB:;
     /* $B7AB: 25 */ maybe_trigger_vblank(3); g_cpu.A &= nes_read(0xB5); FLAG_NZ(g_cpu.A);
 label_B7AD:;
-    /* $B7AD: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { call_by_address(0xB7A3); return; }
+    /* $B7AD: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); call_by_address(0xB7A3); return; }
 label_B7AF:;
     /* $B7AF: 8D */ maybe_trigger_vblank(4); nes_write(0x0723, g_cpu.A);
 label_B7B2:;
@@ -13075,7 +12897,7 @@ label_B7B5:;
     /* $B7B5: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_C998(); return;
 }
 
-static void func_8A6D_b0_body(int _entry) { /* WriteBlockMetatile */
+void func_8A6D_b0_body(int _entry) { /* WriteBlockMetatile */
     switch (_entry) {
         case 1: goto label_8A8F;
     }
@@ -13084,27 +12906,27 @@ label_8A6D:; /* WriteBlockMetatile */
 label_8A6F:;
     /* $8A6F: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x00; g_cpu.C=(g_cpu.A>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_8A71:;
-    /* $8A71: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8A87;
+    /* $8A71: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8A87; }
 label_8A73:;
     /* $8A73: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x00; FLAG_NZ(g_cpu.Y);
 label_8A75:;
     /* $8A75: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x58; g_cpu.C=(g_cpu.A>=0x58)?1:0; FLAG_NZ(r&0xFF); }
 label_8A77:;
-    /* $8A77: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8A87;
+    /* $8A77: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8A87; }
 label_8A79:;
     /* $8A79: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x51; g_cpu.C=(g_cpu.A>=0x51)?1:0; FLAG_NZ(r&0xFF); }
 label_8A7B:;
-    /* $8A7B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8A87;
+    /* $8A7B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8A87; }
 label_8A7D:;
     /* $8A7D: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8A7E:;
     /* $8A7E: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x5D; g_cpu.C=(g_cpu.A>=0x5D)?1:0; FLAG_NZ(r&0xFF); }
 label_8A80:;
-    /* $8A80: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8A87;
+    /* $8A80: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8A87; }
 label_8A82:;
     /* $8A82: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x52; g_cpu.C=(g_cpu.A>=0x52)?1:0; FLAG_NZ(r&0xFF); }
 label_8A84:;
-    /* $8A84: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8A87;
+    /* $8A84: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8A87; }
 label_8A86:;
     /* $8A86: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8A87:; /* UseBOffset */
@@ -13178,11 +13000,11 @@ label_BB98:; /* MiscLoop */
 label_BB9A:;
     /* $BB9A: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x2A + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_BB9C:;
-    /* $BB9C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BBF4;
+    /* $BB9C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BBF4; }
 label_BB9E:;
     /* $BB9E: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_BB9F:;
-    /* $BB9F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BBA7;
+    /* $BB9F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BBA7; }
 label_BBA1:;
     /* $BBA1: 20 */ maybe_trigger_vblank(6); func_BAC3_b0();
 label_BBA4:;
@@ -13192,7 +13014,7 @@ label_BBA7:; /* ProcJumpCoin */
 label_BBA9:;
     /* $BBA9: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_BBAA:;
-    /* $BBAA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BBC9;
+    /* $BBAA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BBC9; }
 label_BBAC:;
     /* $BBAC: F6 */ maybe_trigger_vblank(6); { uint16_t a=(0x2A + g_cpu.X) & 0xFF; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_BBAE:;
@@ -13214,7 +13036,7 @@ label_BBBC:;
 label_BBBE:;
     /* $BBBE: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x30; g_cpu.C=(g_cpu.A>=0x30)?1:0; FLAG_NZ(r&0xFF); }
 label_BBC0:;
-    /* $BBC0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BBE8;
+    /* $BBC0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BBE8; }
 label_BBC2:;
     /* $BBC2: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_BBC4:;
@@ -13252,7 +13074,7 @@ label_BBE0:;
 label_BBE2:;
     /* $BBE2: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x05; g_cpu.C=(g_cpu.A>=0x05)?1:0; FLAG_NZ(r&0xFF); }
 label_BBE4:;
-    /* $BBE4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BBE8;
+    /* $BBE4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BBE8; }
 label_BBE6:;
     /* $BBE6: F6 */ maybe_trigger_vblank(6); { uint16_t a=(0x2A + g_cpu.X) & 0xFF; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_BBE8:; /* RunJCSubs */
@@ -13267,7 +13089,7 @@ label_BBF4:; /* MiscLoopBack */
     /* $BBF4: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_BBF5:;
     /* $BBF5: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -13290,7 +13112,7 @@ label_B9C3:; /* ThreeSChk */
 label_B9C5:;
     /* $B9C5: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0F + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_B9C7:;
-    /* $B9C7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BA1A;
+    /* $B9C7: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_BA1A; }
 label_B9C9:;
     /* $B9C9: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x07A8 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_B9CC:;
@@ -13300,17 +13122,17 @@ label_B9CF:;
 label_B9D2:;
     /* $B9D2: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_B9D4:;
-    /* $B9D4: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_BA1A;
+    /* $B9D4: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(2); goto label_BA1A; }
 label_B9D6:;
     /* $B9D6: A8 */ maybe_trigger_vblank(2); g_cpu.Y = g_cpu.A; FLAG_NZ(g_cpu.Y);
 label_B9D7:;
     /* $B9D7: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x046B + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_B9DA:;
-    /* $B9DA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BA1A;
+    /* $B9DA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_BA1A; }
 label_B9DC:;
     /* $B9DC: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x047D + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_B9DF:;
-    /* $B9DF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B9E9;
+    /* $B9DF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B9E9; }
 label_B9E1:;
     /* $B9E1: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x00; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_B9E3:;
@@ -13320,7 +13142,7 @@ label_B9E6:;
 label_B9E9:; /* FireCannon */
     /* $B9E9: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0747); FLAG_NZ(g_cpu.A);
 label_B9EC:;
-    /* $B9EC: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BA1A;
+    /* $B9EC: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_BA1A; }
 label_B9EE:;
     /* $B9EE: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x0E; FLAG_NZ(g_cpu.A);
 label_B9F0:;
@@ -13366,13 +13188,13 @@ label_BA1A:; /* Chk_BB */
 label_BA1C:;
     /* $BA1C: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x33; g_cpu.C=(g_cpu.A>=0x33)?1:0; FLAG_NZ(r&0xFF); }
 label_BA1E:;
-    /* $BA1E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BA2D;
+    /* $BA1E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BA2D; }
 label_BA20:;
     /* $BA20: 20 */ maybe_trigger_vblank(6); func_D67A();
 label_BA23:;
     /* $BA23: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0F + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_BA25:;
-    /* $BA25: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BA2D;
+    /* $BA25: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BA2D; }
 label_BA27:;
     /* $BA27: 20 */ maybe_trigger_vblank(6); func_F1AF();
 label_BA2A:;
@@ -13395,7 +13217,7 @@ label_BA30:; /* ExCannon */
     return;
 }
 
-static void func_BF63_b0_body(int _entry) { /* MoveD_EnemyVertically */
+void func_BF63_b0_body(int _entry) { /* MoveD_EnemyVertically */
     switch (_entry) {
         case 1: goto label_BF6B;
     }
@@ -13406,7 +13228,7 @@ label_BF65:;
 label_BF67:;
     /* $BF67: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x05; g_cpu.C=(g_cpu.A>=0x05)?1:0; FLAG_NZ(r&0xFF); }
 label_BF69:;
-    /* $BF69: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BF6D;
+    /* $BF69: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BF6D; }
 label_BF6B:; /* MoveFallingPlatform */
     /* $BF6B: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x20; FLAG_NZ(g_cpu.Y);
 label_BF6D:; /* ContVMove */
@@ -13462,7 +13284,7 @@ label_8F78:;
 label_8F79:;
     /* $8F79: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8F7A:;
-    /* $8F7A: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { call_by_address(0x8F68); return; }
+    /* $8F7A: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); call_by_address(0x8F68); return; }
 label_8F7C:; /* EraseDMods */
     /* $8F7C: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_8F7E:;
@@ -13473,7 +13295,7 @@ label_8F83:;
     /* $8F83: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8F84:;
     /* $8F84: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -13500,7 +13322,7 @@ label_8F14:;
 label_8F16:;
     /* $8F16: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_8F18:;
-    /* $8F18: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8F5E;
+    /* $8F18: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8F5E; }
 label_8F1A:;
     /* $8F1A: 48 */ maybe_trigger_vblank(3); g_ram[0x100 + g_cpu.S] = g_cpu.A; g_cpu.S--;
 label_8F1B:;
@@ -13514,7 +13336,7 @@ label_8F20:;
 label_8F22:;
     /* $8F22: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x00; g_cpu.C=(g_cpu.Y>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_8F24:;
-    /* $8F24: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8F28;
+    /* $8F24: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8F28; }
 label_8F26:;
     /* $8F26: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x22; FLAG_NZ(g_cpu.A);
 label_8F28:; /* SetupNums */
@@ -13557,7 +13379,7 @@ label_8F4F:;
     /* $8F4F: C6 */ maybe_trigger_vblank(5); { uint16_t a=0x03; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_8F51:;
     /* $8F51: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -13594,7 +13416,7 @@ label_92DE:;
 label_92E1:;
     /* $92E1: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x0F; FLAG_NZ(g_cpu.A);
 label_92E3:;
-    /* $92E3: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_92EB;
+    /* $92E3: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_92EB; }
 label_92E5:;
     /* $92E5: 8D */ maybe_trigger_vblank(4); nes_write(0x0726, g_cpu.A);
 label_92E8:;
@@ -13708,13 +13530,13 @@ label_8906:;
 label_8908:;
     /* $8908: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x05); FLAG_NZ(g_cpu.A);
 label_890A:;
-    /* $890A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_891A;
+    /* $890A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_891A; }
 label_890C:;
     /* $890C: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x01); FLAG_NZ(g_cpu.A);
 label_890E:;
     /* $890E: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_890F:;
-    /* $890F: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_892A;
+    /* $890F: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_892A; }
 label_8911:;
     /* $8911: 26 */ maybe_trigger_vblank(5); { uint16_t a=0x03; uint8_t v=nes_read(a); uint8_t c=g_cpu.C; g_cpu.C=(v>>7)&1; v=((v<<1)|c)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_8913:;
@@ -13728,7 +13550,7 @@ label_891A:; /* RightCheck */
 label_891C:;
     /* $891C: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_891D:;
-    /* $891D: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_892E;
+    /* $891D: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_892E; }
 label_891F:;
     /* $891F: 46 */ maybe_trigger_vblank(5); { uint16_t a=0x03; uint8_t v=nes_read(a); g_cpu.C=v&1; v>>=1; nes_write(a,v); FLAG_NZ(v); }
 label_8921:;
@@ -13790,7 +13612,7 @@ label_8953:;
 label_8956:;
     /* $8956: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x1F; FLAG_NZ(g_cpu.A);
 label_8958:;
-    /* $8958: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8967;
+    /* $8958: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8967; }
 label_895A:;
     /* $895A: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x80; FLAG_NZ(g_cpu.A);
 label_895C:;
@@ -13805,7 +13627,7 @@ label_8967:; /* ExitDrawM */
     /* $8967: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_89BD_b0(); return;
 }
 
-static void func_93FC_b0_body(int _entry) { /* AreaParserCore */
+void func_93FC_b0_body(int _entry) { /* AreaParserCore */
     switch (_entry) {
         case 1: goto label_9494;
         case 2: goto label_9491;
@@ -13813,7 +13635,7 @@ static void func_93FC_b0_body(int _entry) { /* AreaParserCore */
 label_93FC:; /* AreaParserCore */
     /* $93FC: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0728); FLAG_NZ(g_cpu.A);
 label_93FF:;
-    /* $93FF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9404;
+    /* $93FF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9404; }
 label_9401:;
     /* $9401: 20 */ maybe_trigger_vblank(6); func_9508_b0();
 label_9404:; /* RenderSceneryTerrain */
@@ -13826,7 +13648,7 @@ label_940B:;
     /* $940B: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_940C:;
     /* $940C: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -13835,20 +13657,20 @@ label_940C:;
 label_940E:;
     /* $940E: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0742); FLAG_NZ(g_cpu.Y);
 label_9411:;
-    /* $9411: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9455;
+    /* $9411: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9455; }
 label_9413:;
     /* $9413: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0725); FLAG_NZ(g_cpu.A);
 label_9416:; /* ThirdP */
     /* $9416: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_9418:;
-    /* $9418: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_941F;
+    /* $9418: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_941F; }
 label_941A:;
     /* $941A: 38 */ maybe_trigger_vblank(2); g_cpu.C = 1;
 label_941B:;
     /* $941B: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x03; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_941D:;
     /* $941D: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -13871,7 +13693,7 @@ label_9429:;
 label_942A:;
     /* $942A: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x92FA + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_942D:;
-    /* $942D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9455;
+    /* $942D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9455; }
 label_942F:;
     /* $942F: 48 */ maybe_trigger_vblank(3); g_ram[0x100 + g_cpu.S] = g_cpu.A; g_cpu.S--;
 label_9430:;
@@ -13915,12 +13737,12 @@ label_944C:;
 label_944D:;
     /* $944D: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x0B; g_cpu.C=(g_cpu.Y>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_944F:;
-    /* $944F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9455;
+    /* $944F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9455; }
 label_9451:;
     /* $9451: C6 */ maybe_trigger_vblank(5); { uint16_t a=0x00; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_9453:;
     /* $9453: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -13929,7 +13751,7 @@ label_9453:;
 label_9455:; /* RendFore */
     /* $9455: AE */ maybe_trigger_vblank(4); g_cpu.X = nes_read(0x0741); FLAG_NZ(g_cpu.X);
 label_9458:;
-    /* $9458: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_946D;
+    /* $9458: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_946D; }
 label_945A:;
     /* $945A: BC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read((0x93AD + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.Y);
 label_945D:;
@@ -13937,7 +13759,7 @@ label_945D:;
 label_945F:; /* SceLoop2 */
     /* $945F: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x93B1 + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_9462:;
-    /* $9462: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9467;
+    /* $9462: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9467; }
 label_9464:;
     /* $9464: 9D */ maybe_trigger_vblank(5); nes_write((0x06A1 + g_cpu.X) & 0xFFFF, g_cpu.A);
 label_9467:; /* NoFore */
@@ -13948,7 +13770,7 @@ label_9469:;
     /* $9469: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x0D; g_cpu.C=(g_cpu.X>=0x0D)?1:0; FLAG_NZ(r&0xFF); }
 label_946B:;
     /* $946B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -13957,13 +13779,13 @@ label_946B:;
 label_946D:; /* RendTerr */
     /* $946D: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x074E); FLAG_NZ(g_cpu.Y);
 label_9470:;
-    /* $9470: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_947E;
+    /* $9470: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_947E; }
 label_9472:;
     /* $9472: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075F); FLAG_NZ(g_cpu.A);
 label_9475:;
     /* $9475: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_9477:;
-    /* $9477: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_947E;
+    /* $9477: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_947E; }
 label_9479:;
     /* $9479: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x62; FLAG_NZ(g_cpu.A);
 label_947B:;
@@ -13973,7 +13795,7 @@ label_947E:; /* TerMTile */
 label_9481:;
     /* $9481: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0743); FLAG_NZ(g_cpu.Y);
 label_9484:;
-    /* $9484: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9488;
+    /* $9484: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9488; }
 label_9486:;
     /* $9486: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x88; FLAG_NZ(g_cpu.A);
 label_9488:; /* StoreMT */
@@ -13997,11 +13819,11 @@ label_9497:;
 label_9499:;
     /* $9499: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0743); FLAG_NZ(g_cpu.A);
 label_949C:;
-    /* $949C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_94A8;
+    /* $949C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_94A8; }
 label_949E:;
     /* $949E: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x00; g_cpu.C=(g_cpu.X>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_94A0:;
-    /* $94A0: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_94A8;
+    /* $94A0: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_94A8; }
 label_94A2:;
     /* $94A2: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x00); FLAG_NZ(g_cpu.A);
 label_94A4:;
@@ -14015,7 +13837,7 @@ label_94AA:; /* TerrBChk */
 label_94AD:;
     /* $94AD: 24 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x00); g_cpu.Z=(g_cpu.A&m)?0:1; g_cpu.N=(m>>7)&1; g_cpu.V=(m>>6)&1; }
 label_94AF:;
-    /* $94AF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_94B6;
+    /* $94AF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_94B6; }
 label_94B1:;
     /* $94B1: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x07); FLAG_NZ(g_cpu.A);
 label_94B3:;
@@ -14025,17 +13847,17 @@ label_94B6:; /* NextTBit */
 label_94B7:;
     /* $94B7: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x0D; g_cpu.C=(g_cpu.X>=0x0D)?1:0; FLAG_NZ(r&0xFF); }
 label_94B9:;
-    /* $94B9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_94D3;
+    /* $94B9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_94D3; }
 label_94BB:;
     /* $94BB: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_94BE:;
     /* $94BE: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_94C0:;
-    /* $94C0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_94CA;
+    /* $94C0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_94CA; }
 label_94C2:;
     /* $94C2: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x0B; g_cpu.C=(g_cpu.X>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_94C4:;
-    /* $94C4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_94CA;
+    /* $94C4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_94CA; }
 label_94C6:;
     /* $94C6: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x54; FLAG_NZ(g_cpu.A);
 label_94C8:;
@@ -14046,7 +13868,7 @@ label_94CB:;
     /* $94CB: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x08; g_cpu.C=(g_cpu.Y>=0x08)?1:0; FLAG_NZ(r&0xFF); }
 label_94CD:;
     /* $94CD: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -14056,7 +13878,7 @@ label_94CF:;
     /* $94CF: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x01); FLAG_NZ(g_cpu.Y);
 label_94D1:;
     /* $94D1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -14091,7 +13913,7 @@ label_94EB:;
 label_94EE:;
     /* $94EE: D9 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0x9504 + g_cpu.Y) & 0xFFFF); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_94F1:;
-    /* $94F1: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_94F5;
+    /* $94F1: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_94F5; }
 label_94F3:;
     /* $94F3: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_94F5:; /* StrBlock */
@@ -14165,7 +13987,7 @@ label_BF8C:; /* MoveEnemySlowVert */
 label_BF8E:; /* SetMdMax */
     /* $BF8E: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x02; FLAG_NZ(g_cpu.A);
 label_BF90:;
-    /* $BF90: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BF96;
+    /* $BF90: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BF96; }
 label_BF92:; /* MoveJ_EnemyVertically */
     /* $BF92: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x1C; FLAG_NZ(g_cpu.Y);
 label_BF94:; /* SetHiMax */
@@ -14247,17 +14069,17 @@ label_AF6F:; /* UpdScrollVar */
 label_AF72:;
     /* $AF72: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x06; g_cpu.C=(g_cpu.A>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_AF74:;
-    /* $AF74: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_AF92;
+    /* $AF74: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF92; }
 label_AF76:;
     /* $AF76: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x071F); FLAG_NZ(g_cpu.A);
 label_AF79:;
-    /* $AF79: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_AF8F;
+    /* $AF79: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_AF8F; }
 label_AF7B:;
     /* $AF7B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x073D); FLAG_NZ(g_cpu.A);
 label_AF7E:;
     /* $AF7E: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x20; g_cpu.C=(g_cpu.A>=0x20)?1:0; FLAG_NZ(r&0xFF); }
 label_AF80:;
-    /* $AF80: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_AF92;
+    /* $AF80: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_AF92; }
 label_AF82:;
     /* $AF82: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x073D); FLAG_NZ(g_cpu.A);
 label_AF85:;
@@ -14285,15 +14107,15 @@ void func_8418_b0(void) { /* ThankPlayer */
 label_8418:; /* ThankPlayer */
     /* $8418: A8 */ maybe_trigger_vblank(2); g_cpu.Y = g_cpu.A; FLAG_NZ(g_cpu.Y);
 label_8419:;
-    /* $8419: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8423;
+    /* $8419: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8423; }
 label_841B:;
     /* $841B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0753); FLAG_NZ(g_cpu.A);
 label_841E:;
-    /* $841E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8434;
+    /* $841E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8434; }
 label_8420:;
     /* $8420: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8421:;
-    /* $8421: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8434;
+    /* $8421: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8434; }
 label_8423:; /* SecondPartMsg */
     /* $8423: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8424:;
@@ -14301,21 +14123,21 @@ label_8424:;
 label_8427:;
     /* $8427: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_8429:;
-    /* $8429: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8434;
+    /* $8429: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8434; }
 label_842B:;
     /* $842B: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_842C:;
     /* $842C: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x04; g_cpu.C=(g_cpu.Y>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_842E:;
-    /* $842E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8456;
+    /* $842E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8456; }
 label_8430:;
     /* $8430: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x03; g_cpu.C=(g_cpu.Y>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_8432:;
-    /* $8432: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8443;
+    /* $8432: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8443; }
 label_8434:; /* EvalForMusic */
     /* $8434: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x03; g_cpu.C=(g_cpu.Y>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_8436:;
-    /* $8436: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_843C;
+    /* $8436: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_843C; }
 label_8438:;
     /* $8438: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x04; FLAG_NZ(g_cpu.A);
 label_843A:;
@@ -14345,7 +14167,7 @@ label_8451:;
 label_8454:;
     /* $8454: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_8456:; /* SetEndTimer */
-    /* $8456: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8460;
+    /* $8456: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8460; }
 label_8458:;
     /* $8458: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x06; FLAG_NZ(g_cpu.A);
 label_845A:;
@@ -14371,7 +14193,7 @@ label_924A:;
 label_924C:;
     /* $924C: 20 */ maybe_trigger_vblank(6); func_9282_b0();
 label_924F:;
-    /* $924F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_9264;
+    /* $924F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_9264; }
 label_9251:;
     /* $9251: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075F); FLAG_NZ(g_cpu.A);
 label_9254:;
@@ -14447,21 +14269,21 @@ label_B51E:;
 label_B520:;
     /* $B520: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x1D); FLAG_NZ(g_cpu.A);
 label_B522:;
-    /* $B522: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B52D;
+    /* $B522: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B52D; }
 label_B524:;
     /* $B524: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0700); FLAG_NZ(g_cpu.A);
 label_B527:;
     /* $B527: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x19; g_cpu.C=(g_cpu.A>=0x19)?1:0; FLAG_NZ(r&0xFF); }
 label_B529:;
-    /* $B529: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B55E;
+    /* $B529: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B55E; }
 label_B52B:;
-    /* $B52B: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B545;
+    /* $B52B: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B545; }
 label_B52D:; /* ProcPRun */
     /* $B52D: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B52E:;
     /* $B52E: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_B531:;
-    /* $B531: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B545;
+    /* $B531: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B545; }
 label_B533:;
     /* $B533: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B534:;
@@ -14469,17 +14291,17 @@ label_B534:;
 label_B536:;
     /* $B536: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x45); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B538:;
-    /* $B538: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B545;
+    /* $B538: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B545; }
 label_B53A:;
     /* $B53A: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0A); FLAG_NZ(g_cpu.A);
 label_B53C:;
     /* $B53C: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_B53E:;
-    /* $B53E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B559;
+    /* $B53E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B559; }
 label_B540:;
     /* $B540: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0783); FLAG_NZ(g_cpu.A);
 label_B543:;
-    /* $B543: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B55E;
+    /* $B543: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B55E; }
 label_B545:; /* ChkRFast */
     /* $B545: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B546:;
@@ -14487,13 +14309,13 @@ label_B546:;
 label_B548:;
     /* $B548: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0703); FLAG_NZ(g_cpu.A);
 label_B54B:;
-    /* $B54B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B554;
+    /* $B54B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B554; }
 label_B54D:;
     /* $B54D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0700); FLAG_NZ(g_cpu.A);
 label_B550:;
     /* $B550: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x21; g_cpu.C=(g_cpu.A>=0x21)?1:0; FLAG_NZ(r&0xFF); }
 label_B552:;
-    /* $B552: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B55E;
+    /* $B552: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B55E; }
 label_B554:; /* FastXSp */
     /* $B554: E6 */ maybe_trigger_vblank(5); { uint16_t a=0x00; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B556:;
@@ -14511,7 +14333,7 @@ label_B564:;
 label_B566:;
     /* $B566: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_B568:;
-    /* $B568: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B56C;
+    /* $B568: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B56C; }
 label_B56A:;
     /* $B56A: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x03; FLAG_NZ(g_cpu.Y);
 label_B56C:; /* GetXPhy2 */
@@ -14533,7 +14355,7 @@ label_B57F:;
 label_B581:;
     /* $B581: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x45); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B583:;
-    /* $B583: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B58B;
+    /* $B583: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B58B; }
 label_B585:;
     /* $B585: 0E */ maybe_trigger_vblank(6); { uint16_t a=0x0702; uint8_t v=nes_read(a); g_cpu.C=(v>>7)&1; v=(v<<1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B588:;
@@ -14559,7 +14381,7 @@ label_B564:;
 label_B566:;
     /* $B566: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_B568:;
-    /* $B568: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B56C;
+    /* $B568: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B56C; }
 label_B56A:;
     /* $B56A: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x03; FLAG_NZ(g_cpu.Y);
 label_B56C:; /* GetXPhy2 */
@@ -14581,7 +14403,7 @@ label_B57F:;
 label_B581:;
     /* $B581: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x45); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B583:;
-    /* $B583: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B58B;
+    /* $B583: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B58B; }
 label_B585:;
     /* $B585: 0E */ maybe_trigger_vblank(6); { uint16_t a=0x0702; uint8_t v=nes_read(a); g_cpu.C=(v>>7)&1; v=(v<<1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B588:;
@@ -14605,13 +14427,13 @@ label_B591:;
 label_B594:;
     /* $B594: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x1C; g_cpu.C=(g_cpu.A>=0x1C)?1:0; FLAG_NZ(r&0xFF); }
 label_B596:;
-    /* $B596: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B5AD;
+    /* $B596: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B5AD; }
 label_B598:;
     /* $B598: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B599:;
     /* $B599: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0E; g_cpu.C=(g_cpu.A>=0x0E)?1:0; FLAG_NZ(r&0xFF); }
 label_B59B:;
-    /* $B59B: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B59E;
+    /* $B59B: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B59E; }
 label_B59D:;
     /* $B59D: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B59E:; /* ChkSkid */
@@ -14619,13 +14441,13 @@ label_B59E:; /* ChkSkid */
 label_B5A1:;
     /* $B5A1: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x7F; FLAG_NZ(g_cpu.A);
 label_B5A3:;
-    /* $B5A3: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B5C5;
+    /* $B5A3: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B5C5; }
 label_B5A5:;
     /* $B5A5: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x03; FLAG_NZ(g_cpu.A);
 label_B5A7:;
     /* $B5A7: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x45); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B5A9:;
-    /* $B5A9: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B5B3;
+    /* $B5A9: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B5B3; }
 label_B5AB:;
     /* $B5AB: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_B5AD:; /* SetRunSpd */
@@ -14637,7 +14459,7 @@ label_B5B3:; /* ProcSkid */
 label_B5B6:;
     /* $B5B6: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0B; g_cpu.C=(g_cpu.A>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_B5B8:;
-    /* $B5B8: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_B5C5;
+    /* $B5B8: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_B5C5; }
 label_B5BA:;
     /* $B5BA: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x33); FLAG_NZ(g_cpu.A);
 label_B5BC:;
@@ -14669,19 +14491,19 @@ label_B5CC:; /* ImposeFriction */
 label_B5CF:;
     /* $B5CF: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x00; g_cpu.C=(g_cpu.A>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_B5D1:;
-    /* $B5D1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B5DB;
+    /* $B5D1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B5DB; }
 label_B5D3:;
     /* $B5D3: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x57); FLAG_NZ(g_cpu.A);
 label_B5D5:;
-    /* $B5D5: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B620;
+    /* $B5D5: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_B620; }
 label_B5D7:;
-    /* $B5D7: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_B5FC;
+    /* $B5D7: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_B5FC; }
 label_B5D9:;
-    /* $B5D9: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B5DE;
+    /* $B5D9: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_B5DE; }
 label_B5DB:; /* JoypFrict */
     /* $B5DB: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_B5DC:;
-    /* $B5DC: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B5FC;
+    /* $B5DC: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B5FC; }
 label_B5DE:; /* LeftFrict */
     /* $B5DE: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0705); FLAG_NZ(g_cpu.A);
 label_B5E1:;
@@ -14699,7 +14521,7 @@ label_B5ED:;
 label_B5EF:;
     /* $B5EF: CD */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x0456); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B5F2:;
-    /* $B5F2: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_B617;
+    /* $B5F2: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(2); goto label_B617; }
 label_B5F4:;
     /* $B5F4: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0456); FLAG_NZ(g_cpu.A);
 label_B5F7:;
@@ -14723,7 +14545,7 @@ label_B60B:;
 label_B60D:;
     /* $B60D: CD */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x0450); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B610:;
-    /* $B610: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_B617;
+    /* $B610: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_B617; }
 label_B612:;
     /* $B612: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0450); FLAG_NZ(g_cpu.A);
 label_B615:;
@@ -14731,7 +14553,7 @@ label_B615:;
 label_B617:; /* XSpdSign */
     /* $B617: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x00; g_cpu.C=(g_cpu.A>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_B619:;
-    /* $B619: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_B620;
+    /* $B619: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_B620; }
 label_B61B:;
     /* $B61B: 49 */ maybe_trigger_vblank(2); g_cpu.A ^= 0xFF; FLAG_NZ(g_cpu.A);
 label_B61D:;
@@ -14748,14 +14570,14 @@ label_B623:;
     return;
 }
 
-static void func_BF09_b0_body(int _entry) { /* MovePlayerHorizontally */
+void func_BF09_b0_body(int _entry) { /* MovePlayerHorizontally */
     switch (_entry) {
         case 1: goto label_BF4C;
     }
 label_BF09:; /* MovePlayerHorizontally */
     /* $BF09: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x070E); FLAG_NZ(g_cpu.A);
 label_BF0C:;
-    /* $BF0C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BF4C;
+    /* $BF0C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BF4C; }
 label_BF0E:;
     /* $BF0E: AA */ maybe_trigger_vblank(2); g_cpu.X = g_cpu.A; FLAG_NZ(g_cpu.X);
 label_BF0F:; /* MoveObjectHorizontally */
@@ -14783,7 +14605,7 @@ label_BF1C:;
 label_BF1D:;
     /* $BF1D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x08; g_cpu.C=(g_cpu.A>=0x08)?1:0; FLAG_NZ(r&0xFF); }
 label_BF1F:;
-    /* $BF1F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BF23;
+    /* $BF1F: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BF23; }
 label_BF21:;
     /* $BF21: 09 */ maybe_trigger_vblank(2); g_cpu.A |= 0xF0; FLAG_NZ(g_cpu.A);
 label_BF23:; /* SaveXSpd */
@@ -14793,7 +14615,7 @@ label_BF25:;
 label_BF27:;
     /* $BF27: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x00; g_cpu.C=(g_cpu.A>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_BF29:;
-    /* $BF29: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_BF2C;
+    /* $BF29: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_BF2C; }
 label_BF2B:;
     /* $BF2B: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_BF2C:; /* UseAdder */
@@ -14869,11 +14691,11 @@ label_BF4D:; /* MovePlayerVertically */
 label_BF4F:;
     /* $BF4F: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0747); FLAG_NZ(g_cpu.A);
 label_BF52:;
-    /* $BF52: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BF59;
+    /* $BF52: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BF59; }
 label_BF54:;
     /* $BF54: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x070E); FLAG_NZ(g_cpu.A);
 label_BF57:;
-    /* $BF57: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { call_by_address(0xBF4C); return; }
+    /* $BF57: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); call_by_address(0xBF4C); return; }
 label_BF59:; /* NoJSChk */
     /* $BF59: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0709); FLAG_NZ(g_cpu.A);
 label_BF5C:;
@@ -14891,7 +14713,7 @@ void func_B3AC_b0(void) { /* LRAir */
 label_B3AC:; /* LRAir */
     /* $B3AC: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0C); FLAG_NZ(g_cpu.A);
 label_B3AE:;
-    /* $B3AE: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B3B3;
+    /* $B3AE: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B3B3; }
 label_B3B0:;
     /* $B3B0: 20 */ maybe_trigger_vblank(6); func_B5CC_b0();
 label_B3B3:; /* JSMove */
@@ -14903,7 +14725,7 @@ label_B3B9:;
 label_B3BB:;
     /* $B3BB: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0B; g_cpu.C=(g_cpu.A>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_B3BD:;
-    /* $B3BD: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B3C4;
+    /* $B3BD: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B3C4; }
 label_B3BF:;
     /* $B3BF: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x28; FLAG_NZ(g_cpu.A);
 label_B3C1:;
@@ -14961,27 +14783,27 @@ label_8A6D:; /* WriteBlockMetatile */
 label_8A6F:;
     /* $8A6F: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x00; g_cpu.C=(g_cpu.A>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_8A71:;
-    /* $8A71: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8A87;
+    /* $8A71: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8A87; }
 label_8A73:;
     /* $8A73: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x00; FLAG_NZ(g_cpu.Y);
 label_8A75:;
     /* $8A75: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x58; g_cpu.C=(g_cpu.A>=0x58)?1:0; FLAG_NZ(r&0xFF); }
 label_8A77:;
-    /* $8A77: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8A87;
+    /* $8A77: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8A87; }
 label_8A79:;
     /* $8A79: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x51; g_cpu.C=(g_cpu.A>=0x51)?1:0; FLAG_NZ(r&0xFF); }
 label_8A7B:;
-    /* $8A7B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8A87;
+    /* $8A7B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8A87; }
 label_8A7D:;
     /* $8A7D: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8A7E:;
     /* $8A7E: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x5D; g_cpu.C=(g_cpu.A>=0x5D)?1:0; FLAG_NZ(r&0xFF); }
 label_8A80:;
-    /* $8A80: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8A87;
+    /* $8A80: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8A87; }
 label_8A82:;
     /* $8A82: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x52; g_cpu.C=(g_cpu.A>=0x52)?1:0; FLAG_NZ(r&0xFF); }
 label_8A84:;
-    /* $8A84: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8A87;
+    /* $8A84: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8A87; }
 label_8A86:;
     /* $8A86: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_8A87:; /* UseBOffset */
@@ -15013,7 +14835,7 @@ label_BDF6:; /* BlockBumpedChk */
 label_BDF8:; /* BumpChkLoop */
     /* $BDF8: D9 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0xBDE8 + g_cpu.Y) & 0xFFFF); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_BDFB:;
-    /* $BDFB: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BE01;
+    /* $BDFB: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_BE01; }
 label_BDFD:;
     /* $BDFD: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_BDFE:;
@@ -15086,10 +14908,9 @@ label_BD83:;
     return;
 }
 
-static void func_BD9B_b0_body(int _entry) { /* BumpBlock */
+void func_BD9B_b0_body(int _entry) { /* BumpBlock */
     switch (_entry) {
         case 1: goto label_BDD2;
-        case 2: goto label_BDDF;
     }
 label_BD9B:; /* BumpBlock */
     /* $BD9B: 20 */ maybe_trigger_vblank(6); func_BE1F_b0();
@@ -15114,13 +14935,13 @@ label_BDAF:;
 label_BDB1:;
     /* $BDB1: 20 */ maybe_trigger_vblank(6); func_BDF6_b0();
 label_BDB4:;
-    /* $BDB4: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BDE7;
+    /* $BDB4: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BDE7; }
 label_BDB6:;
     /* $BDB6: 98 */ maybe_trigger_vblank(2); g_cpu.A = g_cpu.Y; FLAG_NZ(g_cpu.A);
 label_BDB7:;
     /* $BDB7: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x09; g_cpu.C=(g_cpu.A>=0x09)?1:0; FLAG_NZ(r&0xFF); }
 label_BDB9:;
-    /* $BDB9: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BDBD;
+    /* $BDB9: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BDBD; }
 label_BDBB:;
     /* $BDBB: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x05; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_BDBD:; /* BlockCode */
@@ -15147,12 +14968,6 @@ label_BDDA:;
     /* $BDDA: 85 */ maybe_trigger_vblank(3); nes_write(0x39, g_cpu.A);
 label_BDDC:;
     /* $BDDC: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_BC49_b0(); return;
-label_BDDF:; /* VineBlock */
-    /* $BDDF: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x05; FLAG_NZ(g_cpu.X);
-label_BDE1:;
-    /* $BDE1: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x03EE); FLAG_NZ(g_cpu.Y);
-label_BDE4:;
-    /* $BDE4: 20 */ maybe_trigger_vblank(6); func_B91E_b0();
 label_BDE7:; /* ExitBlockChk */
     /* $BDE7: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -15181,16 +14996,6 @@ void func_BDD2_b0(void) { /* MushFlowerBlock */
 #endif
 }
 
-void func_BDDF_b0(void) { /* VineBlock */
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_push("func_BDDF_b0");
-#endif
-    func_BD9B_b0_body(2);
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_pop();
-#endif
-}
-
 void func_8A4D_b0(void) { /* RemoveCoin_Axe */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_8A4D_b0");
@@ -15202,7 +15007,7 @@ label_8A4F:;
 label_8A51:;
     /* $8A51: AE */ maybe_trigger_vblank(4); g_cpu.X = nes_read(0x074E); FLAG_NZ(g_cpu.X);
 label_8A54:;
-    /* $8A54: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8A58;
+    /* $8A54: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8A58; }
 label_8A56:;
     /* $8A56: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x04; FLAG_NZ(g_cpu.A);
 label_8A58:; /* WriteBlankMT */
@@ -15234,14 +15039,14 @@ label_971C:; /* KillELoop */
 label_971E:;
     /* $971E: C4 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x00); int r=g_cpu.Y-m; g_cpu.C=(g_cpu.Y>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_9720:;
-    /* $9720: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9724;
+    /* $9720: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9724; }
 label_9722:;
     /* $9722: 95 */ maybe_trigger_vblank(4); nes_write((0x0F + g_cpu.X) & 0xFF, g_cpu.A);
 label_9724:; /* NoKillE */
     /* $9724: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_9725:;
     /* $9725: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -15264,7 +15069,7 @@ label_BA94:; /* SpawnHammerObj */
 label_BA97:;
     /* $BA97: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x07; FLAG_NZ(g_cpu.A);
 label_BA99:;
-    /* $BA99: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BAA0;
+    /* $BA99: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BAA0; }
 label_BA9B:;
     /* $BA9B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x07A8); FLAG_NZ(g_cpu.A);
 label_BA9E:;
@@ -15274,13 +15079,13 @@ label_BAA0:; /* SetMOfs */
 label_BAA1:;
     /* $BAA1: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x002A + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_BAA4:;
-    /* $BAA4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BABF;
+    /* $BAA4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BABF; }
 label_BAA6:;
     /* $BAA6: BE */ maybe_trigger_vblank(4); g_cpu.X = nes_read((0xBA89 + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.X);
 label_BAA9:;
     /* $BAA9: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0F + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_BAAB:;
-    /* $BAAB: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BABF;
+    /* $BAAB: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BABF; }
 label_BAAD:;
     /* $BAAD: A6 */ maybe_trigger_vblank(3); g_cpu.X = nes_read(0x08); FLAG_NZ(g_cpu.X);
 label_BAAF:;
@@ -15354,17 +15159,17 @@ label_B8DF:;
 label_B8E1:;
     /* $B8E1: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x01; g_cpu.C=(g_cpu.Y>=0x01)?1:0; FLAG_NZ(r&0xFF); }
 label_B8E3:;
-    /* $B8E3: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B8F4;
+    /* $B8E3: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B8F4; }
 label_B8E5:;
     /* $B8E5: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x0A); FLAG_NZ(g_cpu.A);
 label_B8E7:;
     /* $B8E7: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x80; FLAG_NZ(g_cpu.A);
 label_B8E9:;
-    /* $B8E9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B8F4;
+    /* $B8E9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B8F4; }
 label_B8EB:;
     /* $B8EB: 25 */ maybe_trigger_vblank(3); g_cpu.A &= nes_read(0x0D); FLAG_NZ(g_cpu.A);
 label_B8ED:;
-    /* $B8ED: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B8F4;
+    /* $B8ED: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B8F4; }
 label_B8EF:;
     /* $B8EF: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0xF4; FLAG_NZ(g_cpu.A);
 label_B8F1:;
@@ -15372,7 +15177,7 @@ label_B8F1:;
 label_B8F4:; /* BounceJS */
     /* $B8F4: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x03; g_cpu.C=(g_cpu.Y>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_B8F6:;
-    /* $B8F6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B902;
+    /* $B8F6: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_B902; }
 label_B8F8:;
     /* $B8F8: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x06DB); FLAG_NZ(g_cpu.A);
 label_B8FB:;
@@ -15390,11 +15195,11 @@ label_B908:;
 label_B90B:;
     /* $B90B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x070E); FLAG_NZ(g_cpu.A);
 label_B90E:;
-    /* $B90E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B91D;
+    /* $B90E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B91D; }
 label_B910:;
     /* $B910: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0786); FLAG_NZ(g_cpu.A);
 label_B913:;
-    /* $B913: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B91D;
+    /* $B913: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B91D; }
 label_B915:;
     /* $B915: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x04; FLAG_NZ(g_cpu.A);
 label_B917:;
@@ -15428,13 +15233,13 @@ label_BC6B:;
 label_BC6D:;
     /* $BC6D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_BC6F:;
-    /* $BC6F: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_BC7B;
+    /* $BC6F: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_BC7B; }
 label_BC71:;
     /* $BC71: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0756); FLAG_NZ(g_cpu.A);
 label_BC74:;
     /* $BC74: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_BC76:;
-    /* $BC76: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BC79;
+    /* $BC76: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BC79; }
 label_BC78:;
     /* $BC78: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_BC79:; /* StrType */
@@ -15455,7 +15260,7 @@ label_BC84:;
     return;
 }
 
-static void func_8A97_b0_body(int _entry) { /* PutBlockMetatile */
+void func_8A97_b0_body(int _entry) { /* PutBlockMetatile */
     switch (_entry) {
         case 1: goto label_8ACD;
         case 2: goto label_8A9D;
@@ -15477,7 +15282,7 @@ label_8AA0:;
 label_8AA2:;
     /* $8AA2: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xD0; g_cpu.C=(g_cpu.A>=0xD0)?1:0; FLAG_NZ(r&0xFF); }
 label_8AA4:;
-    /* $8AA4: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8AA8;
+    /* $8AA4: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8AA8; }
 label_8AA6:;
     /* $8AA6: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x24; FLAG_NZ(g_cpu.Y);
 label_8AA8:; /* SaveHAdder */
@@ -15604,7 +15409,7 @@ void func_8A9D_b0(void) {
 #endif
 }
 
-static void func_BF94_b0_body(int _entry) { /* SetHiMax */
+void func_BF94_b0_body(int _entry) { /* SetHiMax */
     switch (_entry) {
         case 1: goto label_BF96;
     }
@@ -15707,11 +15512,11 @@ label_8F6B:;
 label_8F6C:;
     /* $8F6C: 79 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0x07D7 + g_cpu.Y) & 0xFFFF); uint16_t r=g_cpu.A+m+g_cpu.C; FLAG_NZC_ADD(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_8F6F:;
-    /* $8F6F: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_8F87;
+    /* $8F6F: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_8F87; }
 label_8F71:;
     /* $8F71: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0A; g_cpu.C=(g_cpu.A>=0x0A)?1:0; FLAG_NZ(r&0xFF); }
 label_8F73:;
-    /* $8F73: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8F8E;
+    /* $8F73: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8F8E; }
 label_8F75:; /* StoreNewD */
     /* $8F75: 99 */ maybe_trigger_vblank(5); nes_write((0x07D7 + g_cpu.Y) & 0xFFFF, g_cpu.A);
 label_8F78:;
@@ -15720,7 +15525,7 @@ label_8F79:;
     /* $8F79: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8F7A:;
     /* $8F7A: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -15736,7 +15541,7 @@ label_8F83:;
     /* $8F83: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8F84:;
     /* $8F84: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -15754,7 +15559,7 @@ label_8F8A:;
     /* $8F8A: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x09; FLAG_NZ(g_cpu.A);
 label_8F8C:;
     /* $8F8C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -15792,7 +15597,7 @@ label_893E:;
 label_893F:;
     /* $893F: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x0D; g_cpu.C=(g_cpu.X>=0x0D)?1:0; FLAG_NZ(r&0xFF); }
 label_8941:;
-    /* $8941: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { call_by_address(0x88D0); return; }
+    /* $8941: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(2); call_by_address(0x88D0); return; }
 label_8943:;
     /* $8943: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x00); FLAG_NZ(g_cpu.Y);
 label_8945:;
@@ -15814,7 +15619,7 @@ label_8953:;
 label_8956:;
     /* $8956: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x1F; FLAG_NZ(g_cpu.A);
 label_8958:;
-    /* $8958: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8967;
+    /* $8958: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8967; }
 label_895A:;
     /* $895A: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x80; FLAG_NZ(g_cpu.A);
 label_895C:;
@@ -15845,7 +15650,7 @@ label_89C2:;
     return;
 }
 
-static void func_9508_b0_body(int _entry) { /* ProcessAreaData */
+void func_9508_b0_body(int _entry) { /* ProcessAreaData */
     switch (_entry) {
         case 1: goto label_9588;
     }
@@ -15864,11 +15669,11 @@ label_9514:;
 label_9516:;
     /* $9516: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xFD; g_cpu.C=(g_cpu.A>=0xFD)?1:0; FLAG_NZ(r&0xFF); }
 label_9518:;
-    /* $9518: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9565;
+    /* $9518: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9565; }
 label_951A:;
     /* $951A: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_951D:;
-    /* $951D: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_9565;
+    /* $951D: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_9565; }
 label_951F:;
     /* $951F: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9520:;
@@ -15876,11 +15681,11 @@ label_9520:;
 label_9522:;
     /* $9522: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_9523:;
-    /* $9523: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_9530;
+    /* $9523: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_9530; }
 label_9525:;
     /* $9525: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x072B); FLAG_NZ(g_cpu.A);
 label_9528:;
-    /* $9528: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9530;
+    /* $9528: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9530; }
 label_952A:;
     /* $952A: EE */ maybe_trigger_vblank(6); { uint16_t a=0x072B; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_952D:;
@@ -15894,7 +15699,7 @@ label_9533:;
 label_9535:;
     /* $9535: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0D; g_cpu.C=(g_cpu.A>=0x0D)?1:0; FLAG_NZ(r&0xFF); }
 label_9537:;
-    /* $9537: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9554;
+    /* $9537: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9554; }
 label_9539:;
     /* $9539: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_953A:;
@@ -15904,11 +15709,11 @@ label_953C:;
 label_953D:;
     /* $953D: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_953F:;
-    /* $953F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_955D;
+    /* $953F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_955D; }
 label_9541:;
     /* $9541: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x072B); FLAG_NZ(g_cpu.A);
 label_9544:;
-    /* $9544: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_955D;
+    /* $9544: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_955D; }
 label_9546:;
     /* $9546: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9547:;
@@ -15924,17 +15729,17 @@ label_9551:;
 label_9554:; /* Chk1Row14 */
     /* $9554: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0E; g_cpu.C=(g_cpu.A>=0x0E)?1:0; FLAG_NZ(r&0xFF); }
 label_9556:;
-    /* $9556: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_955D;
+    /* $9556: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_955D; }
 label_9558:;
     /* $9558: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0728); FLAG_NZ(g_cpu.A);
 label_955B:;
-    /* $955B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9565;
+    /* $955B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9565; }
 label_955D:; /* CheckRear */
     /* $955D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x072A); FLAG_NZ(g_cpu.A);
 label_9560:;
     /* $9560: CD */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x0725); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_9563:;
-    /* $9563: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_956B;
+    /* $9563: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_956B; }
 label_9565:; /* RdyDecode */
     /* $9565: 20 */ maybe_trigger_vblank(6); func_9595_b0();
 label_9568:;
@@ -15948,14 +15753,14 @@ label_9571:; /* ChkLength */
 label_9573:;
     /* $9573: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_9576:;
-    /* $9576: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_957B;
+    /* $9576: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_957B; }
 label_9578:;
     /* $9578: DE */ maybe_trigger_vblank(7); { uint16_t a=(0x0730 + g_cpu.X) & 0xFFFF; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_957B:; /* ProcLoopb */
     /* $957B: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_957C:;
     /* $957C: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -15965,7 +15770,7 @@ label_957E:;
     /* $957E: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0729); FLAG_NZ(g_cpu.A);
 label_9581:;
     /* $9581: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -15975,7 +15780,7 @@ label_9583:;
     /* $9583: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0728); FLAG_NZ(g_cpu.A);
 label_9586:;
     /* $9586: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -16034,11 +15839,11 @@ label_9497:;
 label_9499:;
     /* $9499: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0743); FLAG_NZ(g_cpu.A);
 label_949C:;
-    /* $949C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_94A8;
+    /* $949C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_94A8; }
 label_949E:;
     /* $949E: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x00; g_cpu.C=(g_cpu.X>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_94A0:;
-    /* $94A0: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_94A8;
+    /* $94A0: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_94A8; }
 label_94A2:;
     /* $94A2: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x00); FLAG_NZ(g_cpu.A);
 label_94A4:;
@@ -16052,7 +15857,7 @@ label_94AA:; /* TerrBChk */
 label_94AD:;
     /* $94AD: 24 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x00); g_cpu.Z=(g_cpu.A&m)?0:1; g_cpu.N=(m>>7)&1; g_cpu.V=(m>>6)&1; }
 label_94AF:;
-    /* $94AF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_94B6;
+    /* $94AF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_94B6; }
 label_94B1:;
     /* $94B1: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x07); FLAG_NZ(g_cpu.A);
 label_94B3:;
@@ -16062,17 +15867,17 @@ label_94B6:; /* NextTBit */
 label_94B7:;
     /* $94B7: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x0D; g_cpu.C=(g_cpu.X>=0x0D)?1:0; FLAG_NZ(r&0xFF); }
 label_94B9:;
-    /* $94B9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_94D3;
+    /* $94B9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_94D3; }
 label_94BB:;
     /* $94BB: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_94BE:;
     /* $94BE: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_94C0:;
-    /* $94C0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_94CA;
+    /* $94C0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_94CA; }
 label_94C2:;
     /* $94C2: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x0B; g_cpu.C=(g_cpu.X>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_94C4:;
-    /* $94C4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_94CA;
+    /* $94C4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_94CA; }
 label_94C6:;
     /* $94C6: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x54; FLAG_NZ(g_cpu.A);
 label_94C8:;
@@ -16083,7 +15888,7 @@ label_94CB:;
     /* $94CB: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x08; g_cpu.C=(g_cpu.Y>=0x08)?1:0; FLAG_NZ(r&0xFF); }
 label_94CD:;
     /* $94CD: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -16093,7 +15898,7 @@ label_94CF:;
     /* $94CF: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x01); FLAG_NZ(g_cpu.Y);
 label_94D1:;
     /* $94D1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -16128,7 +15933,7 @@ label_94EB:;
 label_94EE:;
     /* $94EE: D9 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0x9504 + g_cpu.Y) & 0xFFFF); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_94F1:;
-    /* $94F1: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_94F5;
+    /* $94F1: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_94F5; }
 label_94F3:;
     /* $94F3: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_94F5:; /* StrBlock */
@@ -16214,7 +16019,7 @@ label_BE1F:; /* CheckTopOfBlock */
 label_BE22:;
     /* $BE22: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x02); FLAG_NZ(g_cpu.Y);
 label_BE24:;
-    /* $BE24: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BE40;
+    /* $BE24: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BE40; }
 label_BE26:;
     /* $BE26: 98 */ maybe_trigger_vblank(2); g_cpu.A = g_cpu.Y; FLAG_NZ(g_cpu.A);
 label_BE27:;
@@ -16230,7 +16035,7 @@ label_BE2D:;
 label_BE2F:;
     /* $BE2F: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xC2; g_cpu.C=(g_cpu.A>=0xC2)?1:0; FLAG_NZ(r&0xFF); }
 label_BE31:;
-    /* $BE31: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BE40;
+    /* $BE31: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BE40; }
 label_BE33:;
     /* $BE33: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_BE35:;
@@ -16343,6 +16148,24 @@ label_BDDC:;
     /* $BDDC: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_BC49_b0(); return;
 }
 
+void func_BDDF_b0(void) { /* VineBlock */
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_BDDF_b0");
+#endif
+label_BDDF:; /* VineBlock */
+    /* $BDDF: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x05; FLAG_NZ(g_cpu.X);
+label_BDE1:;
+    /* $BDE1: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x03EE); FLAG_NZ(g_cpu.Y);
+label_BDE4:;
+    /* $BDE4: 20 */ maybe_trigger_vblank(6); func_B91E_b0();
+label_BDE7:; /* ExitBlockChk */
+    /* $BDE7: 60 */ maybe_trigger_vblank(6); 
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+    return;
+}
+
 void func_BDD5_b0(void) { /* StarBlock */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_BDD5_b0");
@@ -16400,13 +16223,13 @@ label_BC6B:;
 label_BC6D:;
     /* $BC6D: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_BC6F:;
-    /* $BC6F: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_BC7B;
+    /* $BC6F: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_BC7B; }
 label_BC71:;
     /* $BC71: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0756); FLAG_NZ(g_cpu.A);
 label_BC74:;
     /* $BC74: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_BC76:;
-    /* $BC76: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_BC79;
+    /* $BC76: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_BC79; }
 label_BC78:;
     /* $BC78: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_BC79:; /* StrType */
@@ -16526,11 +16349,11 @@ label_B908:;
 label_B90B:;
     /* $B90B: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x070E); FLAG_NZ(g_cpu.A);
 label_B90E:;
-    /* $B90E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B91D;
+    /* $B90E: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B91D; }
 label_B910:;
     /* $B910: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0786); FLAG_NZ(g_cpu.A);
 label_B913:;
-    /* $B913: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B91D;
+    /* $B913: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B91D; }
 label_B915:;
     /* $B915: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x04; FLAG_NZ(g_cpu.A);
 label_B917:;
@@ -16610,13 +16433,13 @@ label_8906:;
 label_8908:;
     /* $8908: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x05); FLAG_NZ(g_cpu.A);
 label_890A:;
-    /* $890A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_891A;
+    /* $890A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_891A; }
 label_890C:;
     /* $890C: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x01); FLAG_NZ(g_cpu.A);
 label_890E:;
     /* $890E: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_890F:;
-    /* $890F: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_892A;
+    /* $890F: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_892A; }
 label_8911:;
     /* $8911: 26 */ maybe_trigger_vblank(5); { uint16_t a=0x03; uint8_t v=nes_read(a); uint8_t c=g_cpu.C; g_cpu.C=(v>>7)&1; v=((v<<1)|c)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_8913:;
@@ -16630,7 +16453,7 @@ label_891A:; /* RightCheck */
 label_891C:;
     /* $891C: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_891D:;
-    /* $891D: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_892E;
+    /* $891D: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_892E; }
 label_891F:;
     /* $891F: 46 */ maybe_trigger_vblank(5); { uint16_t a=0x03; uint8_t v=nes_read(a); g_cpu.C=v&1; v>>=1; nes_write(a,v); FLAG_NZ(v); }
 label_8921:;
@@ -16692,7 +16515,7 @@ label_8953:;
 label_8956:;
     /* $8956: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x1F; FLAG_NZ(g_cpu.A);
 label_8958:;
-    /* $8958: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8967;
+    /* $8958: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8967; }
 label_895A:;
     /* $895A: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x80; FLAG_NZ(g_cpu.A);
 label_895C:;
@@ -16718,21 +16541,21 @@ label_9571:; /* ChkLength */
 label_9573:;
     /* $9573: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_9576:;
-    /* $9576: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_957B;
+    /* $9576: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_957B; }
 label_9578:;
     /* $9578: DE */ maybe_trigger_vblank(7); { uint16_t a=(0x0730 + g_cpu.X) & 0xFFFF; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_957B:; /* ProcLoopb */
     /* $957B: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_957C:;
-    /* $957C: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { call_by_address(0x950A); return; }
+    /* $957C: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); call_by_address(0x950A); return; }
 label_957E:;
     /* $957E: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0729); FLAG_NZ(g_cpu.A);
 label_9581:;
-    /* $9581: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { call_by_address(0x9508); return; }
+    /* $9581: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); call_by_address(0x9508); return; }
 label_9583:;
     /* $9583: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0728); FLAG_NZ(g_cpu.A);
 label_9586:;
-    /* $9586: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { call_by_address(0x9508); return; }
+    /* $9586: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); call_by_address(0x9508); return; }
 label_9588:; /* EndAParse */
     /* $9588: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -16741,7 +16564,7 @@ label_9588:; /* EndAParse */
     return;
 }
 
-static void func_9595_b0_body(int _entry) { /* DecodeAreaData */
+void func_9595_b0_body(int _entry) { /* DecodeAreaData */
     switch (_entry) {
         case 1: goto label_9645;
         case 2: goto label_95DF;
@@ -16749,7 +16572,7 @@ static void func_9595_b0_body(int _entry) { /* DecodeAreaData */
 label_9595:; /* DecodeAreaData */
     /* $9595: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_9598:;
-    /* $9598: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_959D;
+    /* $9598: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_959D; }
 label_959A:;
     /* $959A: BC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read((0x072D + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.Y);
 label_959D:; /* Chk1stB */
@@ -16759,19 +16582,19 @@ label_959F:;
 label_95A1:;
     /* $95A1: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xFD; g_cpu.C=(g_cpu.A>=0xFD)?1:0; FLAG_NZ(r&0xFF); }
 label_95A3:;
-    /* $95A3: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { call_by_address(0x9588); return; }
+    /* $95A3: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); call_by_address(0x9588); return; }
 label_95A5:;
     /* $95A5: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x0F; FLAG_NZ(g_cpu.A);
 label_95A7:;
     /* $95A7: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0F; g_cpu.C=(g_cpu.A>=0x0F)?1:0; FLAG_NZ(r&0xFF); }
 label_95A9:;
-    /* $95A9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_95B3;
+    /* $95A9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_95B3; }
 label_95AB:;
     /* $95AB: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x08; FLAG_NZ(g_cpu.X);
 label_95AD:;
     /* $95AD: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0C; g_cpu.C=(g_cpu.A>=0x0C)?1:0; FLAG_NZ(r&0xFF); }
 label_95AF:;
-    /* $95AF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_95B3;
+    /* $95AF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_95B3; }
 label_95B1:;
     /* $95B1: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x00; FLAG_NZ(g_cpu.X);
 label_95B3:; /* ChkRow14 */
@@ -16781,7 +16604,7 @@ label_95B5:;
 label_95B7:;
     /* $95B7: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0E; g_cpu.C=(g_cpu.A>=0x0E)?1:0; FLAG_NZ(r&0xFF); }
 label_95B9:;
-    /* $95B9: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_95C3;
+    /* $95B9: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_95C3; }
 label_95BB:;
     /* $95BB: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_95BD:;
@@ -16789,11 +16612,11 @@ label_95BD:;
 label_95BF:;
     /* $95BF: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x2E; FLAG_NZ(g_cpu.A);
 label_95C1:;
-    /* $95C1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9616;
+    /* $95C1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_9616; }
 label_95C3:; /* ChkRow13 */
     /* $95C3: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0D; g_cpu.C=(g_cpu.A>=0x0D)?1:0; FLAG_NZ(r&0xFF); }
 label_95C5:;
-    /* $95C5: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_95E2;
+    /* $95C5: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_95E2; }
 label_95C7:;
     /* $95C7: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x22; FLAG_NZ(g_cpu.A);
 label_95C9:;
@@ -16805,7 +16628,7 @@ label_95CC:;
 label_95CE:;
     /* $95CE: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_95D0:;
-    /* $95D0: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9635;
+    /* $95D0: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_9635; }
 label_95D2:;
     /* $95D2: B1 */ maybe_trigger_vblank(5); g_cpu.A = nes_read((nes_read16zp(0xE7) + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_95D4:;
@@ -16813,7 +16636,7 @@ label_95D4:;
 label_95D6:;
     /* $95D6: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x4B; g_cpu.C=(g_cpu.A>=0x4B)?1:0; FLAG_NZ(r&0xFF); }
 label_95D8:;
-    /* $95D8: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_95DD;
+    /* $95D8: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_95DD; }
 label_95DA:;
     /* $95DA: EE */ maybe_trigger_vblank(6); { uint16_t a=0x0745; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_95DD:; /* Mask2MSB */
@@ -16823,7 +16646,7 @@ label_95DF:;
 label_95E2:; /* ChkSRows */
     /* $95E2: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0C; g_cpu.C=(g_cpu.A>=0x0C)?1:0; FLAG_NZ(r&0xFF); }
 label_95E4:;
-    /* $95E4: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_960D;
+    /* $95E4: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(2); goto label_960D; }
 label_95E6:;
     /* $95E6: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_95E7:;
@@ -16831,7 +16654,7 @@ label_95E7:;
 label_95E9:;
     /* $95E9: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x70; FLAG_NZ(g_cpu.A);
 label_95EB:;
-    /* $95EB: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_95F8;
+    /* $95EB: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_95F8; }
 label_95ED:;
     /* $95ED: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x16; FLAG_NZ(g_cpu.A);
 label_95EF:;
@@ -16847,13 +16670,13 @@ label_95F8:; /* LrgObj */
 label_95FA:;
     /* $95FA: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x70; g_cpu.C=(g_cpu.A>=0x70)?1:0; FLAG_NZ(r&0xFF); }
 label_95FC:;
-    /* $95FC: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9608;
+    /* $95FC: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(2); goto label_9608; }
 label_95FE:;
     /* $95FE: B1 */ maybe_trigger_vblank(5); g_cpu.A = nes_read((nes_read16zp(0xE7) + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_9600:;
     /* $9600: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x08; FLAG_NZ(g_cpu.A);
 label_9602:;
-    /* $9602: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9608;
+    /* $9602: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9608; }
 label_9604:;
     /* $9604: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_9606:;
@@ -16881,13 +16704,13 @@ label_9616:; /* NormObj */
 label_9618:;
     /* $9618: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_961B:;
-    /* $961B: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_965F;
+    /* $961B: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_965F; }
 label_961D:;
     /* $961D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x072A); FLAG_NZ(g_cpu.A);
 label_9620:;
     /* $9620: CD */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x0725); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_9623:;
-    /* $9623: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9636;
+    /* $9623: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9636; }
 label_9625:;
     /* $9625: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x072C); FLAG_NZ(g_cpu.Y);
 label_9628:;
@@ -16897,11 +16720,11 @@ label_962A:;
 label_962C:;
     /* $962C: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0E; g_cpu.C=(g_cpu.A>=0x0E)?1:0; FLAG_NZ(r&0xFF); }
 label_962E:;
-    /* $962E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9635;
+    /* $962E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9635; }
 label_9630:;
     /* $9630: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0728); FLAG_NZ(g_cpu.A);
 label_9633:;
-    /* $9633: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9656;
+    /* $9633: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9656; }
 label_9635:; /* LeavePar */
     /* $9635: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -16911,7 +16734,7 @@ label_9635:; /* LeavePar */
 label_9636:; /* InitRear */
     /* $9636: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0728); FLAG_NZ(g_cpu.A);
 label_9639:;
-    /* $9639: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9646;
+    /* $9639: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9646; }
 label_963B:;
     /* $963B: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_963D:;
@@ -16944,7 +16767,7 @@ label_9651:;
     /* $9651: CD */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x0726); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_9654:;
     /* $9654: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -17025,7 +16848,7 @@ label_96CB:;
 label_96CC:;
     /* $96CC: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_96CE:;
-    /* $96CE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_96E2;
+    /* $96CE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_96E2; }
 label_96D0:;
     /* $96D0: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
 label_96D1:;
@@ -17061,7 +16884,7 @@ label_96E3:;
 label_96E5:;
     /* $96E5: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_96E7:;
-    /* $96E7: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_96EE;
+    /* $96E7: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_96EE; }
 label_96E9:;
     /* $96E9: 8D */ maybe_trigger_vblank(4); nes_write(0x0744, g_cpu.A);
 label_96EC:;
@@ -17115,21 +16938,21 @@ label_9571:; /* ChkLength */
 label_9573:;
     /* $9573: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_9576:;
-    /* $9576: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_957B;
+    /* $9576: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_957B; }
 label_9578:;
     /* $9578: DE */ maybe_trigger_vblank(7); { uint16_t a=(0x0730 + g_cpu.X) & 0xFFFF; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_957B:; /* ProcLoopb */
     /* $957B: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_957C:;
-    /* $957C: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { call_by_address(0x950A); return; }
+    /* $957C: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); call_by_address(0x950A); return; }
 label_957E:;
     /* $957E: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0729); FLAG_NZ(g_cpu.A);
 label_9581:;
-    /* $9581: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { call_by_address(0x9508); return; }
+    /* $9581: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); call_by_address(0x9508); return; }
 label_9583:;
     /* $9583: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0728); FLAG_NZ(g_cpu.A);
 label_9586:;
-    /* $9586: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { call_by_address(0x9508); return; }
+    /* $9586: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); call_by_address(0x9508); return; }
 label_9588:; /* EndAParse */
     /* $9588: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -17223,14 +17046,14 @@ label_BB84:; /* FindEmptyMiscSlot */
 label_BB86:; /* FMiscLoop */
     /* $BB86: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x002A + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_BB89:;
-    /* $BB89: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_BB92;
+    /* $BB89: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_BB92; }
 label_BB8B:;
     /* $BB8B: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_BB8C:;
     /* $BB8C: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x05; g_cpu.C=(g_cpu.Y>=0x05)?1:0; FLAG_NZ(r&0xFF); }
 label_BB8E:;
     /* $BB8E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -17291,11 +17114,11 @@ label_B53B:;
 label_B53C:;
     /* $B53C: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_B53E:;
-    /* $B53E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B559;
+    /* $B53E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B559; }
 label_B540:;
     /* $B540: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0783); FLAG_NZ(g_cpu.A);
 label_B543:;
-    /* $B543: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B55E;
+    /* $B543: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B55E; }
 label_B545:; /* ChkRFast */
     /* $B545: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_B546:;
@@ -17303,13 +17126,13 @@ label_B546:;
 label_B548:;
     /* $B548: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0703); FLAG_NZ(g_cpu.A);
 label_B54B:;
-    /* $B54B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B554;
+    /* $B54B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B554; }
 label_B54D:;
     /* $B54D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0700); FLAG_NZ(g_cpu.A);
 label_B550:;
     /* $B550: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x21; g_cpu.C=(g_cpu.A>=0x21)?1:0; FLAG_NZ(r&0xFF); }
 label_B552:;
-    /* $B552: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B55E;
+    /* $B552: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B55E; }
 label_B554:; /* FastXSp */
     /* $B554: E6 */ maybe_trigger_vblank(5); { uint16_t a=0x00; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B556:;
@@ -17327,7 +17150,7 @@ label_B564:;
 label_B566:;
     /* $B566: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_B568:;
-    /* $B568: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_B56C;
+    /* $B568: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_B56C; }
 label_B56A:;
     /* $B56A: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x03; FLAG_NZ(g_cpu.Y);
 label_B56C:; /* GetXPhy2 */
@@ -17349,7 +17172,7 @@ label_B57F:;
 label_B581:;
     /* $B581: C5 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x45); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_B583:;
-    /* $B583: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_B58B;
+    /* $B583: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_B58B; }
 label_B585:;
     /* $B585: 0E */ maybe_trigger_vblank(6); { uint16_t a=0x0702; uint8_t v=nes_read(a); g_cpu.C=(v>>7)&1; v=(v<<1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B588:;
@@ -17415,7 +17238,7 @@ label_BFBD:;
 label_BFBF:;
     /* $BFBF: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x29; g_cpu.C=(g_cpu.Y>=0x29)?1:0; FLAG_NZ(r&0xFF); }
 label_BFC1:;
-    /* $BFC1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BFC5;
+    /* $BFC1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BFC5; }
 label_BFC3:;
     /* $BFC3: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x09; FLAG_NZ(g_cpu.A);
 label_BFC5:; /* SetDplSpd */
@@ -17463,7 +17286,7 @@ label_BFBD:;
 label_BFBF:;
     /* $BFBF: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x29; g_cpu.C=(g_cpu.Y>=0x29)?1:0; FLAG_NZ(r&0xFF); }
 label_BFC1:;
-    /* $BFC1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BFC5;
+    /* $BFC1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BFC5; }
 label_BFC3:;
     /* $BFC3: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x09; FLAG_NZ(g_cpu.A);
 label_BFC5:; /* SetDplSpd */
@@ -17499,13 +17322,13 @@ void func_BF88_b0(void) { /* MoveDropPlatform */
 label_BF88:; /* MoveDropPlatform */
     /* $BF88: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x7F; FLAG_NZ(g_cpu.Y);
 label_BF8A:;
-    /* $BF8A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BF8E;
+    /* $BF8A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BF8E; }
 label_BF8C:; /* MoveEnemySlowVert */
     /* $BF8C: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x0F; FLAG_NZ(g_cpu.Y);
 label_BF8E:; /* SetMdMax */
     /* $BF8E: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x02; FLAG_NZ(g_cpu.A);
 label_BF90:;
-    /* $BF90: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BF96;
+    /* $BF90: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BF96; }
 label_BF92:; /* MoveJ_EnemyVertically */
     /* $BF92: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x1C; FLAG_NZ(g_cpu.Y);
 label_BF94:; /* SetHiMax */
@@ -17543,11 +17366,11 @@ label_9514:;
 label_9516:;
     /* $9516: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xFD; g_cpu.C=(g_cpu.A>=0xFD)?1:0; FLAG_NZ(r&0xFF); }
 label_9518:;
-    /* $9518: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9565;
+    /* $9518: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9565; }
 label_951A:;
     /* $951A: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_951D:;
-    /* $951D: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_9565;
+    /* $951D: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_9565; }
 label_951F:;
     /* $951F: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9520:;
@@ -17555,11 +17378,11 @@ label_9520:;
 label_9522:;
     /* $9522: 0A */ maybe_trigger_vblank(2); g_cpu.C = (g_cpu.A>>7)&1; g_cpu.A = (g_cpu.A<<1)&0xFF; FLAG_NZ(g_cpu.A);
 label_9523:;
-    /* $9523: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_9530;
+    /* $9523: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_9530; }
 label_9525:;
     /* $9525: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x072B); FLAG_NZ(g_cpu.A);
 label_9528:;
-    /* $9528: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9530;
+    /* $9528: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9530; }
 label_952A:;
     /* $952A: EE */ maybe_trigger_vblank(6); { uint16_t a=0x072B; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_952D:;
@@ -17573,7 +17396,7 @@ label_9533:;
 label_9535:;
     /* $9535: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0D; g_cpu.C=(g_cpu.A>=0x0D)?1:0; FLAG_NZ(r&0xFF); }
 label_9537:;
-    /* $9537: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9554;
+    /* $9537: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9554; }
 label_9539:;
     /* $9539: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_953A:;
@@ -17583,11 +17406,11 @@ label_953C:;
 label_953D:;
     /* $953D: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_953F:;
-    /* $953F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_955D;
+    /* $953F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_955D; }
 label_9541:;
     /* $9541: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x072B); FLAG_NZ(g_cpu.A);
 label_9544:;
-    /* $9544: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_955D;
+    /* $9544: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_955D; }
 label_9546:;
     /* $9546: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9547:;
@@ -17603,17 +17426,17 @@ label_9551:;
 label_9554:; /* Chk1Row14 */
     /* $9554: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0E; g_cpu.C=(g_cpu.A>=0x0E)?1:0; FLAG_NZ(r&0xFF); }
 label_9556:;
-    /* $9556: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_955D;
+    /* $9556: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_955D; }
 label_9558:;
     /* $9558: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0728); FLAG_NZ(g_cpu.A);
 label_955B:;
-    /* $955B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9565;
+    /* $955B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9565; }
 label_955D:; /* CheckRear */
     /* $955D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x072A); FLAG_NZ(g_cpu.A);
 label_9560:;
     /* $9560: CD */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x0725); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_9563:;
-    /* $9563: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_956B;
+    /* $9563: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_956B; }
 label_9565:; /* RdyDecode */
     /* $9565: 20 */ maybe_trigger_vblank(6); func_9595_b0();
 label_9568:;
@@ -17627,14 +17450,14 @@ label_9571:; /* ChkLength */
 label_9573:;
     /* $9573: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_9576:;
-    /* $9576: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_957B;
+    /* $9576: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_957B; }
 label_9578:;
     /* $9578: DE */ maybe_trigger_vblank(7); { uint16_t a=(0x0730 + g_cpu.X) & 0xFFFF; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_957B:; /* ProcLoopb */
     /* $957B: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_957C:;
     /* $957C: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -17643,11 +17466,11 @@ label_957C:;
 label_957E:;
     /* $957E: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0729); FLAG_NZ(g_cpu.A);
 label_9581:;
-    /* $9581: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { call_by_address(0x9508); return; }
+    /* $9581: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); call_by_address(0x9508); return; }
 label_9583:;
     /* $9583: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0728); FLAG_NZ(g_cpu.A);
 label_9586:;
-    /* $9586: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { call_by_address(0x9508); return; }
+    /* $9586: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); call_by_address(0x9508); return; }
 label_9588:; /* EndAParse */
     /* $9588: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -17665,13 +17488,13 @@ label_9616:; /* NormObj */
 label_9618:;
     /* $9618: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_961B:;
-    /* $961B: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_965F;
+    /* $961B: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_965F; }
 label_961D:;
     /* $961D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x072A); FLAG_NZ(g_cpu.A);
 label_9620:;
     /* $9620: CD */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x0725); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_9623:;
-    /* $9623: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9636;
+    /* $9623: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9636; }
 label_9625:;
     /* $9625: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x072C); FLAG_NZ(g_cpu.Y);
 label_9628:;
@@ -17681,11 +17504,11 @@ label_962A:;
 label_962C:;
     /* $962C: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0E; g_cpu.C=(g_cpu.A>=0x0E)?1:0; FLAG_NZ(r&0xFF); }
 label_962E:;
-    /* $962E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9635;
+    /* $962E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9635; }
 label_9630:;
     /* $9630: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0728); FLAG_NZ(g_cpu.A);
 label_9633:;
-    /* $9633: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9656;
+    /* $9633: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9656; }
 label_9635:; /* LeavePar */
     /* $9635: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -17695,7 +17518,7 @@ label_9635:; /* LeavePar */
 label_9636:; /* InitRear */
     /* $9636: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0728); FLAG_NZ(g_cpu.A);
 label_9639:;
-    /* $9639: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9646;
+    /* $9639: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9646; }
 label_963B:;
     /* $963B: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_963D:;
@@ -17728,7 +17551,7 @@ label_9651:;
     /* $9651: CD */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x0726); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_9654:;
     /* $9654: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -17809,7 +17632,7 @@ label_96CB:;
 label_96CC:;
     /* $96CC: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_96CE:;
-    /* $96CE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_96E2;
+    /* $96CE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_96E2; }
 label_96D0:;
     /* $96D0: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
 label_96D1:;
@@ -17845,7 +17668,7 @@ label_96E3:;
 label_96E5:;
     /* $96E5: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_96E7:;
-    /* $96E7: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_96EE;
+    /* $96E7: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_96EE; }
 label_96E9:;
     /* $96E9: 8D */ maybe_trigger_vblank(4); nes_write(0x0744, g_cpu.A);
 label_96EC:;
@@ -17877,13 +17700,13 @@ label_9616:; /* NormObj */
 label_9618:;
     /* $9618: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_961B:;
-    /* $961B: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_965F;
+    /* $961B: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_965F; }
 label_961D:;
     /* $961D: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x072A); FLAG_NZ(g_cpu.A);
 label_9620:;
     /* $9620: CD */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x0725); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_9623:;
-    /* $9623: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9636;
+    /* $9623: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9636; }
 label_9625:;
     /* $9625: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x072C); FLAG_NZ(g_cpu.Y);
 label_9628:;
@@ -17893,11 +17716,11 @@ label_962A:;
 label_962C:;
     /* $962C: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0E; g_cpu.C=(g_cpu.A>=0x0E)?1:0; FLAG_NZ(r&0xFF); }
 label_962E:;
-    /* $962E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9635;
+    /* $962E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9635; }
 label_9630:;
     /* $9630: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0728); FLAG_NZ(g_cpu.A);
 label_9633:;
-    /* $9633: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9656;
+    /* $9633: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9656; }
 label_9635:; /* LeavePar */
     /* $9635: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -17907,7 +17730,7 @@ label_9635:; /* LeavePar */
 label_9636:; /* InitRear */
     /* $9636: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0728); FLAG_NZ(g_cpu.A);
 label_9639:;
-    /* $9639: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9646;
+    /* $9639: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9646; }
 label_963B:;
     /* $963B: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_963D:;
@@ -17940,7 +17763,7 @@ label_9651:;
     /* $9651: CD */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x0726); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_9654:;
     /* $9654: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -18021,7 +17844,7 @@ label_96CB:;
 label_96CC:;
     /* $96CC: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_96CE:;
-    /* $96CE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_96E2;
+    /* $96CE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_96E2; }
 label_96D0:;
     /* $96D0: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
 label_96D1:;
@@ -18057,7 +17880,7 @@ label_96E3:;
 label_96E5:;
     /* $96E5: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_96E7:;
-    /* $96E7: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_96EE;
+    /* $96E7: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_96EE; }
 label_96E9:;
     /* $96E9: 8D */ maybe_trigger_vblank(4); nes_write(0x0744, g_cpu.A);
 label_96EC:;
@@ -18081,7 +17904,7 @@ label_98E5:; /* VerticalPipe */
 label_98E8:;
     /* $98E8: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x00); FLAG_NZ(g_cpu.A);
 label_98EA:;
-    /* $98EA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_98F0;
+    /* $98EA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_98F0; }
 label_98EC:;
     /* $98EC: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_98ED:;
@@ -18099,15 +17922,15 @@ label_98F2:;
 label_98F5:;
     /* $98F5: 0D */ maybe_trigger_vblank(4); g_cpu.A |= nes_read(0x075F); FLAG_NZ(g_cpu.A);
 label_98F8:;
-    /* $98F8: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9925;
+    /* $98F8: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_9925; }
 label_98FA:;
     /* $98FA: BC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.Y);
 label_98FD:;
-    /* $98FD: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9925;
+    /* $98FD: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_9925; }
 label_98FF:;
     /* $98FF: 20 */ maybe_trigger_vblank(6); func_994A_b0();
 label_9902:;
-    /* $9902: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_9925;
+    /* $9902: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_9925; }
 label_9904:;
     /* $9904: 20 */ maybe_trigger_vblank(6); func_9BCB_b0();
 label_9907:;
@@ -18160,7 +17983,7 @@ label_9936:;
     /* $9936: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_9B7D_b0(); return;
 }
 
-static void func_9740_b0_body(int _entry) { /* AreaStyleObject */
+void func_9740_b0_body(int _entry) { /* AreaStyleObject */
     switch (_entry) {
         case 1: goto label_9792;
         case 2: goto label_9989;
@@ -18178,11 +18001,11 @@ switch(g_cpu.A) {
   default: nes_log_inline_miss(0x9743, g_cpu.A); return;
 }
 label_9750:;
-    /* $9750: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { call_by_address(0x9759); return; }
+    /* $9750: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); call_by_address(0x9759); return; }
 label_9752:;
-    /* $9752: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9773;
+    /* $9752: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9773; }
 label_9754:;
-    /* $9754: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_9767;
+    /* $9754: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_9767; }
 label_9756:;
     /* $9756: 98 */ maybe_trigger_vblank(2); g_cpu.A = g_cpu.Y; FLAG_NZ(g_cpu.A);
 label_9757:;
@@ -18192,7 +18015,7 @@ label_975A:;
 label_975D:;
     /* $975D: 0D */ maybe_trigger_vblank(4); g_cpu.A |= nes_read(0x0726); FLAG_NZ(g_cpu.A);
 label_9760:;
-    /* $9760: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9767;
+    /* $9760: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9767; }
 label_9762:;
     /* $9762: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x16; FLAG_NZ(g_cpu.A);
 label_9764:;
@@ -18211,28 +18034,6 @@ label_9773:; /* EndTreeL */
     /* $9773: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x18; FLAG_NZ(g_cpu.A);
 label_9775:;
     /* $9775: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_97B0_b0(); return;
-label_9778:; /* MushroomLedge */
-    /* $9778: 20 */ maybe_trigger_vblank(6); func_9BAC_b0();
-label_977B:;
-    /* $977B: 84 */ maybe_trigger_vblank(3); nes_write(0x06, g_cpu.Y);
-label_977D:;
-    /* $977D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_978B;
-label_977F:;
-    /* $977F: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
-label_9782:;
-    /* $9782: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
-label_9783:;
-    /* $9783: 9D */ maybe_trigger_vblank(5); nes_write((0x0736 + g_cpu.X) & 0xFFFF, g_cpu.A);
-label_9786:;
-    /* $9786: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x19; FLAG_NZ(g_cpu.A);
-label_9788:;
-    /* $9788: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_97B0_b0(); return;
-label_978B:; /* EndMushL */
-    /* $978B: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x1B; FLAG_NZ(g_cpu.A);
-label_978D:;
-    /* $978D: BC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.Y);
-label_9790:;
-    /* $9790: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_97B0;
 label_9792:;
     /* $9792: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0736 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_9795:;
@@ -18246,7 +18047,7 @@ label_979B:;
 label_979E:;
     /* $979E: C4 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x06); int r=g_cpu.Y-m; g_cpu.C=(g_cpu.Y>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_97A0:;
-    /* $97A0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_97CE;
+    /* $97A0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_97CE; }
 label_97A2:;
     /* $97A2: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_97A3:;
@@ -18261,34 +18062,6 @@ label_97AB:;
     /* $97AB: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x0F; FLAG_NZ(g_cpu.Y);
 label_97AD:;
     /* $97AD: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_9B7D_b0(); return;
-label_97B0:; /* NoUnder */
-    /* $97B0: A6 */ maybe_trigger_vblank(3); g_cpu.X = nes_read(0x07); FLAG_NZ(g_cpu.X);
-label_97B2:;
-    /* $97B2: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x00; FLAG_NZ(g_cpu.Y);
-label_97B4:;
-    /* $97B4: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_9B7D_b0(); return;
-label_97B7:; /* PulleyRopeMetatiles */
-    /* $97B7: 42 */ maybe_trigger_vblank(2); /* ILLEGAL $42 — skip 1 */
-label_97B8:;
-    /* $97B8: 41 */ maybe_trigger_vblank(6); g_cpu.A ^= nes_read(nes_read16zp((0x43 + g_cpu.X) & 0xFF)); FLAG_NZ(g_cpu.A);
-label_97BA:; /* PulleyRopeObject */
-    /* $97BA: 20 */ maybe_trigger_vblank(6); func_9BAC_b0();
-label_97BD:;
-    /* $97BD: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x00; FLAG_NZ(g_cpu.Y);
-label_97BF:;
-    /* $97BF: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_97C8;
-label_97C1:;
-    /* $97C1: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
-label_97C2:;
-    /* $97C2: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
-label_97C5:;
-    /* $97C5: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_97C8;
-label_97C7:;
-    /* $97C7: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
-label_97C8:; /* RenderPul */
-    /* $97C8: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x97B7 + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
-label_97CB:;
-    /* $97CB: 8D */ maybe_trigger_vblank(4); nes_write(0x06A1, g_cpu.A);
 label_97CE:; /* MushLExit */
     /* $97CE: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -18382,7 +18155,7 @@ label_9821:;
 label_9822:;
     /* $9822: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x06); FLAG_NZ(g_cpu.A);
 label_9824:;
-    /* $9824: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_982D;
+    /* $9824: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_982D; }
 label_9826:;
     /* $9826: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9827:;
@@ -18399,7 +18172,7 @@ label_982D:; /* ChkCFloor */
     /* $982D: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x0B; g_cpu.C=(g_cpu.X>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_982F:;
     /* $982F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -18412,25 +18185,25 @@ label_9832:;
 label_9833:;
     /* $9833: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0725); FLAG_NZ(g_cpu.A);
 label_9836:;
-    /* $9836: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_986E;
+    /* $9836: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_986E; }
 label_9838:;
     /* $9838: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_983B:;
     /* $983B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x01; g_cpu.C=(g_cpu.A>=0x01)?1:0; FLAG_NZ(r&0xFF); }
 label_983D:;
-    /* $983D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9869;
+    /* $983D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9869; }
 label_983F:;
     /* $983F: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x07); FLAG_NZ(g_cpu.Y);
 label_9841:;
-    /* $9841: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9847;
+    /* $9841: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9847; }
 label_9843:;
     /* $9843: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_9845:;
-    /* $9845: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9869;
+    /* $9845: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9869; }
 label_9847:; /* NotTall */
     /* $9847: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_9849:;
-    /* $9849: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_986E;
+    /* $9849: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_986E; }
 label_984B:;
     /* $984B: 20 */ maybe_trigger_vblank(6); func_9BCB_b0();
 label_984E:;
@@ -18504,7 +18277,7 @@ label_9887:;
 label_9889:;
     /* $9889: 20 */ maybe_trigger_vblank(6); func_98B3_b0();
 label_988C:;
-    /* $988C: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_989E;
+    /* $988C: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_989E; }
 label_988E:;
     /* $988E: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x06; FLAG_NZ(g_cpu.X);
 label_9890:; /* VPipeSectLoop */
@@ -18515,7 +18288,7 @@ label_9895:;
     /* $9895: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_9896:;
     /* $9896: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -18568,7 +18341,7 @@ label_98BF:;
 label_98C2:;
     /* $98C2: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x00; g_cpu.C=(g_cpu.A>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_98C4:;
-    /* $98C4: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_98CE;
+    /* $98C4: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_98CE; }
 label_98C6:;
     /* $98C6: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x00; FLAG_NZ(g_cpu.X);
 label_98C8:;
@@ -18606,7 +18379,7 @@ label_98E5:; /* VerticalPipe */
 label_98E8:;
     /* $98E8: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x00); FLAG_NZ(g_cpu.A);
 label_98EA:;
-    /* $98EA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_98F0;
+    /* $98EA: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_98F0; }
 label_98EC:;
     /* $98EC: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_98ED:;
@@ -18624,15 +18397,15 @@ label_98F2:;
 label_98F5:;
     /* $98F5: 0D */ maybe_trigger_vblank(4); g_cpu.A |= nes_read(0x075F); FLAG_NZ(g_cpu.A);
 label_98F8:;
-    /* $98F8: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9925;
+    /* $98F8: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_9925; }
 label_98FA:;
     /* $98FA: BC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.Y);
 label_98FD:;
-    /* $98FD: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9925;
+    /* $98FD: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_9925; }
 label_98FF:;
     /* $98FF: 20 */ maybe_trigger_vblank(6); func_994A_b0();
 label_9902:;
-    /* $9902: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_9925;
+    /* $9902: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_9925; }
 label_9904:;
     /* $9904: 20 */ maybe_trigger_vblank(6); func_9BCB_b0();
 label_9907:;
@@ -18683,104 +18456,6 @@ label_9935:;
     /* $9935: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9936:;
     /* $9936: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_9B7D_b0(); return;
-label_9939:; /* GetPipeHeight */
-    /* $9939: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x01; FLAG_NZ(g_cpu.Y);
-label_993B:;
-    /* $993B: 20 */ maybe_trigger_vblank(6); func_9BAF_b0();
-label_993E:;
-    /* $993E: 20 */ maybe_trigger_vblank(6); func_9BBB_b0();
-label_9941:;
-    /* $9941: 98 */ maybe_trigger_vblank(2); g_cpu.A = g_cpu.Y; FLAG_NZ(g_cpu.A);
-label_9942:;
-    /* $9942: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x07; FLAG_NZ(g_cpu.A);
-label_9944:;
-    /* $9944: 85 */ maybe_trigger_vblank(3); nes_write(0x06, g_cpu.A);
-label_9946:;
-    /* $9946: BC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.Y);
-label_9949:;
-    /* $9949: 60 */ maybe_trigger_vblank(6); 
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_pop();
-#endif
-    return;
-label_994A:; /* FindEmptyEnemySlot */
-    /* $994A: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x00; FLAG_NZ(g_cpu.X);
-label_994C:; /* EmptyChkLoop */
-    /* $994C: 18 */ maybe_trigger_vblank(2); g_cpu.C = 0;
-label_994D:;
-    /* $994D: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0F + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
-label_994F:;
-    /* $994F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9956;
-label_9951:;
-    /* $9951: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
-label_9952:;
-    /* $9952: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x05; g_cpu.C=(g_cpu.X>=0x05)?1:0; FLAG_NZ(r&0xFF); }
-label_9954:;
-    /* $9954: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
-#ifdef WATCHDOG_ENABLED
-    watchdog_check();
-#endif
-    goto label_994C;
-    }
-label_9956:; /* ExitEmptyChk */
-    /* $9956: 60 */ maybe_trigger_vblank(6); 
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_pop();
-#endif
-    return;
-label_9957:; /* Hole_Water */
-    /* $9957: 20 */ maybe_trigger_vblank(6); func_9BAC_b0();
-label_995A:;
-    /* $995A: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x86; FLAG_NZ(g_cpu.A);
-label_995C:;
-    /* $995C: 8D */ maybe_trigger_vblank(4); nes_write(0x06AB, g_cpu.A);
-label_995F:;
-    /* $995F: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x0B; FLAG_NZ(g_cpu.X);
-label_9961:;
-    /* $9961: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x01; FLAG_NZ(g_cpu.Y);
-label_9963:;
-    /* $9963: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x87; FLAG_NZ(g_cpu.A);
-label_9965:;
-    /* $9965: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_9B7D_b0(); return;
-label_9968:; /* QuestionBlockRow_High */
-    /* $9968: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x03; FLAG_NZ(g_cpu.A);
-label_996A:;
-    /* $996A: 2C */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x07A9); g_cpu.Z=(g_cpu.A&m)?0:1; g_cpu.N=(m>>7)&1; g_cpu.V=(m>>6)&1; }
-label_996D:;
-    /* $996D: 48 */ maybe_trigger_vblank(3); g_ram[0x100 + g_cpu.S] = g_cpu.A; g_cpu.S--;
-label_996E:;
-    /* $996E: 20 */ maybe_trigger_vblank(6); func_9BAC_b0();
-label_9971:;
-    /* $9971: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
-label_9972:;
-    /* $9972: AA */ maybe_trigger_vblank(2); g_cpu.X = g_cpu.A; FLAG_NZ(g_cpu.X);
-label_9973:;
-    /* $9973: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0xC0; FLAG_NZ(g_cpu.A);
-label_9975:;
-    /* $9975: 9D */ maybe_trigger_vblank(5); nes_write((0x06A1 + g_cpu.X) & 0xFFFF, g_cpu.A);
-label_9978:;
-    /* $9978: 60 */ maybe_trigger_vblank(6); 
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_pop();
-#endif
-    return;
-label_9979:; /* Bridge_High */
-    /* $9979: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x06; FLAG_NZ(g_cpu.A);
-label_997B:;
-    /* $997B: 2C */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x07A9); g_cpu.Z=(g_cpu.A&m)?0:1; g_cpu.N=(m>>7)&1; g_cpu.V=(m>>6)&1; }
-label_997E:;
-    /* $997E: 2C */ maybe_trigger_vblank(4); { uint8_t m=nes_read(0x09A9); g_cpu.Z=(g_cpu.A&m)?0:1; g_cpu.N=(m>>7)&1; g_cpu.V=(m>>6)&1; }
-label_9981:;
-    /* $9981: 48 */ maybe_trigger_vblank(3); g_ram[0x100 + g_cpu.S] = g_cpu.A; g_cpu.S--;
-label_9982:;
-    /* $9982: 20 */ maybe_trigger_vblank(6); func_9BAC_b0();
-label_9985:;
-    /* $9985: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
-label_9986:;
-    /* $9986: AA */ maybe_trigger_vblank(2); g_cpu.X = g_cpu.A; FLAG_NZ(g_cpu.X);
-label_9987:;
-    /* $9987: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x0B; FLAG_NZ(g_cpu.A);
 label_9989:;
     /* $9989: 9D */ maybe_trigger_vblank(5); nes_write((0x06A1 + g_cpu.X) & 0xFFFF, g_cpu.A);
 label_998C:;
@@ -18791,6 +18466,60 @@ label_998F:;
     /* $998F: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x63; FLAG_NZ(g_cpu.A);
 label_9991:;
     /* $9991: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_9B7D_b0(); return;
+label_9778:; return;
+label_977B:; return;
+label_977D:; return;
+label_977F:; return;
+label_9782:; return;
+label_9783:; return;
+label_9786:; return;
+label_9788:; return;
+label_978B:; return;
+label_978D:; return;
+label_9790:; return;
+label_97B0:; return;
+label_97B2:; return;
+label_97B4:; return;
+label_9939:; return;
+label_993B:; return;
+label_993E:; return;
+label_9941:; return;
+label_9942:; return;
+label_9944:; return;
+label_9946:; return;
+label_9949:; return;
+label_994A:; return;
+label_994C:; return;
+label_994D:; return;
+label_994F:; return;
+label_9951:; return;
+label_9952:; return;
+label_9954:; return;
+label_9956:; return;
+label_9957:; return;
+label_995A:; return;
+label_995C:; return;
+label_995F:; return;
+label_9961:; return;
+label_9963:; return;
+label_9965:; return;
+label_9968:; return;
+label_996A:; return;
+label_996D:; return;
+label_996E:; return;
+label_9971:; return;
+label_9972:; return;
+label_9973:; return;
+label_9975:; return;
+label_9978:; return;
+label_9979:; return;
+label_997B:; return;
+label_997E:; return;
+label_9981:; return;
+label_9982:; return;
+label_9985:; return;
+label_9986:; return;
+label_9987:; return;
 label_9994:; return;
 label_9997:; return;
 label_9999:; return;
@@ -18959,28 +18688,6 @@ label_9B04:; return;
 label_9B06:; return;
 label_9B08:; return;
 label_9B0B:; return;
-label_9B0E:; return;
-label_9B11:; return;
-label_9B14:; return;
-label_9B16:; return;
-label_9B19:; return;
-label_9B1C:; return;
-label_9B1E:; return;
-label_9B20:; return;
-label_9B23:; return;
-label_9B24:; return;
-label_9B26:; return;
-label_9B28:; return;
-label_9B29:; return;
-label_9B2B:; return;
-label_9B2C:; return;
-label_9B2F:; return;
-label_9B30:; return;
-label_9B33:; return;
-label_9B36:; return;
-label_9B38:; return;
-label_9B39:; return;
-label_9B3B:; return;
 label_9B3C:; return;
 label_9B3D:; return;
 label_9B3F:; return;
@@ -20405,13 +20112,12 @@ label_A6A7:; return;
 label_A6A8:; return;
 label_A6AA:; return;
 label_A6AC:; return;
-label_A6AF:; return;
-label_A6B0:; return;
-label_A6B2:; return;
-label_A6B4:; return;
-label_A6B6:; return;
-label_A6B8:; return;
-label_A6BA:; return;
+label_A6B1:; return;
+label_A6B3:; return;
+label_A6B5:; return;
+label_A6B7:; return;
+label_A6B9:; return;
+label_A6BB:; return;
 label_A6BC:; return;
 label_A6BE:; return;
 label_A6C0:; return;
@@ -20557,6 +20263,40 @@ label_A7CA:; return;
 label_A7CD:; return;
 label_A7CE:; return;
 label_A7D0:; return;
+label_A7D3:; return;
+label_A7D5:; return;
+label_A7D7:; return;
+label_A7D9:; return;
+label_A7DC:; return;
+label_A7DE:; return;
+label_A7DF:; return;
+label_A7E1:; return;
+label_A7E3:; return;
+label_A7E6:; return;
+label_A7E8:; return;
+label_A7EA:; return;
+label_A7EB:; return;
+label_A7EE:; return;
+label_A7F0:; return;
+label_A7F2:; return;
+label_A7F3:; return;
+label_A7F5:; return;
+label_A7F8:; return;
+label_A7FA:; return;
+label_A7FC:; return;
+label_A7FE:; return;
+label_A7FF:; return;
+label_A801:; return;
+label_A804:; return;
+label_A807:; return;
+label_A80A:; return;
+label_A80C:; return;
+label_A80E:; return;
+label_A80F:; return;
+label_A811:; return;
+label_A813:; return;
+label_A816:; return;
+label_A818:; return;
 }
 
 void func_9740_b0(void) { /* AreaStyleObject */
@@ -20598,7 +20338,7 @@ label_9A2E:; /* RowOfBricks */
 label_9A31:;
     /* $9A31: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0743); FLAG_NZ(g_cpu.A);
 label_9A34:;
-    /* $9A34: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9A38;
+    /* $9A34: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9A38; }
 label_9A36:;
     /* $9A36: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x04; FLAG_NZ(g_cpu.Y);
 label_9A38:; /* DrawBricks */
@@ -20680,11 +20420,11 @@ void func_9B41_b0(void) { /* Hole_Empty */
 label_9B41:; /* Hole_Empty */
     /* $9B41: 20 */ maybe_trigger_vblank(6); func_9BAC_b0();
 label_9B44:;
-    /* $9B44: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_9B73;
+    /* $9B44: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_9B73; }
 label_9B46:;
     /* $9B46: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_9B49:;
-    /* $9B49: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9B73;
+    /* $9B49: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9B73; }
 label_9B4B:;
     /* $9B4B: AE */ maybe_trigger_vblank(4); g_cpu.X = nes_read(0x046A); FLAG_NZ(g_cpu.X);
 label_9B4E:;
@@ -20722,7 +20462,7 @@ label_9B69:;
 label_9B6A:;
     /* $9B6A: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x05; g_cpu.C=(g_cpu.X>=0x05)?1:0; FLAG_NZ(r&0xFF); }
 label_9B6C:;
-    /* $9B6C: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_9B70;
+    /* $9B6C: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_9B70; }
 label_9B6E:;
     /* $9B6E: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x00; FLAG_NZ(g_cpu.X);
 label_9B70:; /* StrWOffset */
@@ -20740,31 +20480,31 @@ label_9B7D:; /* RenderUnderPart */
 label_9B80:;
     /* $9B80: BC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read((0x06A1 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.Y);
 label_9B83:;
-    /* $9B83: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9B9D;
+    /* $9B83: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9B9D; }
 label_9B85:;
     /* $9B85: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x17; g_cpu.C=(g_cpu.Y>=0x17)?1:0; FLAG_NZ(r&0xFF); }
 label_9B87:;
-    /* $9B87: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9BA0;
+    /* $9B87: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9BA0; }
 label_9B89:;
     /* $9B89: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x1A; g_cpu.C=(g_cpu.Y>=0x1A)?1:0; FLAG_NZ(r&0xFF); }
 label_9B8B:;
-    /* $9B8B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9BA0;
+    /* $9B8B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9BA0; }
 label_9B8D:;
     /* $9B8D: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0xC0; g_cpu.C=(g_cpu.Y>=0xC0)?1:0; FLAG_NZ(r&0xFF); }
 label_9B8F:;
-    /* $9B8F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9B9D;
+    /* $9B8F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9B9D; }
 label_9B91:;
     /* $9B91: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0xC0; g_cpu.C=(g_cpu.Y>=0xC0)?1:0; FLAG_NZ(r&0xFF); }
 label_9B93:;
-    /* $9B93: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_9BA0;
+    /* $9B93: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_9BA0; }
 label_9B95:;
     /* $9B95: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x54; g_cpu.C=(g_cpu.Y>=0x54)?1:0; FLAG_NZ(r&0xFF); }
 label_9B97:;
-    /* $9B97: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9B9D;
+    /* $9B97: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9B9D; }
 label_9B99:;
     /* $9B99: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x50; g_cpu.C=(g_cpu.A>=0x50)?1:0; FLAG_NZ(r&0xFF); }
 label_9B9B:;
-    /* $9B9B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9BA0;
+    /* $9B9B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9BA0; }
 label_9B9D:; /* DrawThisRow */
     /* $9B9D: 9D */ maybe_trigger_vblank(5); nes_write((0x06A1 + g_cpu.X) & 0xFFFF, g_cpu.A);
 label_9BA0:; /* WaitOneRow */
@@ -20772,14 +20512,14 @@ label_9BA0:; /* WaitOneRow */
 label_9BA1:;
     /* $9BA1: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x0D; g_cpu.C=(g_cpu.X>=0x0D)?1:0; FLAG_NZ(r&0xFF); }
 label_9BA3:;
-    /* $9BA3: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_9BAB;
+    /* $9BA3: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_9BAB; }
 label_9BA5:;
     /* $9BA5: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0735); FLAG_NZ(g_cpu.Y);
 label_9BA8:;
     /* $9BA8: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9BA9:;
     /* $9BA9: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -20802,13 +20542,13 @@ label_97BA:; /* PulleyRopeObject */
 label_97BD:;
     /* $97BD: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x00; FLAG_NZ(g_cpu.Y);
 label_97BF:;
-    /* $97BF: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_97C8;
+    /* $97BF: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_97C8; }
 label_97C1:;
     /* $97C1: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_97C2:;
     /* $97C2: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_97C5:;
-    /* $97C5: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_97C8;
+    /* $97C5: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_97C8; }
 label_97C7:;
     /* $97C7: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_97C8:; /* RenderPul */
@@ -21062,7 +20802,7 @@ label_9821:;
 label_9822:;
     /* $9822: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x06); FLAG_NZ(g_cpu.A);
 label_9824:;
-    /* $9824: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_982D;
+    /* $9824: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_982D; }
 label_9826:;
     /* $9826: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9827:;
@@ -21079,7 +20819,7 @@ label_982D:; /* ChkCFloor */
     /* $982D: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x0B; g_cpu.C=(g_cpu.X>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_982F:;
     /* $982F: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -21092,25 +20832,25 @@ label_9832:;
 label_9833:;
     /* $9833: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0725); FLAG_NZ(g_cpu.A);
 label_9836:;
-    /* $9836: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_986E;
+    /* $9836: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_986E; }
 label_9838:;
     /* $9838: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_983B:;
     /* $983B: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x01; g_cpu.C=(g_cpu.A>=0x01)?1:0; FLAG_NZ(r&0xFF); }
 label_983D:;
-    /* $983D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9869;
+    /* $983D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9869; }
 label_983F:;
     /* $983F: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x07); FLAG_NZ(g_cpu.Y);
 label_9841:;
-    /* $9841: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9847;
+    /* $9841: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9847; }
 label_9843:;
     /* $9843: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_9845:;
-    /* $9845: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9869;
+    /* $9845: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9869; }
 label_9847:; /* NotTall */
     /* $9847: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_9849:;
-    /* $9849: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_986E;
+    /* $9849: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_986E; }
 label_984B:;
     /* $984B: 20 */ maybe_trigger_vblank(6); func_9BCB_b0();
 label_984E:;
@@ -21164,7 +20904,7 @@ void func_9AB7_b0(void) { /* StaircaseObject */
 label_9AB7:; /* StaircaseObject */
     /* $9AB7: 20 */ maybe_trigger_vblank(6); func_9BAC_b0();
 label_9ABA:;
-    /* $9ABA: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_9AC1;
+    /* $9ABA: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_9AC1; }
 label_9ABC:;
     /* $9ABC: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x09; FLAG_NZ(g_cpu.A);
 label_9ABE:;
@@ -21214,7 +20954,7 @@ label_98BF:;
 label_98C2:;
     /* $98C2: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x00; g_cpu.C=(g_cpu.A>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_98C4:;
-    /* $98C4: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_98CE;
+    /* $98C4: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_98CE; }
 label_98C6:;
     /* $98C6: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x00; FLAG_NZ(g_cpu.X);
 label_98C8:;
@@ -21272,57 +21012,13 @@ void func_9B01_b0(void) { /* Hidden1UpBlock */
 label_9B01:; /* Hidden1UpBlock */
     /* $9B01: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075D); FLAG_NZ(g_cpu.A);
 label_9B04:;
-    /* $9B04: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9B3C;
+    /* $9B04: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9B3C; }
 label_9B06:;
     /* $9B06: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_9B08:;
     /* $9B08: 8D */ maybe_trigger_vblank(4); nes_write(0x075D, g_cpu.A);
 label_9B0B:;
     /* $9B0B: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_9B19_b0(); return;
-label_9B0E:; /* QuestionBlock */
-    /* $9B0E: 20 */ maybe_trigger_vblank(6); func_9B36_b0();
-label_9B11:;
-    /* $9B11: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_9B2C_b0(); return;
-label_9B14:; /* BrickWithCoins */
-    /* $9B14: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
-label_9B16:;
-    /* $9B16: 8D */ maybe_trigger_vblank(4); nes_write(0x06BC, g_cpu.A);
-label_9B19:; /* BrickWithItem */
-    /* $9B19: 20 */ maybe_trigger_vblank(6); func_9B36_b0();
-label_9B1C:;
-    /* $9B1C: 84 */ maybe_trigger_vblank(3); nes_write(0x07, g_cpu.Y);
-label_9B1E:;
-    /* $9B1E: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
-label_9B20:;
-    /* $9B20: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x074E); FLAG_NZ(g_cpu.Y);
-label_9B23:;
-    /* $9B23: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
-label_9B24:;
-    /* $9B24: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9B28;
-label_9B26:;
-    /* $9B26: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x05; FLAG_NZ(g_cpu.A);
-label_9B28:; /* BWithL */
-    /* $9B28: 18 */ maybe_trigger_vblank(2); g_cpu.C = 0;
-label_9B29:;
-    /* $9B29: 65 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x07); uint16_t r=g_cpu.A+m+g_cpu.C; FLAG_NZC_ADD(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
-label_9B2B:;
-    /* $9B2B: A8 */ maybe_trigger_vblank(2); g_cpu.Y = g_cpu.A; FLAG_NZ(g_cpu.Y);
-label_9B2C:; /* DrawQBlk */
-    /* $9B2C: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0xBDE8 + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
-label_9B2F:;
-    /* $9B2F: 48 */ maybe_trigger_vblank(3); g_ram[0x100 + g_cpu.S] = g_cpu.A; g_cpu.S--;
-label_9B30:;
-    /* $9B30: 20 */ maybe_trigger_vblank(6); func_9BBB_b0();
-label_9B33:;
-    /* $9B33: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_9A48_b0(); return;
-label_9B36:; /* GetAreaObjectID */
-    /* $9B36: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x00); FLAG_NZ(g_cpu.A);
-label_9B38:;
-    /* $9B38: 38 */ maybe_trigger_vblank(2); g_cpu.C = 1;
-label_9B39:;
-    /* $9B39: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x00; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
-label_9B3B:;
-    /* $9B3B: A8 */ maybe_trigger_vblank(2); g_cpu.Y = g_cpu.A; FLAG_NZ(g_cpu.Y);
 label_9B3C:; /* ExitDecBlock */
     /* $9B3C: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -21346,7 +21042,7 @@ label_9B20:;
 label_9B23:;
     /* $9B23: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9B24:;
-    /* $9B24: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9B28;
+    /* $9B24: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9B28; }
 label_9B26:;
     /* $9B26: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x05; FLAG_NZ(g_cpu.A);
 label_9B28:; /* BWithL */
@@ -21384,7 +21080,7 @@ label_9B20:;
 label_9B23:;
     /* $9B23: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9B24:;
-    /* $9B24: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9B28;
+    /* $9B24: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9B28; }
 label_9B26:;
     /* $9B26: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x05; FLAG_NZ(g_cpu.A);
 label_9B28:; /* BWithL */
@@ -21508,7 +21204,7 @@ label_9887:;
 label_9889:;
     /* $9889: 20 */ maybe_trigger_vblank(6); func_98B3_b0();
 label_988C:;
-    /* $988C: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_989E;
+    /* $988C: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_989E; }
 label_988E:;
     /* $988E: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x06; FLAG_NZ(g_cpu.X);
 label_9890:; /* VPipeSectLoop */
@@ -21519,7 +21215,7 @@ label_9895:;
     /* $9895: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_9896:;
     /* $9896: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -21646,7 +21342,7 @@ label_96F2:; /* ScrollLockObject_Warp */
 label_96F4:;
     /* $96F4: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075F); FLAG_NZ(g_cpu.A);
 label_96F7:;
-    /* $96F7: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9701;
+    /* $96F7: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(2); goto label_9701; }
 label_96F9:;
     /* $96F9: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_96FA:;
@@ -21654,7 +21350,7 @@ label_96FA:;
 label_96FD:;
     /* $96FD: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_96FE:;
-    /* $96FE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9701;
+    /* $96FE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9701; }
 label_9700:;
     /* $9700: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_9701:; /* WarpNum */
@@ -21712,12 +21408,12 @@ label_9730:;
 label_9732:; /* FreCompLoop */
     /* $9732: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9733:;
-    /* $9733: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_973C;
+    /* $9733: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_973C; }
 label_9735:;
     /* $9735: D9 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0x0016 + g_cpu.Y) & 0xFFFF); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_9738:;
     /* $9738: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -21750,7 +21446,7 @@ label_96CB:;
 label_96CC:;
     /* $96CC: 29 */ maybe_trigger_vblank(2); g_cpu.A &= 0x40; FLAG_NZ(g_cpu.A);
 label_96CE:;
-    /* $96CE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_96E2;
+    /* $96CE: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_96E2; }
 label_96D0:;
     /* $96D0: 68 */ maybe_trigger_vblank(4); g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);
 label_96D1:;
@@ -21786,7 +21482,7 @@ label_96E3:;
 label_96E5:;
     /* $96E5: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_96E7:;
-    /* $96E7: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_96EE;
+    /* $96E7: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_96EE; }
 label_96E9:;
     /* $96E9: 8D */ maybe_trigger_vblank(4); nes_write(0x0744, g_cpu.A);
 label_96EC:;
@@ -21878,14 +21574,14 @@ label_994C:; /* EmptyChkLoop */
 label_994D:;
     /* $994D: B5 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0F + g_cpu.X) & 0xFF); FLAG_NZ(g_cpu.A);
 label_994F:;
-    /* $994F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9956;
+    /* $994F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9956; }
 label_9951:;
     /* $9951: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_9952:;
     /* $9952: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x05; g_cpu.C=(g_cpu.X>=0x05)?1:0; FLAG_NZ(r&0xFF); }
 label_9954:;
     /* $9954: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -21956,31 +21652,31 @@ label_9B7D:; /* RenderUnderPart */
 label_9B80:;
     /* $9B80: BC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read((0x06A1 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.Y);
 label_9B83:;
-    /* $9B83: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9B9D;
+    /* $9B83: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9B9D; }
 label_9B85:;
     /* $9B85: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x17; g_cpu.C=(g_cpu.Y>=0x17)?1:0; FLAG_NZ(r&0xFF); }
 label_9B87:;
-    /* $9B87: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9BA0;
+    /* $9B87: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9BA0; }
 label_9B89:;
     /* $9B89: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x1A; g_cpu.C=(g_cpu.Y>=0x1A)?1:0; FLAG_NZ(r&0xFF); }
 label_9B8B:;
-    /* $9B8B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9BA0;
+    /* $9B8B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9BA0; }
 label_9B8D:;
     /* $9B8D: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0xC0; g_cpu.C=(g_cpu.Y>=0xC0)?1:0; FLAG_NZ(r&0xFF); }
 label_9B8F:;
-    /* $9B8F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9B9D;
+    /* $9B8F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9B9D; }
 label_9B91:;
     /* $9B91: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0xC0; g_cpu.C=(g_cpu.Y>=0xC0)?1:0; FLAG_NZ(r&0xFF); }
 label_9B93:;
-    /* $9B93: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_9BA0;
+    /* $9B93: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_9BA0; }
 label_9B95:;
     /* $9B95: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x54; g_cpu.C=(g_cpu.Y>=0x54)?1:0; FLAG_NZ(r&0xFF); }
 label_9B97:;
-    /* $9B97: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_9B9D;
+    /* $9B97: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_9B9D; }
 label_9B99:;
     /* $9B99: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x50; g_cpu.C=(g_cpu.A>=0x50)?1:0; FLAG_NZ(r&0xFF); }
 label_9B9B:;
-    /* $9B9B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9BA0;
+    /* $9B9B: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9BA0; }
 label_9B9D:; /* DrawThisRow */
     /* $9B9D: 9D */ maybe_trigger_vblank(5); nes_write((0x06A1 + g_cpu.X) & 0xFFFF, g_cpu.A);
 label_9BA0:; /* WaitOneRow */
@@ -21988,14 +21684,14 @@ label_9BA0:; /* WaitOneRow */
 label_9BA1:;
     /* $9BA1: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x0D; g_cpu.C=(g_cpu.X>=0x0D)?1:0; FLAG_NZ(r&0xFF); }
 label_9BA3:;
-    /* $9BA3: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_9BAB;
+    /* $9BA3: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_9BAB; }
 label_9BA5:;
     /* $9BA5: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0735); FLAG_NZ(g_cpu.Y);
 label_9BA8:;
     /* $9BA8: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9BA9:;
     /* $9BA9: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -22018,9 +21714,9 @@ label_974C:; /* TreeLedge */
 label_974F:;
     /* $974F: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_9752:;
-    /* $9752: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9773;
+    /* $9752: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9773; }
 label_9754:;
-    /* $9754: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_9767;
+    /* $9754: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_9767; }
 label_9756:;
     /* $9756: 98 */ maybe_trigger_vblank(2); g_cpu.A = g_cpu.Y; FLAG_NZ(g_cpu.A);
 label_9757:;
@@ -22030,7 +21726,7 @@ label_975A:;
 label_975D:;
     /* $975D: 0D */ maybe_trigger_vblank(4); g_cpu.A |= nes_read(0x0726); FLAG_NZ(g_cpu.A);
 label_9760:;
-    /* $9760: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9767;
+    /* $9760: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9767; }
 label_9762:;
     /* $9762: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x16; FLAG_NZ(g_cpu.A);
 label_9764:;
@@ -22060,7 +21756,7 @@ label_9778:; /* MushroomLedge */
 label_977B:;
     /* $977B: 84 */ maybe_trigger_vblank(3); nes_write(0x06, g_cpu.Y);
 label_977D:;
-    /* $977D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_978B;
+    /* $977D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_978B; }
 label_977F:;
     /* $977F: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_9782:;
@@ -22076,7 +21772,7 @@ label_978B:; /* EndMushL */
 label_978D:;
     /* $978D: BC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.Y);
 label_9790:;
-    /* $9790: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_97B0;
+    /* $9790: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_97B0; }
 label_9792:;
     /* $9792: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0736 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_9795:;
@@ -22090,7 +21786,7 @@ label_979B:;
 label_979E:;
     /* $979E: C4 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x06); int r=g_cpu.Y-m; g_cpu.C=(g_cpu.Y>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_97A0:;
-    /* $97A0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_97CE;
+    /* $97A0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_97CE; }
 label_97A2:;
     /* $97A2: E8 */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X+1)&0xFF; FLAG_NZ(g_cpu.X);
 label_97A3:;
@@ -22111,28 +21807,6 @@ label_97B2:;
     /* $97B2: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x00; FLAG_NZ(g_cpu.Y);
 label_97B4:;
     /* $97B4: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); func_9B7D_b0(); return;
-label_97B7:; /* PulleyRopeMetatiles */
-    /* $97B7: 42 */ maybe_trigger_vblank(2); /* ILLEGAL $42 — skip 1 */
-label_97B8:;
-    /* $97B8: 41 */ maybe_trigger_vblank(6); g_cpu.A ^= nes_read(nes_read16zp((0x43 + g_cpu.X) & 0xFF)); FLAG_NZ(g_cpu.A);
-label_97BA:; /* PulleyRopeObject */
-    /* $97BA: 20 */ maybe_trigger_vblank(6); func_9BAC_b0();
-label_97BD:;
-    /* $97BD: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x00; FLAG_NZ(g_cpu.Y);
-label_97BF:;
-    /* $97BF: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_97C8;
-label_97C1:;
-    /* $97C1: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
-label_97C2:;
-    /* $97C2: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
-label_97C5:;
-    /* $97C5: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_97C8;
-label_97C7:;
-    /* $97C7: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
-label_97C8:; /* RenderPul */
-    /* $97C8: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x97B7 + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
-label_97CB:;
-    /* $97CB: 8D */ maybe_trigger_vblank(4); nes_write(0x06A1, g_cpu.A);
 label_97CE:; /* MushLExit */
     /* $97CE: 60 */ maybe_trigger_vblank(6); 
 #ifdef RECOMP_STACK_TRACKING
@@ -22158,7 +21832,7 @@ label_9A73:;
 label_9A74:;
     /* $9A74: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9A75:;
-    /* $9A75: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_9A85;
+    /* $9A75: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_9A85; }
 label_9A77:;
     /* $9A77: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x65; FLAG_NZ(g_cpu.A);
 label_9A79:;
@@ -22168,7 +21842,7 @@ label_9A7C:;
 label_9A7D:;
     /* $9A7D: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_9A7E:;
-    /* $9A7E: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_9A85;
+    /* $9A7E: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_9A85; }
 label_9A80:;
     /* $9A80: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x66; FLAG_NZ(g_cpu.A);
 label_9A82:;
@@ -22192,7 +21866,7 @@ label_9A9A:;
 label_9A9B:;
     /* $9A9B: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x06; g_cpu.C=(g_cpu.X>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_9A9D:;
-    /* $9A9D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_9AA1;
+    /* $9A9D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_9AA1; }
 label_9A9F:;
     /* $9A9F: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x00; FLAG_NZ(g_cpu.X);
 label_9AA1:; /* StrCOffset */
@@ -22216,7 +21890,7 @@ label_BB22:;
 label_BB24:;
     /* $BB24: 95 */ maybe_trigger_vblank(4); nes_write((0xC2 + g_cpu.X) & 0xFF, g_cpu.A);
 label_BB26:;
-    /* $BB26: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BB2B;
+    /* $BB26: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BB2B; }
 label_BB28:; /* RunAllH */
     /* $BB28: 20 */ maybe_trigger_vblank(6); func_D7C4();
 label_BB2B:; /* RunHSubs */
@@ -22270,7 +21944,7 @@ label_9BAF:; /* ChkLrgObjFixedLength */
 label_9BB2:;
     /* $9BB2: 18 */ maybe_trigger_vblank(2); g_cpu.C = 0;
 label_9BB3:;
-    /* $9BB3: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_9BBA;
+    /* $9BB3: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_9BBA; }
 label_9BB5:;
     /* $9BB5: 98 */ maybe_trigger_vblank(2); g_cpu.A = g_cpu.Y; FLAG_NZ(g_cpu.A);
 label_9BB6:;
@@ -22322,7 +21996,7 @@ label_9BAF:; /* ChkLrgObjFixedLength */
 label_9BB2:;
     /* $9BB2: 18 */ maybe_trigger_vblank(2); g_cpu.C = 0;
 label_9BB3:;
-    /* $9BB3: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_9BBA;
+    /* $9BB3: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_9BBA; }
 label_9BB5:;
     /* $9BB5: 98 */ maybe_trigger_vblank(2); g_cpu.A = g_cpu.Y; FLAG_NZ(g_cpu.A);
 label_9BB6:;
@@ -22360,7 +22034,7 @@ label_98BF:;
 label_98C2:;
     /* $98C2: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x00; g_cpu.C=(g_cpu.A>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_98C4:;
-    /* $98C4: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_98CE;
+    /* $98C4: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_98CE; }
 label_98C6:;
     /* $98C6: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x00; FLAG_NZ(g_cpu.X);
 label_98C8:;
@@ -22618,7 +22292,7 @@ label_ADB3:;
 label_ADB4:;
     /* $ADB4: 43 */ maybe_trigger_vblank(8); { uint16_t a=nes_read16zp((0x64 + g_cpu.X) & 0xFF); uint8_t v=nes_read(a); g_cpu.C=v&1; v>>=1; nes_write(a,v); g_cpu.A^=v; FLAG_NZ(g_cpu.A); }
 label_ADB6:;
-    /* $ADB6: 40 */ maybe_trigger_vblank(6); /* RTI */ g_cpu.S++; { uint8_t p=g_ram[0x100+g_cpu.S]; g_cpu.N=(p>>7)&1; g_cpu.V=(p>>6)&1; g_cpu.D=(p>>3)&1; g_cpu.I=(p>>2)&1; g_cpu.Z=(p>>1)&1; g_cpu.C=p&1; }
+    /* $ADB6: 40 */ maybe_trigger_vblank(6); /* RTI */ g_rti_source = 0xADB6; g_rti_bank = 0; g_cpu.S++; { uint8_t p=g_ram[0x100+g_cpu.S]; g_cpu.N=(p>>7)&1; g_cpu.V=(p>>6)&1; g_cpu.D=(p>>3)&1; g_cpu.I=(p>>2)&1; g_cpu.Z=(p>>1)&1; g_cpu.C=p&1; }
     g_cpu.S++; { uint8_t _rti_lo = g_ram[0x100+g_cpu.S];
     g_cpu.S++; uint8_t _rti_hi = g_ram[0x100+g_cpu.S];
     g_rti_target = (_rti_hi << 8) | _rti_lo; }
@@ -22633,7 +22307,7 @@ void func_8040_b0(void) {
     recomp_stack_push("func_8040_b0");
 #endif
 label_8040:;
-    /* $8040: 40 */ maybe_trigger_vblank(6); /* RTI */ g_cpu.S++; { uint8_t p=g_ram[0x100+g_cpu.S]; g_cpu.N=(p>>7)&1; g_cpu.V=(p>>6)&1; g_cpu.D=(p>>3)&1; g_cpu.I=(p>>2)&1; g_cpu.Z=(p>>1)&1; g_cpu.C=p&1; }
+    /* $8040: 40 */ maybe_trigger_vblank(6); /* RTI */ g_rti_source = 0x8040; g_rti_bank = 0; g_cpu.S++; { uint8_t p=g_ram[0x100+g_cpu.S]; g_cpu.N=(p>>7)&1; g_cpu.V=(p>>6)&1; g_cpu.D=(p>>3)&1; g_cpu.I=(p>>2)&1; g_cpu.Z=(p>>1)&1; g_cpu.C=p&1; }
     g_cpu.S++; { uint8_t _rti_lo = g_ram[0x100+g_cpu.S];
     g_cpu.S++; uint8_t _rti_hi = g_ram[0x100+g_cpu.S];
     g_rti_target = (_rti_hi << 8) | _rti_lo; }
@@ -22706,7 +22380,7 @@ label_87EC:;
 label_87EF:;
     /* $87EF: 12 */ maybe_trigger_vblank(2); /* ILLEGAL $12 — skip 1 */
 label_87F0:;
-    /* $87F0: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) goto label_8804;
+    /* $87F0: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) { maybe_trigger_vblank(2); goto label_8804; }
 label_87F2:; /* WarpZoneNumbers */
     /* $87F2: 04 */ maybe_trigger_vblank(3); (void)nes_read(0x03); /* NOP* (unofficial DOP/TOP read, result discarded) */
 label_87F4:;
@@ -22741,17 +22415,17 @@ label_880A:;
 label_880B:;
     /* $880B: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x04; g_cpu.C=(g_cpu.Y>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_880D:;
-    /* $880D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_881B;
+    /* $880D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_881B; }
 label_880F:;
     /* $880F: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x08; g_cpu.C=(g_cpu.Y>=0x08)?1:0; FLAG_NZ(r&0xFF); }
 label_8811:;
-    /* $8811: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8815;
+    /* $8811: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8815; }
 label_8813:;
     /* $8813: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x08; FLAG_NZ(g_cpu.Y);
 label_8815:; /* Chk2Players */
     /* $8815: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x077A); FLAG_NZ(g_cpu.A);
 label_8818:;
-    /* $8818: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_881B;
+    /* $8818: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_881B; }
 label_881A:;
     /* $881A: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_881B:; /* LdGameText */
@@ -22763,7 +22437,7 @@ label_8820:; /* GameTextLoop */
 label_8823:;
     /* $8823: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0xFF; g_cpu.C=(g_cpu.A>=0xFF)?1:0; FLAG_NZ(r&0xFF); }
 label_8825:;
-    /* $8825: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_882E;
+    /* $8825: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_882E; }
 label_8827:;
     /* $8827: 99 */ maybe_trigger_vblank(5); nes_write((0x0301 + g_cpu.Y) & 0xFFFF, g_cpu.A);
 label_882A:;
@@ -22772,7 +22446,7 @@ label_882B:;
     /* $882B: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_882C:;
     /* $882C: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -22789,11 +22463,11 @@ label_8834:;
 label_8835:;
     /* $8835: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x04; g_cpu.C=(g_cpu.A>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_8837:;
-    /* $8837: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8882;
+    /* $8837: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8882; }
 label_8839:;
     /* $8839: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_883A:;
-    /* $883A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_885F;
+    /* $883A: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_885F; }
 label_883C:;
     /* $883C: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075A); FLAG_NZ(g_cpu.A);
 label_883F:;
@@ -22803,7 +22477,7 @@ label_8840:;
 label_8842:;
     /* $8842: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x0A; g_cpu.C=(g_cpu.A>=0x0A)?1:0; FLAG_NZ(r&0xFF); }
 label_8844:;
-    /* $8844: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_884D;
+    /* $8844: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_884D; }
 label_8846:;
     /* $8846: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x0A; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_8848:;
@@ -22833,25 +22507,25 @@ label_885E:;
 label_885F:; /* CheckPlayerName */
     /* $885F: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x077A); FLAG_NZ(g_cpu.A);
 label_8862:;
-    /* $8862: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8881;
+    /* $8862: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8881; }
 label_8864:;
     /* $8864: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0753); FLAG_NZ(g_cpu.A);
 label_8867:;
     /* $8867: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_8868:;
-    /* $8868: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_8873;
+    /* $8868: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_8873; }
 label_886A:;
     /* $886A: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0770); FLAG_NZ(g_cpu.Y);
 label_886D:;
     /* $886D: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x03; g_cpu.C=(g_cpu.Y>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_886F:;
-    /* $886F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8873;
+    /* $886F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8873; }
 label_8871:;
     /* $8871: 49 */ maybe_trigger_vblank(2); g_cpu.A ^= 0x01; FLAG_NZ(g_cpu.A);
 label_8873:; /* ChkLuigi */
     /* $8873: 4A */ maybe_trigger_vblank(2); g_cpu.C = g_cpu.A&1; g_cpu.A >>= 1; FLAG_NZ(g_cpu.A);
 label_8874:;
-    /* $8874: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8881;
+    /* $8874: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8881; }
 label_8876:;
     /* $8876: A0 */ maybe_trigger_vblank(2); g_cpu.Y = 0x04; FLAG_NZ(g_cpu.Y);
 label_8878:; /* NameLoop */
@@ -22862,7 +22536,7 @@ label_887E:;
     /* $887E: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_887F:;
     /* $887F: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -22902,7 +22576,7 @@ label_8894:;
     /* $8894: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x0C; g_cpu.C=(g_cpu.Y>=0x0C)?1:0; FLAG_NZ(r&0xFF); }
 label_8896:;
     /* $8896: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -22943,7 +22617,7 @@ label_8E12:;
 label_8E14:;
     /* $8E14: 85 */ maybe_trigger_vblank(3); nes_write(0x07, g_cpu.A);
 label_8E16:;
-    /* $8E16: 6C */ maybe_trigger_vblank(5); { uint16_t _jt = nes_read16zp(0x06); maybe_trigger_vblank(2); call_by_address(_jt); return; }
+    /* $8E16: 6C */ maybe_trigger_vblank(5); { uint16_t _jt = nes_read16zp(0x06); nes_trace_indirect_jump(0x8E16, _jt); maybe_trigger_vblank(2); call_by_address_tail(_jt, -1); return; }
 }
 
 void func_9402_b0(void) {
@@ -22963,7 +22637,7 @@ label_940B:;
     /* $940B: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_940C:;
     /* $940C: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -22972,20 +22646,20 @@ label_940C:;
 label_940E:;
     /* $940E: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0742); FLAG_NZ(g_cpu.Y);
 label_9411:;
-    /* $9411: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9455;
+    /* $9411: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9455; }
 label_9413:;
     /* $9413: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0725); FLAG_NZ(g_cpu.A);
 label_9416:; /* ThirdP */
     /* $9416: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x03; g_cpu.C=(g_cpu.A>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_9418:;
-    /* $9418: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) goto label_941F;
+    /* $9418: 30 */ maybe_trigger_vblank(2); if (g_cpu.N) { maybe_trigger_vblank(1); goto label_941F; }
 label_941A:;
     /* $941A: 38 */ maybe_trigger_vblank(2); g_cpu.C = 1;
 label_941B:;
     /* $941B: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x03; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_941D:;
     /* $941D: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -23008,7 +22682,7 @@ label_9429:;
 label_942A:;
     /* $942A: BD */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x92FA + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_942D:;
-    /* $942D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9455;
+    /* $942D: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9455; }
 label_942F:;
     /* $942F: 48 */ maybe_trigger_vblank(3); g_ram[0x100 + g_cpu.S] = g_cpu.A; g_cpu.S--;
 label_9430:;
@@ -23052,12 +22726,12 @@ label_944C:;
 label_944D:;
     /* $944D: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x0B; g_cpu.C=(g_cpu.Y>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_944F:;
-    /* $944F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9455;
+    /* $944F: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9455; }
 label_9451:;
     /* $9451: C6 */ maybe_trigger_vblank(5); { uint16_t a=0x00; uint8_t v=(nes_read(a)-1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_9453:;
     /* $9453: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -23066,7 +22740,7 @@ label_9453:;
 label_9455:; /* RendFore */
     /* $9455: AE */ maybe_trigger_vblank(4); g_cpu.X = nes_read(0x0741); FLAG_NZ(g_cpu.X);
 label_9458:;
-    /* $9458: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_946D;
+    /* $9458: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_946D; }
 label_945A:;
     /* $945A: BC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read((0x93AD + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.Y);
 label_945D:;
@@ -23074,7 +22748,7 @@ label_945D:;
 label_945F:; /* SceLoop2 */
     /* $945F: B9 */ maybe_trigger_vblank(4); g_cpu.A = nes_read((0x93B1 + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_9462:;
-    /* $9462: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9467;
+    /* $9462: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9467; }
 label_9464:;
     /* $9464: 9D */ maybe_trigger_vblank(5); nes_write((0x06A1 + g_cpu.X) & 0xFFFF, g_cpu.A);
 label_9467:; /* NoFore */
@@ -23085,7 +22759,7 @@ label_9469:;
     /* $9469: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x0D; g_cpu.C=(g_cpu.X>=0x0D)?1:0; FLAG_NZ(r&0xFF); }
 label_946B:;
     /* $946B: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -23094,13 +22768,13 @@ label_946B:;
 label_946D:; /* RendTerr */
     /* $946D: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x074E); FLAG_NZ(g_cpu.Y);
 label_9470:;
-    /* $9470: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_947E;
+    /* $9470: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_947E; }
 label_9472:;
     /* $9472: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x075F); FLAG_NZ(g_cpu.A);
 label_9475:;
     /* $9475: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_9477:;
-    /* $9477: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_947E;
+    /* $9477: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_947E; }
 label_9479:;
     /* $9479: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x62; FLAG_NZ(g_cpu.A);
 label_947B:;
@@ -23110,7 +22784,7 @@ label_947E:; /* TerMTile */
 label_9481:;
     /* $9481: AC */ maybe_trigger_vblank(4); g_cpu.Y = nes_read(0x0743); FLAG_NZ(g_cpu.Y);
 label_9484:;
-    /* $9484: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_9488;
+    /* $9484: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_9488; }
 label_9486:;
     /* $9486: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x88; FLAG_NZ(g_cpu.A);
 label_9488:; /* StoreMT */
@@ -23134,11 +22808,11 @@ label_9497:;
 label_9499:;
     /* $9499: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x0743); FLAG_NZ(g_cpu.A);
 label_949C:;
-    /* $949C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_94A8;
+    /* $949C: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_94A8; }
 label_949E:;
     /* $949E: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x00; g_cpu.C=(g_cpu.X>=0x00)?1:0; FLAG_NZ(r&0xFF); }
 label_94A0:;
-    /* $94A0: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_94A8;
+    /* $94A0: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_94A8; }
 label_94A2:;
     /* $94A2: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x00); FLAG_NZ(g_cpu.A);
 label_94A4:;
@@ -23152,7 +22826,7 @@ label_94AA:; /* TerrBChk */
 label_94AD:;
     /* $94AD: 24 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0x00); g_cpu.Z=(g_cpu.A&m)?0:1; g_cpu.N=(m>>7)&1; g_cpu.V=(m>>6)&1; }
 label_94AF:;
-    /* $94AF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_94B6;
+    /* $94AF: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_94B6; }
 label_94B1:;
     /* $94B1: A5 */ maybe_trigger_vblank(3); g_cpu.A = nes_read(0x07); FLAG_NZ(g_cpu.A);
 label_94B3:;
@@ -23162,17 +22836,17 @@ label_94B6:; /* NextTBit */
 label_94B7:;
     /* $94B7: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x0D; g_cpu.C=(g_cpu.X>=0x0D)?1:0; FLAG_NZ(r&0xFF); }
 label_94B9:;
-    /* $94B9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_94D3;
+    /* $94B9: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_94D3; }
 label_94BB:;
     /* $94BB: AD */ maybe_trigger_vblank(4); g_cpu.A = nes_read(0x074E); FLAG_NZ(g_cpu.A);
 label_94BE:;
     /* $94BE: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x02; g_cpu.C=(g_cpu.A>=0x02)?1:0; FLAG_NZ(r&0xFF); }
 label_94C0:;
-    /* $94C0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_94CA;
+    /* $94C0: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_94CA; }
 label_94C2:;
     /* $94C2: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x0B; g_cpu.C=(g_cpu.X>=0x0B)?1:0; FLAG_NZ(r&0xFF); }
 label_94C4:;
-    /* $94C4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_94CA;
+    /* $94C4: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_94CA; }
 label_94C6:;
     /* $94C6: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x54; FLAG_NZ(g_cpu.A);
 label_94C8:;
@@ -23183,7 +22857,7 @@ label_94CB:;
     /* $94CB: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x08; g_cpu.C=(g_cpu.Y>=0x08)?1:0; FLAG_NZ(r&0xFF); }
 label_94CD:;
     /* $94CD: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -23193,7 +22867,7 @@ label_94CF:;
     /* $94CF: A4 */ maybe_trigger_vblank(3); g_cpu.Y = nes_read(0x01); FLAG_NZ(g_cpu.Y);
 label_94D1:;
     /* $94D1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -23228,7 +22902,7 @@ label_94EB:;
 label_94EE:;
     /* $94EE: D9 */ maybe_trigger_vblank(4); { uint8_t m=nes_read((0x9504 + g_cpu.Y) & 0xFFFF); int r=g_cpu.A-m; g_cpu.C=(g_cpu.A>=m)?1:0; FLAG_NZ(r&0xFF); }
 label_94F1:;
-    /* $94F1: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_94F5;
+    /* $94F1: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_94F5; }
 label_94F3:;
     /* $94F3: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x00; FLAG_NZ(g_cpu.A);
 label_94F5:; /* StrBlock */
@@ -23278,7 +22952,7 @@ label_BFBD:;
 label_BFBF:;
     /* $BFBF: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x29; g_cpu.C=(g_cpu.Y>=0x29)?1:0; FLAG_NZ(r&0xFF); }
 label_BFC1:;
-    /* $BFC1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_BFC5;
+    /* $BFC1: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_BFC5; }
 label_BFC3:;
     /* $BFC3: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x09; FLAG_NZ(g_cpu.A);
 label_BFC5:; /* SetDplSpd */
@@ -23316,7 +22990,7 @@ label_852C:;
 label_852F:;
     /* $852F: 18 */ maybe_trigger_vblank(2); g_cpu.C = 0;
 label_8530:;
-    /* $8530: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8537;
+    /* $8530: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8537; }
 label_8532:;
     /* $8532: E9 */ maybe_trigger_vblank(2); { uint8_t m=0x01; int16_t r=g_cpu.A-m-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,m); g_cpu.A=r&0xFF; }
 label_8534:;
@@ -23378,21 +23052,21 @@ label_8424:;
 label_8427:;
     /* $8427: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_8429:;
-    /* $8429: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) goto label_8434;
+    /* $8429: F0 */ maybe_trigger_vblank(2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_8434; }
 label_842B:;
     /* $842B: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_842C:;
     /* $842C: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x04; g_cpu.C=(g_cpu.Y>=0x04)?1:0; FLAG_NZ(r&0xFF); }
 label_842E:;
-    /* $842E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8456;
+    /* $842E: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8456; }
 label_8430:;
     /* $8430: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x03; g_cpu.C=(g_cpu.Y>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_8432:;
-    /* $8432: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) goto label_8443;
+    /* $8432: B0 */ maybe_trigger_vblank(2); if (g_cpu.C) { maybe_trigger_vblank(1); goto label_8443; }
 label_8434:; /* EvalForMusic */
     /* $8434: C0 */ maybe_trigger_vblank(2); { int r=g_cpu.Y-0x03; g_cpu.C=(g_cpu.Y>=0x03)?1:0; FLAG_NZ(r&0xFF); }
 label_8436:;
-    /* $8436: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) goto label_843C;
+    /* $8436: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) { maybe_trigger_vblank(1); goto label_843C; }
 label_8438:;
     /* $8438: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x04; FLAG_NZ(g_cpu.A);
 label_843A:;
@@ -23422,7 +23096,7 @@ label_8451:;
 label_8454:;
     /* $8454: C9 */ maybe_trigger_vblank(2); { int r=g_cpu.A-0x07; g_cpu.C=(g_cpu.A>=0x07)?1:0; FLAG_NZ(r&0xFF); }
 label_8456:; /* SetEndTimer */
-    /* $8456: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_8460;
+    /* $8456: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_8460; }
 label_8458:;
     /* $8458: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x06; FLAG_NZ(g_cpu.A);
 label_845A:;
@@ -23457,7 +23131,7 @@ label_822D:;
     /* $822D: C8 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y+1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_822E:;
     /* $822E: D0 */ maybe_trigger_vblank(2); if (!g_cpu.Z) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -23524,7 +23198,7 @@ label_9A99:;
 label_9A9B:;
     /* $9A9B: E0 */ maybe_trigger_vblank(2); { int r=g_cpu.X-0x06; g_cpu.C=(g_cpu.X>=0x06)?1:0; FLAG_NZ(r&0xFF); }
 label_9A9D:;
-    /* $9A9D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_9AA1;
+    /* $9A9D: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_9AA1; }
 label_9A9F:;
     /* $9A9F: A2 */ maybe_trigger_vblank(2); g_cpu.X = 0x00; FLAG_NZ(g_cpu.X);
 label_9AA1:; /* StrCOffset */
@@ -23563,7 +23237,7 @@ label_90B1:;
     /* $90B1: CA */ maybe_trigger_vblank(2); g_cpu.X = (g_cpu.X-1)&0xFF; FLAG_NZ(g_cpu.X);
 label_90B2:;
     /* $90B2: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -23579,7 +23253,7 @@ label_90BC:;
     /* $90BC: 88 */ maybe_trigger_vblank(2); g_cpu.Y = (g_cpu.Y-1)&0xFF; FLAG_NZ(g_cpu.Y);
 label_90BD:;
     /* $90BD: 10 */ maybe_trigger_vblank(2); if (!g_cpu.N) {
-    maybe_trigger_vblank(2);
+    maybe_trigger_vblank(1);
 #ifdef WATCHDOG_ENABLED
     watchdog_check();
 #endif
@@ -23614,7 +23288,7 @@ label_B30C:;
 label_B30E:;
     /* $B30E: C2 */ maybe_trigger_vblank(2); /* NOP */
 label_B310:;
-    /* $B310: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) goto label_B315;
+    /* $B310: 90 */ maybe_trigger_vblank(2); if (!g_cpu.C) { maybe_trigger_vblank(1); goto label_B315; }
 label_B312:;
     /* $B312: EE */ maybe_trigger_vblank(6); { uint16_t a=0x075D; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); FLAG_NZ(v); }
 label_B315:; /* NextArea */
