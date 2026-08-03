@@ -14,19 +14,6 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 
 > **Status:** The game is fully playable. All worlds and levels are believed to be completable, though not every path has been exhaustively tested. If you find a game-breaking bug, please [open an issue](../../issues).
 
-## Netplay
-
-The launcher includes two-player delay-sync netplay for SMB's alternating
-Mario/Luigi mode. Open **Netplay** to host or join a room; local lobbies use a
-direct LAN connection and Internet rooms negotiate an ICE connection through
-the configured lobby service. The host's widescreen choice and input delay are
-used by both peers.
-
-During a match, F6/F7 quick save/load are disabled because they would break
-determinism. Press Escape to leave the match and return to the room for a
-rematch. A controller-input mismatch, state-digest mismatch, or disconnected
-peer also returns both players to the lobby.
-
 ## Known Issues
 
 - **Demo sequence non-determinism** — the title screen auto-play demo may behave
@@ -41,21 +28,16 @@ peer also returns both players to the lobby.
 2. Extract and run `SuperMarioBrosRecomp.exe`
 3. Select your Super Mario Bros. (World) ROM when prompted — the path is saved for future launches
 
-## Widescreen (experimental)
+## Widescreen mod (experimental)
 
 An optional 16:9 mode renders the world beyond the NES's 256-px viewport
 — real background and sprites in the margins, no stretching. It is
 **experimental and buggy** (see [WIDESCREEN.md](WIDESCREEN.md)).
 
-- Download `SuperMarioBrosRecomp-widescreen-windows-x64.zip` from
-  [Releases](../../releases), **or**
-- drop a `widescreen.ini` next to the exe (`enabled = 1`, `aspect = 16:9`),
-  **or** pass `--widescreen 16:9` (or `--widescreen <left>x<right>`,
-  `--widescreen off`).
-
-Both release zips contain the same binary: widescreen is a runtime
-setting. Without it the game is the authentic 4:3 recomp — verified
-byte-identical to the emulator reference with widescreen off.
+Open **Mods** in the launcher and enable **Widescreen (16:9)**. It is a
+default-off package alongside **Voxel 3D**; neither package
+patches the stock ROM. With both disabled the game is the authentic 4:3
+recomp, verified byte-identical to the emulator reference.
 
 ## Controls
 
@@ -84,9 +66,9 @@ byte-identical to the emulator reference with widescreen off.
 | MD5   | `811b027eaf99c2def7b933c5208636de` |
 | SHA-1 | `ea343f4e445a9050d4b4fbac2c77d0693b1d0922` |
 
-## Experimental First-Person Voxel View
+## Experimental Voxel 3D
 
-Open **Mods** in the launcher and enable **First-Person Voxel View**. This
+Open **Mods** in the launcher and enable **Voxel 3D**. This
 separate experimental branch parks the earlier tabletop treatment, rotates
 the sampled side-scroller plane upright, and moves the camera with Mario while
 looking forward along the course. Right advances, Left backpedals without

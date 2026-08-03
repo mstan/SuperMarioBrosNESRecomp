@@ -200,32 +200,12 @@ static void ws_set_margins_from_spec(const char *spec) {
     s_ws_enabled = (s_ws_left + s_ws_right) > 0;
 }
 
-/* widescreen.ini next to the exe:
- *   enabled = 1
- *   aspect = 16:9        (or: margins = 85x85)
- * Absent file or enabled=0 → fully vanilla. */
-static void ws_load_config(void) {
-    /* Launcher toggle: config.ini "Widescreen = 1" enables widescreen with a 16:9
-     * default. A widescreen.ini below can still override the margins. */
-    if (g_nes_config.widescreen) ws_set_margins_from_spec("16:9");
-
-    char path[512];
-    get_exe_relative_path("widescreen.ini", path, sizeof(path));
-    FILE *f = fopen(path, "r");
-    if (!f) return;
-    int enabled = 0;
-    char aspect[32] = "16:9";
-    char line[128];
-    while (fgets(line, sizeof(line), f)) {
-        char key[32], val[64];
-        if (sscanf(line, " %31[A-Za-z_] = %63s", key, val) == 2) {
-            if (strcmp(key, "enabled") == 0) enabled = atoi(val);
-            else if (strcmp(key, "aspect") == 0 || strcmp(key, "margins") == 0)
-                snprintf(aspect, sizeof(aspect), "%s", val);
-        }
-    }
-    fclose(f);
-    if (enabled) ws_set_margins_from_spec(aspect);
+/* The launcher-facing switch lives in the bundled package catalog. */
+void game_widescreen_set_mod_enabled(int enabled) {
+    s_ws_enabled = 0;
+    s_ws_left = s_ws_right = 0;
+    if (enabled)
+        ws_set_margins_from_spec("16:9");
 }
 
 static void ws_apply_init(void) {
@@ -257,7 +237,6 @@ const char *game_get_name(void) { return "Super Mario Bros."; }
 
 void game_on_init(void) {
     watchdog_frame_start();
-    ws_load_config();
     ws_apply_init();
     game_voxel_init();
 

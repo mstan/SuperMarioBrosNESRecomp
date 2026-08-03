@@ -1,0 +1,24 @@
+format_version = 1
+id = "super-mario-bros.enhancement.widescreen"
+version = "1.0.0"
+name = "Super Mario Bros. Widescreen"
+author = "NESRecomp"
+description = "Renders Super Mario Bros. with its game-specific 16:9 background, sprite, culling, and HUD treatment without modifying the stock ROM."
+license = "MIT"
+resolver = "declarative"
+save_compatibility = "stock"
+
+[[target]]
+game_id = "super-mario-bros-world"
+rom_crc32 = "d445f698"
+
+[[feature]]
+id = "widescreen"
+name = "Widescreen (16:9)"
+description = "Enable Super Mario Bros.' experimental game-specific 16:9 rendering enhancement."
+group = "Display"
+default_enabled = false
+
+[[plugin]]
+feature = "widescreen"
+id = "super-mario-bros.widescreen"

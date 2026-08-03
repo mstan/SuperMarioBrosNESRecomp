@@ -1,7 +1,7 @@
 format_version = 1
 id = "super-mario-bros.enhancement.voxel-first-person"
 version = "1.0.0"
-name = "First-Person Voxel View"
+name = "Voxel 3D"
 author = "NESRecomp"
 description = "Presents Super Mario Bros. through a player-tracked voxel camera without modifying the stock ROM."
 license = "MIT"
@@ -14,7 +14,7 @@ rom_crc32 = "d445f698"
 
 [[feature]]
 id = "voxel-first-person"
-name = "First-Person Voxel View"
+name = "Voxel 3D"
 description = "Tracks Mario from eye level while reconstructing terrain and non-player actors in perspective."
 group = "Display"
 default_enabled = false

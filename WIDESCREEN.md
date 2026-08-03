@@ -7,14 +7,11 @@ off unless explicitly enabled.
 
 ## Enabling
 
-Either ship a `widescreen.ini` next to the exe:
+Open **Mods** in the launcher and enable **Widescreen (16:9)**. The bundled
+package is disabled by default and activates the game-specific rendering
+implementation without patching the ROM.
 
-```ini
-enabled = 1
-aspect = 16:9        # or: margins = 85x85  (left x right, in pixels)
-```
-
-or pass a command-line flag (overrides the ini):
+For developer testing, the command-line override remains available:
 
 ```
 SuperMarioBrosRecomp.exe --widescreen 16:9
@@ -25,13 +22,13 @@ SuperMarioBrosRecomp.exe --widescreen off
 `16:9` resolves to 428 px wide (86 left + 256 + 86 right) at 240 lines.
 Margins are capped at **left ≤ 128, right ≤ 96** — see Caps below.
 
-With no ini and no flag, or `enabled = 0`, or `margins = 0x0`, the game
-is exactly vanilla: the 8000-frame `--verify` oracle run is byte-identical
-to the Nestopia reference in work RAM with widescreen off.
+With the package disabled (and no command-line override), the game is exactly
+vanilla: the 8000-frame `--verify` oracle run is byte-identical to the Nestopia
+reference in work RAM with widescreen off.
 
 ## How it works
 
-Four coordinated layers, all gated at runtime on the config AND the
+Four coordinated layers, all gated at runtime on the package switch AND the
 gameplay mode (OperMode 1 = game, 2 = victory; the title screen, attract
 demo, and game-over screens stay fully vanilla and pillarboxed):
 

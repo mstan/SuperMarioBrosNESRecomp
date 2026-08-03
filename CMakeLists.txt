@@ -6,10 +6,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(NESRECOMP_ROOT ${CMAKE_SOURCE_DIR}/nesrecomp)
 
-# Super Mario Bros. is the first two-player delay-sync netplay title. ICE is
-# enabled for Internet lobbies; recomp-net also retains its direct LAN path.
-set(NESRECOMP_NET_ICE ON CACHE BOOL "" FORCE)
-
 # nesrecomp/ and recomp-ui/ are git submodules (see .gitmodules); the pinned
 # commit is the gitlink recorded in this repo. After cloning run setup.sh/.bat
 # (git submodule update --init) to fetch them at the recorded commits.
@@ -26,6 +22,7 @@ add_executable(SuperMarioBrosRecomp
     ${NESRECOMP_RUNNER_SOURCES}
     extras.c
     game_voxel.c
+    mods/widescreen_plugin.c
     mods/voxel_plugin.c
     nes_snapshot.c
     verify_mode.c
@@ -37,7 +34,6 @@ add_executable(SuperMarioBrosRecomp
 target_compile_definitions(SuperMarioBrosRecomp PRIVATE
     RECOMP_STACK_TRACKING WATCHDOG_ENABLED
     NESRECOMP_GAME_PLAYERS=2
-    NESRECOMP_GAME_VERSION="smb-netplay-v1"
     NESRECOMP_GAME_ID="super-mario-bros-world"
     NESRECOMP_GAME_ROM_CRC32="d445f698"
     NESRECOMP_GAME_SDL_EVENT_HOOK=game_voxel_handle_event)
@@ -49,7 +45,6 @@ target_include_directories(SuperMarioBrosRecomp PRIVATE
 )
 
 target_link_libraries(SuperMarioBrosRecomp PRIVATE ${SDL2_LIBRARIES})
-nesrecomp_enable_recomp_net(SuperMarioBrosRecomp)
 
 if(WIN32)
     target_link_libraries(SuperMarioBrosRecomp PRIVATE ws2_32)
@@ -83,4 +78,3 @@ add_custom_command(TARGET SuperMarioBrosRecomp POST_BUILD
         "${CMAKE_SOURCE_DIR}/mods/preloaded"
         "$<TARGET_FILE_DIR:SuperMarioBrosRecomp>/mods"
     COMMENT "Staging SMB's preloaded NES mod packages")
-target_compile_definitions(SuperMarioBrosRecomp PRIVATE NESRECOMP_GAME_WIDESCREEN=1)
