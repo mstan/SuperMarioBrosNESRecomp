@@ -1,7 +1,7 @@
 /*
  * Super Mario Bros. first-person experiment for NESRecomp's opt-in voxel
  * compositor. The camera rides at Mario's screen-relative position and looks
- * along his facing direction through the reconstructed level geometry.
+ * forward along the course through an upright reconstruction of the level.
  */
 #include "game_voxel.h"
 
@@ -56,11 +56,12 @@ static float clamp_float(float value, float low, float high) {
 static void smb_first_person_camera(NesVoxelScreenCamera *camera,
                                     float pitch, float yaw, float roll,
                                     float zoom_percent, void *user) {
-    int facing = g_ram[0x0033] == 2 ? -1 : 1;
     float player_x = (float)g_ram[0x03AD] + 8.0f;
     float player_y = (float)g_ram[0x03B8];
-    float heading = (facing < 0 ? SMB_PI : 0.0f) +
-                    yaw * SMB_PI / 180.0f;
+    /* In the upright side-scroller layout, +X is level progress and screen Y
+     * is actual world height. Keep the course direction stable: Right moves
+     * forward, Left backpedals, and numpad yaw is deliberate head turning. */
+    float heading = yaw * SMB_PI / 180.0f;
     float look_pitch = (pitch - 15.0f) * SMB_PI / 180.0f;
     float look_distance = 128.0f;
     (void)roll;
@@ -70,13 +71,11 @@ static void smb_first_person_camera(NesVoxelScreenCamera *camera,
     if (player_y < 32.0f || player_y > 224.0f) player_y = 176.0f;
 
     camera->enabled = 1;
-    camera->eye_x = player_x + facing * 5.0f;
-    camera->eye_y = 10.0f;
-    /* Screen Y is the tabletop depth axis. Sitting slightly north of
-     * Mario's feet puts the lens in the open lane immediately above the
-     * ground row instead of inside its raised prisms. */
-    camera->eye_z = clamp_float(
-        player_y + 8.0f - SMB_SOURCE_Y, 12.0f, 192.0f);
+    camera->eye_x = player_x + 5.0f;
+    camera->eye_y = clamp_float(
+        (float)(SMB_SOURCE_Y + 208) - player_y - 8.0f,
+        12.0f, 196.0f);
+    camera->eye_z = 0.0f;
     camera->look_at_x =
         camera->eye_x + cosf(heading) * cosf(look_pitch) * look_distance;
     camera->look_at_y =
@@ -111,7 +110,8 @@ static const NesVoxelScreenProfile s_profile = {
     smb_tile_height,
     0,
     smb_first_person_camera,
-    smb_first_person_sprite_visible
+    smb_first_person_sprite_visible,
+    NES_VOXEL_LAYOUT_SIDE
 };
 
 void game_voxel_set_mod_enabled(int enabled) {

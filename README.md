@@ -87,11 +87,12 @@ byte-identical to the emulator reference with widescreen off.
 ## Experimental First-Person Voxel View
 
 Open **Mods** in the launcher and enable **First-Person Voxel View**. This
-separate experimental branch parks the earlier tabletop treatment and moves
-the camera to Mario's screen-relative position, looking along his facing
-direction. Mario's own card is hidden; enemies and items remain oriented
-cards among the reconstructed block, pipe, and terrain geometry. The feature
-is disabled by default and does not patch the stock ROM.
+separate experimental branch parks the earlier tabletop treatment, rotates
+the sampled side-scroller plane upright, and moves the camera with Mario while
+looking forward along the course. Right advances, Left backpedals without
+snapping the camera 180 degrees, and Mario's own card is hidden. Enemies and
+items remain oriented cards among the reconstructed block and terrain
+geometry. The feature is disabled by default and does not patch the stock ROM.
 
 Numpad 8/2 adjusts head pitch, 4/6 head yaw, 7/9 roll, +/- zoom, and 1/3
 sprite scale.
