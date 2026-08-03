@@ -84,6 +84,17 @@ byte-identical to the emulator reference with widescreen off.
 | MD5   | `811b027eaf99c2def7b933c5208636de` |
 | SHA-1 | `ea343f4e445a9050d4b4fbac2c77d0693b1d0922` |
 
+## Experimental 3D Voxel Diorama
+
+Open **Mods** in the launcher and enable **3D Voxel Diorama**. The bundled
+feature is disabled by default. Brown blocks and ground plus dense green
+terrain become solid geometry; clouds and other painted sky decoration stay
+flat, while Mario, enemies, and items remain oriented sprite cards with
+contact shadows.
+
+Numpad 8/2 adjusts pitch, 4/6 yaw, 7/9 roll, +/- zoom, and 1/3 sprite scale.
+Numpad 0 toggles the live view and Numpad 5 restores package defaults.
+
 ## Building from Source
 
 Prerequisites: Windows 10+, Visual Studio 2022, CMake 3.20+ (SDL2 is bundled)

@@ -13,6 +13,7 @@
 #include "input_script.h"
 #include "debug_server.h"
 #include "verify_mode.h"
+#include "game_voxel.h"
 #ifdef ENABLE_NESTOPIA_ORACLE
 #include "nestopia_bridge.h"
 #endif
@@ -256,6 +257,7 @@ const char *game_get_name(void) { return "Super Mario Bros."; }
 void game_on_init(void) {
     ws_load_config();
     ws_apply_init();
+    game_voxel_init();
 
     s_debug_enabled = check_debug_ini();
 
@@ -289,6 +291,7 @@ void game_on_frame(uint64_t frame_count) {
 void game_post_nmi(uint64_t frame_count) {
     (void)frame_count;
     ws_update_frame_gate();
+    game_voxel_update();
     if (s_debug_enabled) {
         debug_server_record_frame();
     }
@@ -553,7 +556,9 @@ void game_fill_frame_record(void *record) {
     /* slots 6..15 left at their zero-initialized state */
 }
 
-void game_post_render(uint32_t *framebuf) { (void)framebuf; }
+void game_post_render(uint32_t *framebuf) {
+    game_voxel_post_render(framebuf);
+}
 
 /* ---- Debug command handler (SMB-specific) ---- */
 

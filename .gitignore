@@ -1,4 +1,5 @@
 build/
+build-voxel-vs/
 build_release/
 build_debug/
 release/
