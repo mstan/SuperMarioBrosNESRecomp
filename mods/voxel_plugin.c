@@ -8,11 +8,12 @@ static void reset_voxel(void) {
 }
 
 static void activate_voxel(void) {
-    const char *package = "super-mario-bros.enhancement.voxel-diorama";
-    const char *feature = "voxel-diorama";
+    const char *package =
+        "super-mario-bros.enhancement.voxel-first-person";
+    const char *feature = "voxel-first-person";
     game_voxel_configure_mod(
-        nes_mod_get_option_int(package, feature, "pitch", 25),
-        nes_mod_get_option_int(package, feature, "yaw", -20),
+        nes_mod_get_option_int(package, feature, "pitch", 15),
+        nes_mod_get_option_int(package, feature, "yaw", 0),
         nes_mod_get_option_int(package, feature, "roll", 0),
         nes_mod_get_option_int(package, feature, "zoom", 100),
         nes_mod_get_option_int(package, feature, "sprite-scale", 120));
@@ -22,6 +23,7 @@ static void activate_voxel(void) {
 NES_MOD_CONSTRUCTOR(register_voxel_plugin) {
     if (!nes_mod_register_reset_callback(reset_voxel) ||
         !nes_mod_register_activation_plugin(
-            "super-mario-bros.voxel-diorama", activate_voxel))
-        fprintf(stderr, "[Mods] Failed to register SMB voxel plugin\n");
+            "super-mario-bros.voxel-first-person", activate_voxel))
+        fprintf(stderr,
+                "[Mods] Failed to register SMB first-person voxel plugin\n");
 }
