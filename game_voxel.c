@@ -24,8 +24,24 @@ static int smb_scene_visible(const uint32_t *framebuffer,
     return mode == 1 || mode == 2;
 }
 
+static uint8_t smb_metatile_at_sample(
+    const NesVoxelScreenSample *sample) {
+    int camera_x = ((int)g_ram[0x071A] << 8) | g_ram[0x071C];
+    int screen_x = -(camera_x & 15) + sample->tile_x * 8 + 4;
+    int world_x = camera_x + screen_x;
+    int row = sample->tile_y / 2;
+    int column;
+    int buffer;
+
+    if (world_x < 0 || row < 0 || row >= 13) return 0;
+    column = (world_x >> 4) & 15;
+    buffer = ((world_x >> 8) & 1) ? 0x05D0 : 0x0500;
+    return g_ram[buffer + row * 16 + column];
+}
+
 static float smb_tile_height(const NesVoxelScreenSample *sample,
                              void *user) {
+    uint8_t metatile = smb_metatile_at_sample(sample);
     unsigned bg_sum =
         ((sample->background >> 16) & 0xFFu) +
         ((sample->background >> 8) & 0xFFu) +
@@ -33,10 +49,17 @@ static float smb_tile_height(const NesVoxelScreenSample *sample,
     (void)user;
     if (sample->non_background_pixels < 5) return 0.0f;
 
+    /* Use SMB's native collision/metatile buffers for green structures that
+     * cannot safely be recognized from color alone.  $12-$15 are vertical
+     * pipe quadrants; $24-$25 are the flagpole cap and shaft. Decorative
+     * hills use different metatiles and remain flat scenery. */
+    if ((metatile >= 0x12 && metatile <= 0x15) ||
+        metatile == 0x24 || metatile == 0x25)
+        return 16.0f;
+
     /* Warm brick/soil are reliable structural materials. Green is deliberately
-     * left flat in first person: the framebuffer-only sampler cannot reliably
-     * distinguish pipes from large decorative hills, and a false-positive
-     * hill becomes an impassable wall directly in front of the camera. */
+     * otherwise left flat in first person: a false-positive hill would become
+     * an impassable wall directly in front of the camera. */
     if (sample->warm_pixels >= 4)
         return sample->non_background_pixels >= 32 ? 16.0f : 12.0f;
 
