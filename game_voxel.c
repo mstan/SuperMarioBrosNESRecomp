@@ -101,6 +101,12 @@ static int smb_first_person_sprite_visible(int min_x, int min_y,
     return 1;
 }
 
+static int smb_metatile_grid_offset(void *user) {
+    int camera_x = ((int)g_ram[0x071A] << 8) | g_ram[0x071C];
+    (void)user;
+    return -(camera_x & 15);
+}
+
 static const NesVoxelScreenProfile s_profile = {
     "Super Mario Bros. first-person voxel",
     32, 208, 32, 0, 85,
@@ -111,7 +117,9 @@ static const NesVoxelScreenProfile s_profile = {
     0,
     smb_first_person_camera,
     smb_first_person_sprite_visible,
-    NES_VOXEL_LAYOUT_SIDE
+    NES_VOXEL_LAYOUT_SIDE,
+    2,
+    smb_metatile_grid_offset
 };
 
 void game_voxel_set_mod_enabled(int enabled) {

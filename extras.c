@@ -14,6 +14,7 @@
 #include "debug_server.h"
 #include "verify_mode.h"
 #include "game_voxel.h"
+#include "watchdog.h"
 #ifdef ENABLE_NESTOPIA_ORACLE
 #include "nestopia_bridge.h"
 #endif
@@ -255,6 +256,7 @@ uint32_t game_get_expected_crc32(void) { return 0xD445F698u; }
 const char *game_get_name(void) { return "Super Mario Bros."; }
 
 void game_on_init(void) {
+    watchdog_frame_start();
     ws_load_config();
     ws_apply_init();
     game_voxel_init();
@@ -286,6 +288,10 @@ void game_on_frame(uint64_t frame_count) {
         if (ovr >= 0)
             g_controller1_buttons = (uint8_t)ovr;
     }
+    /* Start timing only after any TCP/debug pause has ended.  Previously the
+     * watchdog's zero-initialized timestamp measured process lifetime and
+     * eventually blamed an ordinary backward branch (often ReadPortBits). */
+    watchdog_frame_start();
 }
 
 void game_post_nmi(uint64_t frame_count) {

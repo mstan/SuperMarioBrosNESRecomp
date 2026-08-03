@@ -14,6 +14,13 @@ SCREENSHOT C:/temp/smb_first_person.png
 KEY_TAP KP6
 WAIT 20
 SCREENSHOT C:/temp/smb_first_person_yaw.png
+KEY_TAP KP5
+WAIT 20
+HOLD RIGHT
+WAIT 240
+RELEASE RIGHT
+WAIT 20
+SCREENSHOT C:/temp/smb_first_person_enemy_scale.png
 KEY_TAP KP0
 WAIT 10
 SCREENSHOT C:/temp/smb_first_person_toggled_flat.png
