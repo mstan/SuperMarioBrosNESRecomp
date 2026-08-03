@@ -142,7 +142,8 @@ static const NesVoxelScreenProfile s_profile = {
     smb_first_person_sprite_visible,
     NES_VOXEL_LAYOUT_SIDE,
     2,
-    smb_metatile_grid_offset
+    smb_metatile_grid_offset,
+    16
 };
 
 void game_voxel_set_mod_enabled(int enabled) {
