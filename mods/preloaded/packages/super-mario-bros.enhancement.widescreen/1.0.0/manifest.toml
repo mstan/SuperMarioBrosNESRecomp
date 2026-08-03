@@ -17,6 +17,7 @@ id = "widescreen"
 name = "Widescreen (16:9)"
 description = "Enable Super Mario Bros.' experimental game-specific 16:9 rendering enhancement."
 group = "Display"
+exclusive_group = "display-mode"
 default_enabled = false
 
 [[plugin]]

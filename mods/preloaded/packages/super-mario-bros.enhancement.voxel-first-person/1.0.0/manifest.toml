@@ -17,6 +17,7 @@ id = "voxel-first-person"
 name = "Voxel 3D"
 description = "Tracks Mario from eye level while reconstructing terrain and non-player actors in perspective."
 group = "Display"
+exclusive_group = "display-mode"
 default_enabled = false
 
 [[plugin]]

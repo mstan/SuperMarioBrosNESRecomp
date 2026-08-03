@@ -9,7 +9,8 @@ off unless explicitly enabled.
 
 Open **Mods** in the launcher and enable **Widescreen (16:9)**. The bundled
 package is disabled by default and activates the game-specific rendering
-implementation without patching the ROM.
+implementation without patching the ROM. It is mutually exclusive with
+**Voxel 3D**; enabling either display mode automatically disables the other.
 
 For developer testing, the command-line override remains available:
 
