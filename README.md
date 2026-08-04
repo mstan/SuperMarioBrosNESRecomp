@@ -46,10 +46,21 @@ package patches the stock ROM. With both disabled the game is the authentic
 
 Open **Mods** in the launcher and enable **Voxel 3D**. This first-person
 experiment rotates the sampled side-scroller plane upright and moves the camera
-with Mario while looking forward along the course. Right advances and Left
-backpedals without snapping the camera 180 degrees. Mario's own sprite is hidden
+with Mario while looking along his live facing direction. Right faces forward
+along the course; turning Left smoothly reverses the camera 180 degrees, as it
+does for Samus in Metroid's first-person mode. Mario's own sprite is hidden
 from the first-person view; enemies and items remain camera-facing cards among
 the reconstructed blocks, pipes, flagpoles, and terrain.
+
+First-person movement uses compact tank controls: Up advances in the direction
+the camera faces and Left/Right select the corresponding facing. Down makes
+small Mario backpedal without reversing the view; grounded tall Mario retains
+his native crouch. The right stick looks vertically; pushing it fully upward
+looks almost straight up and centers Mario's overhead column for lining up
+jumps into blocks. Releasing the stick returns the camera to level. Crouching
+lowers the camera to tall Mario's crouched eye level and standing raises it
+again. Small Mario and pipe-entry input retain their ordinary eye height. A, B,
+Start, and Select retain their original NES behavior.
 
 The package saves camera pitch, yaw, roll, zoom, and sprite scale. During play,
 Numpad 8/2 adjusts pitch, 4/6 rotates yaw, 7/9 rolls the view, +/- changes zoom,

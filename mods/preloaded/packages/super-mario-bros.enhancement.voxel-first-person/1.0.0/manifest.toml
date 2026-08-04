@@ -15,6 +15,7 @@ rom_crc32 = "d445f698"
 [[feature]]
 id = "voxel-first-person"
 name = "Voxel 3D"
+camera_controls = true
 description = "Tracks Mario from eye level while reconstructing terrain and non-player actors in perspective."
 group = "Display"
 exclusive_group = "display-mode"

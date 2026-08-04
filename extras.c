@@ -267,6 +267,7 @@ void game_on_frame(uint64_t frame_count) {
         if (ovr >= 0)
             g_controller1_buttons = (uint8_t)ovr;
     }
+    game_voxel_update_input();
     /* Start timing only after any TCP/debug pause has ended.  Previously the
      * watchdog's zero-initialized timestamp measured process lifetime and
      * eventually blamed an ordinary backward branch (often ReadPortBits). */

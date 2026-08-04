@@ -1,0 +1,6 @@
+WAIT 4
+DUMP_RAM 3AD 01
+DUMP_RAM 3B8 01
+DUMP_RAM 71A 03
+SCREENSHOT C:/temp/smb_first_person_upper_route.png
+EXIT 0
