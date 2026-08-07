@@ -41,3 +41,8 @@ int game_smash64_active(void);
 /* Frames on which Falcon supplied the horizontal velocity. Lets a scripted
  * run assert the takeover happened rather than inferring it from pixels. */
 unsigned long game_smash64_owned_frames(void);
+
+/* Frames on which SMB1 refused the proposed horizontal motion -- it zeroed
+ * Player_X_Speed via ImpedePlayerMove and we honoured that. Nonzero proves the
+ * collision feedback loop is live rather than silently ignored. */
+unsigned long game_smash64_wall_frames(void);
