@@ -45,15 +45,6 @@ The mod's own contributions — the mod package manifest, plugin registration,
 the SMB1 host adapter, and the engine-side `ForeignController` interface — are
 original to this project and carry its license.
 
-## Framework and libraries
-
-| Component | Role | Terms |
-|---|---|---|
-| [`nesrecomp`](https://github.com/mstan/nesrecomp) | 6502 static recompiler and runner | see that repository |
-| [`recomp-ui`](https://github.com/mstan/recomp-ui) | pre-boot launcher (Dear ImGui) | see that repository |
-| SDL2 | window, input, audio | zlib |
-| Dear ImGui | launcher widgets | MIT |
-
 ### Super Mario Bros. disassembly — *submodule, technical reference*
 
 `smb-disassembly/` is a submodule pointing at
@@ -69,3 +60,12 @@ traced back to the exact revision it came from.
 **only names and addresses** — no ROM bytes, no instruction text, and none of
 the disassembly's own commentary. That is the same treatment
 `snesrecomp/tools/ingest_dkc2_disasm.py` applies to the DKC2 disassembly.
+
+## Framework and libraries
+
+| Component | Role | Terms |
+|---|---|---|
+| [`nesrecomp`](https://github.com/mstan/nesrecomp) | 6502 static recompiler and runner | see that repository |
+| [`recomp-ui`](https://github.com/mstan/recomp-ui) | pre-boot launcher (Dear ImGui) | see that repository |
+| SDL2 | window, input, audio | zlib |
+| Dear ImGui | launcher widgets | MIT |
