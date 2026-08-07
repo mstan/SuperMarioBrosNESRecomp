@@ -1,0 +1,43 @@
+format_version = 1
+id = "super-mario-bros.gameplay.smash64-player-replacement"
+version = "1.0.0"
+name = "Smash 64 Player Replacement"
+author = "NESRecomp"
+description = "Drives Mario with a fighter's Super Smash Bros. 64 locomotion while Super Mario Bros. keeps its own world, enemies and rules. The stock ROM is not modified."
+license = "MIT"
+resolver = "declarative"
+save_compatibility = "stock"
+
+[[target]]
+game_id = "super-mario-bros-world"
+rom_crc32 = "d445f698"
+
+[[feature]]
+id = "smash64-player"
+name = "Smash 64 Player Replacement"
+description = "Replaces Mario's ground acceleration, dash/run, traction, turning, jump and air physics with the selected Smash 64 fighter's. Level layout, enemies, collision and progression stay vanilla, and control returns to the game for pipes, death and the flagpole."
+group = "Gameplay"
+exclusive_group = "player-controller"
+default_enabled = false
+
+[[option]]
+feature = "smash64-player"
+id = "character"
+label = "Character"
+description = "Which fighter's locomotion drives the player."
+group = "Character"
+type = "choice"
+default = "captain-falcon"
+
+[[option.choice]]
+value = "captain-falcon"
+label = "Captain Falcon"
+
+# One trusted plugin per character, selected by the dropdown above. Adding a
+# fighter means adding an [[option.choice]] and a conditioned [[plugin]] — no
+# string dispatch in game code.
+[[plugin]]
+feature = "smash64-player"
+id = "super-mario-bros.smash64.captain-falcon"
+when_option = "character"
+when_value = "captain-falcon"

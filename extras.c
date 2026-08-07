@@ -14,6 +14,7 @@
 #include "debug_server.h"
 #include "verify_mode.h"
 #include "game_voxel.h"
+#include "game_smash64.h"
 #include "watchdog.h"
 #ifdef ENABLE_NESTOPIA_ORACLE
 #include "nestopia_bridge.h"
@@ -239,6 +240,7 @@ void game_on_init(void) {
     watchdog_frame_start();
     ws_apply_init();
     game_voxel_init();
+    game_smash64_init();
 
     s_debug_enabled = check_debug_ini();
 
@@ -268,6 +270,9 @@ void game_on_frame(uint64_t frame_count) {
             g_controller1_buttons = (uint8_t)ovr;
     }
     game_voxel_update_input();
+    /* Player replacement samples input and ticks its controller before NMI,
+     * so the fighter's intent for this frame exists before SMB1 runs. */
+    game_smash64_update_input(frame_count);
     /* Start timing only after any TCP/debug pause has ended.  Previously the
      * watchdog's zero-initialized timestamp measured process lifetime and
      * eventually blamed an ordinary backward branch (often ReadPortBits). */
@@ -278,6 +283,7 @@ void game_post_nmi(uint64_t frame_count) {
     (void)frame_count;
     ws_update_frame_gate();
     game_voxel_update();
+    game_smash64_update(frame_count);
     if (s_debug_enabled) {
         debug_server_record_frame();
     }

@@ -2,6 +2,7 @@ build/
 build-voxel-vs/
 build_release/
 build_debug/
+build_falcon/
 release/
 widescreen.ini
 _ws_build.bat
