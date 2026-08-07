@@ -14459,6 +14459,7 @@ label_B5CB:;
 }
 
 void func_B5CC_b0(void) { /* ImposeFriction */
+    if (nes_mod_function_entry(0xB5CCu)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_B5CC_b0");
 #endif

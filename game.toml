@@ -105,3 +105,19 @@ fixed = [
 bank0 = [
     0xB308,  # JSR target missing definition — bank0 explicit for correct suffix
 ]
+
+# Smash 64 player replacement (mods/smash64_player_plugin.c): take over SMB1's
+# horizontal velocity integrator while the mod is enabled.
+#
+# ImposeFriction is the whole horizontal model -- it advances the 16-bit
+# Player_X_Speed:Player_X_MoveForce pair from input and clamps it to the caps
+# X_Physics selected -- and it is player-only by construction, reading
+# Player_CollisionBits/Player_X_Speed non-indexed. Called from just two sites,
+# GndMove ($B363) and LRAir ($B3B0).
+#
+# Hooking here rather than PlayerCtrlRoutine keeps SMB1's jump, gravity,
+# vertical collision, horizontal collision and position integration intact:
+# the velocity we write flows into MoveObjectHorizontally ($BF0F) and is
+# resolved by the game's own rules. The hook is inert unless the mod enables it.
+[[mod_function_hook]]
+addr = 0xB5CC           # ImposeFriction

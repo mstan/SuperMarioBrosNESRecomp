@@ -61,6 +61,13 @@ NES_MOD_CONSTRUCTOR(register_smash64_player_plugin) {
         fprintf(stderr,
                 "[Mods] Failed to register the Captain Falcon controller\n");
 
+    /* The trusted 6502 function-entry hook that takes over SMB1's horizontal
+     * velocity integrator. Registered DISABLED, so registration alone cannot
+     * change behaviour; activation enables it. */
+    if (!game_smash64_register_hooks())
+        fprintf(stderr,
+                "[Mods] Failed to register the SMB1 ImposeFriction hook\n");
+
     if (!nes_mod_register_reset_callback(reset_smash64_player) ||
         !nes_mod_register_activation_plugin(
             SMASH64_CAPTAIN_FALCON_ID, activate_captain_falcon))

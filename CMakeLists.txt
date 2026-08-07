@@ -27,6 +27,7 @@ add_executable(SuperMarioBrosRecomp
     mods/voxel_plugin.c
     mods/smash64_player_plugin.c
     mods/smash64/characters/captain_falcon.c
+    mods/smash64/ssb_ported/falcon_locomotion.c
     nes_snapshot.c
     verify_mode.c
     watchdog.c

@@ -1,27 +1,25 @@
 #pragma once
 
 /*
- * Captain Falcon's Super Smash Bros. 64 locomotion, as a ForeignController.
+ * Captain Falcon, as a ForeignController.
  *
- * Registered before main(); the mod package selects it by the plugin id
- * below when the Character dropdown resolves to "captain-falcon".
+ * A thin adapter: the state machine and physics live in
+ * mods/smash64/ssb_ported/falcon_locomotion.c (quarantined, since that is a
+ * direct port of an unlicensed decomp). This file only bridges it to the
+ * engine's game-agnostic ForeignController ABI, which is why it stays
+ * publishable while the port does not.
+ *
+ * Registered before main(); the mod package selects it by the plugin id below
+ * when the Character dropdown resolves to "captain-falcon".
  */
 
 #define SMASH64_CAPTAIN_FALCON_ID "super-mario-bros.smash64.captain-falcon"
 
-/* Locomotion states. These mirror the Smash 64 action set that ftcommon owns
- * for ordinary movement; combat, shields, grabs and cliff states are out of
- * scope and must never appear here. */
-typedef enum {
-    FALCON_IDLE = 0,
-    FALCON_WALK,
-    FALCON_DASH,
-    FALCON_RUN,
-    FALCON_TURN,
-    FALCON_JUMPSQUAT,
-    FALCON_AIR,
-    FALCON_LANDING,
-} FalconMoveState;
+/* State ids and their names come from the ported module -- there is exactly
+ * one enum for Falcon's states and it lives with the physics that uses it.
+ * Duplicating it here is how a trace ends up labelled IDLE while the fighter
+ * is dashing. */
+#include "../ssb_ported/falcon_locomotion.h"
 
 /* Register with the engine's controller registry. Safe to call more than
  * once. Returns 1 on success. */

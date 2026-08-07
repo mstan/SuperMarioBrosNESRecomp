@@ -1,29 +1,17 @@
 /*
- * captain_falcon.c — Captain Falcon's Smash 64 locomotion.
+ * captain_falcon.c — Captain Falcon as a ForeignController.
  *
- * ============================== STATUS ==============================
- * SCAFFOLD ONLY. This controller is registered and ticked, and it reports
- * its state honestly, but it does NOT yet move the player: every tick
- * requests zero motion and stays in FALCON_IDLE.
+ * Deliberately thin. The state machine, physics and attributes are in
+ * mods/smash64/ssb_ported/falcon_locomotion.c; this file only bridges them to
+ * the engine's game-agnostic ABI. That split is what lets the bridge stay
+ * publishable while the direct port stays quarantined.
  *
- * That is deliberate. The physics comes from a bounded, evidence-backed
- * dependency closure over the Smash 64 decompilation (see
- * docs/falcon_movement_dependency.md, milestone M0), and hand-tuning an
- * approximation in the meantime would produce something that feels
- * vaguely Falcon-ish and can never be checked against anything. An
- * obviously-inert controller is easier to reason about than a plausible
- * wrong one.
- *
- * Do not populate the constants below from memory, from a wiki, or from
- * feel. They come from ftparam/ftdata at the pinned revision, or from a
- * verified runtime trace, and every intentional adaptation gets recorded.
- * ====================================================================
- *
- * This file must stay free of SMB1 knowledge. It sees an analog-shaped
- * stick and reports desired motion; the adapter in game_smash64.c owns
- * everything about NES RAM, tiles, scale and scripted states. Keeping that
- * line clean is what lets the same controller drive a different NES game
- * later.
+ * The SMB1 adapter (game_smash64.c) currently drives the ported module
+ * directly, because it needs the module's own richer state to decide
+ * ownership. This controller registration is what makes the character
+ * selectable and gives the always-on trace ring its state names; when a
+ * second game or a second fighter appears, the tick/resolve callbacks below
+ * become the shared path.
  */
 #include "captain_falcon.h"
 
@@ -31,88 +19,89 @@
 
 #include <string.h>
 
-/* ------------------------------------------------------------------ */
-/* Character attributes                                               */
-/*                                                                    */
-/* Populated in M0 from src/ft/ftparam.c and src/ft/ftdata.c at pinned */
-/* revision 054ffc23f396868cd1db2b87ee3a2c1d3bebb75a, in the source's  */
-/* own units. The single world-scale conversion happens in the         */
-/* adapter, never here — see docs/FOREIGN_CONTROLLER.md on scale.      */
-/* ------------------------------------------------------------------ */
+/* One fighter instance behind the ABI. The adapter owns its own instance for
+ * the SMB1 path; this one serves any host that drives the controller through
+ * the generic interface. */
+static FalconFighter s_fighter;
 
-/* TODO(M0): ground accel, max walk/dash/run speed, traction, turn frames,
- * jumpsquat duration, initial jump velocity, gravity, terminal velocity,
- * air accel/drift limit, fast-fall velocity, landing lag. */
-
-/* ------------------------------------------------------------------ */
-/* Controller                                                         */
-/* ------------------------------------------------------------------ */
-
-static void falcon_reset(ForeignState *state) {
-    state->state = FALCON_IDLE;
+static void cf_reset(ForeignState *state)
+{
+    falcon_reset(&s_fighter);
+    state->state = s_fighter.state;
     state->state_frame = 0;
-    state->vx = 0.0;
-    state->vy = 0.0;
+    state->vx = state->vy = 0.0;
     state->facing = 1.0f;
     state->grounded = 1;
     state->fast_fall = 0;
 }
 
-static void falcon_tick(ForeignState *state, const ForeignInput *input,
-                        ForeignMoveResult *out) {
-    /* Facing is the one thing that is unambiguous without the source, and
-     * having it live makes the trace ring readable while the rest is being
-     * built out. It costs nothing and moves nobody. */
-    if (input->stick_x > 0.5f) state->facing = 1.0f;
-    else if (input->stick_x < -0.5f) state->facing = -1.0f;
+static void cf_tick(ForeignState *state, const ForeignInput *input,
+                    ForeignMoveResult *out)
+{
+    FalconInputRaw raw;
+    FalconMotion motion;
 
-    state->state_frame++;
+    /* ForeignInput is normalised -1..+1; the ported module works in the source
+     * game's own +/-80 stick range. */
+    memset(&raw, 0, sizeof(raw));
+    raw.stick_x = (int)(input->stick_x * 80.0f);
+    raw.stick_y = (int)(input->stick_y * 80.0f);
+    raw.jump_held = input->jump_held;
+    raw.jump_pressed = input->jump_pressed;
 
-    /* M0/M1 land the real state machine here. Until then: no motion. */
-    out->requested_dx = 0.0;
-    out->requested_dy = 0.0;
-    out->vx = state->vx;
-    out->vy = state->vy;
-    out->state = FALCON_IDLE;
+    s_fighter.grounded = state->grounded;
+
+    falcon_tick(&s_fighter, &raw, &motion);
+
+    out->requested_dx = motion.requested_dx;
+    out->requested_dy = motion.requested_dy;
+    out->vx = s_fighter.vel_ground_x * (double)s_fighter.lr;
+    out->vy = s_fighter.vel_air_y;
+    out->state = s_fighter.state;
+
+    state->state = s_fighter.state;
+    state->state_frame = (unsigned)s_fighter.state_frame;
+    state->facing = (float)s_fighter.lr;
+    state->fast_fall = s_fighter.is_fastfall;
 }
 
-static void falcon_resolve(ForeignState *state,
-                           const ForeignCollisionResult *hit) {
-    state->x += hit->actual_dx;
-    state->y += hit->actual_dy;
-    state->grounded = hit->grounded;
+static void cf_resolve(ForeignState *state, const ForeignCollisionResult *hit)
+{
+    FalconCollision c;
 
-    /* Sign convention: +y is down (NES screen space). The source's own
-     * convention is confirmed in M0; if it differs, it is converted at the
-     * adapter boundary, not by flipping comparisons here. */
-    if (hit->hit_ceiling && state->vy < 0.0) state->vy = 0.0;
-    if (hit->hit_floor   && state->vy > 0.0) state->vy = 0.0;
-    if (hit->hit_wall) state->vx = 0.0;
+    memset(&c, 0, sizeof(c));
+    c.actual_dx = hit->actual_dx;
+    c.actual_dy = hit->actual_dy;
+    c.grounded = hit->grounded;
+    c.hit_ceiling = hit->hit_ceiling;
+    c.hit_floor = hit->hit_floor;
+    c.hit_wall = hit->hit_wall;
+
+    falcon_resolve(&s_fighter, &c);
+
+    state->x = s_fighter.pos_x;
+    state->y = s_fighter.pos_y;
+    state->grounded = s_fighter.grounded;
+    state->state = s_fighter.state;
 }
 
-static const char *falcon_state_name(ForeignMoveState state) {
-    switch ((FalconMoveState)state) {
-        case FALCON_IDLE:      return "IDLE";
-        case FALCON_WALK:      return "WALK";
-        case FALCON_DASH:      return "DASH";
-        case FALCON_RUN:       return "RUN";
-        case FALCON_TURN:      return "TURN";
-        case FALCON_JUMPSQUAT: return "JUMPSQUAT";
-        case FALCON_AIR:       return "AIR";
-        case FALCON_LANDING:   return "LANDING";
-    }
-    return "?";
+/* Delegates to the ported module so a trace can never disagree with the
+ * physics about which state the fighter is in. */
+static const char *cf_state_name(ForeignMoveState state)
+{
+    return falcon_state_name(state);
 }
 
 static const ForeignController kCaptainFalcon = {
     SMASH64_CAPTAIN_FALCON_ID,
     "Captain Falcon",
-    falcon_reset,
-    falcon_tick,
-    falcon_resolve,
-    falcon_state_name,
+    cf_reset,
+    cf_tick,
+    cf_resolve,
+    cf_state_name,
 };
 
-int smash64_captain_falcon_register(void) {
+int smash64_captain_falcon_register(void)
+{
     return nes_foreign_register(&kCaptainFalcon);
 }

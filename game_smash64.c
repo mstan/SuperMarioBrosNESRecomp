@@ -1,59 +1,83 @@
 /*
  * game_smash64.c — SMB1 host adapter for the Smash 64 player replacement mod.
  *
- * ============================== STATUS ==============================
- * SCAFFOLD. The mod package, the dropdown, plugin activation, controller
- * selection, ownership policy and the always-on trace ring are wired end to
- * end. What is NOT wired is the part that would change the game: ownership
- * never rises above SPECTATE, and nothing is written back into SMB1 RAM.
+ * Answers "where is the player allowed to go" and owns everything the fighter
+ * controller must not see: NES RAM layout, SMB1's fixed-point velocity
+ * representation, and its scripted player states.
  *
- * Enabling the mod today is observably a no-op on gameplay — by design.
- * SMB1 stays byte-identical while the plumbing is proven, so that when
- * physics does land, any behaviour change is attributable to the physics
- * and not to the scaffolding underneath it.
- * ====================================================================
+ * M2 SCOPE: horizontal ground movement only. SMB1 keeps its jump, gravity,
+ * vertical collision, horizontal collision and position integration. We supply
+ * the horizontal velocity and nothing else. See docs/smb1_player_adapter.md.
  *
- * This file is the only place that may know both halves: SMB1's RAM map and
- * the fighter's motion. Everything NES-specific belongs here; the
- * controllers under mods/smash64/characters/ must stay portable.
+ * Every address below was confirmed in Ghidra (nes/SuperMarioBrosNES) before
+ * being read or written -- framework RULE 0 -- and the confirming instruction
+ * is cited. Names come from symbols.sym, generated into the decls header.
  */
 #include "game_smash64.h"
 
 #include "foreign_controller.h"
+#include "mod_function_hooks.h"
 #include "nes_runtime.h"
+
+/* Brings in the RAM/const symbol defines (Player_X_Speed, GameEngineSubroutine,
+ * ...) so nothing below is a bare literal. */
+#include "generated/super-mario-bros_full_decls.h"
+
+#include "mods/smash64/ssb_ported/falcon_locomotion.h"
 
 #include <stdio.h>
 #include <string.h>
 
 /* ------------------------------------------------------------------ */
-/* Scale                                                              */
+/* Scale — ONE conversion, applied here and nowhere else              */
 /*                                                                    */
-/* ONE uniform conversion between the fighter's world and SMB1's, so   */
-/* the ported constants stay internally authentic. Never retune run    */
-/* speed, jump speed, gravity and air acceleration individually to     */
-/* make something feel right — that turns a port into a guess.         */
+/* Derived in docs/falcon_movement_dependency.md §8 from Falcon's      */
+/* 400-unit collision diamond against SMB1's 16px metatile grid.       */
 /*                                                                    */
-/* Derived in M0 from a stable reference: fighter height against the   */
-/* source's platform geometry, versus Mario's height against SMB1's    */
-/* 16px metatile grid. Placeholder 1.0 until that measurement exists.  */
+/* SMB1 stores horizontal velocity as a signed 8-bit value in units of */
+/* 1/16 pixel per frame: MoveObjectHorizontally ($BF0F) shifts the low */
+/* nibble into the subpixel accumulator and the sign-extended high     */
+/* nibble into the position. So a Smash unit converts as               */
+/*     smash_units * 0.08 px/unit * 16 = smash_units * 1.28            */
 /* ------------------------------------------------------------------ */
-#define FALCON_TO_SMB1_X   1.0
-#define FALCON_TO_SMB1_Y   1.0
-#define SMB1_TO_FALCON_X   (1.0 / FALCON_TO_SMB1_X)
-#define SMB1_TO_FALCON_Y   (1.0 / FALCON_TO_SMB1_Y)
+#define FALCON_TO_SMB1_PX     0.08
+#define SMB1_XSPEED_PER_PX    16.0
+#define FALCON_TO_SMB1_XSPEED (FALCON_TO_SMB1_PX * SMB1_XSPEED_PER_PX)
+
+/* SMB1's own caps, for scale: MaxRightXSpdData $B443 = {40,24,16,12}, so
+ * Mario's top run is 40/16 = 2.5 px/frame. Falcon's run is 75 * 1.28 = 96,
+ * which is 2.4x Mario and still inside the signed 8-bit field. */
+#define SMB1_XSPEED_LIMIT 127
 
 /* ------------------------------------------------------------------ */
-/* SMB1 player state                                                  */
+/* SMB1 player state — every address Ghidra-confirmed                 */
 /*                                                                    */
-/* Addresses are confirmed against Ghidra before anything reads or     */
-/* writes them (framework RULE 0 — no guessing 6502 behaviour), and    */
-/* every synchronization write gets recorded in                        */
-/* docs/smb1_player_adapter.md. Nothing here is live yet.              */
+/* GameEngineSubroutine  $000E  read at $B0E9 (PlayerCtrlRoutine) and  */
+/*                              indexed at $B04A (GameRoutines)        */
+/* Player_State          $001D  read at $B450, $B51C, $B0E9           */
+/* Player_X_Speed        $0057  written by $B5CC (ImposeFriction)      */
+/* Player_XSpeedAbsolute $0700  written by $B5CC, read by $B51C/$B4BB  */
+/* PlayerFacingDir       $0033  read at $B57F                          */
+/*                                                                    */
+/* The GameRoutines jump table at $B04F was decoded straight out of    */
+/* the ROM and gives the complete ownership map:                       */
+/*   0 Entrance_GameTimerSetup   7 PlayerEntrance                      */
+/*   1 Vine_AutoClimb            8 PlayerCtrlRoutine  <-- ordinary play */
+/*   2 SideExitPipeEntry         9 PlayerChangeSize                     */
+/*   3 VerticalPipeEntry        10 PlayerInjuryBlink                    */
+/*   4 FlagpoleSlide            11 PlayerDeath                         */
+/*   5 PlayerEndLevel           12 PlayerFireFlower                    */
+/*   6 PlayerLoseLife                                                  */
+/* So == 8 is exactly "ordinary controllable gameplay", and every other */
+/* value is a scripted sequence that must stay native.                 */
 /* ------------------------------------------------------------------ */
+#define SMB1_GAMEMODE_PLAYER_CTRL 8
 
-/* TODO(M2): player page/X, player Y, X/Y velocity, facing, ground/air
- * state, size/power state, and the scripted-state discriminators
- * (pipe, death, flagpole, level intro, castle sequence). */
+/* ImposeFriction, the horizontal velocity integrator we take over. Called
+ * only from GndMove ($B363) and LRAir ($B3B0) -- player-only by construction,
+ * since it reads Player_CollisionBits/Player_X_Speed non-indexed. */
+#define SMB1_IMPOSE_FRICTION_ADDR 0xB5CC
+#define SMASH64_FRICTION_HOOK_ID  "super-mario-bros.smash64.impose-friction"
 
 /* ------------------------------------------------------------------ */
 /* Mod state                                                          */
@@ -61,11 +85,17 @@
 
 static int  s_enabled = 0;
 static char s_controller_id[96] = {0};
-static int  s_selected = 0;      /* the id resolved to a real controller */
+static int  s_selected = 0;
 static int  s_announced = 0;
 
-/* Rising-edge tracking for the digital -> analog adapter. */
+static FalconFighter s_falcon;
+static FalconInputRaw s_input;
 static uint8_t s_prev_buttons = 0;
+static uint64_t s_frame = 0;
+static uint64_t s_ticked_frame = ~0ull;  /* last frame the controller ran */
+static unsigned long s_owned_frames = 0;
+static int8_t s_last_xspeed = 0;         /* held so a second hook call in one
+                                          * frame writes the same velocity */
 
 /* NES pad bits: bit7=A bit6=B bit5=Select bit4=Start
  *               bit3=Up bit2=Down bit1=Left bit0=Right */
@@ -76,12 +106,179 @@ static uint8_t s_prev_buttons = 0;
 #define PAD_LEFT   0x02
 #define PAD_RIGHT  0x01
 
-void game_smash64_set_mod_enabled(int enabled, const char *controller_id) {
+/* ------------------------------------------------------------------ */
+/* Ownership                                                          */
+/* ------------------------------------------------------------------ */
+
+static ForeignOwnership decide_ownership(void)
+{
+    unsigned mode;
+
+    if (!s_enabled || !s_selected) return FOREIGN_OWNERSHIP_NATIVE;
+
+    mode = g_ram[GameEngineSubroutine];
+
+    /* Anything but ordinary play is a scripted sequence -- pipes, flagpole,
+     * death, entrance autowalk, powerup transitions. Hand control back
+     * rather than blanket-suppressing SMB1's player update. */
+    if (mode != SMB1_GAMEMODE_PLAYER_CTRL) return FOREIGN_OWNERSHIP_SCRIPTED;
+
+    /* M2 SIMPLIFICATION: Falcon owns the ground, SMB1 owns the air. When
+     * Player_State is nonzero the player is jumping/falling and SMB1's own
+     * air physics run untouched. The controller holds its ground state and
+     * velocity meanwhile and resumes on landing -- it is NOT ticked through
+     * the air, because its air simulation would disagree with SMB1's jump and
+     * inject a wrong speed on touchdown. M3 takes the air properly. */
+    if (g_ram[Player_State] != 0) return FOREIGN_OWNERSHIP_NATIVE;
+
+    return FOREIGN_OWNERSHIP_FOREIGN;
+}
+
+/* ------------------------------------------------------------------ */
+/* Input — digital pad to synthetic analog stick                       */
+/* ------------------------------------------------------------------ */
+
+/*
+ * A d-pad press moves the synthetic stick 0 -> +/-80 in one frame, which by
+ * the source's tap rule (ftmain.c:1320-1345) is exactly a fresh stick tap.
+ * That makes dash, dash->run, turn, brake, short hop, full hop and fast fall
+ * all reachable. WALK is not: it needs a magnitude in 8..55 without a fresh
+ * tap, and a d-pad always lands at full deflection so dash always wins.
+ * Recorded in docs/falcon_movement_dependency.md §7 with mitigations.
+ */
+#define STICK_FULL 80
+
+static void sample_input(void)
+{
+    const uint8_t b = g_controller1_buttons;
+    const uint8_t pressed = (uint8_t)(b & ~s_prev_buttons);
+
+    const int left  = (b & PAD_LEFT)  != 0;
+    const int right = (b & PAD_RIGHT) != 0;
+    const int up    = (b & PAD_UP)    != 0;
+    const int down  = (b & PAD_DOWN)  != 0;
+
+    /* Opposing directions cancel, matching how the pad is read. */
+    s_input.stick_x = ((right ? 1 : 0) - (left ? 1 : 0)) * STICK_FULL;
+    s_input.stick_y = ((up ? 1 : 0) - (down ? 1 : 0)) * STICK_FULL;
+
+    s_input.jump_held    = (b & PAD_A) != 0;
+    s_input.jump_pressed = (pressed & PAD_A) != 0;
+
+    s_prev_buttons = b;
+}
+
+/* ------------------------------------------------------------------ */
+/* The takeover                                                       */
+/* ------------------------------------------------------------------ */
+
+static int8_t clamp_xspeed(double smash_units)
+{
+    double v = smash_units * FALCON_TO_SMB1_XSPEED;
+
+    if (v >  SMB1_XSPEED_LIMIT) v =  SMB1_XSPEED_LIMIT;
+    if (v < -SMB1_XSPEED_LIMIT) v = -SMB1_XSPEED_LIMIT;
+    return (int8_t)((v >= 0.0) ? (v + 0.5) : (v - 0.5));
+}
+
+/*
+ * Replaces ImposeFriction ($B5CC) while Falcon owns the player.
+ *
+ * Returning 1 skips SMB1's own horizontal integrator, so the velocity we
+ * write survives to MoveObjectHorizontally ($BF0F), which applies it with
+ * SMB1's own collision. Returning 0 runs the original unchanged.
+ */
+static int impose_friction_hook(uint16_t addr)
+{
+    ForeignOwnership own;
+    ForeignInput fin;
+    ForeignMoveResult move;
+    FalconMotion motion;
+    int8_t xspeed;
+
+    (void)addr;
+
+    /*
+     * Re-check ownership here even though update_input already decided it.
+     * This runs inside the game's own movement path, so it is the authoritative
+     * moment: if the mode changed between VBlank and now, we must not write.
+     * Defence in depth on top of the structural guarantee that ImposeFriction
+     * is only reached during ordinary play at all.
+     */
+    own = decide_ownership();
+
+    if (own != FOREIGN_OWNERSHIP_FOREIGN) return 0;  /* SMB1 keeps the wheel */
+
+    /* Exactly one controller tick per frame, even if the hook fires twice. */
+    if (s_ticked_frame != s_frame) {
+        s_ticked_frame = s_frame;
+
+        /* SMB1 is the authority on standing on ground. */
+        s_falcon.grounded = 1;
+
+        falcon_tick(&s_falcon, &s_input, &motion);
+
+        /*
+         * M2: SMB1 integrates and collides, so the controller is told its
+         * motion was granted in full. That is honest for horizontal ground
+         * movement -- SMB1 will refuse it at a wall by simply not advancing
+         * the position -- and M4 replaces it with a real swept query.
+         */
+        {
+            FalconCollision hit;
+            memset(&hit, 0, sizeof(hit));
+            hit.actual_dx = motion.requested_dx;
+            hit.grounded = 1;
+            falcon_resolve(&s_falcon, &hit);
+        }
+
+        /* Mirror into the engine's ForeignState so the always-on ring and
+         * any future host-side consumer see the same numbers. */
+        {
+            ForeignState *fs = nes_foreign_state();
+            if (fs) {
+                fs->state = s_falcon.state;
+                fs->state_frame = (unsigned)s_falcon.state_frame;
+                fs->vx = s_falcon.vel_ground_x * (double)s_falcon.lr;
+                fs->vy = 0.0;
+                fs->facing = (float)s_falcon.lr;
+                fs->grounded = 1;
+                fs->fast_fall = s_falcon.is_fastfall;
+            }
+        }
+
+        (void)fin; (void)move;
+        s_last_xspeed = clamp_xspeed(motion.requested_dx);
+        s_owned_frames++;
+    }
+
+    xspeed = s_last_xspeed;
+
+    /* The two bytes ImposeFriction itself writes. Player_XSpeedAbsolute is
+     * not decoration: $B51C reads it to pick the speed tier and $B4BB reads
+     * it to scale jump height, so leaving it stale would make Falcon jump
+     * like a walking Mario. */
+    g_ram[Player_X_Speed] = (uint8_t)xspeed;
+    g_ram[Player_XSpeedAbsolute] =
+        (uint8_t)((xspeed < 0) ? -(int)xspeed : (int)xspeed);
+
+    nes_foreign_trace_note_native((int32_t)(int8_t)g_ram[Player_X_Speed],
+                                  (int32_t)g_ram[Player_Y_Position]);
+    return 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Public                                                             */
+/* ------------------------------------------------------------------ */
+
+void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
+{
     s_enabled = 0;
     s_selected = 0;
     s_announced = 0;
     s_controller_id[0] = '\0';
     nes_foreign_set_ownership(FOREIGN_OWNERSHIP_NATIVE);
+    nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 0);
 
     if (!enabled || !controller_id || !controller_id[0]) {
         nes_foreign_select(NULL);
@@ -94,126 +291,102 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id) {
         /* Fail loudly. A silently-ignored character selection is exactly the
          * kind of thing that gets mistaken for "the physics is subtle". */
         fprintf(stderr,
-                "[Smash64] No controller registered for '%s' — "
+                "[Smash64] No controller registered for '%s' - "
                 "player replacement stays OFF\n", s_controller_id);
+        return;
+    }
+
+    falcon_reset(&s_falcon);
+    memset(&s_input, 0, sizeof(s_input));
+    s_last_xspeed = 0;
+    s_ticked_frame = ~0ull;
+    s_owned_frames = 0;
+
+    if (!nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 1)) {
+        fprintf(stderr,
+                "[Smash64] ImposeFriction hook is not registered; SMB1 keeps "
+                "its own horizontal physics\n");
         return;
     }
     s_enabled = 1;
 }
 
-int game_smash64_active(void) {
+int game_smash64_active(void)
+{
     return s_enabled && s_selected &&
            nes_foreign_ownership() == FOREIGN_OWNERSHIP_FOREIGN;
 }
 
-void game_smash64_init(void) {
+void game_smash64_init(void)
+{
     if (!s_enabled) return;
-    const ForeignController *ctl = nes_foreign_active();
-    printf("[Smash64] Player replacement armed: %s (%s)\n",
-           ctl && ctl->name ? ctl->name : "?", s_controller_id);
+    {
+        const ForeignController *ctl = nes_foreign_active();
+        printf("[Smash64] Player replacement armed: %s (%s)\n",
+               ctl && ctl->name ? ctl->name : "?", s_controller_id);
+    }
     /* ASCII only: the Windows console codepage mangles non-ASCII here. */
-    printf("[Smash64] Locomotion is not implemented yet - SMB1 physics is "
-           "unchanged. Movement traces: TCP 'ftring', or "
-           "NESRECOMP_FTRING_DUMP=<path>.\n");
+    printf("[Smash64] M2: Falcon owns horizontal GROUND movement; SMB1 keeps "
+           "jump, gravity, vertical and all collision.\n");
+    printf("[Smash64] Traces: TCP 'ftring', or NESRECOMP_FTRING_DUMP=<path>.\n");
 }
 
-/* ------------------------------------------------------------------ */
-/* Ownership                                                          */
-/* ------------------------------------------------------------------ */
+void game_smash64_update_input(uint64_t frame_count)
+{
+    ForeignInput fin;
+    ForeignMoveResult move;
 
-/*
- * SMB1 runs scripted player sequences — pipe entry/exit, death, the
- * flagpole, level intros, castle walks — that expect their own state
- * transitions. Those must stay native, so the fighter takes over only
- * during ordinary controllable play. Blanket-suppressing the player update
- * is never correct.
- *
- * M2 makes this real by reading SMB1's gameplay-mode and player-state
- * discriminators. Until then the adapter deliberately declines control, so
- * the scaffold cannot alter the game.
- */
-static ForeignOwnership decide_ownership(void) {
-    if (!s_enabled || !s_selected) return FOREIGN_OWNERSHIP_NATIVE;
-    /* TODO(M2): return FOREIGN during ordinary play, SCRIPTED during pipe,
-     * death, flagpole and intro sequences. */
-    return FOREIGN_OWNERSHIP_NATIVE;
-}
-
-/* ------------------------------------------------------------------ */
-/* Input                                                              */
-/* ------------------------------------------------------------------ */
-
-/*
- * SMB1's pad is digital; Smash 64 distinguishes walk from dash from run by
- * stick magnitude and timing. Full-deflection values are the starting
- * point, not the destination: the adapter keeps synthetic magnitudes so
- * partial-tilt behaviour stays reachable later (a run modifier, a tap-dash
- * detector, or a real analog stick through the pad layer).
- *
- * Transitions that pure digital input cannot reach are recorded in
- * docs/smb1_player_adapter.md rather than quietly dropped.
- */
-static void sample_input(ForeignInput *out) {
-    const uint8_t b = g_controller1_buttons;
-    const uint8_t pressed = (uint8_t)(b & ~s_prev_buttons);
-
-    memset(out, 0, sizeof *out);
-    out->raw_buttons = b;
-
-    const int left  = (b & PAD_LEFT)  != 0;
-    const int right = (b & PAD_RIGHT) != 0;
-    const int up    = (b & PAD_UP)    != 0;
-    const int down  = (b & PAD_DOWN)  != 0;
-
-    /* Opposing directions cancel, matching how the pad hardware is read. */
-    out->stick_x = (float)((right ? 1 : 0) - (left ? 1 : 0));
-    out->stick_y = (float)((up ? 1 : 0) - (down ? 1 : 0));
-
-    out->jump_held      = (b & PAD_A) != 0;
-    out->jump_pressed   = (pressed & PAD_A) != 0;
-    out->down_pressed   = (pressed & PAD_DOWN) != 0;
-    out->attack_pressed = (pressed & PAD_B) != 0;
-
-    s_prev_buttons = b;
-}
-
-/* ------------------------------------------------------------------ */
-/* Per-frame                                                          */
-/* ------------------------------------------------------------------ */
-
-void game_smash64_update_input(uint64_t frame_count) {
+    s_frame = frame_count;
     if (!s_enabled || !s_selected) return;
 
+    sample_input();
+
+    /*
+     * Publish ownership and record a trace row EVERY frame, including while
+     * SMB1 owns the player. The ring must show a handoff as a transition, not
+     * as a gap -- and a gap is what it showed before, because the hook only
+     * fires from SMB1's own movement path and scripted sequences never reach
+     * it. See nesrecomp/docs/FOREIGN_CONTROLLER.md on the always-on contract.
+     *
+     * The velocity write still happens in the hook, where the ownership check
+     * is authoritative for the frame the game logic actually runs.
+     */
     nes_foreign_set_ownership(decide_ownership());
 
-    ForeignInput input;
-    sample_input(&input);
+    memset(&fin, 0, sizeof(fin));
+    fin.stick_x = (float)s_input.stick_x / (float)STICK_FULL;
+    fin.stick_y = (float)s_input.stick_y / (float)STICK_FULL;
+    fin.jump_held = s_input.jump_held;
+    fin.jump_pressed = s_input.jump_pressed;
+    fin.raw_buttons = g_controller1_buttons;
 
-    ForeignMoveResult move;
-    if (!nes_foreign_tick(frame_count, &input, &move)) {
-        /* Native or scripted ownership: SMB1 moves the player itself. The
-         * tick above still recorded a trace row, so the ring shows the
-         * handoff instead of a gap. */
-        return;
-    }
-
-    /* TODO(M2/M3): sweep move.requested_dx/dy against SMB1's tiles via
-     * nes_foreign_sweep(), then nes_foreign_resolve() with the outcome. */
-    (void)move;
+    memset(&move, 0, sizeof(move));
+    move.requested_dx = (double)s_last_xspeed / SMB1_XSPEED_PER_PX;
+    move.state = s_falcon.state;
+    (void)nes_foreign_tick(frame_count, &fin, &move);
 }
 
-void game_smash64_update(uint64_t frame_count) {
+void game_smash64_update(uint64_t frame_count)
+{
     (void)frame_count;
     if (!s_enabled || !s_selected) return;
 
-    if (!s_announced) {
+    if (!s_announced && s_owned_frames > 0) {
         s_announced = 1;
-        printf("[Smash64] Controller ticking; ownership=%d\n",
-               (int)nes_foreign_ownership());
+        printf("[Smash64] Falcon has the wheel (state %s, X_Speed %d = %.2f "
+               "px/frame; Mario's own max run is 40 = 2.50)\n",
+               falcon_state_name(s_falcon.state), (int)s_last_xspeed,
+               (double)s_last_xspeed / SMB1_XSPEED_PER_PX);
     }
+}
 
-    /* TODO(M2): project host state into SMB1's page+pixel coordinates and
-     * write back only the variables SMB1 must observe, then report them:
-     *     nes_foreign_trace_note_native(player_x, player_y);
-     * Every such write gets documented in docs/smb1_player_adapter.md. */
+unsigned long game_smash64_owned_frames(void) { return s_owned_frames; }
+
+/* Registered before main() by mods/smash64_player_plugin.c; starts disabled,
+ * so registration alone cannot change behaviour. */
+int game_smash64_register_hooks(void)
+{
+    return nes_mod_register_function_entry_plugin(
+        SMASH64_FRICTION_HOOK_ID, SMB1_IMPOSE_FRICTION_ADDR,
+        impose_friction_hook);
 }
