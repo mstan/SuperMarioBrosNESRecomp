@@ -2,7 +2,8 @@
 #include "super-mario-bros_full_decls.h"
 
 #ifndef NESRECOMP_SPLIT_PARTS_EXTERNAL
-#include "super-mario-bros_full_bank00.c"
+#include "super-mario-bros_full_bank00_part00.c"
+#include "super-mario-bros_full_bank00_part01.c"
 #include "super-mario-bros_full_bank01_part00.c"
 #include "super-mario-bros_full_bank01_part01.c"
 #include "super-mario-bros_full_bank01_part02.c"
@@ -15,7 +16,129 @@
 #include "super-mario-bros_full_bank01_part09.c"
 #include "super-mario-bros_full_bank01_part10.c"
 #include "super-mario-bros_full_bank01_part11.c"
+#include "super-mario-bros_full_bank01_part12.c"
 #endif
+
+/* Interpreter wrappers for discovered entries that were not emitted natively. */
+void func_AD10_b0(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_AD10_b0");
+#endif
+    (void)nes_interp_force_generated(0xAD10, 0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_A060_b0(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_A060_b0");
+#endif
+    (void)nes_interp_force_generated(0xA060, 0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_B537_b0(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_B537_b0");
+#endif
+    (void)nes_interp_force_generated(0xB537, 0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_9759_b0(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_9759_b0");
+#endif
+    (void)nes_interp_force_generated(0x9759, 0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_9F2C_b0(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_9F2C_b0");
+#endif
+    (void)nes_interp_force_generated(0x9F2C, 0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_A49A_b0(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_A49A_b0");
+#endif
+    (void)nes_interp_force_generated(0xA49A, 0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_A6B1_b0(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_A6B1_b0");
+#endif
+    (void)nes_interp_force_generated(0xA6B1, 0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_8F8D_b0(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_8F8D_b0");
+#endif
+    (void)nes_interp_force_generated(0x8F8D, 0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_AD48_b0(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_AD48_b0");
+#endif
+    (void)nes_interp_force_generated(0xAD48, 0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_8040_b0(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_8040_b0");
+#endif
+    (void)nes_interp_force_generated(0x8040, 0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_87B5_b0(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_87B5_b0");
+#endif
+    (void)nes_interp_force_generated(0x87B5, 0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_B1B5_b0(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_B1B5_b0");
+#endif
+    (void)nes_interp_force_generated(0xB1B5, 0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
 
 /* Runner entry points */
 void func_RESET(void) { uint16_t _saved_wb = g_code_window_base; g_code_window_base = 0x8000; func_8000_b0(); g_code_window_base = _saved_wb; }
@@ -25,17 +148,11 @@ int g_rti_bank = -1; /* bank for last generated RTI instruction */
 uint16_t g_rts_target = 0; /* last RTS operand popped by generated code */
 
 void func_NMI(void)   {
-    /* Simulate 6502 NMI hardware: push PCH, PCL, P onto stack.
+    /* The runner pushes the 6502 NMI hardware frame.
      * Uses $0000 as sentinel PC — RTI stores the target in g_rti_target.
      * If the handler modified the return address (RTI hijack),
      * we dispatch to the hijacked target AFTER the handler returns,
      * so the post-NMI code runs outside the NMI context (depth 0). */
-    uint8_t _nmi_p = (g_cpu.N<<7)|(g_cpu.V<<6)|0x20|
-                     (g_cpu.D<<3)|(g_cpu.I<<2)|(g_cpu.Z<<1)|g_cpu.C;
-    g_ram[0x100 + g_cpu.S] = 0x00; g_cpu.S--; /* PCH (sentinel) */
-    g_ram[0x100 + g_cpu.S] = 0x00; g_cpu.S--; /* PCL (sentinel) */
-    g_ram[0x100 + g_cpu.S] = _nmi_p; g_cpu.S--; /* P */
-    g_cpu.I = 1; /* NMI entry sets I after pushing the old P */
     g_rti_target = 0;
     uint16_t _nmi_saved_wb = g_code_window_base;
     g_code_window_base = 0x8000;
