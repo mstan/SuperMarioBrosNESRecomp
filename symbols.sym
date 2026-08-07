@@ -2000,68 +2000,40 @@ FFEA BrickShatterEnvData func
 # Names and addresses lifted from threecreepio/smb-disassembly
 # (ca65 port of doppelganger's disassembly). Regenerate with:
 #   python nesrecomp/tools/ingest_smbdis.py \
-#       --disasm _smbdis --symbols symbols.sym
+#       --disasm smb-disassembly --symbols symbols.sym
 #
-# SMB overloads zero page across object types: $0033 is
-# PlayerFacingDir to the player code and BulletBill_CannonVar to the
-# enemy code. Both names are equally correct; which one applies
-# depends on the subsystem running, not on the address.
+# `ram` entries name a memory location. `const` entries are plain
+# constants -- object and enemy ids -- that merely happen to be small
+# numbers. The disassembly declares both as `Name = $XX`, so they are
+# told apart by use: a bare instruction operand is an address, while
+# `#Name` or a .byte table entry is a value. $0033 is BOTH:
+# PlayerFacingDir is zero-page RAM, BulletBill_CannonVar is enemy id
+# $33. They are unrelated and are NOT aliases of each other.
 #
-# EVERY name is listed, because they are all aliases of one constant
-# and any of them should resolve. The first line for an address is
-# the one the disassembly references most, and is what single-name
-# consumers (inline comments) use; the rest follow immediately.
+# Within one kind, several names on one address ARE aliases of the
+# same byte -- Player_X_Position is SprObject_X_Position slot 0. All
+# are listed; the first is the one the disassembly references most,
+# and is what single-name consumers (inline comments) use.
 # Do not hand-edit inside this block; edits are overwritten.
 
-0000 GreenKoopa ram
-0002 BuzzyBeetle ram
-0003 RedKoopa ram
-0005 HammerBro ram
-0006 Goomba ram
-0007 Bloober ram
 0008 ObjectOffset ram
-0008 BulletBill_FrenzyVar ram
 0009 FrameCounter ram
-0009 TallEnemy ram
 000A A_B_Buttons ram
-000A GreyCheepCheep ram
 000B Up_Down_Buttons ram
-000B RedCheepCheep ram
 000C Left_Right_Buttons ram
-000C Podoboo ram
-000D PiranhaPlant ram
 000D PreviousA_B_Buttons ram
 000E GameEngineSubroutine ram
-000E GreenParatroopaJump ram
 000F Enemy_Flag ram
-000F RedParatroopa ram
-0010 GreenParatroopaFly ram
-0011 Lakitu ram
-0012 Spiny ram
-0014 FlyingCheepCheep ram
-0014 FlyCheepCheepFrenzy ram
-0015 BowserFlame ram
 0016 Enemy_ID ram
-0016 Fireworks ram
-0017 BBill_CCheep_Frenzy ram
-0018 Stop_Frenzy ram
 001D Player_State ram
 001E Enemy_State ram
 0024 Fireball_State ram
 0026 Block_State ram
 002A Misc_State ram
-002D Bowser ram
-002E PowerUpObject ram
-002F VineObject ram
-0030 FlagpoleFlagObject ram
-0031 StarFlagObject ram
-0032 JumpspringObject ram
 0033 PlayerFacingDir ram
-0033 BulletBill_CannonVar ram
 0034 DestinationPageLoc ram
 0034 FirebarSpinDirection ram
 0035 VictoryWalkControl ram
-0035 RetainerObject ram
 0039 PowerUpType ram
 003A FireballBouncingFlag ram
 003C HammerBroJumpTimer ram
@@ -2486,5 +2458,39 @@ FFEA BrickShatterEnvData func
 4016 JOYPAD_PORT ram
 4016 JOYPAD_PORT1 ram
 4017 JOYPAD_PORT2 ram
+
+# Object / enemy type ids -- VALUES, not addresses.
+
+0000 GreenKoopa const
+0002 BuzzyBeetle const
+0003 RedKoopa const
+0005 HammerBro const
+0006 Goomba const
+0007 Bloober const
+0008 BulletBill_FrenzyVar const
+0009 TallEnemy const
+000A GreyCheepCheep const
+000B RedCheepCheep const
+000C Podoboo const
+000D PiranhaPlant const
+000E GreenParatroopaJump const
+000F RedParatroopa const
+0010 GreenParatroopaFly const
+0011 Lakitu const
+0012 Spiny const
+0014 FlyingCheepCheep const
+0014 FlyCheepCheepFrenzy const
+0015 BowserFlame const
+0016 Fireworks const
+0017 BBill_CCheep_Frenzy const
+0018 Stop_Frenzy const
+002D Bowser const
+002E PowerUpObject const
+002F VineObject const
+0030 FlagpoleFlagObject const
+0031 StarFlagObject const
+0032 JumpspringObject const
+0033 BulletBill_CannonVar const
+0035 RetainerObject const
 
 # --- END auto-ingested RAM symbols ---
