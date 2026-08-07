@@ -1,0 +1,10 @@
+# Short hop: release the jump button inside the 3-frame window. Peak height
+# should be visibly lower than jump.script's full hop.
+jump down
+frames 1
+expect_state KNEEBEND
+jump up
+note released-inside-shorthop-window
+frames 1
+frames 3
+frames 60

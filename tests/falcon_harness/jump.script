@@ -1,0 +1,15 @@
+# plan.md trace 3: Jump. Right, jump press, hold, release, continue right.
+# Held jump past the 3-frame short-hop window = full hop.
+stick_x 80
+frames 20
+jump down
+note jump-pressed
+frames 1
+expect_state KNEEBEND
+frames 3
+note takeoff-expected-after-4-frames-of-jumpsquat
+frames 1
+jump up
+frames 60
+neutral
+frames 60

@@ -1,0 +1,12 @@
+# plan.md trace 4: Fast Fall. Jump, wait for the descending phase, press down.
+# Fast fall needs !is_fastfall, vel_air_y < 0, stick_y <= -53, tap_stick_y < 4.
+jump down
+frames 1
+frames 4
+jump up
+note airborne
+frames 30
+note now-descending-press-down
+stick_y -80
+frames 1
+frames 40

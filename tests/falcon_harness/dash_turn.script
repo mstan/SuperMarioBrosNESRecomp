@@ -1,0 +1,10 @@
+# plan.md trace 2: Dash -> Turn. Right 30 frames, then left 30.
+stick_x 80
+frames 30
+stick_x -80
+note reverse
+frames 1
+frames 25
+neutral
+frames 40
+expect_state WAIT

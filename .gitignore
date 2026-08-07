@@ -3,6 +3,7 @@ build-voxel-vs/
 build_release/
 build_debug/
 build_falcon/
+build_harness/
 release/
 widescreen.ini
 _ws_build.bat
@@ -28,3 +29,8 @@ hdpack/
 nestopia-core
 
 build_ui/
+
+# Falcon harness build byproducts (traces are regenerated, not tracked)
+tests/falcon_harness/*.exe
+tests/falcon_harness/*.obj
+tests/falcon_harness/trace_*.csv

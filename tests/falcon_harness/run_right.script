@@ -1,0 +1,17 @@
+# plan.md trace 1: Run Right.
+# A d-pad press is a fresh stick tap, so this should dash, then convert to
+# run in the one-frame window at dash_to_run (16), then hold run_speed
+# exactly -- Run applies no friction.
+note idle
+frames 2
+expect_state WAIT
+stick_x 80
+note press-right
+frames 1
+expect_state DASH
+frames 15
+note at-dash-to-run-window
+frames 1
+expect_state RUN
+frames 100
+expect_state RUN
