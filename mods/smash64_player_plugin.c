@@ -14,6 +14,7 @@
 #include "smash64/characters/captain_falcon.h"
 
 #include <stdio.h>
+#include <string.h>
 
 static void reset_smash64_player(void) {
     /* Reset callbacks run before active plugins on every launch, so
@@ -21,7 +22,35 @@ static void reset_smash64_player(void) {
     game_smash64_set_mod_enabled(0, NULL);
 }
 
+#define SMASH64_PACKAGE_ID \
+    "super-mario-bros.gameplay.smash64-player-replacement"
+#define SMASH64_FEATURE_ID "smash64-player"
+
+/*
+ * Read back the committed dropdown value. The condition on [[plugin]] is
+ * what actually selected this callback, so this is a cross-check, not the
+ * selection mechanism: if the two ever disagree, the manifest and the
+ * resolver have drifted apart and the log says so instead of hiding it.
+ */
+static void report_selected_character(const char *expected) {
+    char selected[64];
+    if (!nes_mod_option_value(SMASH64_PACKAGE_ID, SMASH64_FEATURE_ID,
+                              "character", selected, sizeof selected)) {
+        fprintf(stderr, "[Smash64] Could not read the Character option; "
+                        "assuming '%s'\n", expected);
+        return;
+    }
+    if (strcmp(selected, expected) != 0)
+        fprintf(stderr,
+                "[Smash64] Character option is '%s' but the '%s' plugin "
+                "activated - manifest conditions and resolver disagree\n",
+                selected, expected);
+    else
+        printf("[Smash64] Character: %s\n", selected);
+}
+
 static void activate_captain_falcon(void) {
+    report_selected_character("captain-falcon");
     game_smash64_set_mod_enabled(1, SMASH64_CAPTAIN_FALCON_ID);
 }
 
