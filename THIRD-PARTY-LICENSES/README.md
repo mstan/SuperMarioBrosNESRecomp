@@ -53,3 +53,19 @@ original to this project and carry its license.
 | [`recomp-ui`](https://github.com/mstan/recomp-ui) | pre-boot launcher (Dear ImGui) | see that repository |
 | SDL2 | window, input, audio | zlib |
 | Dear ImGui | launcher widgets | MIT |
+
+### Super Mario Bros. disassembly — *submodule, technical reference*
+
+`smb-disassembly/` is a submodule pointing at
+**`threecreepio/smb-disassembly`** (a ca65 port of doppelganger's Super Mario
+Bros. disassembly) pinned at `da964553b3695fde607d796acde21b3f4b282dfe`. It is
+the authoritative source for this project's SMB1 symbol names.
+
+That repository publishes no license. A submodule records a URL and a commit —
+it redistributes nothing, and the pin is there so a symbol name can always be
+traced back to the exact revision it came from.
+
+`nesrecomp/tools/ingest_smbdis.py` derives `symbols.sym` from it and copies
+**only names and addresses** — no ROM bytes, no instruction text, and none of
+the disassembly's own commentary. That is the same treatment
+`snesrecomp/tools/ingest_dkc2_disasm.py` applies to the DKC2 disassembly.

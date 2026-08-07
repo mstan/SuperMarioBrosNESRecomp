@@ -3,10 +3,6 @@ build-voxel-vs/
 build_release/
 build_debug/
 build_falcon/
-
-# Local reference checkout of threecreepio/smb-disassembly (no license
-# upstream; used as a technical reference only). See tools/ingest_smbdis.py.
-_smbdis/
 release/
 widescreen.ini
 _ws_build.bat

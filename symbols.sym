@@ -2002,11 +2002,15 @@ FFEA BrickShatterEnvData func
 #   python nesrecomp/tools/ingest_smbdis.py \
 #       --disasm _smbdis --symbols symbols.sym
 #
-# One name per address, because that is all the table can hold. SMB
-# overloads zero page across object types, so where several names
-# share a slot the most-referenced one wins and the rest follow on an
-# 'alias:' comment. An alias is not a worse name — it is the same
-# byte read by different code.
+# SMB overloads zero page across object types: $0033 is
+# PlayerFacingDir to the player code and BulletBill_CannonVar to the
+# enemy code. Both names are equally correct; which one applies
+# depends on the subsystem running, not on the address.
+#
+# EVERY name is listed, because they are all aliases of one constant
+# and any of them should resolve. The first line for an address is
+# the one the disassembly references most, and is what single-name
+# consumers (inline comments) use; the rest follow immediately.
 # Do not hand-edit inside this block; edits are overwritten.
 
 0000 GreenKoopa ram
@@ -2016,29 +2020,29 @@ FFEA BrickShatterEnvData func
 0006 Goomba ram
 0007 Bloober ram
 0008 ObjectOffset ram
-#   alias: BulletBill_FrenzyVar
+0008 BulletBill_FrenzyVar ram
 0009 FrameCounter ram
-#   alias: TallEnemy
+0009 TallEnemy ram
 000A A_B_Buttons ram
-#   alias: GreyCheepCheep
+000A GreyCheepCheep ram
 000B Up_Down_Buttons ram
-#   alias: RedCheepCheep
+000B RedCheepCheep ram
 000C Left_Right_Buttons ram
-#   alias: Podoboo
+000C Podoboo ram
 000D PiranhaPlant ram
-#   alias: PreviousA_B_Buttons
+000D PreviousA_B_Buttons ram
 000E GameEngineSubroutine ram
-#   alias: GreenParatroopaJump
+000E GreenParatroopaJump ram
 000F Enemy_Flag ram
-#   alias: RedParatroopa
+000F RedParatroopa ram
 0010 GreenParatroopaFly ram
 0011 Lakitu ram
 0012 Spiny ram
 0014 FlyingCheepCheep ram
-#   alias: FlyCheepCheepFrenzy
+0014 FlyCheepCheepFrenzy ram
 0015 BowserFlame ram
 0016 Enemy_ID ram
-#   alias: Fireworks
+0016 Fireworks ram
 0017 BBill_CCheep_Frenzy ram
 0018 Stop_Frenzy ram
 001D Player_State ram
@@ -2053,63 +2057,77 @@ FFEA BrickShatterEnvData func
 0031 StarFlagObject ram
 0032 JumpspringObject ram
 0033 PlayerFacingDir ram
-#   alias: BulletBill_CannonVar
+0033 BulletBill_CannonVar ram
 0034 DestinationPageLoc ram
-#   alias: FirebarSpinDirection
+0034 FirebarSpinDirection ram
 0035 VictoryWalkControl ram
-#   alias: RetainerObject
+0035 RetainerObject ram
 0039 PowerUpType ram
 003A FireballBouncingFlag ram
 003C HammerBroJumpTimer ram
 0045 Player_MovingDir ram
 0046 Enemy_MovingDir ram
 0057 Player_X_Speed ram
-#   alias: SprObject_X_Speed
+0057 SprObject_X_Speed ram
 0058 Enemy_X_Speed ram
-#   alias: XMoveSecondaryCounter, PiranhaPlant_Y_Speed, BlooperMoveSpeed, FirebarSpinState_Low, LakituMoveSpeed, ExplosionGfxCounter, CheepCheepMoveMFlag, Jumpspring_FixedYPos, RedPTroopaCenterYPos, YPlatformCenterYPos
+0058 XMoveSecondaryCounter ram
+0058 PiranhaPlant_Y_Speed ram
+0058 BlooperMoveSpeed ram
+0058 FirebarSpinState_Low ram
+0058 LakituMoveSpeed ram
+0058 ExplosionGfxCounter ram
+0058 CheepCheepMoveMFlag ram
+0058 Jumpspring_FixedYPos ram
+0058 RedPTroopaCenterYPos ram
+0058 YPlatformCenterYPos ram
 005E Fireball_X_Speed ram
 0060 Block_X_Speed ram
 0064 Misc_X_Speed ram
 006D Player_PageLoc ram
-#   alias: SprObject_PageLoc
+006D SprObject_PageLoc ram
 006E Enemy_PageLoc ram
 0074 Fireball_PageLoc ram
 0076 Block_PageLoc ram
 007A Misc_PageLoc ram
 0083 Bubble_PageLoc ram
 0086 Player_X_Position ram
-#   alias: SprObject_X_Position
+0086 SprObject_X_Position ram
 0087 Enemy_X_Position ram
 008D Fireball_X_Position ram
 008F Block_X_Position ram
 0093 Misc_X_Position ram
 009C Bubble_X_Position ram
 009F Player_Y_Speed ram
-#   alias: SprObject_Y_Speed
+009F SprObject_Y_Speed ram
 00A0 Enemy_Y_Speed ram
-#   alias: BlooperMoveCounter, FirebarSpinState_High, LakituMoveDirection, PiranhaPlant_MoveFlag, ExplosionTimerCounter, XMovePrimaryCounter
+00A0 BlooperMoveCounter ram
+00A0 FirebarSpinState_High ram
+00A0 LakituMoveDirection ram
+00A0 PiranhaPlant_MoveFlag ram
+00A0 ExplosionTimerCounter ram
+00A0 XMovePrimaryCounter ram
 00A6 Fireball_Y_Speed ram
 00A8 Block_Y_Speed ram
 00AC Misc_Y_Speed ram
 00B5 Player_Y_HighPos ram
-#   alias: SprObject_Y_HighPos
+00B5 SprObject_Y_HighPos ram
 00B6 Enemy_Y_HighPos ram
 00BC Fireball_Y_HighPos ram
 00BE Block_Y_HighPos ram
 00C2 Misc_Y_HighPos ram
 00CB Bubble_Y_HighPos ram
 00CE Player_Y_Position ram
-#   alias: SprObject_Y_Position
+00CE SprObject_Y_Position ram
 00CF Enemy_Y_Position ram
 00D5 Fireball_Y_Position ram
 00D7 Block_Y_Position ram
 00DB Misc_Y_Position ram
 00E4 Bubble_Y_Position ram
 00E7 AreaData ram
-#   alias: AreaDataLow
+00E7 AreaDataLow ram
 00E8 AreaDataHigh ram
 00E9 EnemyData ram
-#   alias: EnemyDataLow
+00E9 EnemyDataLow ram
 00EA EnemyDataHigh ram
 00F0 NoteLenLookupTblOfs ram
 00F1 Square1SoundBuffer ram
@@ -2117,7 +2135,7 @@ FFEA BrickShatterEnvData func
 00F3 NoiseSoundBuffer ram
 00F4 AreaMusicBuffer ram
 00F5 MusicData ram
-#   alias: MusicDataLow
+00F5 MusicDataLow ram
 00F6 MusicDataHigh ram
 00F7 MusicOffset_Square2 ram
 00F8 MusicOffset_Square1 ram
@@ -2139,7 +2157,7 @@ FFEA BrickShatterEnvData func
 012C FloateyNum_Timer ram
 0134 DigitModifier ram
 0200 Sprite_Y_Position ram
-#   alias: Sprite_Data
+0200 Sprite_Data ram
 0201 Sprite_Tilenumber ram
 0202 Sprite_Attributes ram
 0203 Sprite_X_Position ram
@@ -2163,26 +2181,26 @@ FFEA BrickShatterEnvData func
 03A0 BalPlatformAlignment ram
 03A1 Platform_X_Scroll ram
 03A2 PlatformCollisionFlag ram
-#   alias: HammerThrowingTimer
+03A2 HammerThrowingTimer ram
 03AD Player_Rel_XPos ram
-#   alias: SprObject_Rel_XPos
+03AD SprObject_Rel_XPos ram
 03AE Enemy_Rel_XPos ram
 03AF Fireball_Rel_XPos ram
 03B0 Bubble_Rel_XPos ram
 03B1 Block_Rel_XPos ram
 03B3 Misc_Rel_XPos ram
 03B8 SprObject_Rel_YPos ram
-#   alias: Player_Rel_YPos
+03B8 Player_Rel_YPos ram
 03B9 Enemy_Rel_YPos ram
 03BA Fireball_Rel_YPos ram
 03BB Bubble_Rel_YPos ram
 03BC Block_Rel_YPos ram
 03BE Misc_Rel_YPos ram
 03C4 Player_SprAttrib ram
-#   alias: SprObject_SprAttrib
+03C4 SprObject_SprAttrib ram
 03C5 Enemy_SprAttrib ram
 03D0 Player_OffscreenBits ram
-#   alias: SprObject_OffscrBits
+03D0 SprObject_OffscrBits ram
 03D1 Enemy_OffscreenBits ram
 03D2 FBall_OffscreenBits ram
 03D3 Bubble_OffscreenBits ram
@@ -2200,43 +2218,46 @@ FFEA BrickShatterEnvData func
 03F9 AttributeBuffer ram
 0400 SprObject_X_MoveForce ram
 0401 Enemy_X_MoveForce ram
-#   alias: RedPTroopaOrigXPos, YPlatformTopYPos
+0401 RedPTroopaOrigXPos ram
+0401 YPlatformTopYPos ram
 0416 Player_YMF_Dummy ram
-#   alias: SprObject_YMF_Dummy
+0416 SprObject_YMF_Dummy ram
 0417 Enemy_YMF_Dummy ram
-#   alias: BowserFlamePRandomOfs, PiranhaPlantUpYPos
+0417 BowserFlamePRandomOfs ram
+0417 PiranhaPlantUpYPos ram
 042C Bubble_YMF_Dummy ram
 0433 SprObject_Y_MoveForce ram
-#   alias: Player_Y_MoveForce
+0433 Player_Y_MoveForce ram
 0434 Enemy_Y_MoveForce ram
-#   alias: CheepCheepOrigYPos, PiranhaPlantDownYPos
+0434 CheepCheepOrigYPos ram
+0434 PiranhaPlantDownYPos ram
 043C Block_Y_MoveForce ram
 0450 MaximumLeftSpeed ram
 0456 MaximumRightSpeed ram
 046A Cannon_Offset ram
-#   alias: Whirlpool_Offset
+046A Whirlpool_Offset ram
 046B Whirlpool_PageLoc ram
-#   alias: Cannon_PageLoc
+046B Cannon_PageLoc ram
 0471 Whirlpool_LeftExtent ram
-#   alias: Cannon_X_Position
+0471 Cannon_X_Position ram
 0477 Whirlpool_Length ram
-#   alias: Cannon_Y_Position
+0477 Cannon_Y_Position ram
 047D Cannon_Timer ram
-#   alias: Whirlpool_Flag
+047D Whirlpool_Flag ram
 0483 BowserHitPoints ram
 0484 StompChainCounter ram
 0490 Player_CollisionBits ram
 0491 Enemy_CollisionBits ram
 0499 Player_BoundBoxCtrl ram
-#   alias: SprObj_BoundBoxCtrl
+0499 SprObj_BoundBoxCtrl ram
 049A Enemy_BoundBoxCtrl ram
 04A0 Fireball_BoundBoxCtrl ram
 04A2 Misc_BoundBoxCtrl ram
 04AC BoundingBox_UL_Corner ram
-#   alias: BoundingBox_UL_XPos
+04AC BoundingBox_UL_XPos ram
 04AD BoundingBox_UL_YPos ram
 04AE BoundingBox_LR_Corner ram
-#   alias: BoundingBox_DR_XPos
+04AE BoundingBox_DR_XPos ram
 04AF BoundingBox_DR_YPos ram
 04B0 EnemyBoundingBoxCoord ram
 0500 Block_Buffer_1 ram
@@ -2267,15 +2288,15 @@ FFEA BrickShatterEnvData func
 06E0 SprShuffleAmtOffset ram
 06E1 SprShuffleAmt ram
 06E4 Player_SprDataOffset ram
-#   alias: SprDataOffset
+06E4 SprDataOffset ram
 06E5 Enemy_SprDataOffset ram
 06EC Block_SprDataOffset ram
-#   alias: Alt_SprDataOffset
+06EC Alt_SprDataOffset ram
 06EE Bubble_SprDataOffset ram
 06F1 FBall_SprDataOffset ram
 06F3 Misc_SprDataOffset ram
 06FC SavedJoypadBits ram
-#   alias: SavedJoypad1Bits
+06FC SavedJoypad1Bits ram
 06FD SavedJoypad2Bits ram
 06FF Player_X_Scroll ram
 0700 Player_XSpeedAbsolute ram
@@ -2305,10 +2326,10 @@ FFEA BrickShatterEnvData func
 0718 DemoActionTimer ram
 0719 PrimaryMsgCounter ram
 071A ScreenLeft_PageLoc ram
-#   alias: ScreenEdge_PageLoc
+071A ScreenEdge_PageLoc ram
 071B ScreenRight_PageLoc ram
 071C ScreenLeft_X_Pos ram
-#   alias: ScreenEdge_X_Pos
+071C ScreenEdge_X_Pos ram
 071D ScreenRight_X_Pos ram
 071E ColumnSets ram
 071F AreaParserTaskNum ram
@@ -2360,7 +2381,7 @@ FFEA BrickShatterEnvData func
 0758 JoypadOverride ram
 0759 GameTimerExpiredFlag ram
 075A NumberofLives ram
-#   alias: OnscreenPlayerInfo
+075A OnscreenPlayerInfo ram
 075B HalfwayPage ram
 075C LevelNumber ram
 075D Hidden1UpFlag ram
@@ -2368,7 +2389,7 @@ FFEA BrickShatterEnvData func
 075F WorldNumber ram
 0760 AreaNumber ram
 0761 OffScr_NumberofLives ram
-#   alias: OffscreenPlayerInfo
+0761 OffscreenPlayerInfo ram
 0762 OffScr_HalfwayPage ram
 0763 OffScr_LevelNumber ram
 0764 OffScr_Hidden1UpFlag ram
@@ -2391,7 +2412,7 @@ FFEA BrickShatterEnvData func
 077A NumberOfPlayers ram
 077F IntervalTimerControl ram
 0780 SelectTimer ram
-#   alias: Timers
+0780 Timers ram
 0781 PlayerAnimTimer ram
 0782 JumpSwimTimer ram
 0783 RunningTimer ram
@@ -2415,7 +2436,7 @@ FFEA BrickShatterEnvData func
 07A2 DemoTimer ram
 07A7 PseudoRandomBitReg ram
 07B0 MusicOffset_Noise ram
-#   alias: SoundMemory
+07B0 SoundMemory ram
 07B1 EventMusicBuffer ram
 07B2 PauseSoundBuffer ram
 07B3 Squ2_NoteLenBuffer ram
@@ -2438,9 +2459,9 @@ FFEA BrickShatterEnvData func
 07C7 GroundMusicHeaderOfs ram
 07CA AltRegContentFlag ram
 07D7 DisplayDigits ram
-#   alias: TopScoreDisplay
+07D7 TopScoreDisplay ram
 07DD PlayerScoreDisplay ram
-#   alias: ScoreAndCoinDisplay
+07DD ScoreAndCoinDisplay ram
 07F8 GameTimerDisplay ram
 07FC WorldSelectEnableFlag ram
 07FD ContinueWorld ram
@@ -2455,7 +2476,7 @@ FFEA BrickShatterEnvData func
 2006 PPU_ADDRESS ram
 2007 PPU_DATA ram
 4000 SND_SQUARE1_REG ram
-#   alias: SND_REGISTER
+4000 SND_REGISTER ram
 4004 SND_SQUARE2_REG ram
 4008 SND_TRIANGLE_REG ram
 400C SND_NOISE_REG ram
@@ -2463,7 +2484,7 @@ FFEA BrickShatterEnvData func
 4014 SPR_DMA ram
 4015 SND_MASTERCTRL_REG ram
 4016 JOYPAD_PORT ram
-#   alias: JOYPAD_PORT1
+4016 JOYPAD_PORT1 ram
 4017 JOYPAD_PORT2 ram
 
 # --- END auto-ingested RAM symbols ---
