@@ -141,6 +141,10 @@ Key committed evidence/docs:
 - `tests/falcon_m7_savestate.script`
 - `tests/falcon_m8_audio.script`
 - `tests/falcon_visual_acceptance.script`
+- `tests/falcon_visual_locomotion_qa.script`
+- `tests/falcon_visual_combat_qa.script`
+- `tests/falcon_visual_aerial_sequence_qa.script`
+- `tests/falcon_tier4_death_respawn_qa.script`
 - `tests/falcon_tier4_mod_off.script`
 
 The M8 live trace loads 7/7 clips and queues every mapping. During a Punch
@@ -170,6 +174,19 @@ fallback message and a smoke run exits cleanly.
   `tests/falcon_visual_acceptance.script` and inspect all five native-resolution
   screenshots under `C:\temp\falcon_accept_*.png`; a coherent, recognizable
   Falcon silhouette is the M6 acceptance criterion.
+- `WAIT_RAM8 000E 08` becomes true while World 1-2's native entrance drop is
+  still in progress. Visual tests must wait 120 more frames before saving a
+  settled ground baseline. A `SCREENSHOT` is also queued until the next render;
+  wait at least two frames before loading another savestate or changing the
+  pose, or the PNG will record the replacement state instead.
+- World 1-2's black backdrop is useful for the purple/yellow ground poses, but
+  can hide Falcon's darkest lower-leg polygons during aerial kicks. The aerial
+  sequence QA repeats consecutive Fair/Bair frames against World 1-1's light
+  sky to distinguish connected dark geometry from a genuinely detached joint.
+- `falcon_tier4_mod_off.script` does not toggle package state itself. Set the
+  staged `build_falcon/Release/mods/state.toml` Smash64 feature to `false`
+  before running it, verify no Falcon trace/asset/audio initialization occurs,
+  then restore the feature to `true`.
 - `nes_foreign_sweep` is not used by SMB1 because the host needs its own
   inclusive per-pixel collision semantics.
 

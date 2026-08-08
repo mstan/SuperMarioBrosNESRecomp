@@ -1,0 +1,77 @@
+LOG falcon-visual-locomotion-qa-world-1-2
+WAIT 60
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 01
+WRITE_RAM8 760 01
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+ASSERT_RAM8 000E 08
+# Ordinary control begins during the World 1-2 entrance drop. Establish the
+# baseline only after the native landing and settled Wait state.
+WAIT 120
+SAVE_STATE C:/temp/falcon_visual_locomotion_base.sav
+SCREENSHOT C:/temp/falcon_qa_idle.png
+
+# Fresh right tap: Dash, then the source dash-to-run conversion window.
+HOLD RIGHT
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_dash.png
+WAIT 18
+SCREENSHOT C:/temp/falcon_qa_run.png
+WAIT 2
+
+# Reverse a live run to exercise TurnRun.
+RELEASE RIGHT
+HOLD LEFT
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_turn_run.png
+WAIT 4
+RELEASE LEFT
+
+# Reload before braking so the World 1-2 entrance ledge cannot turn the
+# reversal into a fall before RunBrake is reached.
+LOAD_STATE C:/temp/falcon_visual_locomotion_base.sav
+WAIT 2
+HOLD RIGHT
+WAIT 20
+RELEASE RIGHT
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_run_brake.png
+WAIT 8
+
+# Reverse just before Dash's one-frame Run conversion. This source path uses
+# Turn and settles into WalkFast, covering the walk family separately from
+# the full-speed TurnRun path above.
+LOAD_STATE C:/temp/falcon_visual_locomotion_base.sav
+WAIT 2
+HOLD RIGHT
+WAIT 14
+RELEASE RIGHT
+HOLD LEFT
+WAIT 8
+SCREENSHOT C:/temp/falcon_qa_walk.png
+WAIT 2
+RELEASE LEFT
+
+# Reload a real player-control state before the jump sequence.
+LOAD_STATE C:/temp/falcon_visual_locomotion_base.sav
+WAIT 2
+HOLD A
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_kneebend.png
+WAIT 3
+SCREENSHOT C:/temp/falcon_qa_jump.png
+RELEASE A
+WAIT 30
+SCREENSHOT C:/temp/falcon_qa_fall.png
+HOLD DOWN
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_fast_fall.png
+RELEASE DOWN
+WAIT 45
+SCREENSHOT C:/temp/falcon_qa_landing.png
+ASSERT_RAM8 000E 08
+WAIT 2
+EXIT 0

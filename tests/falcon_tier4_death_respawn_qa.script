@@ -1,0 +1,45 @@
+LOG falcon-tier4-death-respawn-qa-world-1-1
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+ASSERT_RAM8 000E 08
+
+# Drive real player-controlled Falcon through World 1-1. Periodic jumps clear
+# the early pipes; continuous rightward movement then reaches a native pit.
+HOLD RIGHT
+WAIT 25
+HOLD A
+WAIT 12
+RELEASE A
+WAIT 35
+HOLD A
+WAIT 12
+RELEASE A
+WAIT 35
+HOLD A
+WAIT 12
+RELEASE A
+WAIT 35
+HOLD A
+WAIT 12
+RELEASE A
+WAIT 35
+HOLD A
+WAIT 12
+RELEASE A
+WAIT 90
+
+# SMB1 owns the native death sequence (GameEngineSubroutine $0B), then the
+# adapter must reseed Falcon when ordinary control ($08) returns.
+WAIT_RAM8 000E 0B
+SCREENSHOT C:/temp/falcon_qa_death.png
+WAIT 2
+RELEASE RIGHT
+WAIT_RAM8 000E 08
+WAIT 30
+ASSERT_RAM8 000E 08
+SCREENSHOT C:/temp/falcon_qa_respawn.png
+WAIT 2
+EXIT 0

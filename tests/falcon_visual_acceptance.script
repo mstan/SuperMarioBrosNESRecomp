@@ -1,7 +1,8 @@
 LOG falcon-visual-acceptance-world-1-2
 WAIT 60
-# Select World 1-2 before SMB1 resolves the area pointer. The underground
-# black backdrop keeps every part of Falcon's source model visible.
+# Select World 1-2 before SMB1 resolves the area pointer. Its quiet opening
+# gives the ground poses strong contrast; the separate aerial-sequence QA uses
+# World 1-1's light sky so Falcon's darkest limb geometry remains visible.
 WRITE_RAM8 75F 00
 WRITE_RAM8 75C 01
 WRITE_RAM8 760 01
@@ -9,28 +10,45 @@ HOLD START
 WAIT 6
 RELEASE START
 WAIT_RAM8 000E 08
-WAIT 30
+# World 1-2 enters ordinary control while the player is still dropping from
+# the entrance. Wait through that native landing; earlier captures at +30 were
+# airborne and therefore invalid as idle/ground-attack evidence.
+WAIT 120
+SAVE_STATE C:/temp/falcon_visual_acceptance_base.sav
 SCREENSHOT C:/temp/falcon_accept_idle.png
+WAIT 2
 
+# Reload the settled baseline before each pose so enemies, blocks, scrolling,
+# or an earlier move cannot invalidate a later visual acceptance frame.
+LOAD_STATE C:/temp/falcon_visual_acceptance_base.sav
+WAIT 2
 HOLD RIGHT
-WAIT 30
+WAIT 18
 SCREENSHOT C:/temp/falcon_accept_run.png
-HOLD A
-WAIT 12
-SCREENSHOT C:/temp/falcon_accept_jump.png
-RELEASE A
+WAIT 2
 RELEASE RIGHT
-WAIT 70
+
+LOAD_STATE C:/temp/falcon_visual_acceptance_base.sav
+WAIT 2
+HOLD A
+WAIT 15
+SCREENSHOT C:/temp/falcon_accept_jump.png
+WAIT 2
+RELEASE A
 
 # Capture the source-active pose of Falcon Punch.
+LOAD_STATE C:/temp/falcon_visual_acceptance_base.sav
+WAIT 2
 HOLD B
 WAIT 2
 RELEASE B
 WAIT 41
 SCREENSHOT C:/temp/falcon_accept_punch.png
-WAIT 55
+WAIT 2
 
 # Capture the source-active pose of Falcon Kick.
+LOAD_STATE C:/temp/falcon_visual_acceptance_base.sav
+WAIT 2
 HOLD DOWN
 HOLD B
 WAIT 2
@@ -39,4 +57,5 @@ RELEASE DOWN
 WAIT 11
 SCREENSHOT C:/temp/falcon_accept_kick.png
 WAIT 2
+ASSERT_RAM8 000E 08
 EXIT 0

@@ -1,0 +1,65 @@
+LOG falcon-visual-aerial-sequence-qa-world-1-1
+WAIT 60
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 00
+WRITE_RAM8 760 00
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+ASSERT_RAM8 000E 08
+# Settle into ordinary player control before establishing the baseline.
+WAIT 120
+SAVE_STATE C:/temp/falcon_visual_aerial_sequence_base.sav
+
+# Capture consecutive source frames so an extended kick can be judged as
+# motion, instead of accepting or rejecting one ambiguous projection.
+HOLD A
+WAIT 5
+RELEASE A
+HOLD RIGHT
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE RIGHT
+SCREENSHOT C:/temp/falcon_qa_fair_00.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_fair_02.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_fair_04.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_fair_06.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_fair_08.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_fair_10.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_fair_12.png
+WAIT 2
+
+LOAD_STATE C:/temp/falcon_visual_aerial_sequence_base.sav
+WAIT 2
+HOLD A
+WAIT 5
+RELEASE A
+HOLD LEFT
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE LEFT
+SCREENSHOT C:/temp/falcon_qa_bair_00.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_bair_02.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_bair_04.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_bair_06.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_bair_08.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_bair_10.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_qa_bair_12.png
+WAIT 2
+ASSERT_RAM8 000E 08
+EXIT 0
