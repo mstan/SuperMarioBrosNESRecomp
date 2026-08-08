@@ -34,3 +34,6 @@ build_ui/
 tests/falcon_harness/*.exe
 tests/falcon_harness/*.obj
 tests/falcon_harness/trace_*.csv
+
+# SSB64 ROM + extracted assets: owner-authorized LOCAL-ONLY quarantine. Never commit, never publish.
+assets_ssb64/
