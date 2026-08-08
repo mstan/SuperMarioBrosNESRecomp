@@ -1,9 +1,11 @@
 # SMB1 player adapter
 
-**Status: M2 + M3 COMPLETE** (`beads-2dw.2.1.3`, `beads-2dw.2.1.4`). Falcon
-owns horizontal movement and vertical motion — jump velocity, gravity, terminal
-velocity, fast fall and air drift. SMB1 still decides **when** a jump starts and
-when a landing happens, and owns all collision and every scripted sequence.
+**Status: M2 + M3 + M3.5 COMPLETE** (`beads-2dw.2.1.3`, `beads-2dw.2.1.4`,
+`beads-2dw.2.1.9`). Falcon owns horizontal movement, vertical motion — jump
+velocity, gravity, terminal velocity, fast fall and air drift — and, since M3.5,
+jump **timing**: his 4-frame jumpsquat runs and decides short hop versus full
+hop. SMB1 still decides when a landing happens, and owns all collision and every
+scripted sequence.
 
 Every address below was confirmed in Ghidra (`nes/SuperMarioBrosNES`) before
 being read or written — framework RULE 0 — and the confirming instruction is
@@ -96,10 +98,99 @@ SMB1's -5 px and Falcon's -6.7 px, once. By the next VBlank `Player_State` is 1,
 the controller reconciles into a real jump, and every frame after that is ours.
 The same guard covers walking off a ledge.
 
+### The third hook: `PlayerPhysicsSub $B450` — M3.5, jump *timing*
+
+M3 gave Falcon the jump *physics* and left SMB1 owning the jump *trigger*.
+`CheckForJumping $B479` fires `InitJS` on the A button's **rising edge**, so
+Falcon's 4-frame `KneeBend` had nowhere to live and the short-hop branch of
+`jump_force_button` was unreachable — every jump was a full hop. M3 had also
+bypassed SMB1's *own* variable jump height as a side effect (`JumpSwimSub` swaps
+`VerticalForce` for `VerticalForceDown` when A is released, and the `$BF4D` hook
+never reads `VerticalForce`), so there was no height variety left at all.
+
+The fix does **not** contest `Player_State`. It makes SMB1 see the press *late*:
+withhold the A bit in `A_B_Buttons $000A` for the squat, then present it on the
+frame Falcon actually leaves the ground. The controller announces the window
+through `ForeignState.jump_phase`; the adapter decides which byte carries it.
+
+**Why `$B450` and not `PlayerCtrlRoutine $B0E9`.** `$B0E9` is the obvious
+candidate for this too, and it does not work: `SaveJoyp` lives *inside*
+`PlayerCtrlRoutine`, a few instructions past entry, and rewrites `$000A` from
+`SavedJoypadBits` every frame —
+
+```
+SaveJoyp:  lda SavedJoypadBits / and #%11000000 / sta A_B_Buttons
+```
+
+— so a mask applied at `$B0E9` entry is overwritten by the game itself before
+`CheckForJumping` ever reads it. `$B450` is downstream of `SaveJoyp`, upstream of
+`$B479` in the same routine, and entered from exactly one site (`ProcMove`).
+Ghidra, confirming both:
+
+```
+b450: LDA $001D / CMP #3 / BNE $b479      ; PlayerPhysicsSub entry
+b479: LDA $070e / BNE $b488               ; CheckForJumping, jumpspring gate
+b47e: LDA $000a / AND #$80 / BEQ $b488
+b484: AND $000d / BEQ $b48b -> InitJS $b4a0
+```
+
+The hook **always returns 0** — it moves one input byte and lets SMB1's physics
+run unmodified.
+
+#### Every reader of `$000A`, and which ones are in scope
+
+Enumerated from the byte-exact disassembly and cross-checked against a ROM-wide
+search for `LDA $0A`: 8 byte hits, 7 real readers plus one false positive at
+`$A134` inside `E_UndergroundArea3` level data. Sole writer is `SaveJoyp`.
+Frame order is `GameRoutines` (→ `$B450`) → `GameEngine` → `SaveAB`, so all of
+these are downstream of the write within the same frame.
+
+| Reader | Reads | In scope? |
+|---|---|---|
+| `$B47E` `CheckForJumping` | `and #$80` | **the target** |
+| `$AF67` `SaveAB` | `sta PreviousA_B_Buttons` | **affected and required** — this is what manufactures the clean rising edge on the launch frame, and what stops `InitJS` re-firing the frame after while A is still held |
+| `$B37A` `JumpSwimSub` | `and #$80 / and $0D` | not reached — guarded by `ldy Player_Y_Speed / bpl DumpFall`, and Falcon is grounded with `vy 0` for the whole squat |
+| `$B8E5` `JumpspringHandler` | `and #$80` | **gated off** — masking would suppress the "press A on frame 3 of the bounce" boost, and `CheckForJumping` already declines while `JumpspringAnimCtrl` is set, so it would buy nothing |
+| `$F05D` `ActionSwimming` | `asl / bcs` | **gated off** — swim stroke animation extent |
+| `$B53A`, `$B62B` | `and #B_Button` (`$40`) | untouched; the mask is A-only |
+
+So the hook declines entirely when `SwimmingFlag $0704` or
+`JumpspringAnimCtrl $070E` is set.
+
+#### LAUNCH must *set* the bit, not just stop masking
+
+A short hop means the player already released A, so `SavedJoypadBits` no longer
+carries it and `SaveJoyp` has already written `$000A` without it. If the hook
+only stopped suppressing, a short hop would produce **no jump at all** —
+silently, and it would read as the physics being wrong. So `FOREIGN_JUMP_LAUNCH`
+forces the bit on.
+
+#### The launch frame is the mirror of the handoff frame
+
+The subsection above gives SMB1 the handoff frame because the host leads and the
+controller lags. On the launch frame the polarity reverses: Falcon left the
+ground at VBlank, and SMB1 will not set `Player_State = 1` until it runs
+`InitJS` later in that same frame. So `Player_State` still reads 0 when the
+adapter builds its `ForeignCollisionResult`, and reporting that as `grounded`
+makes `falcon_resolve` conclude he *landed*.
+
+Measured, before the guard: a 2-frame tap took off at `vy 65.60` — the correct
+short-hop force — and was overwritten to `97.60`, the full-hop force, on the
+very next frame. `enter_landing` ran, then the M3 reconciliation branch saw a
+ground state with the host reporting airborne and re-launched him at full
+height. **Every short hop silently became a full hop while the takeoff row in
+the trace still looked correct.** The adapter now believes the controller for
+that one frame; SMB1 confirms on the next.
+
+Because Falcon integrates the launch frame himself, the M3 handoff frame is no
+longer consumed on a button jump — which is why the running full hop measures
+85 px now against M3's 90 px. The 5 px is exactly SMB1's one free `-5`.
+
 ### Rejected: hooking `PlayerCtrlRoutine $B0E9`
 
 The obvious target, and wrong for M2. Skipping it would take the vertical axis
-too — jump, gravity, the lot — which is M3's job, not M2's.
+too — jump, gravity, the lot — which is M3's job, not M2's. It is also the wrong
+place to move the A bit, for a different reason — see `$B450` above.
 
 ---
 
@@ -329,19 +420,71 @@ f292  LANDING_LIGHT  vy    0.00   y 112      hit_floor = 1
 
 Harness coverage: `tests/falcon_harness/host_launch.script` and
 `host_ledge_fall.script` exercise the reconciliation branch directly, which the
-fighter's own kneebend path never reaches. `ctest --test-dir build_harness`
-runs 7/7.
+fighter's own kneebend path never reaches.
+
+---
+
+### M3.5, short hop versus full hop
+
+Two scripted runs, identical except for how long A is held. World 1-1, standing
+start (neutral stick, so `jump_force_button` gets `sq = 1` and the full force
+term). Ground is `native_y 176`.
+
+```
+        f290  KNEEBEND  jp=CHARGING  gnd=1  vy   0.00   y 176
+        f291  KNEEBEND  jp=CHARGING  gnd=1  vy   0.00   y 176
+        f292  KNEEBEND  jp=CHARGING  gnd=1  vy   0.00   y 176
+        f293  KNEEBEND  jp=CHARGING  gnd=1  vy   0.00   y 176
+2-frame tap:
+        f294  JUMP_F    jp=LAUNCH    gnd=0  vy +65.60   y 171   peak y 123 = 53 px
+30-frame hold:
+        f294  JUMP_F    jp=LAUNCH    gnd=0  vy +97.60   y 169   peak y  61 = 115 px
+```
+
+- **The squat is real**: `KNEEBEND` for exactly 4 frames with `grounded = 1` and
+  `native_y` unchanged, then one `JUMP_F` frame. Under M3 this was a single
+  `KNEEBEND` frame that got overwritten.
+- **The height split is real**: 53 px versus 115 px from the same script.
+- Both takeoff velocities are **derived, not fitted**. With a neutral stick
+  `jump_force_button` gives `force + min`, then `+A_JUMP_HEIGHT_BASE 24.0`, then
+  `-A_GRAVITY 3.4` on the same tick:
+  `short 9+36+24-3.4 = 65.6`, `full 17+63→77 (clamped) +24-3.4 = 97.6`.
+  Both matched the runtime to the digit.
+- Gravity stays a constant 3.4/frame in both.
+- The running full hop (`falcon_m3.script`, stick held at 80) still takes off at
+  `vy 83.60`, identical to M3.
+
+Harness coverage: `jump_height_split.script` does both jumps in one run and
+asserts the takeoff velocities and both peak heights numerically. That matters
+because a short hop and a full hop are *both* `KNEEBEND → JUMP_F`, so
+`expect_state` alone cannot tell them apart — which is exactly how M3 shipped a
+build where every jump was a full hop and every state assertion still passed.
+Its predicted peaks (666 and 1450 units, ×0.08 = 53 and 116 px) match the
+in-game measurement above. `ctest --test-dir build_harness` runs **8/8**.
+
+**Mod-off regression:** with `smash64-player` disabled the run produces zero
+`[Smash64]` output, no ring rows at all, and exits 0. The generated diff is one
+line — the `$B450` hook.
 
 ---
 
 ## 7. Known-open for M4+
 
-- **Jumpsquat and short hop are SMB1's.** The host owns jump *timing*, so
-  Falcon's 4-frame kneebend window and the short-hop rule it gates are not
-  reachable; every jump is a full hop. Taking those would mean contesting
-  `Player_State`, which M3 deliberately does not do.
-- **Swimming is driven as a jump.** `Player_State == 1` doubles as swimming;
-  water levels are M5.
+- **Jump now costs 4 frames of input latency.** That is the jumpsquat, it is
+  authentic to the source game, and it is alien to SMB1's. It belongs to the
+  character, never to the runner — it only happens while the mod is on. It has
+  **not yet had an owner playtest**, which is the one thing measurement cannot
+  settle.
+- **The stick-based jump-height path is still unreachable.** M3.5 opened the
+  window for `KB_INPUT_BUTTON`; `kneebend_input_type` can also return
+  `KB_INPUT_STICK` on a fresh upward tap, and a d-pad UP press does produce one.
+  Not exercised or measured — it just is not reached in any trace so far.
+- **Swimming keeps SMB1's rising-edge jump.** The jumpsquat hook declines
+  entirely while `SwimmingFlag` is set, because masking A would reach the swim
+  hold-check at `$B37A` and the stroke animation at `$F05D`. `Player_State == 1`
+  doubles as swimming and water levels are M5, so this is deferred, not solved.
+- **Jumpsprings keep SMB1's behaviour too**, for the same reason — the boost
+  check at `$B8E5` reads the A bit later in the frame.
 - **No swept collision.** The controller is told its motion was granted in
   full; SMB1 refuses it at a wall by not advancing the position. At 6.4 px/frame
   that is a real tunnelling exposure — `beads-2dw.2.1.5` (M4), and

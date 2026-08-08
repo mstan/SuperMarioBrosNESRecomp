@@ -34,6 +34,7 @@ static void cf_reset(ForeignState *state)
     state->grounded = 1;
     state->fast_fall = 0;
     state->air_cause = FOREIGN_AIR_NONE;
+    state->jump_phase = FOREIGN_JUMP_NONE;
 }
 
 static void cf_tick(ForeignState *state, const ForeignInput *input,
@@ -41,6 +42,7 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
 {
     FalconInputRaw raw;
     FalconMotion motion;
+    int was_kneebend;
 
     /* ForeignInput is normalised -1..+1; the ported module works in the source
      * game's own +/-80 stick range. */
@@ -56,7 +58,29 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
     s_fighter.grounded = state->grounded;
     s_fighter.host_air_cause = (int)state->air_cause;
 
+    was_kneebend = (s_fighter.state == FL_KNEEBEND);
+
     falcon_tick(&s_fighter, &raw, &motion);
+
+    /*
+     * Publish the jumpsquat handshake (ForeignJumpPhase). Falcon's jump height
+     * is chosen inside KneeBend -- ftCommonKneeBendProcUpdate flags a short hop
+     * when the button comes up within C_KNEEBEND_SHORTHOP_FRAMES -- so a host
+     * that launches on the button's rising edge collapses the window and every
+     * jump is a full hop. Here we tell the host to hold its trigger for the
+     * squat and fire on the frame the module itself leaves the ground.
+     *
+     * LAUNCH is the KneeBend -> airborne edge, which is exactly where
+     * ftCommonJumpSetStatus ran and vel_air_y became nonzero. Detecting it from
+     * `grounded` rather than from the state enum keeps this correct if the
+     * module ever gains another way out of a squat.
+     */
+    if (s_fighter.state == FL_KNEEBEND)
+        state->jump_phase = FOREIGN_JUMP_CHARGING;
+    else if (was_kneebend && !s_fighter.grounded)
+        state->jump_phase = FOREIGN_JUMP_LAUNCH;
+    else
+        state->jump_phase = FOREIGN_JUMP_NONE;
 
     out->requested_dx = motion.requested_dx;
     out->requested_dy = motion.requested_dy;

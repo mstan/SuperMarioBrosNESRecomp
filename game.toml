@@ -133,3 +133,22 @@ addr = 0xB5CC           # ImposeFriction
 # corrects the position we wrote. Inert unless the mod enables it.
 [[mod_function_hook]]
 addr = 0xBF4D           # MovePlayerVertically
+
+# ... and SMB1's jump TIMING, which is a different thing from its jump physics.
+#
+# CheckForJumping ($B479) fires InitJS on the A button's RISING EDGE, so Falcon's
+# 4-frame KneeBend has no window to live in and his short hop was unreachable.
+# The hook withholds the A bit in A_B_Buttons ($000A) for the squat and presents
+# it on the frame Falcon leaves the ground, so SMB1 launches when the fighter
+# says rather than when the button went down.
+#
+# $B450 and NOT PlayerCtrlRoutine ($B0E9): SaveJoyp lives inside $B0E9 and
+# rewrites $000A from SavedJoypadBits a few instructions past entry, so a mask
+# applied there is overwritten by the game before CheckForJumping reads it.
+# $B450 is downstream of SaveJoyp, upstream of $B479 in the same routine, and
+# entered from exactly one site (ProcMove).
+#
+# The hook always returns 0 -- it moves one input byte and lets SMB1's own
+# physics run unmodified. Inert unless the mod enables it.
+[[mod_function_hook]]
+addr = 0xB450           # PlayerPhysicsSub

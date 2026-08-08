@@ -116,6 +116,38 @@
 #define SMB1_MOVE_PLAYER_VERTICALLY_ADDR 0xBF4D
 #define SMASH64_VERTICAL_HOOK_ID "super-mario-bros.smash64.move-vertically"
 
+/*
+ * PlayerPhysicsSub ($B450) -- M3.5, the jumpsquat window.
+ *
+ * SMB1 launches on the A button's RISING EDGE, which leaves Falcon's 4-frame
+ * KneeBend nowhere to live, so his short hop was unreachable. We make SMB1 see
+ * the press LATE: withhold the A bit for the squat, then present it on the
+ * frame Falcon actually leaves the ground. See ForeignJumpPhase.
+ *
+ * WHY THIS ADDRESS AND NOT PlayerCtrlRoutine ($B0E9). $B0E9 is the obvious
+ * candidate and it does not work: SaveJoyp lives INSIDE PlayerCtrlRoutine, a
+ * few instructions past entry, and rewrites A_B_Buttons from SavedJoypadBits
+ * every frame --
+ *     SaveJoyp: lda SavedJoypadBits / and #%11000000 / sta A_B_Buttons
+ * so a mask applied at $B0E9 entry is overwritten by the game itself before
+ * CheckForJumping ever reads it. $B450 is downstream of SaveJoyp and upstream
+ * of CheckForJumping ($B479, 41 bytes into the same routine), and is entered
+ * from exactly one site, ProcMove. Ghidra:
+ *     b450: LDA $001D / CMP #3 / BNE $b479     <- entry
+ *     b479: LDA $070e / BNE $b488              <- jumpspring gate
+ *     b47e: LDA $000a / AND #$80 / BEQ $b488
+ *     b484: AND $000d / BEQ $b48b -> InitJS $b4a0
+ *
+ * The hook ALWAYS RETURNS 0: it adjusts one byte and lets SMB1's own physics
+ * run untouched.
+ */
+#define SMB1_PLAYER_PHYSICS_ADDR 0xB450
+#define SMASH64_JUMPSQUAT_HOOK_ID "super-mario-bros.smash64.jumpsquat"
+
+/* A_B_Buttons bit for A. B ($40) is never touched, which is what keeps the
+ * run-speed check at $B53A and the fireball check at $B62B out of scope. */
+#define SMB1_A_BUTTON_BIT 0x80
+
 /* SMB1 vertical scale differs from horizontal: Player_Y_Speed is in WHOLE
  * pixels per frame (PlayerYSpdData $B432 = -4,-4,-4,-5,-5,-2,-1) with
  * Player_Y_MoveForce as a 1/256 fraction. Horizontal was 1/16 px. */
@@ -140,6 +172,8 @@ static int8_t   s_wrote_xspeed = 0;      /* what the hook wrote last frame, so a
 static unsigned long s_owned_frames = 0;
 static unsigned long s_wall_frames = 0;
 static unsigned long s_air_frames = 0;
+static unsigned long s_squat_frames = 0;   /* frames SMB1's A bit was withheld */
+static unsigned long s_launch_frames = 0;  /* frames it was presented */
 static int s_friction_ran = 0;           /* did ImposeFriction fire this frame */
 static double s_y_sub = 0.0;             /* vertical subpixel remainder, kept
                                           * host-side rather than contending
@@ -330,6 +364,29 @@ void game_smash64_update_input(uint64_t frame_count)
     hit.grounded = (g_ram[Player_State] == 0);
     hit.hit_wall = wall;
 
+    /*
+     * The LAUNCH frame is the mirror image of the handoff frame, and it needs
+     * the opposite courtesy.
+     *
+     * Normally SMB1 leads and the controller follows a frame later. On the
+     * frame Falcon's own jumpsquat ends, the controller LEADS: it left the
+     * ground at VBlank, and SMB1 will not set Player_State = 1 until it runs
+     * InitJS later in this same frame. So Player_State still reads 0 here, and
+     * reporting that as `grounded` makes falcon_resolve conclude he landed --
+     * enter_landing, one frame later the reconciliation branch sees a ground
+     * state with the host saying airborne, and re-launches him at the FULL hop
+     * velocity.
+     *
+     * Measured: a 2-frame tap took off at vy 65.60 (the short-hop force) and
+     * was overwritten to 97.60 (the full-hop force) on the very next frame, so
+     * every short hop silently became a full hop while the trace's takeoff row
+     * still looked correct.
+     *
+     * The controller has just told us it is airborne. Believe it for this one
+     * frame; SMB1 confirms on the next.
+     */
+    if (fs && fs->jump_phase == FOREIGN_JUMP_LAUNCH) hit.grounded = 0;
+
     if (s_wrote_y_valid) {
         int now_y = ((int)(int8_t)g_ram[Player_Y_HighPos] * 256) +
                     (int)g_ram[Player_Y_Position];
@@ -483,8 +540,103 @@ static int move_player_vertically_hook(uint16_t addr)
      */
     if (!s_friction_ran) write_xspeed(s_xspeed);
 
+    /*
+     * Record the native coordinates here too, not only from the friction hook.
+     * SMB1 calls ImposeFriction from LRAir only when a direction is held, so on
+     * a neutral airborne frame nothing noted them and native_y stayed 0 for the
+     * whole flight -- which is exactly the column you need to compare a short
+     * hop's peak against a full hop's. Post-write, so the row carries the Y the
+     * game actually ended up with.
+     */
+    nes_foreign_trace_note_native((int32_t)s_xspeed,
+                                  (int32_t)g_ram[Player_Y_Position]);
+
     s_air_frames++;
     return 1;
+}
+
+/*
+ * Runs at PlayerPhysicsSub ($B450) entry, before CheckForJumping ($B479).
+ *
+ * Withholds or presents SMB1's A bit so Falcon's KneeBend decides jump height.
+ * Always returns 0 -- SMB1's physics runs unmodified; only one input byte moved.
+ *
+ * SCOPE OF THE WRITE. A_B_Buttons ($000A) is written by SMB1 itself every
+ * frame at SaveJoyp, a few instructions before we get here, so this is a
+ * time-scoped write to a byte the game owns and rewrites -- the sanctioned
+ * pattern in nesrecomp/docs/FOREIGN_CONTROLLER.md, not a relocation and not new
+ * guest state. Nothing persists across frames.
+ *
+ * WHO ELSE SEES IT. Every reader of $000A was enumerated from the byte-exact
+ * disassembly and cross-checked against a ROM-wide search for LDA $0A (8 hits,
+ * 7 real + one inside E_UndergroundArea3 level data). Downstream of us in the
+ * same frame:
+ *   $B47E CheckForJumping   the target.
+ *   $AF67 SaveAB            copies $000A into PreviousA_B_Buttons at the end of
+ *                           GameEngine. AFFECTED AND REQUIRED: that is what
+ *                           manufactures a clean rising edge on the launch
+ *                           frame, and what stops InitJS re-firing on the frame
+ *                           after it while A is still held.
+ *   $B37A JumpSwimSub       guarded by "ldy Player_Y_Speed / bpl DumpFall", so
+ *                           only reached while rising. Falcon is grounded with
+ *                           vy 0 for the whole squat, so it is not reached.
+ *   $B8E5 JumpspringHandler gated off below.
+ *   $F05D ActionSwimming    gated off below.
+ *   $B53A, $B62B            read B_Button ($40) only. Untouched.
+ */
+static int jumpsquat_hook(uint16_t addr)
+{
+    const ForeignState *fs;
+
+    (void)addr;
+
+    if (decide_ownership() != FOREIGN_OWNERSHIP_FOREIGN) return 0;
+
+    fs = nes_foreign_state();
+    if (!fs) return 0;
+
+    /*
+     * Water is M5's problem, and masking A here would reach two swim readers:
+     * ProcSwim's hold-check at $B37A and the stroke animation at $F05D. Decline
+     * the whole mechanism rather than half-applying it -- SMB1 keeps its own
+     * rising-edge jump while swimming, which is the M3 behaviour.
+     */
+    if (g_ram[SwimmingFlag] != 0) return 0;
+
+    /*
+     * A jumpspring bounce reads $000A at $B8E5 later in the frame to decide
+     * whether to apply the boosted force, and CheckForJumping itself declines
+     * while JumpspringAnimCtrl is set ($B479), so masking here would suppress
+     * the boost and buy nothing in exchange.
+     */
+    if (g_ram[JumpspringAnimCtrl] != 0) return 0;
+
+    switch (fs->jump_phase) {
+    case FOREIGN_JUMP_CHARGING:
+        /* Falcon is in KneeBend. Withhold the press -- do not consume it: the
+         * bit is only cleared for this frame, so SMB1's own edge detection
+         * stays intact and sees a clean edge when we present it. */
+        g_ram[A_B_Buttons] &= (uint8_t)~SMB1_A_BUTTON_BIT;
+        s_squat_frames++;
+        break;
+
+    case FOREIGN_JUMP_LAUNCH:
+        /*
+         * Falcon left the ground this tick. FORCE the bit rather than merely
+         * stopping the mask: a short hop means the player released A during the
+         * squat, so SavedJoypadBits no longer carries it and SaveJoyp already
+         * wrote $000A without it. Without this, a short hop produces no jump at
+         * all -- silently, and it reads as the physics being wrong.
+         */
+        g_ram[A_B_Buttons] |= (uint8_t)SMB1_A_BUTTON_BIT;
+        s_launch_frames++;
+        break;
+
+    case FOREIGN_JUMP_NONE:
+    default:
+        break;
+    }
+    return 0;
 }
 
 /* ------------------------------------------------------------------ */
@@ -500,6 +652,7 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     nes_foreign_set_ownership(FOREIGN_OWNERSHIP_NATIVE);
     nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 0);
     nes_mod_set_function_hook_enabled(SMASH64_VERTICAL_HOOK_ID, 0);
+    nes_mod_set_function_hook_enabled(SMASH64_JUMPSQUAT_HOOK_ID, 0);
 
     if (!enabled || !controller_id || !controller_id[0]) {
         nes_foreign_select(NULL);
@@ -522,6 +675,8 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_owned_frames = 0;
     s_wall_frames = 0;
     s_air_frames = 0;
+    s_squat_frames = 0;
+    s_launch_frames = 0;
     s_y_sub = 0.0;
     s_wrote_y = 0;
     s_wrote_y_valid = 0;
@@ -539,6 +694,15 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
                 "[Smash64] MovePlayerVertically hook is not registered; SMB1 "
                 "keeps its own gravity\n");
         return;
+    }
+    if (!nes_mod_set_function_hook_enabled(SMASH64_JUMPSQUAT_HOOK_ID, 1)) {
+        /* Not fatal: without it SMB1 launches on the A rising edge and every
+         * jump is a full hop, which is exactly M3's behaviour. Say so, because
+         * "short hop does nothing" is otherwise indistinguishable from a
+         * physics bug. */
+        fprintf(stderr,
+                "[Smash64] PlayerPhysicsSub hook is not registered; SMB1 keeps "
+                "its own jump TIMING, so short hop is unavailable\n");
     }
     s_enabled = 1;
 }
@@ -582,6 +746,8 @@ void game_smash64_update(uint64_t frame_count)
 unsigned long game_smash64_owned_frames(void) { return s_owned_frames; }
 unsigned long game_smash64_wall_frames(void)  { return s_wall_frames; }
 unsigned long game_smash64_air_frames(void)   { return s_air_frames; }
+unsigned long game_smash64_squat_frames(void)  { return s_squat_frames; }
+unsigned long game_smash64_launch_frames(void) { return s_launch_frames; }
 
 /* Registered before main() by mods/smash64_player_plugin.c; starts disabled,
  * so registration alone cannot change behaviour. */
@@ -593,5 +759,8 @@ int game_smash64_register_hooks(void)
     ok &= nes_mod_register_function_entry_plugin(
         SMASH64_VERTICAL_HOOK_ID, SMB1_MOVE_PLAYER_VERTICALLY_ADDR,
         move_player_vertically_hook);
+    ok &= nes_mod_register_function_entry_plugin(
+        SMASH64_JUMPSQUAT_HOOK_ID, SMB1_PLAYER_PHYSICS_ADDR,
+        jumpsquat_hook);
     return ok;
 }

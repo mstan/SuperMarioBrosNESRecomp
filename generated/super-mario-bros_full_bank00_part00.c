@@ -11722,6 +11722,7 @@ label_B27C:;
 }
 
 void func_B450_b0(void) { /* PlayerPhysicsSub */
+    if (nes_mod_function_entry(0xB450u)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_B450_b0");
 #endif

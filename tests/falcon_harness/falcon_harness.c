@@ -26,7 +26,15 @@
  *   host_fall             host says airborne, cause = FELL (walked off a ledge)
  *   host_land             host says grounded again
  *   expect_state <NAME>   assert the current state, non-zero exit on failure
+ *   expect_vel_air_y <lo> <hi>  assert takeoff/air velocity is in [lo,hi]
+ *   expect_peak_y <lo> <hi>     assert the highest pos_y since reset_peak
+ *   reset_peak            start a new peak-height measurement here
  *   note <text>           annotate the trace
+ *
+ * expect_state alone cannot see a jump HEIGHT, and height is the whole point of
+ * the short hop: a short hop and a full hop are both KNEEBEND then JUMP_F, and
+ * a regression that silently full-hops every time passes every state assertion.
+ * Hence the two numeric forms.
  *
  * The host_* commands stand in for a host game that keeps its own jump trigger
  * and ledge detection -- which is what SMB1 does. They are the only way to
@@ -48,6 +56,29 @@ static double g_scale = 0.08;
 static FILE *g_csv;
 static int   g_failures;
 static long  g_frame;
+static double g_peak_y;   /* highest pos_y since the last reset_peak */
+
+/* One place to report a numeric assertion, so both forms read identically in
+ * the CTest log and a failure prints the value that was actually produced. */
+static void check_range(const char *what, double have, const char *arg)
+{
+    double lo = 0.0, hi = 0.0;
+
+    if (sscanf(arg, "%lf %lf", &lo, &hi) != 2) {
+        fprintf(stderr, "FAIL frame %ld: %s needs <lo> <hi>, got '%s'\n",
+                g_frame, what, arg);
+        g_failures++;
+        return;
+    }
+    if (have < lo || have > hi) {
+        fprintf(stderr, "FAIL frame %ld: %s = %.4f, expected [%.4f, %.4f]\n",
+                g_frame, what, have, lo, hi);
+        g_failures++;
+    } else {
+        printf("  ok  frame %-5ld %s = %.4f in [%.4f, %.4f]\n",
+               g_frame, what, have, lo, hi);
+    }
+}
 
 static void emit_header(void)
 {
@@ -171,6 +202,12 @@ static int run_script(const char *path)
             } else {
                 printf("  ok  frame %-5ld state == %s\n", g_frame, want);
             }
+        } else if (!strcmp(cmd, "expect_vel_air_y")) {
+            check_range("vel_air_y", f.vel_air_y, arg);
+        } else if (!strcmp(cmd, "expect_peak_y")) {
+            check_range("peak_y", g_peak_y, arg);
+        } else if (!strcmp(cmd, "reset_peak")) {
+            g_peak_y = f.pos_y;
         } else if (!strcmp(cmd, "frames")) {
             int n = atoi(arg), i;
             for (i = 0; i < n; i++) {
@@ -181,6 +218,8 @@ static int run_script(const char *path)
                 falcon_tick(&f, &in, &m);
                 resolve_flat_floor(&f, &m, &hit);
                 falcon_resolve(&f, &hit);
+
+                if (f.pos_y > g_peak_y) g_peak_y = f.pos_y;
 
                 emit_row(&f, &in, &m, pending_note);
                 pending_note[0] = '\0';

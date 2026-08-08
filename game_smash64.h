@@ -52,3 +52,10 @@ unsigned long game_smash64_wall_frames(void);
 /* Frames on which Falcon supplied the vertical motion, replacing SMB1's own
  * integrator and its 4px/frame fall cap. */
 unsigned long game_smash64_air_frames(void);
+
+/* M3.5 jumpsquat handshake. Frames on which SMB1's A bit was withheld so
+ * Falcon's KneeBend could run, and frames on which it was presented to launch
+ * him. A squat count of 0 across a run that jumped means the window never
+ * opened and every jump was a full hop -- the M3 behaviour this replaces. */
+unsigned long game_smash64_squat_frames(void);
+unsigned long game_smash64_launch_frames(void);
