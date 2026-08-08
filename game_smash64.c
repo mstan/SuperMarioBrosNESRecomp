@@ -36,6 +36,7 @@
 #include "generated/super-mario-bros_full_decls.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* ------------------------------------------------------------------ */
@@ -250,6 +251,12 @@ static int32_t player_native_x(void)
 #define SMASH64_SWEEP_FLOOR   2
 static int s_swept_block = SMASH64_SWEEP_NONE;
 static int s_swept_ran = 0;
+/* Diagnostic: NESRECOMP_SMASH64_SWEEP_NOBLOCK=1 keeps the sweep's probes and
+ * ring flags but never stops the motion. This exists to answer the question
+ * the sweep otherwise masks: does the raw per-frame delta tunnel through
+ * SMB1's own collision? Announced on stderr at mod enable, so a run with it
+ * on can never be mistaken for a normal one. */
+static int s_sweep_noblock = 0;
 /* Collision-flag bits accumulated inside the vertical hook, where the sweep
  * runs, and drained by the next update_input when the ForeignCollisionResult
  * is assembled. Sampling them at the later point read a different instant of
@@ -823,7 +830,9 @@ static int move_player_vertically_hook(uint16_t addr)
                 high = cand_hi;
                 s_swept_block = feet ? SMASH64_SWEEP_FLOOR
                                      : SMASH64_SWEEP_CEILING;
-                break;
+                /* Diagnostic mode records the would-have-blocked position in
+                 * the ring but lets the motion run to the full delta. */
+                if (!s_sweep_noblock) break;
             }
 
             pos = cand;
@@ -1021,6 +1030,16 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_wrote_yspeed_valid = 0;
     s_imposed_frames = 0;
     s_swept_block = SMASH64_SWEEP_NONE;
+
+    {
+        const char *e = getenv("NESRECOMP_SMASH64_SWEEP_NOBLOCK");
+        s_sweep_noblock = (e && *e && *e != '0');
+        if (s_sweep_noblock)
+            fprintf(stderr,
+                    "[Smash64] DIAGNOSTIC: vertical sweep will PROBE BUT NOT "
+                    "BLOCK (NESRECOMP_SMASH64_SWEEP_NOBLOCK) - collision "
+                    "behaviour in this run is not representative\n");
+    }
 
     if (!nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 1)) {
         fprintf(stderr,

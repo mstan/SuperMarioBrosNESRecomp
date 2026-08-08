@@ -472,9 +472,8 @@ line — the `$B450` hook.
 
 - **Jump now costs 4 frames of input latency.** That is the jumpsquat, it is
   authentic to the source game, and it is alien to SMB1's. It belongs to the
-  character, never to the runner — it only happens while the mod is on. It has
-  **not yet had an owner playtest**, which is the one thing measurement cannot
-  settle.
+  character, never to the runner — it only happens while the mod is on.
+  Owner-playtested and accepted (2026-08-07, "jumping is good yes").
 - **The stick-based jump-height path is still unreachable.** M3.5 opened the
   window for `KB_INPUT_BUTTON`; `kneebend_input_type` can also return
   `KB_INPUT_STICK` on a fresh upward tap, and a d-pad UP press does produce one.
@@ -485,10 +484,25 @@ line — the `$B450` hook.
   doubles as swimming and water levels are M5, so this is deferred, not solved.
 - **Jumpsprings keep SMB1's behaviour too**, for the same reason — the boost
   check at `$B8E5` reads the A bit later in the frame.
-- **No swept collision.** The controller is told its motion was granted in
-  full; SMB1 refuses it at a wall by not advancing the position. At 6.4 px/frame
-  that is a real tunnelling exposure — `beads-2dw.2.1.5` (M4), and
-  `nes_foreign_sweep` is already in the engine waiting for it.
+- **Swept collision: vertical DONE, horizontal open.** The vertical axis now
+  walks the motion one pixel at a time against SMB1's own block buffer (§ the
+  vertical hook). The tunnelling exposure it guards against is **measured, not
+  hypothetical**: with the sweep's blocking branch disabled
+  (`NESRECOMP_SMASH64_SWEEP_NOBLOCK=1`, a permanent diagnostic announced on
+  stderr at mod enable), a fast-fall at `vy = -100` moves 8 px/frame, the feet
+  cross the floor at Y residues 14/6/14/6 (mod 16) — never inside
+  `DoFootCheck`'s `cpy #$05` landing window — and the player falls through the
+  entire two-tile floor (native_y 190→198→206→214, `FEET_IN_SOLID` +
+  `SWEPT_FLOOR` flagged on every frame) off the bottom of the screen and dies.
+  With the sweep active, the same 22-cycle input never puts a frame below
+  y=176 and every floor block parks at exactly y%16==0, the coordinate
+  `LandPlyr` fires on. (Rings: `ftring_ff_control.csv` /
+  `ftring_ff_noblock.csv`, 2026-08-07.) The **horizontal** axis is still
+  readback inference against `ImpedePlayerMove` with one-frame lag —
+  `beads-2dw.2.1.5` (M4) stays open for it. `nes_foreign_sweep` in the engine
+  remains unused: its last-unblocked semantics don't fit a host that resolves
+  its own collisions and needs the overlap; if a second game needs it, add an
+  inclusive-stop mode to the helper rather than copying this adapter's loop.
 - **`TurnRun` is an adaptation**, not Falcon's real run-turn — the original is
   animation-driven. See `falcon_movement_dependency.md` §6.
 - **Two provisional durations** (`FL_DASH`, landings) still need the Figatree
