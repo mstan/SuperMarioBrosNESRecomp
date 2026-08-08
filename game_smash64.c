@@ -722,8 +722,9 @@ void game_smash64_init(void)
                ctl && ctl->name ? ctl->name : "?", s_controller_id);
     }
     /* ASCII only: the Windows console codepage mangles non-ASCII here. */
-    printf("[Smash64] M2: Falcon owns horizontal GROUND movement; SMB1 keeps "
-           "jump, gravity, vertical and all collision.\n");
+    printf("[Smash64] Falcon owns ground movement, air physics, and jump "
+           "timing (4-frame jumpsquat: tap A for a short hop). SMB1 keeps all "
+           "collision and every scripted sequence.\n");
     printf("[Smash64] Traces: TCP 'ftring', or NESRECOMP_FTRING_DUMP=<path>.\n");
 }
 
