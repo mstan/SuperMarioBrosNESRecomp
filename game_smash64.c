@@ -29,6 +29,7 @@
 
 #include "foreign_controller.h"
 #include "mod_function_hooks.h"
+#include "mod_savestate.h"
 #include "nes_runtime.h"
 
 /* Brings in the RAM/const symbol defines (Player_X_Speed, GameEngineSubroutine,
@@ -145,6 +146,10 @@
  */
 #define SMB1_MOVE_PLAYER_HORIZONTALLY_ADDR 0xBF09
 #define SMASH64_HORIZONTAL_HOOK_ID "super-mario-bros.smash64.move-horizontally"
+
+/* M5.5 save-state hook id -- the adapter half. See game_smash64_savestate_get
+ * below for the layout and what it deliberately omits. */
+#define SMASH64_ADAPTER_SAVESTATE_ID "super-mario-bros.smash64.adapter"
 
 /*
  * PlayerPhysicsSub ($B450) -- M3.5, the jumpsquat window.
@@ -783,7 +788,7 @@ void game_smash64_update_input(uint64_t frame_count)
              * COLLISION and not merely a number.
              *
              * The test is >= 0, not > 0, because SMB1 expresses a block bump as
-             * Player_Y_Speed = 0 (PlayerHeadCollision, smb.asm:11252) and only
+             * Player_Y_Speed = 0 (PlayerHeadCollision, smb.asm:7252) and only
              * a solid-tile stop as $01. Testing > 0 missed the commonest case
              * of all -- measured: bumping a ? block gave imposed 0.00 with
              * hit_ceiling 0, which read as "nothing happened" in the ring even
@@ -1281,6 +1286,141 @@ static int jumpsquat_hook(uint16_t addr)
 }
 
 /* ------------------------------------------------------------------ */
+/* Save state -- the adapter half (M5.5)                              */
+/*                                                                    */
+/* The fighter's own state travels in its own hook, registered from    */
+/* captain_falcon.c (see mods/smash64/characters/captain_falcon.c).     */
+/* This is everything the ADAPTER carries that the fighter never sees: */
+/* in-flight subpixel accumulators and the previous-frame readback      */
+/* latches that tell the difference between "SMB1 kept our write" and   */
+/* "SMB1 overruled it" on the very next frame. Losing any of these on a */
+/* load reproduces exactly the bugs their own comments describe above  */
+/* -- e.g. a stale s_wrote_yspeed_valid reads a save's own restore as   */
+/* an imposed vertical event that never happened.                      */
+/*                                                                    */
+/* Deliberately NOT included:                                          */
+/*   s_enabled / s_selected / s_controller_id -- mod activation is the  */
+/*     live user choice this session, per M5.5's design notes; a save   */
+/*     must not silently re-arm or disarm the mod on load.              */
+/*   s_sweep_noblock -- bound to NESRECOMP_SMASH64_SWEEP_NOBLOCK in      */
+/*     *this* process's environment, not to the save file's history.    */
+/*   s_frame, s_announced, s_owned_frames, s_wall_frames, s_air_frames,  */
+/*     s_squat_frames, s_launch_frames, s_imposed_frames, s_friction_ran */
+/*     -- run diagnostics/counters, not trajectory state; restoring     */
+/*     them would make a loaded run's stats describe two sessions at    */
+/*     once, which is more confusing than resetting them at zero.       */
+/* ------------------------------------------------------------------ */
+
+/* Fixed layout after the version byte. A future field addition bumps the
+ * version rather than growing this silently; struct memcpy is fine here
+ * (unlike a cross-process ABI) because get/set run in the same build. */
+typedef struct {
+    int8_t   xspeed;
+    int8_t   wrote_xspeed;
+    double   y_sub;
+    double   x_sub;
+    int32_t  wrote_y;
+    int32_t  wrote_y_valid;
+    int8_t   wrote_yspeed;
+    int32_t  wrote_yspeed_valid;
+    int32_t  y_before;
+    double   wrote_dy_px;
+    int32_t  wrote_x;
+    int32_t  wrote_x_valid;
+    int32_t  x_before;
+    int32_t  prev_ownership;
+    uint8_t  prev_buttons;     /* sample_input's edge-detect latch */
+    /* Undrained per-frame collision verdicts, set inside a movement hook
+     * and consumed by the NEXT update_input. Saving mid-frame, between the
+     * hook and that drain, would otherwise lose the very event a trace is
+     * usually taken to inspect. */
+    int32_t  swept_block;
+    int32_t  swept_ran;
+    int32_t  x_swept_wall;
+    int32_t  x_swept_ran;
+    uint32_t pending_flags;
+} AdapterSaveFields;
+
+#define SMASH64_ADAPTER_SAVESTATE_VERSION 1
+
+/*
+ * Returns 0 bytes while the mod is off. There is no adapter trajectory to
+ * preserve when it is not driving anything -- game_smash64_set_mod_enabled
+ * already zeroes every field below the moment it disables -- and this keeps
+ * a vanilla (or mod-off) save lean instead of carrying a dead record.
+ */
+static int game_smash64_savestate_get(uint8_t *buf, int cap)
+{
+    AdapterSaveFields f;
+
+    if (!s_enabled) return 0;
+    if (cap < (int)(1 + sizeof f)) return -1;
+
+    f.xspeed              = s_xspeed;
+    f.wrote_xspeed        = s_wrote_xspeed;
+    f.y_sub               = s_y_sub;
+    f.x_sub               = s_x_sub;
+    f.wrote_y             = s_wrote_y;
+    f.wrote_y_valid       = s_wrote_y_valid;
+    f.wrote_yspeed        = s_wrote_yspeed;
+    f.wrote_yspeed_valid  = s_wrote_yspeed_valid;
+    f.y_before            = s_y_before;
+    f.wrote_dy_px         = s_wrote_dy_px;
+    f.wrote_x             = s_wrote_x;
+    f.wrote_x_valid       = s_wrote_x_valid;
+    f.x_before            = s_x_before;
+    f.prev_ownership      = (int32_t)s_prev_ownership;
+    f.prev_buttons        = s_prev_buttons;
+    f.swept_block         = s_swept_block;
+    f.swept_ran           = s_swept_ran;
+    f.x_swept_wall        = s_x_swept_wall;
+    f.x_swept_ran         = s_x_swept_ran;
+    f.pending_flags       = s_pending_flags;
+
+    buf[0] = SMASH64_ADAPTER_SAVESTATE_VERSION;
+    memcpy(buf + 1, &f, sizeof f);
+    return (int)(1 + sizeof f);
+}
+
+/*
+ * len == 0 is the "mod was off when this was saved" case get() produces
+ * above (or an older save with no adapter record at all) -- nothing to
+ * restore, and s_enabled/s_selected are the live session's choice regardless.
+ */
+static int game_smash64_savestate_set(const uint8_t *buf, int len)
+{
+    AdapterSaveFields f;
+
+    if (len == 0) return 1;
+    if (len != (int)(1 + sizeof f)) return 0;
+    if (buf[0] != SMASH64_ADAPTER_SAVESTATE_VERSION) return 0;
+
+    memcpy(&f, buf + 1, sizeof f);
+
+    s_xspeed              = f.xspeed;
+    s_wrote_xspeed        = f.wrote_xspeed;
+    s_y_sub               = f.y_sub;
+    s_x_sub               = f.x_sub;
+    s_wrote_y             = f.wrote_y;
+    s_wrote_y_valid       = f.wrote_y_valid;
+    s_wrote_yspeed        = f.wrote_yspeed;
+    s_wrote_yspeed_valid  = f.wrote_yspeed_valid;
+    s_y_before            = f.y_before;
+    s_wrote_dy_px         = f.wrote_dy_px;
+    s_wrote_x             = f.wrote_x;
+    s_wrote_x_valid       = f.wrote_x_valid;
+    s_x_before            = f.x_before;
+    s_prev_ownership      = (ForeignOwnership)f.prev_ownership;
+    s_prev_buttons        = f.prev_buttons;
+    s_swept_block         = f.swept_block;
+    s_swept_ran           = f.swept_ran;
+    s_x_swept_wall        = f.x_swept_wall;
+    s_x_swept_ran         = f.x_swept_ran;
+    s_pending_flags       = f.pending_flags;
+    return 1;
+}
+
+/* ------------------------------------------------------------------ */
 /* Public                                                             */
 /* ------------------------------------------------------------------ */
 
@@ -1441,5 +1581,12 @@ int game_smash64_register_hooks(void)
     ok &= nes_mod_register_function_entry_plugin(
         SMASH64_HORIZONTAL_HOOK_ID, SMB1_MOVE_PLAYER_HORIZONTALLY_ADDR,
         move_player_horizontally_hook);
+
+    /* Unconditional, like the function hooks above: registering a savestate
+     * hook does not by itself change behaviour, since get() returns 0 bytes
+     * whenever the mod is off (see game_smash64_savestate_get). */
+    ok &= nes_mod_register_savestate_hook(SMASH64_ADAPTER_SAVESTATE_ID,
+                                          game_smash64_savestate_get,
+                                          game_smash64_savestate_set);
     return ok;
 }

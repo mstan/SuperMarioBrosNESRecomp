@@ -952,3 +952,29 @@ void falcon_resolve(FalconFighter *f, const FalconCollision *hit)
     }
     f->grounded = hit->grounded;
 }
+
+/* ------------------------------------------------------------------ */
+/* Save states -- see mod_savestate.h in the engine                   */
+/* ------------------------------------------------------------------ */
+
+#define FALCON_SAVESTATE_VERSION 1
+
+int falcon_serialize(const FalconFighter *f, uint8_t *buf, int cap)
+{
+    if (cap < (int)(1 + sizeof(*f))) return -1;
+
+    buf[0] = FALCON_SAVESTATE_VERSION;
+    memcpy(buf + 1, f, sizeof(*f));
+    return (int)(1 + sizeof(*f));
+}
+
+int falcon_deserialize(FalconFighter *f, const uint8_t *buf, int len)
+{
+    /* Unknown or truncated blob -- caller keeps whatever f already holds
+     * rather than getting a half-written struct. */
+    if (len != (int)(1 + sizeof(*f))) return 0;
+    if (buf[0] != FALCON_SAVESTATE_VERSION) return 0;
+
+    memcpy(f, buf + 1, sizeof(*f));
+    return 1;
+}

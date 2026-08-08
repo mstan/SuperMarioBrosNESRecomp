@@ -515,4 +515,23 @@ line — the `$B450` hook.
   animation-driven. See `falcon_movement_dependency.md` §6.
 - **Two provisional durations** (`FL_DASH`, landings) still need the Figatree
   animation length.
-- **Save states** do not yet carry the controller's host-side state.
+- **Save states now carry the controller's host-side state (M5.5).** The
+  engine's generic per-mod savestate registry (`mod_savestate.h`, SS_VERSION
+  6) is used by two hooks, matching the fighter/adapter boundary: a fighter
+  hook registered from `captain_falcon.c` under `SMASH64_CAPTAIN_FALCON_ID`
+  (the `FalconFighter` struct via `falcon_serialize`/`falcon_deserialize` in
+  `ssb_ported/falcon_locomotion.c`, plus the engine's `ForeignState`, since
+  this file owns the reset path for both), and an adapter hook registered
+  from `game_smash64_register_hooks()` under
+  `"super-mario-bros.smash64.adapter"` covering the in-flight subpixel
+  accumulators and previous-frame readback latches (`s_y_sub`, `s_x_sub`,
+  `s_wrote_*`, `s_prev_ownership`, the undrained per-frame sweep/collision
+  flags, `s_prev_buttons`). Both blobs are version-prefixed so a future
+  layout change degrades to "hook present, record skipped" rather than a
+  misread. `s_enabled`/`s_selected`/`s_controller_id` are deliberately never
+  restored -- mod activation stays the live session's choice -- and the
+  adapter hook writes a 0-byte record whenever the mod is off, so a vanilla
+  or mod-off save carries no dead payload. Diagnostic counters
+  (`s_owned_frames` and siblings) and the env-derived
+  `NESRECOMP_SMASH64_SWEEP_NOBLOCK` flag are excluded on the same
+  live-session grounds.

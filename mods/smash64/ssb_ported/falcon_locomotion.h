@@ -21,6 +21,8 @@
 #ifndef FALCON_LOCOMOTION_H
 #define FALCON_LOCOMOTION_H
 
+#include <stdint.h>
+
 /* Action states. Only the locomotion subset; combat, shields, grabs,
  * cliffs and item states are deliberately absent. */
 typedef enum {
@@ -153,5 +155,19 @@ void falcon_tick(FalconFighter *f, const FalconInputRaw *in,
 
 /* Feed the host's collision outcome back in. */
 void falcon_resolve(FalconFighter *f, const FalconCollision *hit);
+
+/*
+ * Save-state support (M5.5). FalconFighter is all scalars -- no pointers, no
+ * handles -- so a version-tagged memcpy is a faithful and complete snapshot;
+ * the struct lives here, so its serialization does too.
+ *
+ * falcon_serialize writes a version byte followed by a raw copy of *f into
+ * `buf` (capacity `cap`) and returns the byte count, or -1 if it does not
+ * fit. falcon_deserialize accepts only its own version -- a future layout
+ * change bumps FALCON_SAVESTATE_VERSION and old blobs are rejected (returns
+ * 0) rather than misread. Returns 1 on success.
+ */
+int falcon_serialize(const FalconFighter *f, uint8_t *buf, int cap);
+int falcon_deserialize(FalconFighter *f, const uint8_t *buf, int len);
 
 #endif /* FALCON_LOCOMOTION_H */
