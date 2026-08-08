@@ -2,33 +2,38 @@
 
 Date: 2026-08-08
 
-## Current visual QA status: FAILED / work remains
+## Current QA status: corrected and freshly inspected
 
-Do not treat commits `93f8741` or `7ce5406` as final visual acceptance. A
-fresh interactive title-screen capture from the launched Release build,
-`C:\Users\Matthew\Documents\ShareX\Screenshots\2026-08\SuperMarioBrosRecomp_67ZewrnuT5.png`,
-still shows an incorrect Falcon presentation. The model is becoming more
-recognizable, but its title-screen pose/silhouette is malformed and much too
-large, overlapping the logo and menu. The walk animation also faces/poses in
-the opposite direction: holding right moves the player right, but the model's
-walk cycle visually reads as walking left (and vice versa).
+The defects shown in the owner's August 8 screenshots have been corrected in
+the current worktree. Fresh Release captures were generated after the final
+build and visually inspected, not accepted from script exit codes alone:
 
-This screenshot supersedes the earlier QA closure. The Falcon Beads epic and
-final-QA child were reopened. Next-session work should diagnose model-facing
-and animation-space mirroring plus title-screen presentation, then repeat
-fresh interactive screenshot review. Do not declare visual completion from
-script exit codes or the existing `C:\temp\falcon_*` captures.
+- `C:\temp\falcon_qa_title.png`: normal SMB1 title/menu with no Falcon overlay;
+- `falcon_qa_idle.png`, `falcon_qa_run.png`, and `falcon_qa_walk.png`: readable
+  purple/red/yellow Falcon; rightward Run faces right and leftward Walk faces
+  left;
+- `falcon_qa_jump.png`, `falcon_accept_punch.png`, and
+  `falcon_accept_kick.png`: coherent articulated action poses.
+
+The fixes came from BattleShip's Smash 64 implementation rather than visual
+guesswork. Costume frame zero now evaluates Captain's material-animation
+scripts, Figatree tracks retain their source hold/linear/cubic/step segments,
+the mesh mirror follows Smash's authored +LR convention, and replacement
+ownership is gated on SMB1 `OperMode == 1` so stale gameplay state cannot draw
+Falcon over the title screen. The prior screenshots and commits `93f8741` and
+`7ce5406` remain useful failure evidence, not acceptance evidence.
 
 Captain Falcon's implementation milestone ladder is present—locomotion, host
-collision/handoffs, model and animation playback, representative combat,
-native SMB1 enemy/block consequences, and original voice/move audio—but final
-visual acceptance is reopened for the defects above. The central Beads tracker
-remains the source of truth:
+collision/handoffs, corrected model/animation playback, representative combat,
+native SMB1 enemy/block consequences, and corrected original voice/move
+audio. The central Beads tracker remains the source of truth:
 
 ```powershell
 bd -C F:\Software\beads\issues show beads-2dw.2.1 --json
+bd -C F:\Software\beads\issues show beads-2dw.2.1.7 --json  # M6 rendering
 bd -C F:\Software\beads\issues show beads-2dw.2.1.8 --json  # M7 combat
 bd -C F:\Software\beads\issues show beads-do7 --json        # M8 audio
+bd -C F:\Software\beads\issues show beads-2dw.2.1.10 --json # final QA
 ```
 
 ## Repositories
@@ -124,9 +129,13 @@ only translates to/from the generic ABI.
 
 Presentation uses `game_smash64_assets.c`: 26 joints, 319 triangles,
 23 textures, and 30 animations. Figatree's one-based joint names are converted
-to zero-based model slots by the baker. The runtime normalizes each pose to a
-64-pixel readable height and uses a 60-degree three-quarter view. Missing model
-data uses the cube fallback.
+to zero-based model slots by the baker. Blob version 2 stores BattleShip's
+source interpolation segments and tangent rates instead of flattening them
+into linear keys. Costume-zero primary colors come from reloc 332's
+`MatAnimJoint` programs, matching BattleShip's fighter-part material
+initialization. The runtime normalizes each pose to a 64-pixel readable height
+and uses a 60-degree three-quarter view. Missing model data uses the cube
+fallback.
 
 Audio uses `game_smash64_audio.c`: seven local cues for jump effort, "Falcon",
 "Punch", Falcon Kick, Punch impact, Kick swing, and Kick energy start. Missing
@@ -140,13 +149,16 @@ adaptations are in `docs/falcon_audio.md`.
 - M5 gameplay: ordinary/scripted ownership, pipes/water/castle/death handoffs,
   save states, reseed behavior, and mod-off regression.
 - M6 rendering: real Falcon model, textures, and authentic animation selection;
-  corrected Figatree joint-slot mapping; screenshot-verified readable idle,
-  run, jump, Falcon Punch, and Falcon Kick poses; absent-asset fallback.
+  corrected Figatree joint-slot mapping, source interpolation, costume-zero
+  material initialization, and facing convention; screenshot-verified idle,
+  bidirectional locomotion, jump, Falcon Punch, Falcon Kick, clean title, and
+  absent-asset fallback.
 - M7 combat: Jab, forward tilt, neutral/forward/back air, Falcon Punch, Falcon
   Kick; source hit windows/damage; native SMB1 enemy defeat and `$51/$52` brick
   shatter; nonbreakable/special/boss filtering; save/load and mod-off coverage.
 - M8 audio: exact source-frame cue events, seven ignored local clips, shared
-  NES mix, stop-on-load, mod unload, silent fallback, and no per-frame spam.
+  NES mix, BattleShip-accurate pitch, stop-on-load, mod unload, silent fallback,
+  and no per-frame spam.
 
 Key committed evidence/docs:
 
@@ -159,6 +171,7 @@ Key committed evidence/docs:
 - `tests/falcon_m8_audio.script`
 - `tests/falcon_visual_acceptance.script`
 - `tests/falcon_visual_locomotion_qa.script`
+- `tests/falcon_visual_title_qa.script`
 - `tests/falcon_visual_combat_qa.script`
 - `tests/falcon_visual_aerial_sequence_qa.script`
 - `tests/falcon_tier4_death_respawn_qa.script`
@@ -167,17 +180,23 @@ Key committed evidence/docs:
 The M8 live trace loads 7/7 clips and queues every mapping. During a Punch
 windup save/load, the already-consumed "Falcon" entry call does not replay;
 the future frame-42 "Punch" and impact cues each occur once on both genuine
-continuations. A 12-second audio-debug capture contains both native APU output
-and a distinct combined bridge input. With the mod disabled, no Falcon asset or
-audio load occurs. With the ignored audio directory withheld, startup emits one
-fallback message and a smoke run exits cleanly.
+continuations. The August 8 final 12-second capture queues all seven cues; its
+first 500 frames match a sample-level reconstruction of native APU plus Falcon
+overlays exactly (367,500/367,500 samples). BattleShip establishes a 32 kHz
+synthesizer and direct -1200-cent FGM voice ratio, so the voice bytes have a
+16 kHz effective playback clock before conversion to the runner's 44.1 kHz.
+With the mod disabled, no Falcon asset or audio load occurs. With the ignored
+asset directory withheld, startup emits one model and one audio fallback
+message and a smoke run exits cleanly.
 
 ## Known adaptations and traps
 
 - Hook player wrapper `$BF09`, never generic `$BF0F`; enemies use the latter.
 - SMB1 has no double jump, so Falcon's JumpAerial effort voice maps to its one
   supported jump.
-- Voice previews preserve the original -1200-cent articulation. The three FGM
+- Voice previews preserve the original -1200-cent articulation against Smash
+  64's 32 kHz output clock (effective 16 kHz source consumption), not against
+  the decomp preview AIFF's incidental 44.1 kHz header. The three FGM
   previews preserve mapped waveform/pitch but adapt the full N64 envelope and
   forked-voice program; do not describe them as a complete N64 synthesizer.
 - Native enemy defeat is intentionally not Smash percentage/knockback. The host

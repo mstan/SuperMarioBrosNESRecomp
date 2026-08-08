@@ -86,6 +86,12 @@
 /* value is a scripted sequence that must stay native.                  */
 /* ------------------------------------------------------------------ */
 #define SMB1_GAMEMODE_PLAYER_CTRL 8
+/* OperModeExecutionTree $8212 reads OperMode $0770 and dispatches value 0 to
+ * TitleScreenMode, 1 to GameMode, 2 to VictoryMode, and 3 to GameOverMode.
+ * Ghidra confirms the $8212 read of $0770.  GameEngineSubroutine can retain 8
+ * in title/attract state, so it is not sufficient as the outer presentation
+ * gate by itself. */
+#define SMB1_OPER_MODE_GAME 1
 
 /* ImposeFriction, the horizontal velocity integrator we take over. Called
  * only from GndMove ($B363) and LRAir ($B3B0) -- player-only by construction,
@@ -494,6 +500,9 @@ static int smb1_side_solid_at(int x_pos, int page, int dir)
 static ForeignOwnership decide_ownership(void)
 {
     if (!s_enabled || !s_selected) return FOREIGN_OWNERSHIP_NATIVE;
+
+    if (g_ram[OperMode] != SMB1_OPER_MODE_GAME)
+        return FOREIGN_OWNERSHIP_SCRIPTED;
 
     /* Anything but ordinary play is a scripted sequence -- pipes, flagpole,
      * death, entrance autowalk, powerup transitions. Hand control back

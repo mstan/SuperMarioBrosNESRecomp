@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FALCON_BLOB_VERSION 1u
+#define FALCON_BLOB_VERSION 2u
 #define FALCON_JOINT_COUNT 26u
 #define FALCON_RENDER_HEIGHT 64.0f
 #define FALCON_YAW_DEG 60.0f
@@ -60,10 +60,15 @@ typedef struct FalconAssetTrack {
     uint32_t key_count;
 } FalconAssetTrack;
 
-typedef struct FalconAssetKey {
+typedef struct FalconAssetSegment {
     float frame;
-    float value;
-} FalconAssetKey;
+    float duration;
+    float value_base;
+    float value_target;
+    float rate_base;
+    float rate_target;
+    uint32_t kind;
+} FalconAssetSegment;
 
 typedef struct FalconAssetModel {
     FalconAssetJoint *joints;
@@ -71,13 +76,13 @@ typedef struct FalconAssetModel {
     FalconAssetTexture *textures;
     FalconAssetAnimation *animations;
     FalconAssetTrack *tracks;
-    FalconAssetKey *keys;
+    FalconAssetSegment *segments;
     uint32_t joint_count;
     uint32_t triangle_count;
     uint32_t texture_count;
     uint32_t animation_count;
     uint32_t track_count;
-    uint32_t key_count;
+    uint32_t segment_count;
     float bounds_min[3];
     float bounds_max[3];
 } FalconAssetModel;
@@ -179,7 +184,7 @@ static void free_model(FalconAssetModel *model)
     free(model->textures);
     free(model->animations);
     free(model->tracks);
-    free(model->keys);
+    free(model->segments);
     memset(model, 0, sizeof(*model));
 }
 
@@ -324,13 +329,13 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
     model->texture_count = read_u32(&reader);
     model->animation_count = read_u32(&reader);
     model->track_count = read_u32(&reader);
-    model->key_count = read_u32(&reader);
+    model->segment_count = read_u32(&reader);
     if (model->joint_count != FALCON_JOINT_COUNT ||
         !count_is_safe(model->triangle_count, 10000) ||
         !count_is_safe(model->texture_count, 256) ||
         !count_is_safe(model->animation_count, 128) ||
         !count_is_safe(model->track_count, 100000) ||
-        !count_is_safe(model->key_count, 1000000))
+        !count_is_safe(model->segment_count, 1000000))
         return 0;
 
     model->joints = (FalconAssetJoint *)calloc(model->joint_count,
@@ -343,10 +348,10 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
                                                        sizeof(*model->animations));
     model->tracks = (FalconAssetTrack *)calloc(model->track_count,
                                                sizeof(*model->tracks));
-    model->keys = (FalconAssetKey *)calloc(model->key_count,
-                                          sizeof(*model->keys));
+    model->segments = (FalconAssetSegment *)calloc(model->segment_count,
+                                                   sizeof(*model->segments));
     if (!model->joints || !model->triangles || !model->textures ||
-        !model->animations || !model->tracks || !model->keys)
+        !model->animations || !model->tracks || !model->segments)
         goto fail;
 
     for (i = 0; i < model->joint_count; ++i) {
@@ -416,12 +421,20 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
         if (track->joint >= model->joint_count || track->kind > 8 ||
             !track->key_count ||
             !range_is_safe(track->first_key, track->key_count,
-                           model->key_count))
+                           model->segment_count))
             reader.ok = 0;
     }
-    for (i = 0; i < model->key_count; ++i) {
-        model->keys[i].frame = read_f32(&reader);
-        model->keys[i].value = read_f32(&reader);
+    for (i = 0; i < model->segment_count; ++i) {
+        FalconAssetSegment *segment = &model->segments[i];
+        segment->frame = read_f32(&reader);
+        segment->duration = read_f32(&reader);
+        segment->value_base = read_f32(&reader);
+        segment->value_target = read_f32(&reader);
+        segment->rate_base = read_f32(&reader);
+        segment->rate_target = read_f32(&reader);
+        segment->kind = read_u32(&reader);
+        if (segment->duration < 0.0f || segment->kind > 3u)
+            reader.ok = 0;
     }
     if (!reader.ok || reader.offset != reader.size) goto fail;
     compute_bind_bounds(model);
@@ -562,23 +575,43 @@ static const FalconAssetAnimation *find_animation(const FalconAssetModel *model,
 static float sample_track(const FalconAssetModel *model,
                           const FalconAssetTrack *track, float frame)
 {
-    const FalconAssetKey *keys = model->keys + track->first_key;
+    const FalconAssetSegment *segments =
+        model->segments + track->first_key;
     uint32_t i;
-    if (track->key_count == 1 || frame <= keys[0].frame) return keys[0].value;
-    for (i = 1; i < track->key_count; ++i) {
-        if (frame <= keys[i].frame) {
-            float span = keys[i].frame - keys[i - 1].frame;
-            float amount = span > 0.0f ? (frame - keys[i - 1].frame) / span : 1.0f;
-            float delta = keys[i].value - keys[i - 1].value;
-            if (track->kind <= 2) {
-                const float pi = 3.14159265358979323846f;
-                while (delta > pi) delta -= 2.0f * pi;
-                while (delta < -pi) delta += 2.0f * pi;
+    if (frame <= segments[0].frame) return segments[0].value_base;
+    for (i = 0; i < track->key_count; ++i) {
+        const FalconAssetSegment *segment = &segments[i];
+        float elapsed;
+        if (frame < segment->frame) {
+            return i ? segments[i - 1].value_target : segment->value_base;
+        }
+        if (segment->duration <= 0.0f) continue;
+        elapsed = frame - segment->frame;
+        if (elapsed <= segment->duration) {
+            float amount = elapsed / segment->duration;
+            if (segment->kind == 1u) {
+                return segment->value_base +
+                    (segment->value_target - segment->value_base) * amount;
             }
-            return keys[i - 1].value + delta * amount;
+            if (segment->kind == 2u) {
+                float amount2 = amount * amount;
+                float amount3 = amount2 * amount;
+                float h00 = 2.0f * amount3 - 3.0f * amount2 + 1.0f;
+                float h10 = amount3 - 2.0f * amount2 + amount;
+                float h01 = -2.0f * amount3 + 3.0f * amount2;
+                float h11 = amount3 - amount2;
+                return h00 * segment->value_base +
+                       h10 * segment->duration * segment->rate_base +
+                       h01 * segment->value_target +
+                       h11 * segment->duration * segment->rate_target;
+            }
+            if (segment->kind == 3u)
+                return elapsed >= segment->duration
+                    ? segment->value_target : segment->value_base;
+            return segment->value_base;
         }
     }
-    return keys[track->key_count - 1].value;
+    return segments[track->key_count - 1].value_target;
 }
 
 static void apply_animation(const FalconAssetModel *model,
@@ -668,7 +701,10 @@ int game_smash64_assets_draw(float center_x, float foot_y)
         pose_height = s_model.bounds_max[1] - s_model.bounds_min[1];
     model_scale = env_float("NESRECOMP_FALCON_RENDER_HEIGHT",
                             FALCON_RENDER_HEIGHT) / pose_height;
-    facing = state->facing < 0.0f ? -1.0f : 1.0f;
+    /* Smash's +LR model orientation is opposite our screen-space projection.
+     * Mirror the mesh against that authored convention, not against movement
+     * directly; the old sign made rightward Run visibly face left. */
+    facing = state->facing < 0.0f ? 1.0f : -1.0f;
     yaw_rad = env_float("NESRECOMP_FALCON_YAW_DEG", FALCON_YAW_DEG) *
         (3.14159265358979323846f / 180.0f);
 

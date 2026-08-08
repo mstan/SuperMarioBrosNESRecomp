@@ -182,118 +182,248 @@ def validate_dl_material_indices(assets: Path, joint_materials: list[list[dict]]
             )
 
 
+def reloc_expression_offset(expression: str) -> int | None:
+    """Resolve the CaptainModel symbols used by BattleShip's .reloc map."""
+    parts = expression.split("+0x", 1)
+    symbol = parts[0]
+    extra = int(parts[1], 16) if len(parts) == 2 else 0
+    if symbol == "dCaptainModel_JointTree":
+        return 0x3BE0 + extra
+    match = re.fullmatch(
+        r"dCaptainModel_gap_0x([0-9A-Fa-f]+)"
+        r"(?:_sub_0x([0-9A-Fa-f]+))?",
+        symbol,
+    )
+    if not match:
+        return None
+    return int(match.group(1), 16) + (
+        int(match.group(2), 16) if match.group(2) else 0
+    ) + extra
+
+
+def parse_internal_relocations(path: Path) -> dict[int, str]:
+    relocations = {}
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        match = re.match(r"intern\s+(\S+)\s+(\S+)", line)
+        if not match:
+            continue
+        pointer_offset = reloc_expression_offset(match.group(1))
+        if pointer_offset is not None:
+            relocations[pointer_offset] = match.group(2)
+    return relocations
+
+
+def rgba_word_to_argb(value: int) -> int:
+    return ((value & 0xFF) << 24) | (value >> 8)
+
+
+def first_costume_primcolor(raw: bytes, offset: int) -> int | None:
+    """Read the first prim-color target from one BattleShip MatAnimJoint.
+
+    Fighter creation passes the costume index as the material animation frame.
+    At frame zero the first target is the displayed costume-0 color.  The
+    following blocking command establishes the next costume's target while
+    the step interpolator continues to display this first value.
+    """
+    cursor = offset
+    for _ in range(256):
+        if cursor + 4 > len(raw):
+            return None
+        command = int.from_bytes(raw[cursor:cursor + 4], "big")
+        cursor += 4
+        opcode = command >> 25
+        flags = (command >> 15) & 0x3FF
+
+        if opcode == 0:  # End
+            return None
+        if opcode in (1, 13):  # Jump / SetAnim pointer
+            cursor += 4
+        elif opcode in (3, 4, 8, 9, 10, 11):
+            cursor += 4 * flags.bit_count()
+        elif opcode in (5, 6):
+            cursor += 8 * flags.bit_count()
+        elif opcode == 7:
+            cursor += 4 * flags.bit_count()
+        elif opcode in (18, 19, 20, 21):
+            for track in range(5):
+                if flags & (1 << track):
+                    if cursor + 4 > len(raw):
+                        return None
+                    value = int.from_bytes(raw[cursor:cursor + 4], "big")
+                    cursor += 4
+                    if track == 0:  # nGCAnimTrackPrimColor
+                        return rgba_word_to_argb(value)
+        elif opcode == 22:
+            cursor += 4 * (flags & 0x1F).bit_count()
+    return None
+
+
+def apply_default_costume_materials(result: dict, reloc_bin: Path,
+                                    reloc_map: Path) -> int:
+    """Apply BattleShip's costume-frame-zero material initialization."""
+    raw = reloc_bin.read_bytes()
+    relocations = parse_internal_relocations(reloc_map)
+    # CaptainMain's FTCommonPart points here.  See
+    # lbCommonAddMObjForFighterPartsDObj: each joint entry is an array with one
+    # MatAnimJoint pointer per MObj, evaluated at the selected costume frame.
+    dispatch_offset = 0x3BE0 + 0x4B0
+    applied = 0
+    for joint_index, materials in enumerate(result["joint_materials"]):
+        array_symbol = relocations.get(dispatch_offset + joint_index * 4)
+        array_offset = (reloc_expression_offset(array_symbol)
+                        if array_symbol else None)
+        if array_offset is None:
+            continue
+        for material_index, material in enumerate(materials):
+            script_symbol = relocations.get(array_offset + material_index * 4)
+            script_offset = (reloc_expression_offset(script_symbol)
+                             if script_symbol else None)
+            if script_offset is None:
+                continue
+            primary = first_costume_primcolor(raw, script_offset)
+            if primary is not None:
+                material["default_primary_argb"] = primary
+                applied += 1
+    return applied
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--source", type=Path, required=True,
+    source_group = parser.add_mutually_exclusive_group(required=True)
+    source_group.add_argument("--source", type=Path,
                         help="path to src/relocData/332_CaptainModel.c")
+    source_group.add_argument("--existing-bindings", type=Path,
+                        help="update an already resolved material_bindings.json")
     parser.add_argument("--assets", type=Path, default=Path("assets_ssb64"))
     parser.add_argument("--build-dir", type=Path,
                         help="directory containing CaptainModel/*.inc.c")
+    parser.add_argument("--reloc-bin", type=Path,
+                        help="raw BattleShip reloc file 332 extracted from the ROM")
+    parser.add_argument("--reloc-map", type=Path,
+                        help="BattleShip decomp/src/relocData/332_CaptainModel.reloc")
     args = parser.parse_args()
 
-    source_path = args.source.resolve()
     assets = args.assets.resolve()
-    decomp_root = source_path.parents[2]
-    build_dir = (args.build_dir or
-                 decomp_root / "build" / "us" / "src" / "relocData" / "CaptainModel")
-    source = source_path.read_text(encoding="utf-8", errors="replace")
+    if bool(args.reloc_bin) != bool(args.reloc_map):
+        parser.error("--reloc-bin and --reloc-map must be supplied together")
 
-    arrays = {}
-    for c_type in ("void", "u16", "MObjSub"):
-        arrays.update({
-            symbol: pointer_entries(body)
-            for symbol, body in declaration_bodies(source, c_type, "*").items()
-        })
+    if args.existing_bindings:
+        output = args.existing_bindings.resolve()
+        result = json.loads(output.read_text(encoding="utf-8"))
+        source_path = None
+    else:
+        source_path = args.source.resolve()
+        decomp_root = source_path.parents[2]
+        build_dir = (args.build_dir or
+                     decomp_root / "build" / "us" / "src" / "relocData" / "CaptainModel")
+        source = source_path.read_text(encoding="utf-8", errors="replace")
 
-    declarations = parse_asset_declarations(source, build_dir)
-    texture_dimensions = parse_texture_dimensions(source)
-    materials = parse_materials(source)
-    dispatch = parse_dispatch(source)
-    joint_materials = []
+        arrays = {}
+        for c_type in ("void", "u16", "MObjSub"):
+            arrays.update({
+                symbol: pointer_entries(body)
+                for symbol, body in declaration_bodies(source, c_type, "*").items()
+            })
 
-    for list_symbol in dispatch:
-        resolved = []
-        for material_symbol in (arrays.get(list_symbol, []) if list_symbol else []):
-            if material_symbol is None:
-                continue
-            material = dict(materials[material_symbol])
-            palette_set = material.pop("palette_set")
-            palette_entries = [item for item in arrays.get(palette_set, []) if item]
-            material["palette_symbol"] = palette_entries[0] if palette_entries else None
-            resolved.append(material)
-        joint_materials.append(resolved)
+        declarations = parse_asset_declarations(source, build_dir)
+        texture_dimensions = parse_texture_dimensions(source)
+        materials = parse_materials(source)
+        dispatch = parse_dispatch(source)
+        joint_materials = []
 
-    validate_dl_material_indices(assets, joint_materials)
+        for list_symbol in dispatch:
+            resolved = []
+            for material_symbol in (arrays.get(list_symbol, []) if list_symbol else []):
+                if material_symbol is None:
+                    continue
+                material = dict(materials[material_symbol])
+                palette_set = material.pop("palette_set")
+                palette_entries = [item for item in arrays.get(palette_set, []) if item]
+                material["palette_symbol"] = palette_entries[0] if palette_entries else None
+                resolved.append(material)
+            joint_materials.append(resolved)
+
+        validate_dl_material_indices(assets, joint_materials)
 
     # Include every declared palette because a few unmaterialed display lists
     # load one statically with G_LOADTLUT (notably the torso emblem joint).
-    palettes = {}
-    for symbol, (kind, values) in declarations.items():
-        if kind == "u16" and len(values) >= 16:
-            palettes[symbol] = [rgba16_to_argb(value) for value in values]
+        palettes = {}
+        for symbol, (kind, values) in declarations.items():
+            if kind == "u16" and len(values) >= 16:
+                palettes[symbol] = [rgba16_to_argb(value) for value in values]
 
     # Some CI4 pixel images are declared as u16 and named "palette".  Recover
     # them as big-endian byte streams so the baker can treat every G_LOADBLOCK
     # source uniformly.
-    image_symbols = set()
-    for dl_path in (assets / "model" / "dl").glob("*.json"):
-        for op in json.loads(dl_path.read_text()):
-            if op.get("op") == "G_SETTIMG" and op.get("image"):
-                image_symbols.add(op["image"])
-    recovered = []
-    textures_dir = assets / "textures"
-    textures_dir.mkdir(parents=True, exist_ok=True)
+        image_symbols = set()
+        for dl_path in (assets / "model" / "dl").glob("*.json"):
+            for op in json.loads(dl_path.read_text()):
+                if op.get("op") == "G_SETTIMG" and op.get("image"):
+                    image_symbols.add(op["image"])
+        recovered = []
+        textures_dir = assets / "textures"
+        textures_dir.mkdir(parents=True, exist_ok=True)
 
     # Rebuild the portion of the reloc file described by absolute-offset
     # symbols.  Some logical texture atlases overlap declarations that the
     # decomp splitter also names as costume palettes; placing every declaration
     # at its source offset recovers those atlases without a model-specific map.
-    placements = []
-    file_size = 0
-    for symbol, (kind, values) in declarations.items():
-        offset = symbol_file_offset(symbol)
-        if offset is None:
-            continue
-        raw = declaration_bytes(kind, values)
-        placements.append((offset, raw))
-        file_size = max(file_size, offset + len(raw))
-    file_image = bytearray(file_size)
-    for offset, raw in placements:
-        file_image[offset:offset + len(raw)] = raw
+        placements = []
+        file_size = 0
+        for symbol, (kind, values) in declarations.items():
+            offset = symbol_file_offset(symbol)
+            if offset is None:
+                continue
+            raw = declaration_bytes(kind, values)
+            placements.append((offset, raw))
+            file_size = max(file_size, offset + len(raw))
+        file_image = bytearray(file_size)
+        for offset, raw in placements:
+            file_image[offset:offset + len(raw)] = raw
 
-    for symbol in sorted(image_symbols):
-        declaration = declarations.get(symbol)
-        if not declaration:
-            continue
-        kind, values = declaration
-        raw = declaration_bytes(kind, values)
-        dimensions = texture_dimensions.get(symbol)
-        offset = symbol_file_offset(symbol)
-        if dimensions and offset is not None:
-            expected = (dimensions[0] * dimensions[1] + 1) // 2
-            if offset + expected <= len(file_image):
-                raw = bytes(file_image[offset:offset + expected])
-        output = textures_dir / f"{symbol}.bin"
-        output.write_bytes(raw)
-        recovered.append(output.name)
+        for symbol in sorted(image_symbols):
+            declaration = declarations.get(symbol)
+            if not declaration:
+                continue
+            kind, values = declaration
+            raw = declaration_bytes(kind, values)
+            dimensions = texture_dimensions.get(symbol)
+            offset = symbol_file_offset(symbol)
+            if dimensions and offset is not None:
+                expected = (dimensions[0] * dimensions[1] + 1) // 2
+                if offset + expected <= len(file_image):
+                    raw = bytes(file_image[offset:offset + expected])
+            output = textures_dir / f"{symbol}.bin"
+            output.write_bytes(raw)
+            recovered.append(output.name)
 
-    result = {
-        "version": 1,
-        "costume_index": 0,
-        "source": source_path.name,
-        "joint_materials": joint_materials,
-        "palettes_argb": palettes,
-        "texture_dimensions": {
-            symbol: list(dimensions)
-            for symbol, dimensions in texture_dimensions.items()
-        },
-        "recovered_texture_bins": recovered,
-    }
-    output = textures_dir / "material_bindings.json"
+        result = {
+            "version": 2,
+            "costume_index": 0,
+            "source": source_path.name,
+            "joint_materials": joint_materials,
+            "palettes_argb": palettes,
+            "texture_dimensions": {
+                symbol: list(dimensions)
+                for symbol, dimensions in texture_dimensions.items()
+            },
+            "recovered_texture_bins": recovered,
+        }
+        output = textures_dir / "material_bindings.json"
+
+    costume_colors = 0
+    if args.reloc_bin:
+        costume_colors = apply_default_costume_materials(
+            result, args.reloc_bin.resolve(), args.reloc_map.resolve())
+        result["version"] = max(int(result.get("version", 1)), 2)
+        result["costume_source"] = args.reloc_bin.name
+
     output.write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
     print(
-        f"wrote {output}: {sum(map(len, joint_materials))} materials, "
-        f"{len(palettes)} palettes, {len(recovered)} texture blobs"
+        f"wrote {output}: {sum(map(len, result['joint_materials']))} materials, "
+        f"{len(result.get('palettes_argb', {}))} palettes, "
+        f"{len(result.get('recovered_texture_bins', []))} texture blobs, "
+        f"{costume_colors} costume-0 primary colors"
     )
 
 

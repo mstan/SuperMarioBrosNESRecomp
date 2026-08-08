@@ -1,0 +1,5 @@
+LOG falcon-visual-title-qa
+WAIT 120
+SCREENSHOT C:/temp/falcon_qa_title.png
+WAIT 2
+EXIT 0

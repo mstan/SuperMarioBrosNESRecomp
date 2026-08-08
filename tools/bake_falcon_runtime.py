@@ -19,7 +19,7 @@ from PIL import Image
 
 
 MAGIC = b"FLCN64B\0"
-VERSION = 1
+VERSION = 2
 TRACK_IDS = {
     "RotX": 0,
     "RotY": 1,
@@ -32,6 +32,11 @@ TRACK_IDS = {
     "ScaZ": 8,
 }
 LOOPING_ANIMS = {"Wait", "Walk1", "Walk2", "Walk3", "Run", "CrouchIdle"}
+
+INTERP_HOLD = 0
+INTERP_LINEAR = 1
+INTERP_CUBIC = 2
+INTERP_STEP = 3
 
 
 def load_json(path: Path):
@@ -223,7 +228,8 @@ def collect_model(root: Path):
                                         current_bpp)
                             else:
                                 current_texture = catalog.solid(
-                                    int(material["primary_argb"]))
+                                    int(material.get("default_primary_argb",
+                                                     material["primary_argb"])))
                         # The called material DL supplies the palette image;
                         # prevent the preceding pixel SETTIMG from masquerading
                         # as a static TLUT source when G_LOADTLUT follows.
@@ -272,11 +278,103 @@ def collect_model(root: Path):
     return joints, joint_ranges, triangles, catalog.records
 
 
+def _track_segments(joint: dict):
+    """Compile one Figatree joint stream with objanim.c's AObj semantics.
+
+    A Figatree command changes an AObj's target immediately, then a blocking
+    command advances the shared stream clock while the AObj interpolates from
+    its previous target.  Flattening commands into target keyframes loses that
+    previous target, the authored tangent rates, step-vs-linear behavior, and
+    the duration after the final target.  Keep explicit segments instead.
+    """
+    states = {}
+    segments = {}
+    frame = 0.0
+
+    def state_for(track):
+        return states.setdefault(track, {"target": 0.0, "rate": 0.0})
+
+    for op in joint.get("ops", []):
+        opname = op.get("op")
+        duration = float(op.get("dur") or 0.0)
+        if opname == "Block":
+            frame += duration
+            continue
+        if opname == "SetTargetRate":
+            for track in op.get("tracks", []):
+                raw = op["payload"][track]
+                state_for(track)["rate"] = raw_to_units(track, raw)
+            continue
+        if opname not in {
+            "SetValBlock", "SetVal", "SetValRateBlock", "SetValRate",
+            "SetVal0RateBlock", "SetVal0Rate", "SetValAfterBlock",
+            "SetValAfter",
+        }:
+            continue
+
+        is_block = opname.endswith("Block") and duration > 0.0
+        for track in op.get("tracks", []):
+            payload = op["payload"][track]
+            raw_value = payload[0] if isinstance(payload, list) else payload
+            target = raw_to_units(track, raw_value)
+            state = state_for(track)
+            base = state["target"]
+            rate_base = state["rate"]
+
+            if opname.startswith("SetValRate"):
+                raw_rate = payload[1]
+                rate_target = raw_to_units(track, raw_rate)
+                kind = INTERP_CUBIC
+            elif opname.startswith("SetVal0Rate"):
+                rate_target = 0.0
+                kind = INTERP_CUBIC
+            elif opname.startswith("SetValAfter"):
+                rate_target = 0.0
+                kind = INTERP_STEP
+            else:
+                rate_target = 0.0
+                kind = INTERP_LINEAR
+
+            if is_block:
+                segments.setdefault(track, []).append((
+                    frame, duration, base, target, rate_base, rate_target, kind
+                ))
+            # This assignment is immediate in gcParseDObjAnimJoint, even for
+            # a blocking command; the elapsed segment still starts at `base`.
+            state["target"] = target
+            state["rate"] = rate_target
+
+        if is_block:
+            frame += duration
+
+    # Preserve tracks that only contain a zero-duration initializer.  A hold
+    # record gives the runtime the initialized target instead of inventing 0.
+    for track, state in states.items():
+        if not segments.get(track):
+            segments.setdefault(track, []).append((
+                0.0, 0.0, state["target"], state["target"],
+                state["rate"], state["rate"], INTERP_HOLD
+            ))
+    return segments, frame
+
+
+def raw_to_units(track: str, raw: int) -> float:
+    if track.startswith("Rot"):
+        return raw / 512.0
+    if track == "TraI":
+        return raw / 16384.0
+    if track.startswith("Tra"):
+        return raw / 4.0
+    if track.startswith("Sca"):
+        return raw / 4096.0
+    raise ValueError(f"unknown Figatree track {track}")
+
+
 def collect_animations(root: Path):
     manifest = load_json(root / "anim" / "anim_manifest.json")
     animations = []
     tracks = []
-    keys = []
+    segments = []
 
     for entry in manifest:
         if entry.get("status") != "ok":
@@ -293,38 +391,33 @@ def collect_animations(root: Path):
                 "joint_slot", int(joint.get("joint_id", 1)) - 1))
             if not 0 <= joint_index < 26:
                 continue
-            for track_name, frames in joint.get("keyframes", {}).items():
-                if track_name not in TRACK_IDS or not frames:
+            joint_segments, joint_duration = _track_segments(joint)
+            duration = max(duration, joint_duration)
+            for track_name, track_segments in joint_segments.items():
+                if track_name not in TRACK_IDS or not track_segments:
                     continue
-                # Some scripts set two values at frame zero. Preserve the
-                # last write, matching the source interpreter's semantics.
-                unique = {}
-                for key in frames:
-                    unique[float(key["frame"])] = float(key["value"])
-                ordered = sorted(unique.items())
-                first_key = len(keys)
-                keys.extend(ordered)
-                duration = max(duration, ordered[-1][0])
-                tracks.append((joint_index, TRACK_IDS[track_name], first_key,
-                               len(ordered)))
+                first_segment = len(segments)
+                segments.extend(track_segments)
+                tracks.append((joint_index, TRACK_IDS[track_name],
+                               first_segment, len(track_segments)))
         name = str(data["canonical_name"])
         animations.append((name, duration if duration > 0.0 else 1.0,
                            1 if name in LOOPING_ANIMS else 0,
                            first_track, len(tracks) - first_track))
 
-    return animations, tracks, keys
+    return animations, tracks, segments
 
 
 def write_blob(root: Path, output: Path):
     joints, joint_ranges, triangles, textures = collect_model(root)
-    animations, tracks, keys = collect_animations(root)
+    animations, tracks, segments = collect_animations(root)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("wb") as stream:
         stream.write(MAGIC)
         stream.write(struct.pack(
             "<7I", VERSION, len(joints), len(triangles), len(textures),
-            len(animations), len(tracks), len(keys)))
+            len(animations), len(tracks), len(segments)))
 
         for joint, (first_tri, tri_count) in zip(joints, joint_ranges):
             parent = joint.get("parent")
@@ -352,16 +445,18 @@ def write_blob(root: Path, output: Path):
             stream.write(struct.pack("<f3I", duration, loop, first_track,
                                      track_count))
 
-        for joint, kind, first_key, key_count in tracks:
-            stream.write(struct.pack("<HH2I", joint, kind, first_key, key_count))
+        for joint, kind, first_segment, segment_count in tracks:
+            stream.write(struct.pack("<HH2I", joint, kind, first_segment,
+                                     segment_count))
 
-        for frame, value in keys:
-            stream.write(struct.pack("<2f", frame, value))
+        for frame, duration, base, target, rate_base, rate_target, kind in segments:
+            stream.write(struct.pack("<6fI", frame, duration, base, target,
+                                     rate_base, rate_target, kind))
 
     print(f"wrote {output} ({output.stat().st_size} bytes): "
           f"{len(joints)} joints, {len(triangles)} triangles, "
           f"{len(textures)} textures, {len(animations)} animations, "
-          f"{len(tracks)} tracks, {len(keys)} keys")
+          f"{len(tracks)} tracks, {len(segments)} interpolation segments")
 
 
 def main() -> None:

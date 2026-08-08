@@ -7,8 +7,11 @@ without those files prints one fallback message and continues with NES audio.
 
 ## Source mapping
 
-The pinned `SmashBrosDecomp` US build exposes the original route as
-`gmFGMVoiceID -> fgm.ucd -> fgm.tbl -> ALBank -> decoded AIFF`.
+The primary implementation reference is JRickey's
+[BattleShip](https://github.com/JRickey/BattleShip) PC port/decomp (local
+checkout `4fc1128`). Its US data exposes the original route as
+`gmFGMVoiceID -> fgm.ucd -> fgm.tbl -> ALBank -> decoded AIFF`. The earlier
+`SmashBrosDecomp` checkout remains the local decoded-preview source only.
 
 | Runtime cue | Source id / route | Local input |
 |---|---|---|
@@ -21,9 +24,15 @@ The pinned `SmashBrosDecomp` US build exposes the original route as
 | Kick energy start | FGM 183 -> 186, articulation 147, instrument 11 | `B1_sounds1/wave_019.aiff` |
 
 The four voice articulations and instrument 11 specify approximately -1200
-cents, so the local conversion preserves their half-speed playback before
-resampling to 44100 Hz. The LightSwingL path combines +550 and -400 cents, so
-its representative waveform is rendered at +150 cents.
+cents. BattleShip's `audio.c` configures a 32000 Hz synthesizer, and the FGM
+path in `n_env.c` sends `alCents2Ratio(unk2C + unk30)` directly to
+`n_alSynStartVoiceParams`; an `ALWaveTable` carries no independent source-rate
+field. The original byte stream is therefore consumed at an effective 16000
+samples/second. The decomp preview AIFF's 44100 Hz header is export metadata,
+not the game's playback clock. Local conversion assigns 16000 Hz before
+resampling to the runner's 44100 Hz. The LightSwingL path combines +550 and
+-400 cents, so its representative waveform is rendered at +150 cents against
+the 32000 Hz synthesizer.
 
 The original FGM interpreter also applies evolving envelopes, repeated notes,
 and (for the Punch impact) a forked explosion voice. Reimplementing that whole
@@ -77,10 +86,13 @@ the restored timeline fires normally.
   save/load. With trace enabled, all seven mappings queue. The pre-save
   "Falcon" call occurs once; frame-42 "Punch" and impact each occur once on
   both continuations after the rewind.
-- `RECOMP_AUDIO_DEBUG` capture: `t1_apu.wav` and `t2_bridge_in.wav` are both
-  mono 44100 Hz/12 seconds but have different SHA-256 hashes, demonstrating
-  overlays are present at the shared bridge input while native APU audio is
-  also active.
+- Final `RECOMP_AUDIO_DEBUG` capture
+  `C:\temp\falcon_audio_battleship_16000_1556`: all seven cues queue at their
+  expected frames. Reconstructing the first 500 bridge frames from `t1_apu`
+  plus the registered clips, integer gains, overlap, and saturation matches
+  `t2_bridge_in` exactly (367500/367500 samples). Corrected voice durations are
+  0.218005 s (jump), 0.564014 s ("Falcon"), 0.938005 s ("Punch"), and
+  0.829002 s (Kick).
 - `tests/falcon_tier4_mod_off.script`: holding B with the package disabled
   produces no Smash64 controller, asset, audio-load, or cue log.
 - Temporarily withholding the ignored audio directory produces exactly one
