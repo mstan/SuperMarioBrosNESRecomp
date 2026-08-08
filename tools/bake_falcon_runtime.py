@@ -285,8 +285,13 @@ def collect_animations(root: Path):
         first_track = len(tracks)
         duration = 0.0
         for joint in data.get("joints", []):
-            joint_id = int(joint.get("joint_id", joint.get("joint_slot", 0) + 1))
-            if not 0 <= joint_id < 26:
+            # Figatree names are one-based (joint1..joint26), while the
+            # extracted DObj descriptor array and runtime model are zero-based.
+            # The first Figatree stream is attached to TopN->child, i.e. model
+            # joint 0, not model joint 1.
+            joint_index = int(joint.get(
+                "joint_slot", int(joint.get("joint_id", 1)) - 1))
+            if not 0 <= joint_index < 26:
                 continue
             for track_name, frames in joint.get("keyframes", {}).items():
                 if track_name not in TRACK_IDS or not frames:
@@ -300,7 +305,7 @@ def collect_animations(root: Path):
                 first_key = len(keys)
                 keys.extend(ordered)
                 duration = max(duration, ordered[-1][0])
-                tracks.append((joint_id, TRACK_IDS[track_name], first_key,
+                tracks.append((joint_index, TRACK_IDS[track_name], first_key,
                                len(ordered)))
         name = str(data["canonical_name"])
         animations.append((name, duration if duration > 0.0 else 1.0,

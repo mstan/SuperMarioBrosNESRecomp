@@ -106,7 +106,10 @@ Captain Falcon's state machine remains in the quarantined
 only translates to/from the generic ABI.
 
 Presentation uses `game_smash64_assets.c`: 26 joints, 319 triangles,
-23 textures, and 30 animations. Missing model data uses the cube fallback.
+23 textures, and 30 animations. Figatree's one-based joint names are converted
+to zero-based model slots by the baker. The runtime normalizes each pose to a
+64-pixel readable height and uses a 60-degree three-quarter view. Missing model
+data uses the cube fallback.
 
 Audio uses `game_smash64_audio.c`: seven local cues for jump effort, "Falcon",
 "Punch", Falcon Kick, Punch impact, Kick swing, and Kick energy start. Missing
@@ -120,7 +123,8 @@ adaptations are in `docs/falcon_audio.md`.
 - M5 gameplay: ordinary/scripted ownership, pipes/water/castle/death handoffs,
   save states, reseed behavior, and mod-off regression.
 - M6 rendering: real Falcon model, textures, and authentic animation selection;
-  absent-asset fallback.
+  corrected Figatree joint-slot mapping; screenshot-verified readable idle,
+  run, jump, Falcon Punch, and Falcon Kick poses; absent-asset fallback.
 - M7 combat: Jab, forward tilt, neutral/forward/back air, Falcon Punch, Falcon
   Kick; source hit windows/damage; native SMB1 enemy defeat and `$51/$52` brick
   shatter; nonbreakable/special/boss filtering; save/load and mod-off coverage.
@@ -136,6 +140,7 @@ Key committed evidence/docs:
 - `tests/falcon_m7_combat.script`
 - `tests/falcon_m7_savestate.script`
 - `tests/falcon_m8_audio.script`
+- `tests/falcon_visual_acceptance.script`
 - `tests/falcon_tier4_mod_off.script`
 
 The M8 live trace loads 7/7 clips and queues every mapping. During a Punch
@@ -161,6 +166,10 @@ fallback message and a smoke run exits cleanly.
   score/sound effects.
 - Runtime assets are loaded lazily only when the mod is enabled. Mod-off must
   produce no asset-load log.
+- Never accept presentation from counters or load logs alone. Run
+  `tests/falcon_visual_acceptance.script` and inspect all five native-resolution
+  screenshots under `C:\temp\falcon_accept_*.png`; a coherent, recognizable
+  Falcon silhouette is the M6 acceptance criterion.
 - `nes_foreign_sweep` is not used by SMB1 because the host needs its own
   inclusive per-pixel collision semantics.
 

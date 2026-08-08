@@ -16,8 +16,8 @@
 
 #define FALCON_BLOB_VERSION 1u
 #define FALCON_JOINT_COUNT 26u
-#define FALCON_RENDER_HEIGHT 36.0f
-#define FALCON_YAW_RAD 0.2094395102f /* 12 degrees */
+#define FALCON_RENDER_HEIGHT 64.0f
+#define FALCON_YAW_DEG 60.0f
 
 typedef struct FalconAssetJoint {
     int parent;
@@ -96,6 +96,22 @@ typedef struct Mat4 {
 static FalconAssetModel s_model;
 static int s_load_attempted;
 static const uint32_t s_fallback_color[1] = { 0xFF3060C8u };
+
+static int env_enabled(const char *name)
+{
+    const char *value = SDL_getenv(name);
+    return value && *value && strcmp(value, "0") != 0;
+}
+
+static float env_float(const char *name, float fallback)
+{
+    const char *value = SDL_getenv(name);
+    char *end;
+    float parsed;
+    if (!value || !*value) return fallback;
+    parsed = strtof(value, &end);
+    return end != value && isfinite(parsed) ? parsed : fallback;
+}
 
 static uint16_t read_u16(BlobReader *reader)
 {
@@ -594,11 +610,12 @@ static NesVoxelMeshVertex render_vertex(const FalconAssetModel *model,
                                         const float pose_min[3],
                                         const float pose_max[3],
                                         float center_x, float foot_y,
-                                        float facing, float model_scale)
+                                        float facing, float model_scale,
+                                        float yaw_rad)
 {
     NesVoxelMeshVertex out;
     float point[3];
-    float x, y, z, c = cosf(FALCON_YAW_RAD), s = sinf(FALCON_YAW_RAD);
+    float x, y, z, c = cosf(yaw_rad), yaw_sin = sinf(yaw_rad);
     mat_point(matrix, vertex->pos, point);
     (void)model;
     x = point[0] - (pose_min[0] + pose_max[0]) * 0.5f;
@@ -606,9 +623,9 @@ static NesVoxelMeshVertex render_vertex(const FalconAssetModel *model,
     z = point[2] - (pose_min[2] + pose_max[2]) * 0.5f;
     x *= facing;
     z *= facing;
-    out.x = center_x + (x * c - z * s) * model_scale;
+    out.x = center_x + (x * c - z * yaw_sin) * model_scale;
     out.y = foot_y + y * model_scale;
-    out.z = (x * s + z * c) * model_scale;
+    out.z = (x * yaw_sin + z * c) * model_scale;
     out.u = vertex->uv[0];
     out.v = vertex->uv[1];
     return out;
@@ -623,7 +640,7 @@ int game_smash64_assets_draw(float center_x, float foot_y)
     float s[FALCON_JOINT_COUNT][3];
     Mat4 world[FALCON_JOINT_COUNT];
     float pose_min[3], pose_max[3];
-    float model_scale, facing;
+    float model_scale, pose_height, facing, yaw_rad;
     uint16_t bound_texture = 0xFFFEu;
     uint32_t i;
 
@@ -637,7 +654,8 @@ int game_smash64_assets_draw(float center_x, float foot_y)
         memcpy(s[i], s_model.joints[i].scale, sizeof(s[i]));
     }
     animation = find_animation(&s_model, animation_for_state(state->state));
-    apply_animation(&s_model, animation, (float)state->state_frame, t, r, s);
+    if (!env_enabled("NESRECOMP_FALCON_BIND_POSE"))
+        apply_animation(&s_model, animation, (float)state->state_frame, t, r, s);
     build_matrices(&s_model, t, r, s, world);
     /* Figatree root translations are absolute fighter-pose coordinates, not
      * SMB1 world motion. Anchor the animated mesh's current lowest point to
@@ -645,9 +663,14 @@ int game_smash64_assets_draw(float center_x, float foot_y)
      * lifting the whole fighter dozens of pixels off the floor. */
     compute_world_bounds(&s_model, world, pose_min, pose_max);
 
-    model_scale = FALCON_RENDER_HEIGHT /
-        (s_model.bounds_max[1] - s_model.bounds_min[1]);
+    pose_height = pose_max[1] - pose_min[1];
+    if (pose_height < 1.0f)
+        pose_height = s_model.bounds_max[1] - s_model.bounds_min[1];
+    model_scale = env_float("NESRECOMP_FALCON_RENDER_HEIGHT",
+                            FALCON_RENDER_HEIGHT) / pose_height;
     facing = state->facing < 0.0f ? -1.0f : 1.0f;
+    yaw_rad = env_float("NESRECOMP_FALCON_YAW_DEG", FALCON_YAW_DEG) *
+        (3.14159265358979323846f / 180.0f);
 
     for (i = 0; i < s_model.triangle_count; ++i) {
         const FalconAssetTriangle *triangle = &s_model.triangles[i];
@@ -668,15 +691,15 @@ int game_smash64_assets_draw(float center_x, float foot_y)
         a = render_vertex(&s_model, world[triangle->joint],
                           &triangle->vertex[0], pose_min, pose_max,
                           center_x, foot_y,
-                          facing, model_scale);
+                          facing, model_scale, yaw_rad);
         b = render_vertex(&s_model, world[triangle->joint],
                           &triangle->vertex[1], pose_min, pose_max,
                           center_x, foot_y,
-                          facing, model_scale);
+                          facing, model_scale, yaw_rad);
         c = render_vertex(&s_model, world[triangle->joint],
                           &triangle->vertex[2], pose_min, pose_max,
                           center_x, foot_y,
-                          facing, model_scale);
+                          facing, model_scale, yaw_rad);
         nes_voxel_mesh_triangle(a, b, c);
     }
     return 1;

@@ -1,0 +1,42 @@
+LOG falcon-visual-acceptance-world-1-2
+WAIT 60
+# Select World 1-2 before SMB1 resolves the area pointer. The underground
+# black backdrop keeps every part of Falcon's source model visible.
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 01
+WRITE_RAM8 760 01
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 30
+SCREENSHOT C:/temp/falcon_accept_idle.png
+
+HOLD RIGHT
+WAIT 30
+SCREENSHOT C:/temp/falcon_accept_run.png
+HOLD A
+WAIT 12
+SCREENSHOT C:/temp/falcon_accept_jump.png
+RELEASE A
+RELEASE RIGHT
+WAIT 70
+
+# Capture the source-active pose of Falcon Punch.
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 41
+SCREENSHOT C:/temp/falcon_accept_punch.png
+WAIT 55
+
+# Capture the source-active pose of Falcon Kick.
+HOLD DOWN
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE DOWN
+WAIT 11
+SCREENSHOT C:/temp/falcon_accept_kick.png
+WAIT 2
+EXIT 0
