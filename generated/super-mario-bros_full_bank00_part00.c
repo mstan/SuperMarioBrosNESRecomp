@@ -14549,6 +14549,7 @@ label_B623:;
 }
 
 void func_BF09_b0(void) { /* MovePlayerHorizontally */
+    if (nes_mod_function_entry(0xBF09u)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_BF09_b0");
 #endif

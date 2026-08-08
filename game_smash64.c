@@ -118,6 +118,35 @@
 #define SMASH64_VERTICAL_HOOK_ID "super-mario-bros.smash64.move-vertically"
 
 /*
+ * MovePlayerHorizontally ($BF09) -- M4, the horizontal integrator.
+ *
+ * WHY THIS ADDRESS AND NOT $BF0F. MoveObjectHorizontally ($BF0F) is GENERIC:
+ * it indexes SprObject_X_Speed,X and enemies reach it through
+ * MoveEnemyHorizontally (smb.asm:7468) and four other call sites. Hooking it
+ * would freeze every enemy on screen. $BF09 is the player-only wrapper --
+ * Ghidra:
+ *     bf09: LDA $070E / BNE $BF4C (ExXMove)   <- jumpspring gate
+ *     bf0e: TAX                               <- X = 0, the player
+ *     bf0f: LDA $57,X ...                     <- generic body
+ *
+ * ABI THAT MUST BE PRESERVED: both callers store the routine's return A as
+ * Player_X_Scroll (smb.asm:5848 GndMove, :5889 JSMove) -- A is the whole
+ * pixels moved this frame and it DRIVES THE SCROLL ENGINE. The hook must
+ * leave the swept per-frame delta in g_cpu.A or the screen stops following
+ * the player. (Reporting the swept-actual rather than vanilla's intended
+ * value is deliberate: the screen should not scroll into a wall the player
+ * did not pass.)
+ *
+ * Horizontal COLLISION is not here -- DoPlayerSideCheck ($DD5E) runs inside
+ * PlayerBGCollision, separately, and still reacts to the position we commit.
+ * The sweep's job is only to never move MORE than one pixel into the first
+ * tile SMB1's own side check objects to, so this remains "controller
+ * proposes, SMB1 resolves" -- the exact vertical-sweep contract.
+ */
+#define SMB1_MOVE_PLAYER_HORIZONTALLY_ADDR 0xBF09
+#define SMASH64_HORIZONTAL_HOOK_ID "super-mario-bros.smash64.move-horizontally"
+
+/*
  * PlayerPhysicsSub ($B450) -- M3.5, the jumpsquat window.
  *
  * SMB1 launches on the A button's RISING EDGE, which leaves Falcon's 4-frame
@@ -243,6 +272,14 @@ static int32_t player_native_x(void)
  * block" is ambiguous between "nothing was in the way" and "the sweep never
  * got a chance to look", and those need completely different fixes. */
 #define SMASH64_CF_SWEPT_RAN     0x0010u
+/* Horizontal twins. SIDE_SWEPT_RAN exists for the identical ambiguity. The
+ * WALL_READBACK bit records the legacy ImpedePlayerMove inference (zeroed
+ * X speed / SideCollisionTimer) so a trace can compare the sweep's verdict
+ * against SMB1's own reaction offline; once the two agree over the harness
+ * scripts the readback bit goes away with the inference itself. */
+#define SMASH64_CF_SWEPT_WALL     0x0020u
+#define SMASH64_CF_SIDE_SWEPT_RAN 0x0040u
+#define SMASH64_CF_WALL_READBACK  0x0080u
 
 /* What the per-pixel sweep stopped on last frame, if anything. Consumed by the
  * next update_input, which is the next time a ForeignCollisionResult is built. */
@@ -255,8 +292,21 @@ static int s_swept_ran = 0;
  * ring flags but never stops the motion. This exists to answer the question
  * the sweep otherwise masks: does the raw per-frame delta tunnel through
  * SMB1's own collision? Announced on stderr at mod enable, so a run with it
- * on can never be mistaken for a normal one. */
+ * on can never be mistaken for a normal one. Governs BOTH axes. */
 static int s_sweep_noblock = 0;
+
+/* Horizontal sweep results, produced inside the horizontal hook and drained
+ * by the next update_input -- the exact pattern of s_swept_block above. */
+static int s_x_swept_wall = 0;
+static int s_x_swept_ran = 0;
+static double s_x_sub = 0.0;   /* horizontal subpixel remainder, host-side --
+                                * replaces SprObject_X_MoveForce ($0400), which
+                                * the skipped integrator owned */
+static int s_wrote_x = 0;      /* native (page*256+pos) X the horizontal hook
+                                * last wrote, so an ImpedePlayerMove 1px eject
+                                * is detectable as SMB1 refusing the motion */
+static int s_wrote_x_valid = 0;
+static int s_x_before = 0;     /* native X at horizontal hook entry */
 /* Collision-flag bits accumulated inside the vertical hook, where the sweep
  * runs, and drained by the next update_input when the ForeignCollisionResult
  * is assembled. Sampling them at the later point read a different instant of
@@ -349,6 +399,85 @@ static int smb1_solid_at(int y_pos, int feet)
 
     memcpy(&g_ram[0x02], save_scratch, sizeof save_scratch);
     g_ram[Player_Y_Position] = save_y;
+    g_cpu = save_cpu;
+    return solid;
+}
+
+/*
+ * The side-contact predicate is neither of the vertical ones. CheckSideMTiles
+ * ($DD9C) is its own chain, reproduced here in its own order:
+ *   ChkInvisibleMTiles $DEBD: $5F/$60 are not walls
+ *   CheckForClimbMTiles $DF9A: vine/ladder edges climb instead of stopping
+ *   coins $C2/$C3 collect instead of stopping (CheckForCoinMTiles is NOT
+ *     called for the same reason smb1_solid_at avoids it -- side effects)
+ *   jumpsprings $67/$68 stop the player UNLESS one is already animating
+ *   ChkPBtm: past this point everything is a wall except a sideways-pipe
+ *     bottom ($6C/$1F) approached grounded and facing left, which enters it
+ * DoPlayerSideCheck additionally excuses pipe tops $1C/$6B -- but only for
+ * the UPPER body probe (smb.asm:11981-11984); the lower probe hands ANY
+ * nonzero tile to CheckSideMTiles (smb.asm:11997).
+ */
+static int side_tile_is_wall(uint8_t tile, int upper)
+{
+    if (tile == 0) return 0;
+    if (upper && (tile == 0x1C || tile == 0x6B)) return 0;
+    if (tile == 0x5F || tile == 0x60) return 0;
+    g_cpu.A = tile;
+    CheckForClimbMTiles();
+    if (g_cpu.C) return 0;
+    if (tile == 0xC2 || tile == 0xC3) return 0;
+    if (tile == 0x67 || tile == 0x68)
+        return g_ram[JumpspringAnimCtrl] ? 0 : 1;
+    if (g_ram[Player_State] != 0) return 1;
+    if (g_ram[PlayerFacingDir] != 1) return 1;
+    return (tile == 0x6C || tile == 0x1F) ? 0 : 1;
+}
+
+/*
+ * Ask SMB1 whether a CANDIDATE horizontal position touches a wall on the
+ * leading side. dir < 0 probes the left-edge adder pair (base+3/base+4,
+ * X_Adder $02), dir > 0 the right-edge pair (base+5/base+6, X_Adder $0D) --
+ * only the leading edge, because that is the only side ImpedePlayerMove
+ * ($DF4B) itself acts on: a left-edge hit reacts only while X speed <= 0
+ * ($DF60 CPY #1 / BPL exit) and a right-edge hit only while >= 0 ($DF55).
+ *
+ * BlockBufferColli_Side ($E3EC) sets X = 0 itself, unlike _Head/_Feet, and
+ * touches the same scratch $02-$07, so the save/restore mirrors
+ * smb1_solid_at exactly, with the position byte swapped for X and PageLoc.
+ */
+static int smb1_side_solid_at(int x_pos, int page, int dir)
+{
+    CPU6502State save_cpu = g_cpu;
+    uint8_t save_scratch[6];
+    uint8_t save_x = g_ram[Player_X_Position];
+    uint8_t save_page = g_ram[Player_PageLoc];
+    uint8_t base = block_adder_index();
+    uint8_t py = g_ram[Player_Y_Position];
+    int solid = 0;
+
+    memcpy(save_scratch, &g_ram[0x02], sizeof save_scratch);
+
+    g_ram[Player_X_Position] = (uint8_t)(x_pos & 0xFF);
+    g_ram[Player_PageLoc]    = (uint8_t)page;
+
+    /* DoPlayerSideCheck's own screen-margin guards: the upper-body probe only
+     * runs for Y in [$20,$E4) (smb.asm:11976-11979), the lower-body probe for
+     * [$08,$D0) (smb.asm:11988-11991). Probing outside them would invent
+     * walls in the status bar and below the pit line. */
+    if (py >= 0x20 && py < 0xE4) {
+        g_cpu.Y = (uint8_t)(base + (dir < 0 ? 3 : 5));
+        BlockBufferColli_Side();
+        if (side_tile_is_wall(g_cpu.A, 1)) solid = 1;
+    }
+    if (!solid && py >= 0x08 && py < 0xD0) {
+        g_cpu.Y = (uint8_t)(base + (dir < 0 ? 4 : 6));
+        BlockBufferColli_Side();
+        if (side_tile_is_wall(g_cpu.A, 0)) solid = 1;
+    }
+
+    memcpy(&g_ram[0x02], save_scratch, sizeof save_scratch);
+    g_ram[Player_X_Position] = save_x;
+    g_ram[Player_PageLoc]    = save_page;
     g_cpu = save_cpu;
     return solid;
 }
@@ -469,13 +598,18 @@ void game_smash64_update_input(uint64_t frame_count)
     }
 
     /*
-     * Did SMB1 refuse last frame's motion? ImpedePlayerMove ($DF4B) is the wall
-     * response: it zeroes Player_X_Speed ($DF6D), sets SideCollisionTimer
-     * ($DF68) and ejects the player one pixel. Either signal means the velocity
-     * we proposed was rejected, so feed that back rather than proposing it
-     * again -- which is what turned a wall into a tunnel.
+     * The horizontal sweep's own verdict is now the wall authority (M4). The
+     * ImpedePlayerMove inference below -- zeroed Player_X_Speed ($DF6D) or
+     * SideCollisionTimer ($DF68) -- still fires when SMB1 reacts to the
+     * position the sweep parked at, and is kept as a CROSS-CHECK, recorded
+     * in its own ring bit so the two verdicts can be compared offline. Once
+     * they agree across the harness scripts the inference gets deleted; the
+     * sweep sees the wall on the frame of contact, the readback one frame
+     * late, which at 6.4 px/frame was the difference between a wall and a
+     * tunnel.
      */
-    wall = (s_wrote_xspeed != 0 && (int8_t)g_ram[Player_X_Speed] == 0) ||
+    wall = s_x_swept_wall ||
+           (s_wrote_xspeed != 0 && (int8_t)g_ram[Player_X_Speed] == 0) ||
            (g_ram[SideCollisionTimer] != 0);
 
     memset(&move, 0, sizeof(move));
@@ -502,12 +636,6 @@ void game_smash64_update_input(uint64_t frame_count)
         s_wrote_y_valid = 0;
     }
 
-    /*
-     * M2: SMB1 integrates and collides, so the granted motion is what we
-     * proposed minus anything the wall check just removed. That is honest for
-     * horizontal ground movement; M4 replaces it with a real swept query
-     * against SMB1's block buffer.
-     */
     /*
      * Vertical readback -- the exact twin of the horizontal wall check above,
      * and needed for the same reason. PlayerBGCollision runs after
@@ -627,6 +755,25 @@ void game_smash64_update_input(uint64_t frame_count)
     }
 
     /*
+     * Horizontal position readback -- the X twin of the block above. SMB1's
+     * DoPlayerSideCheck runs after the horizontal hook and ejects the player
+     * one pixel off a wall it objects to (ImpedePlayerMove $DF77), so a
+     * position that moved under us is SMB1 refusing the parked contact.
+     * Same sign both sides, so no negation: SMB1's X and Falcon's X both
+     * grow rightward.
+     */
+    if (s_wrote_x_valid) {
+        int now_x = (int)player_native_x();
+
+        if (now_x != s_wrote_x) {
+            hit.hit_wall = 1;
+            s_x_sub = 0.0;
+        }
+        hit.actual_dx = (double)(now_x - s_x_before) / FALCON_TO_SMB1_PX;
+        s_wrote_x_valid = 0;
+    }
+
+    /*
      * M4 step 1 -- OBSERVE before changing the movement path.
      *
      * Ask SMB1's own block buffer whether the position we just wrote is inside
@@ -675,15 +822,29 @@ void game_smash64_update_input(uint64_t frame_count)
     s_swept_ran = 0;
     s_pending_flags = 0;
 
+    /* Horizontal drain -- same lifecycle as the vertical bits above. The
+     * WALL_READBACK bit re-derives the legacy inference in isolation so the
+     * ring can show sweep-vs-readback agreement per frame. */
+    if (s_x_swept_wall) {
+        hit.hit_wall = 1;
+        hit.flags |= SMASH64_CF_SWEPT_WALL;
+    }
+    if (s_x_swept_ran) hit.flags |= SMASH64_CF_SIDE_SWEPT_RAN;
+    if ((s_wrote_xspeed != 0 && (int8_t)g_ram[Player_X_Speed] == 0) ||
+        (g_ram[SideCollisionTimer] != 0))
+        hit.flags |= SMASH64_CF_WALL_READBACK;
+    s_x_swept_wall = 0;
+    s_x_swept_ran = 0;
+
     nes_foreign_resolve(&hit);
 }
 
 /*
  * Replaces ImposeFriction ($B5CC) while Falcon owns the player.
  *
- * Returning 1 skips SMB1's own horizontal integrator, so the velocity we write
- * survives to MoveObjectHorizontally ($BF0F), which applies it with SMB1's own
- * collision. Returning 0 runs the original unchanged.
+ * Returning 1 skips SMB1's own friction/acceleration, so the velocity we
+ * write survives to the horizontal hook at $BF09, which integrates it with
+ * the per-pixel sweep (M4). Returning 0 runs the original unchanged.
  */
 static void write_xspeed(int8_t xspeed)
 {
@@ -900,6 +1061,81 @@ static int move_player_vertically_hook(uint16_t addr)
 }
 
 /*
+ * Replaces MovePlayerHorizontally ($BF09) while Falcon owns the player.
+ *
+ * M4 -- walk the horizontal motion one pixel at a time against SMB1's own
+ * tiles instead of letting the skipped integrator teleport the whole delta.
+ * Unlike vertical there is NO alignment gate to satisfy: DoPlayerSideCheck
+ * reacts the instant the probe pixel enters a solid tile column, so parking
+ * AT the first solid candidate is exactly the pixel SMB1's own check fires
+ * on -- it sets SideCollisionTimer and ejects one pixel from there, the same
+ * dance vanilla performs every frame Mario pushes a wall.
+ *
+ * Consumes Player_X_Speed (1/16 px/frame), which the friction hook wrote
+ * earlier this same frame, so the two hooks stay a pipeline, not rivals.
+ */
+static int move_player_horizontally_hook(uint16_t addr)
+{
+    double dx_px;
+    int whole, pos, page;
+
+    (void)addr;
+
+    if (decide_ownership() != FOREIGN_OWNERSHIP_FOREIGN) return 0;
+
+    /* MovePlayerHorizontally's own first act is to leave while a jumpspring
+     * animates ($BF09: LDA $070E / BNE ExXMove); declining preserves it. */
+    if (g_ram[JumpspringAnimCtrl] != 0) return 0;
+
+    dx_px = (double)(int8_t)g_ram[Player_X_Speed] / SMB1_XSPEED_PER_PX;
+
+    s_x_before = (int)player_native_x();
+    s_x_sub += dx_px;
+    whole = (int)s_x_sub;
+    s_x_sub -= (double)whole;
+
+    pos  = (int)g_ram[Player_X_Position];
+    page = (int)g_ram[Player_PageLoc];
+
+    {
+        int step = (whole > 0) ? 1 : -1;
+        int left = (whole >= 0) ? whole : -whole;
+
+        while (left-- > 0) {
+            int cand = pos + step;
+            int cand_page = page;
+
+            s_x_swept_ran = 1;
+
+            while (cand < 0)   { cand += 256; cand_page -= 1; }
+            while (cand > 255) { cand -= 256; cand_page += 1; }
+
+            pos = cand;
+            page = cand_page;
+
+            if (cand_page >= 0 &&
+                smb1_side_solid_at(cand, cand_page, step)) {
+                s_x_swept_wall = 1;
+                if (!s_sweep_noblock) break;
+            }
+        }
+    }
+
+    g_ram[Player_X_Position] = (uint8_t)pos;
+    g_ram[Player_PageLoc]    = (uint8_t)page;
+
+    s_wrote_x = (page * 256) + pos;
+    s_wrote_x_valid = 1;
+
+    /* ABI: both callers store A as Player_X_Scroll (smb.asm:5848, :5889) --
+     * the whole pixels moved this frame, driving the scroll engine. Report
+     * the SWEPT distance, so the camera never advances into a wall. */
+    g_cpu.A = (uint8_t)(int8_t)(s_wrote_x - s_x_before);
+
+    return 1;
+}
+
+/*
  * Runs at PlayerPhysicsSub ($B450) entry, before CheckForJumping ($B479).
  *
  * Withholds or presents SMB1's A bit so Falcon's KneeBend decides jump height.
@@ -997,6 +1233,7 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 0);
     nes_mod_set_function_hook_enabled(SMASH64_VERTICAL_HOOK_ID, 0);
     nes_mod_set_function_hook_enabled(SMASH64_JUMPSQUAT_HOOK_ID, 0);
+    nes_mod_set_function_hook_enabled(SMASH64_HORIZONTAL_HOOK_ID, 0);
 
     if (!enabled || !controller_id || !controller_id[0]) {
         nes_foreign_select(NULL);
@@ -1030,6 +1267,12 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_wrote_yspeed_valid = 0;
     s_imposed_frames = 0;
     s_swept_block = SMASH64_SWEEP_NONE;
+    s_x_swept_wall = 0;
+    s_x_swept_ran = 0;
+    s_x_sub = 0.0;
+    s_wrote_x = 0;
+    s_wrote_x_valid = 0;
+    s_x_before = 0;
 
     {
         const char *e = getenv("NESRECOMP_SMASH64_SWEEP_NOBLOCK");
@@ -1061,6 +1304,16 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
         fprintf(stderr,
                 "[Smash64] PlayerPhysicsSub hook is not registered; SMB1 keeps "
                 "its own jump TIMING, so short hop is unavailable\n");
+    }
+    if (!nes_mod_set_function_hook_enabled(SMASH64_HORIZONTAL_HOOK_ID, 1)) {
+        /* Not fatal: SMB1's own integrator applies the velocity the friction
+         * hook wrote, which is M3 behaviour -- correct speeds, but wall
+         * detection reverts to the one-frame-late readback and its tunnelling
+         * exposure. Say so, for the same reason the jumpsquat hook does. */
+        fprintf(stderr,
+                "[Smash64] MovePlayerHorizontally hook is not registered; "
+                "horizontal motion is unswept (readback wall detection, "
+                "tunnelling exposure at dash speed)\n");
     }
     s_enabled = 1;
 }
@@ -1122,5 +1375,8 @@ int game_smash64_register_hooks(void)
     ok &= nes_mod_register_function_entry_plugin(
         SMASH64_JUMPSQUAT_HOOK_ID, SMB1_PLAYER_PHYSICS_ADDR,
         jumpsquat_hook);
+    ok &= nes_mod_register_function_entry_plugin(
+        SMASH64_HORIZONTAL_HOOK_ID, SMB1_MOVE_PLAYER_HORIZONTALLY_ADDR,
+        move_player_horizontally_hook);
     return ok;
 }

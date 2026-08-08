@@ -497,11 +497,19 @@ line — the `$B450` hook.
   With the sweep active, the same 22-cycle input never puts a frame below
   y=176 and every floor block parks at exactly y%16==0, the coordinate
   `LandPlyr` fires on. (Rings: `ftring_ff_control.csv` /
-  `ftring_ff_noblock.csv`, 2026-08-07.) The **horizontal** axis is still
-  readback inference against `ImpedePlayerMove` with one-frame lag —
-  `beads-2dw.2.1.5` (M4) stays open for it. `nes_foreign_sweep` in the engine
-  remains unused: its last-unblocked semantics don't fit a host that resolves
-  its own collisions and needs the overlap; if a second game needs it, add an
+  `ftring_ff_noblock.csv`, 2026-08-07.) The **horizontal** axis is swept the
+  same way via a fourth hook at `MovePlayerHorizontally` `$BF09` (NOT the
+  generic `MoveObjectHorizontally` `$BF0F`, which enemies share), probing
+  `BlockBufferColli_Side` `$E3EC` with `CheckSideMTiles`' own predicate and
+  synthesizing the routine's return A (pixels moved → `Player_X_Scroll`, the
+  scroll driver). Measured: dash pins flush at native_x 434 against 1-1's
+  first pipe (probe adder 13 → pixel 447, last column before the tile at
+  448), zero penetration over ~400 contact frames, one frame of wall latency
+  removed. The legacy `ImpedePlayerMove` readback stays as a ring-visible
+  cross-check (`WALL_READBACK` 0x80) until the harness scripts show sustained
+  agreement, then gets deleted. `nes_foreign_sweep` in the engine remains
+  unused: its last-unblocked semantics don't fit a host that resolves its own
+  collisions and needs the overlap; if a second game needs it, add an
   inclusive-stop mode to the helper rather than copying this adapter's loop.
 - **`TurnRun` is an adaptation**, not Falcon's real run-turn — the original is
   animation-driven. See `falcon_movement_dependency.md` §6.

@@ -152,3 +152,17 @@ addr = 0xBF4D           # MovePlayerVertically
 # physics run unmodified. Inert unless the mod enables it.
 [[mod_function_hook]]
 addr = 0xB450           # PlayerPhysicsSub
+
+# ... and SMB1's horizontal integrator, so M4's per-pixel sweep owns X the way
+# the vertical hook owns Y.
+#
+# $BF09 (MovePlayerHorizontally) and NOT $BF0F (MoveObjectHorizontally): the
+# latter is generic -- enemies reach it through MoveEnemyHorizontally and four
+# other call sites -- so hooking it would freeze every enemy. $BF09 is the
+# player-only wrapper (LDA JumpspringAnimCtrl / BNE ExXMove / TAX -> X=0).
+#
+# ABI: both callers store the routine's return A as Player_X_Scroll (the whole
+# pixels moved, driving the scroll engine), so the hook synthesizes A from the
+# swept distance. Inert unless the mod enables it.
+[[mod_function_hook]]
+addr = 0xBF09           # MovePlayerHorizontally
