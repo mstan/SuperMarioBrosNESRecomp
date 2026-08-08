@@ -1,0 +1,36 @@
+LOG falcon-m7-savestate
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+
+WRITE_RAM8 000F 01
+WRITE_RAM8 0016 06
+WRITE_RAM8 001E 00
+WRITE_RAM8 006E 00
+WRITE_RAM8 0087 46
+WRITE_RAM8 00B6 01
+WRITE_RAM8 00CF B0
+WRITE_RAM8 0594 51
+
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 20
+SAVE_STATE C:/temp/falcon_m7_combat.sav
+
+# First continuation reaches the Punch window and consumes both targets.
+WAIT 27
+WAIT 5
+DUMP_RAM 000F 20
+DUMP_RAM 0590 10
+
+# Loading must restore the exact windup plus native target state. The same
+# continuation therefore produces a second identical native consequence.
+LOAD_STATE C:/temp/falcon_m7_combat.sav
+WAIT 27
+WAIT 5
+DUMP_RAM 000F 20
+DUMP_RAM 0590 10
+EXIT 0

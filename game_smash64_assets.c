@@ -519,6 +519,15 @@ static const char *animation_for_state(int state)
     case FL_FALL_AERIAL: return "FallAerial";
     case FL_LANDING_LIGHT:
     case FL_LANDING_HEAVY: return "LandingAirX";
+    case FL_JAB: return "Jab1";
+    case FL_FTILT: return "AttackS3";
+    case FL_ATTACK_AIR_N: return "AttackAirN";
+    case FL_ATTACK_AIR_F: return "AttackAirF";
+    case FL_ATTACK_AIR_B: return "AttackAirB";
+    case FL_FALCON_PUNCH_GROUND: return "FalconPunchGround";
+    case FL_FALCON_PUNCH_AIR: return "FalconPunchAir";
+    case FL_FALCON_KICK_GROUND: return "DownSpecial";
+    case FL_FALCON_KICK_AIR: return "DownSpecialAir";
     default: return "Wait";
     }
 }

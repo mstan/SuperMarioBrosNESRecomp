@@ -1,0 +1,120 @@
+# Grounded Falcon Punch: neutral B, source hit window 42..46.
+neutral
+attack down
+frames 1
+expect_state FALCON_PUNCH_GROUND
+attack up
+frames 41
+expect_attack 0 0
+frames 1
+expect_attack 1 1
+expect_damage 25 25
+expect_break 1 1
+roundtrip
+frames 5
+expect_attack 0 0
+frames 42
+expect_state WAIT
+
+# Grounded Falcon Kick: down+B, source hit window 12..31.
+neutral
+stick_y -80
+attack down
+frames 1
+expect_state FALCON_KICK_GROUND
+attack up
+frames 11
+expect_attack 0 0
+frames 1
+expect_attack 1 1
+expect_damage 15 15
+expect_break 1 1
+frames 20
+expect_attack 0 0
+frames 52
+expect_state WAIT
+
+# Up+B is the compact NES mapping for Jab1.
+neutral
+stick_y 80
+attack down
+frames 1
+expect_state JAB
+attack up
+frames 5
+expect_attack 1 1
+expect_damage 3 3
+frames 4
+expect_attack 0 0
+frames 12
+expect_state WAIT
+
+# Horizontal+B maps to forward tilt while grounded.
+neutral
+stick_x 80
+attack down
+frames 1
+expect_state FTILT
+attack up
+frames 9
+expect_attack 1 1
+expect_damage 13 13
+frames 7
+expect_attack 0 0
+neutral
+frames 13
+expect_state WAIT
+
+# Aerial up+B maps to neutral air.
+neutral
+pos_y 10000
+host_fall
+frames 1
+stick_y 80
+attack down
+frames 1
+expect_state ATTACK_AIR_N
+attack up
+frames 4
+expect_attack 1 1
+expect_damage 16 16
+frames 4
+expect_damage 13 13
+frames 20
+expect_attack 0 0
+frames 21
+expect_state FALL
+
+# Horizontal+B chooses forward/back air relative to facing.
+neutral
+stick_x 80
+attack down
+frames 1
+expect_state ATTACK_AIR_F
+attack up
+frames 7
+expect_attack 1 1
+expect_damage 10 10
+frames 6
+expect_attack 0 0
+frames 8
+expect_attack 1 1
+expect_damage 12 12
+frames 8
+expect_attack 0 0
+frames 15
+expect_state FALL
+
+neutral
+stick_x -80
+attack down
+frames 1
+expect_state ATTACK_AIR_B
+attack up
+frames 7
+expect_attack 1 1
+expect_damage 16 16
+frames 12
+expect_attack 0 0
+frames 16
+expect_state FALL

@@ -52,6 +52,7 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
     raw.stick_y = (int)(input->stick_y * 80.0f);
     raw.jump_held = input->jump_held;
     raw.jump_pressed = input->jump_pressed;
+    raw.attack_pressed = input->attack_pressed;
 
     /* Host truth in before the tick; the module reconciles a transition it
      * did not initiate (see falcon_tick). air_cause is what tells a launched
@@ -88,6 +89,16 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
     out->vx = s_fighter.vel_ground_x * (double)s_fighter.lr;
     out->vy = s_fighter.vel_air_y;
     out->state = s_fighter.state;
+    out->attack.offset_x = motion.attack.offset_x;
+    out->attack.offset_y = motion.attack.offset_y;
+    out->attack.width = motion.attack.width;
+    out->attack.height = motion.attack.height;
+    out->attack.knockback_x = motion.attack.knockback_x;
+    out->attack.knockback_y = motion.attack.knockback_y;
+    out->attack.damage = motion.attack.damage;
+    out->attack.flags = motion.attack.break_blocks
+                            ? FOREIGN_ATTACK_BREAK_BLOCKS : 0;
+    out->attack.active = motion.attack.active;
 
     state->state = s_fighter.state;
     state->state_frame = (unsigned)s_fighter.state_frame;

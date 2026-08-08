@@ -178,9 +178,11 @@
 #define SMB1_PLAYER_PHYSICS_ADDR 0xB450
 #define SMASH64_JUMPSQUAT_HOOK_ID "super-mario-bros.smash64.jumpsquat"
 
-/* A_B_Buttons bit for A. B ($40) is never touched, which is what keeps the
- * run-speed check at $B53A and the fireball check at $B62B out of scope. */
+/* A_B_Buttons bits. A remains the jump handshake. B is sampled as Falcon's
+ * attack button and masked at PlayerPhysicsSub so SMB1 does not also run or
+ * throw a fireball on the same press. */
 #define SMB1_A_BUTTON_BIT 0x80
+#define SMB1_B_BUTTON_BIT 0x40
 
 /* SMB1 vertical scale differs from horizontal: Player_Y_Speed is in WHOLE
  * pixels per frame (PlayerYSpdData $B432 = -4,-4,-4,-5,-5,-2,-1) with
@@ -200,6 +202,8 @@ static uint8_t  s_prev_buttons = 0;
 static uint64_t s_frame = 0;
 static int8_t   s_xspeed = 0;            /* this frame's velocity, computed in
                                           * update_input, written by the hook */
+static ForeignAttackHitbox s_attack;     /* emitted before NMI, consumed once
+                                          * inside PlayerPhysicsSub */
 static unsigned long s_owned_frames = 0;
 static unsigned long s_wall_frames = 0;
 static unsigned long s_air_frames = 0;
@@ -275,6 +279,9 @@ static int32_t player_native_x(void)
 /* Horizontal twins. SIDE_SWEPT_RAN exists for the identical ambiguity. */
 #define SMASH64_CF_SWEPT_WALL     0x0020u
 #define SMASH64_CF_SIDE_SWEPT_RAN 0x0040u
+#define SMASH64_CF_ATTACK_ACTIVE  0x0100u
+#define SMASH64_CF_ENEMY_DEFEATED 0x0200u
+#define SMASH64_CF_BLOCK_BROKEN   0x0400u
 
 /* What the per-pixel sweep stopped on last frame, if anything. Consumed by the
  * next update_input, which is the next time a ForeignCollisionResult is built. */
@@ -551,6 +558,8 @@ static void sample_input(ForeignInput *out)
 
     out->jump_held    = (b & PAD_A) != 0;
     out->jump_pressed = (pressed & PAD_A) != 0;
+    out->down_pressed = (pressed & PAD_DOWN) != 0;
+    out->attack_pressed = (pressed & PAD_B) != 0;
     out->raw_buttons  = b;
 
     s_prev_buttons = b;
@@ -655,6 +664,7 @@ void game_smash64_update_input(uint64_t frame_count)
 
     memset(&move, 0, sizeof(move));
     if (nes_foreign_tick(frame_count, &fin, &move)) {
+        s_attack = move.attack;
         if (wall) {
             move.requested_dx = 0.0;
             s_wall_frames++;
@@ -662,6 +672,7 @@ void game_smash64_update_input(uint64_t frame_count)
         s_xspeed = clamp_xspeed(move.requested_dx);
         s_owned_frames++;
     } else {
+        memset(&s_attack, 0, sizeof(s_attack));
         /* SMB1 owns the player; keep our idea of velocity in step with it so
          * resuming control does not inject a stale speed. */
         s_xspeed = (int8_t)g_ram[Player_X_Speed];
@@ -1177,6 +1188,175 @@ static int move_player_horizontally_hook(uint16_t addr)
     return 1;
 }
 
+/* ------------------------------------------------------------------ */
+/* M7 combat -- portable hitbox to native SMB1 consequences           */
+/*                                                                    */
+/* The native entry points used here were confirmed headlessly in     */
+/* nes/SuperMarioBrosNES: PlayerHeadCollision $BCED, BrickShatter     */
+/* $BE02, and ShellOrBlockDefeat $D795.                                */
+/* ------------------------------------------------------------------ */
+
+static int ranges_overlap(double a0, double a1, double b0, double b1)
+{
+    return a0 < b1 && b0 < a1;
+}
+
+static int enemy_accepts_attack(uint8_t id, uint8_t state)
+{
+    if (state & 0x20) return 0; /* ShellOrBlockDefeat's defeated bit. */
+    if (id == BulletBill_FrenzyVar || id == Podoboo) return 0;
+    /* Mirrors ChkOtherEnemies ($D78B): the special objects and Bowser live
+     * at or above $15 and retain their own native interaction rules. */
+    return id < BowserFlame;
+}
+
+static int defeat_enemies_in_attack(double left, double right,
+                                    double top, double bottom)
+{
+    CPU6502State save_cpu = g_cpu;
+    int hits = 0;
+
+    for (int slot = 0; slot < 5; ++slot) {
+        uint8_t id, state;
+        int ex, ey;
+
+        if (!g_ram[Enemy_Flag + slot]) continue;
+        if (g_ram[Enemy_Y_HighPos + slot] != 1) continue;
+        id = g_ram[Enemy_ID + slot];
+        state = g_ram[Enemy_State + slot];
+        if (!enemy_accepts_attack(id, state)) continue;
+
+        ex = ((int)g_ram[Enemy_PageLoc + slot] << 8) |
+             (int)g_ram[Enemy_X_Position + slot];
+        ey = (int)g_ram[Enemy_Y_Position + slot];
+        if (!ranges_overlap(left, right, (double)ex, (double)(ex + 16)) ||
+            !ranges_overlap(top, bottom, (double)ey, (double)(ey + 24)))
+            continue;
+
+        /* RelativeEnemyPosition refreshes the coordinates consumed by the
+         * native floatey-number path; ShellOrBlockDefeat then owns state,
+         * score, stun direction, and the enemy-smack sound. */
+        g_cpu.X = (uint8_t)slot;
+        RelativeEnemyPosition();
+        g_cpu.X = (uint8_t)slot;
+        ShellOrBlockDefeat();
+        hits++;
+    }
+    g_cpu = save_cpu;
+    return hits;
+}
+
+static int break_smb1_brick(int world_col, int tile_top)
+{
+    CPU6502State save_cpu = g_cpu;
+    uint8_t save_scratch[8];
+    uint8_t save_size = g_ram[PlayerSize];
+    uint8_t save_crouch = g_ram[CrouchingFlag];
+    uint8_t save_x = g_ram[Player_X_Position];
+    uint8_t save_page = g_ram[Player_PageLoc];
+    uint8_t save_y = g_ram[Player_Y_Position];
+    uint8_t save_yhi = g_ram[Player_Y_HighPos];
+    uint8_t save_yspeed = g_ram[Player_Y_Speed];
+    int row = tile_top - 0x20;
+    int anchor_x = world_col * 16 - 8;
+    uint16_t base;
+    uint16_t addr;
+    uint8_t tile;
+    int broke;
+
+    if (world_col < 0 || anchor_x < 0 ||
+        tile_top < 0x20 || tile_top > 0xE0) return 0;
+    base = (world_col & 0x10) ? Block_Buffer_2 : Block_Buffer_1;
+    addr = (uint16_t)(base + (world_col & 0x0F) + row);
+    tile = g_ram[addr];
+    /* $51/$52 are the ordinary breakable bricks. Question, coin, invisible,
+     * scenery, pipe, and castle metatiles never enter the native shatter path. */
+    if (tile != 0x51 && tile != 0x52) return 0;
+
+    memcpy(save_scratch, &g_ram[0x00], sizeof save_scratch);
+    g_ram[0x02] = (uint8_t)row;
+    g_ram[0x06] = (uint8_t)(base + (world_col & 0x0F));
+    g_ram[0x07] = (uint8_t)(base >> 8);
+
+    /* Present the target as the same head contact Big Mario would have made.
+     * PlayerHeadCollision then performs the real buffer/VRAM update, block
+     * object spawn, brick chunks, 50 points, and Sfx_BrickShatter. */
+    g_ram[PlayerSize] = 0;
+    g_ram[CrouchingFlag] = 0;
+    g_ram[Player_PageLoc] = (uint8_t)(anchor_x >> 8);
+    g_ram[Player_X_Position] = (uint8_t)anchor_x;
+    g_ram[Player_Y_HighPos] = 1;
+    g_ram[Player_Y_Position] = (uint8_t)(tile_top - 4);
+    g_cpu.A = tile;
+    PlayerHeadCollision();
+    broke = (g_ram[addr] == 0x23);
+
+    memcpy(&g_ram[0x00], save_scratch, sizeof save_scratch);
+    g_ram[PlayerSize] = save_size;
+    g_ram[CrouchingFlag] = save_crouch;
+    g_ram[Player_X_Position] = save_x;
+    g_ram[Player_PageLoc] = save_page;
+    g_ram[Player_Y_Position] = save_y;
+    g_ram[Player_Y_HighPos] = save_yhi;
+    /* Falcon's attack is not a head-bounce. Preserve every native shatter
+     * consequence except BrickShatter's imposed Mario Y speed. */
+    g_ram[Player_Y_Speed] = save_yspeed;
+    g_cpu = save_cpu;
+    return broke;
+}
+
+static int break_bricks_in_attack(double left, double right,
+                                  double top, double bottom)
+{
+    int first_col = (int)(left / 16.0);
+    int last_col = (int)((right - 0.001) / 16.0);
+    int first_row = (int)(top / 16.0);
+    int last_row = (int)((bottom - 0.001) / 16.0);
+    int broken = 0;
+
+    for (int row = first_row; row <= last_row; ++row) {
+        int tile_top = row * 16;
+        for (int col = first_col; col <= last_col; ++col)
+            broken += break_smb1_brick(col, tile_top);
+    }
+    return broken;
+}
+
+static void apply_pending_attack(void)
+{
+    const ForeignState *fs = nes_foreign_state();
+    const ForeignController *ctl = nes_foreign_active();
+    double facing, center_x, foot_y, center_y, half_w, half_h;
+    double left, right, top, bottom;
+    int enemies, blocks = 0;
+
+    if (!s_attack.active || !fs) return;
+    facing = fs->facing < 0.0f ? -1.0 : 1.0;
+    center_x = (double)player_native_x() + 8.0 +
+               facing * s_attack.offset_x * FALCON_TO_SMB1_PX;
+    foot_y = (double)g_ram[Player_Y_Position] + 32.0;
+    center_y = foot_y - s_attack.offset_y * FALCON_TO_SMB1_PX;
+    half_w = s_attack.width * FALCON_TO_SMB1_PX * 0.5;
+    half_h = s_attack.height * FALCON_TO_SMB1_PX * 0.5;
+    left = center_x - half_w;
+    right = center_x + half_w;
+    top = center_y - half_h;
+    bottom = center_y + half_h;
+
+    nes_foreign_trace_note_flags(SMASH64_CF_ATTACK_ACTIVE);
+    enemies = defeat_enemies_in_attack(left, right, top, bottom);
+    if (s_attack.flags & FOREIGN_ATTACK_BREAK_BLOCKS)
+        blocks = break_bricks_in_attack(left, right, top, bottom);
+    if (enemies) nes_foreign_trace_note_flags(SMASH64_CF_ENEMY_DEFEATED);
+    if (blocks) nes_foreign_trace_note_flags(SMASH64_CF_BLOCK_BROKEN);
+    if (enemies || blocks) {
+        const char *name = (ctl && ctl->state_name)
+                               ? ctl->state_name(fs->state) : "?";
+        printf("[Smash64Combat] %s: %d enemy hit(s), %d brick(s) broken\n",
+               name ? name : "?", enemies, blocks);
+    }
+}
+
 /*
  * Runs at PlayerPhysicsSub ($B450) entry, before CheckForJumping ($B479).
  *
@@ -1216,6 +1396,12 @@ static int jumpsquat_hook(uint16_t addr)
 
     fs = nes_foreign_state();
     if (!fs) return 0;
+
+    /* B belongs to Falcon combat while the foreign controller owns the
+     * player. Mask it before SMB1's run-speed and fireball readers, then apply
+     * the attack once in the guest's own execution context. */
+    g_ram[A_B_Buttons] &= (uint8_t)~SMB1_B_BUTTON_BIT;
+    apply_pending_attack();
 
     /*
      * Water is M5's problem, and masking A here would reach two swim readers:
@@ -1314,9 +1500,10 @@ typedef struct {
     int32_t  x_swept_wall;
     int32_t  x_swept_ran;
     uint32_t pending_flags;
+    ForeignAttackHitbox attack;
 } AdapterSaveFields;
 
-#define SMASH64_ADAPTER_SAVESTATE_VERSION 2
+#define SMASH64_ADAPTER_SAVESTATE_VERSION 3
 
 /*
  * Returns 0 bytes while the mod is off. There is no adapter trajectory to
@@ -1350,6 +1537,7 @@ static int game_smash64_savestate_get(uint8_t *buf, int cap)
     f.x_swept_wall        = s_x_swept_wall;
     f.x_swept_ran         = s_x_swept_ran;
     f.pending_flags       = s_pending_flags;
+    f.attack              = s_attack;
 
     buf[0] = SMASH64_ADAPTER_SAVESTATE_VERSION;
     memcpy(buf + 1, &f, sizeof f);
@@ -1390,6 +1578,7 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
     s_x_swept_wall        = f.x_swept_wall;
     s_x_swept_ran         = f.x_swept_ran;
     s_pending_flags       = f.pending_flags;
+    s_attack              = f.attack;
     return 1;
 }
 
@@ -1402,6 +1591,7 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_enabled = 0;
     s_selected = 0;
     s_announced = 0;
+    memset(&s_attack, 0, sizeof(s_attack));
     s_controller_id[0] = '\0';
     nes_foreign_set_ownership(FOREIGN_OWNERSHIP_NATIVE);
     nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 0);
@@ -1426,6 +1616,7 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     }
 
     s_xspeed = 0;
+    memset(&s_attack, 0, sizeof(s_attack));
     s_owned_frames = 0;
     s_wall_frames = 0;
     s_air_frames = 0;

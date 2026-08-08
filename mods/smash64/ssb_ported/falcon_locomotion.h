@@ -23,8 +23,9 @@
 
 #include <stdint.h>
 
-/* Action states. Only the locomotion subset; combat, shields, grabs,
- * cliffs and item states are deliberately absent. */
+/* Action states. Combat includes the representative normals and signature
+ * specials used by the SMB1 port; shields, grabs, cliffs and items remain
+ * deliberately absent. */
 typedef enum {
     FL_WAIT = 0,
     FL_WALK_SLOW,
@@ -44,6 +45,15 @@ typedef enum {
     FL_FALL_AERIAL,
     FL_LANDING_LIGHT,
     FL_LANDING_HEAVY,
+    FL_JAB,
+    FL_FTILT,
+    FL_ATTACK_AIR_N,
+    FL_ATTACK_AIR_F,
+    FL_ATTACK_AIR_B,
+    FL_FALCON_PUNCH_GROUND,
+    FL_FALCON_PUNCH_AIR,
+    FL_FALCON_KICK_GROUND,
+    FL_FALCON_KICK_AIR,
     FL_STATE_COUNT
 } FalconState;
 
@@ -55,6 +65,7 @@ typedef struct {
     int stick_y;        /* -80 .. +80 */
     int jump_held;      /* jump button currently down */
     int jump_pressed;   /* jump button newly pressed this frame */
+    int attack_pressed; /* attack button newly pressed this frame */
 } FalconInputRaw;
 
 /* What the host's collision permitted, in source units. */
@@ -138,10 +149,23 @@ typedef struct {
     int    motion_flag1;
 } FalconFighter;
 
+typedef struct {
+    double offset_x;
+    double offset_y;
+    double width;
+    double height;
+    double knockback_x;
+    double knockback_y;
+    int damage;
+    int break_blocks;
+    int active;
+} FalconAttack;
+
 /* Motion the state machine wants this frame, before host collision. */
 typedef struct {
     double requested_dx;
     double requested_dy;
+    FalconAttack attack;
 } FalconMotion;
 
 void falcon_reset(FalconFighter *f);

@@ -1,0 +1,60 @@
+LOG falcon-m7-combat
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+
+# Deterministic representative target in enemy slot 0, immediately in front
+# of the initial spawn. The attack must set Enemy_State d5 through SMB1's
+# ShellOrBlockDefeat, not delete Enemy_Flag.
+WRITE_RAM8 000F 01
+WRITE_RAM8 0016 06
+WRITE_RAM8 001E 00
+WRITE_RAM8 006E 00
+WRITE_RAM8 0087 46
+WRITE_RAM8 00B6 01
+WRITE_RAM8 00CF B0
+
+# Ordinary brick at world column 4 / screen row $B0. Adjacent $54 scenery is
+# inside the punch span and must remain unchanged.
+WRITE_RAM8 0594 51
+WRITE_RAM8 0595 54
+DUMP_RAM 000F 20
+DUMP_RAM 0590 10
+
+# Neutral B = Falcon Punch. Source-active frame begins at 42.
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 41
+WAIT 2
+SCREENSHOT C:/temp/falcon_m7_punch.png
+WAIT 5
+DUMP_RAM 000F 20
+DUMP_RAM 0590 10
+
+# A fresh target and brick for down+B = Falcon Kick (active at frame 12).
+# Falcon Punch's source Figatree runs through frame 89 before it can cancel.
+WAIT 50
+WRITE_RAM8 000F 01
+WRITE_RAM8 0016 06
+WRITE_RAM8 001E 00
+WRITE_RAM8 006E 00
+WRITE_RAM8 0087 4E
+WRITE_RAM8 00B6 01
+WRITE_RAM8 00CF B0
+WRITE_RAM8 0595 51
+HOLD DOWN
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE DOWN
+WAIT 11
+WAIT 2
+SCREENSHOT C:/temp/falcon_m7_kick.png
+WAIT 5
+DUMP_RAM 000F 20
+DUMP_RAM 0590 10
+WAIT 2
+EXIT 0
