@@ -1,13 +1,26 @@
 # Session Handoff — Smash 64 Player Replacement (Captain Falcon in SMB1)
 
 Date: 2026-08-07. Written for a Codex session taking over.
+
+**FIRST ACTION, before reading further or touching any file:** the single
+source of truth for this project is the **Beads tracker** —
+
+```
+bd -C F:\Software\beads\issues show beads-2dw.2.1 --json    # milestone ladder
+bd -C F:\Software\beads\issues show beads-2dw.2.1.7 --json  # M6 (recommended next)
+bd -C F:\Software\beads\issues show beads-2dw.2.1.6 --json  # M5 remaining
+bd -C F:\Software\beads\issues show beads-2dw.2.1.5 --json  # M4 tail
+```
+
+Every milestone, measurement, evidence trail, and DISPROVED theory lives in
+those beads, in more detail than this file. This file is only the map: rules,
+build recipe, and pointers. When beads and this file disagree, the beads win.
+Record your own work back into the beads the same way (`--append-notes`,
+including anything you disprove).
+
 North star: `F:\Projects\nesrecomp\.claude\GOAL.md` — finish the full Captain
 Falcon port into SMB1 via the mod ecosystem, extensible to future fighters.
-
-The durable record is the **Beads tree** (`bd -C F:\Software\beads\issues`)
-under epic `beads-2dw` — read the relevant bead BEFORE starting any item; every
-milestone, measurement, and disproved theory is recorded there. Design records:
-`docs/smb1_player_adapter.md`, `docs/smb1_scripted_handoffs.md`,
+Design records: `docs/smb1_player_adapter.md`, `docs/smb1_scripted_handoffs.md`,
 `docs/falcon_movement_dependency.md`, `assets_ssb64/SPEC.md`.
 
 ## Worktrees (both on branch `feat/smash64-player-replacement`, both clean)
