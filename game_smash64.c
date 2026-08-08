@@ -184,6 +184,13 @@ static int s_wrote_y = 0;                /* 16-bit player Y the vertical hook
                                           * motion -- the vertical twin of
                                           * s_wrote_xspeed */
 static int s_wrote_y_valid = 0;
+static int8_t s_wrote_yspeed = 0;        /* Player_Y_Speed the vertical hook
+                                          * last wrote, so SMB1 overwriting it
+                                          * is detectable as a vertical EVENT
+                                          * (bounce / spring / killed jump)
+                                          * rather than lost silently */
+static int s_wrote_yspeed_valid = 0;
+static unsigned long s_imposed_frames = 0;
 static int s_y_before = 0;               /* 16-bit player Y at hook entry */
 static double s_wrote_dy_px = 0.0;       /* sign of that motion: SMB1's Y grows
                                           * downward, so < 0 was rising */
@@ -200,6 +207,22 @@ static double s_wrote_dy_px = 0.0;       /* sign of that motion: SMB1's Y grows
 /* ------------------------------------------------------------------ */
 /* Ownership                                                          */
 /* ------------------------------------------------------------------ */
+
+/*
+ * The player's WORLD x, for the trace ring's native_x column.
+ *
+ * This used to be handed the frame's x-SPEED, which made the column a
+ * duplicate of vx under a name that says position -- so a trace could not
+ * answer "where was he when that happened", which is the first question any
+ * geometry bug asks. Player_X_Position ($0086) is only the low byte and wraps
+ * every 256 px, so combine it with Player_PageLoc ($006D) to get something
+ * monotonic across a level.
+ */
+static int32_t player_native_x(void)
+{
+    return ((int32_t)g_ram[Player_PageLoc] * 256) +
+           (int32_t)g_ram[Player_X_Position];
+}
 
 static ForeignOwnership decide_ownership(void)
 {
@@ -338,6 +361,16 @@ void game_smash64_update_input(uint64_t frame_count)
         /* SMB1 owns the player; keep our idea of velocity in step with it so
          * resuming control does not inject a stale speed. */
         s_xspeed = (int8_t)g_ram[Player_X_Speed];
+
+        /*
+         * And drop the pending vertical-event readback. On the frame ownership
+         * hands back, SMB1's own integrator writes Player_Y_Speed for perfectly
+         * ordinary reasons, which would otherwise read as an imposed impulse
+         * and inject a velocity into the controller in the middle of a pipe,
+         * a death or a powerup.
+         */
+        s_wrote_yspeed_valid = 0;
+        s_wrote_y_valid = 0;
     }
 
     /*
@@ -386,6 +419,55 @@ void game_smash64_update_input(uint64_t frame_count)
      * frame; SMB1 confirms on the next.
      */
     if (fs && fs->jump_phase == FOREIGN_JUMP_LAUNCH) hit.grounded = 0;
+
+    /*
+     * Vertical EVENT readback -- the velocity-level twin of the position
+     * readback below, and the more important of the two.
+     *
+     * SMB1 does not only block vertical motion; it LAUNCHES the player, and it
+     * signals every such event the same way: by storing a new Player_Y_Speed
+     * and expecting ImposeGravity to pick it up next frame. Decoded from the
+     * ROM, the writers are
+     *
+     *   $01  head hit a block, "kill jump"      ($DBD1 area, and NYSpd $DE87)
+     *   $FD  stomped an enemy -- bounce         (EnemyStomped)
+     *   $FC  bounce off a stomped enemy / death (SBnce)
+     *   $FE  shattered a brick                  (BrickShatter)
+     *        jumpspring force                   (JumpspringHandler)
+     *
+     * We skip MovePlayerVertically, so nothing ever consumed any of them. That
+     * one omission is why Falcon sailed straight through the underside of a
+     * question block and why stomping an enemy produced no bounce -- both
+     * reported by the owner in the first playtest, and both the same bug.
+     *
+     * The position readback below cannot substitute. A killed jump changes only
+     * the velocity: SMB1 leaves the position exactly where we put it, so the
+     * position diff sees nothing at all.
+     *
+     * Rule: if Player_Y_Speed is not the value the hook wrote, SMB1 overruled
+     * us. Adopt it. One rule covers bounce, spring, brick and ceiling, because
+     * SMB1 expresses all four in the same byte.
+     */
+    if (s_wrote_yspeed_valid) {
+        int8_t now_ys = (int8_t)g_ram[Player_Y_Speed];
+
+        if (now_ys != s_wrote_yspeed) {
+            /* SMB1's Y grows downward and is in whole px/frame; Falcon's is
+             * +up in his own units. The one scale constant undoes both. */
+            hit.has_imposed_vy = 1;
+            hit.imposed_vy = -(double)now_ys / FALCON_TO_SMB1_PX;
+            s_imposed_frames++;
+
+            /* Downward impulse while we were rising is SMB1 stopping the jump
+             * against something solid; report it as a ceiling too so the ring
+             * and the controller both see the collision, not just the number. */
+            if (now_ys > 0 && s_wrote_dy_px < 0.0) hit.hit_ceiling = 1;
+
+            /* Our subpixel remainder describes a trajectory SMB1 has replaced. */
+            s_y_sub = 0.0;
+        }
+        s_wrote_yspeed_valid = 0;
+    }
 
     if (s_wrote_y_valid) {
         int now_y = ((int)(int8_t)g_ram[Player_Y_HighPos] * 256) +
@@ -447,7 +529,7 @@ static int impose_friction_hook(uint16_t addr)
     write_xspeed(xspeed);
     s_friction_ran = 1;
 
-    nes_foreign_trace_note_native((int32_t)xspeed,
+    nes_foreign_trace_note_native(player_native_x(),
                                   (int32_t)g_ram[Player_Y_Position]);
     return 1;
 }
@@ -523,6 +605,10 @@ static int move_player_vertically_hook(uint16_t addr)
         if (ys >  127) ys =  127;
         if (ys < -128) ys = -128;
         g_ram[Player_Y_Speed] = (uint8_t)(int8_t)ys;
+        /* Remember it, so next frame can tell OUR value apart from one SMB1
+         * stored to signal a bounce, a spring or a killed jump. */
+        s_wrote_yspeed = (int8_t)ys;
+        s_wrote_yspeed_valid = 1;
     }
 
     /*
@@ -548,7 +634,7 @@ static int move_player_vertically_hook(uint16_t addr)
      * hop's peak against a full hop's. Post-write, so the row carries the Y the
      * game actually ended up with.
      */
-    nes_foreign_trace_note_native((int32_t)s_xspeed,
+    nes_foreign_trace_note_native(player_native_x(),
                                   (int32_t)g_ram[Player_Y_Position]);
 
     s_air_frames++;
@@ -682,6 +768,9 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_wrote_y_valid = 0;
     s_y_before = 0;
     s_wrote_dy_px = 0.0;
+    s_wrote_yspeed = 0;
+    s_wrote_yspeed_valid = 0;
+    s_imposed_frames = 0;
 
     if (!nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 1)) {
         fprintf(stderr,
@@ -747,6 +836,7 @@ void game_smash64_update(uint64_t frame_count)
 unsigned long game_smash64_owned_frames(void) { return s_owned_frames; }
 unsigned long game_smash64_wall_frames(void)  { return s_wall_frames; }
 unsigned long game_smash64_air_frames(void)   { return s_air_frames; }
+unsigned long game_smash64_imposed_frames(void) { return s_imposed_frames; }
 unsigned long game_smash64_squat_frames(void)  { return s_squat_frames; }
 unsigned long game_smash64_launch_frames(void) { return s_launch_frames; }
 

@@ -1,0 +1,83 @@
+# The host launches us, and the fighter must adopt it.
+#
+# SMB1 signals every vertical event by storing its own Player_Y_Speed and
+# expecting its own integrator to pick it up next frame:
+#
+#   $FD  stomped an enemy -- bounce         -> +37.5 source units
+#   $FC  bounce off a stomped enemy         -> +50.0
+#   $FE  shattered a brick                  -> +25.0
+#   $01  head hit a block, "kill jump"      -> -12.5
+#
+# We replaced that integrator, so before this was fixed every one of them was
+# discarded SILENTLY: Falcon sailed through the underside of a question block
+# and stomping a Goomba produced no bounce at all. Both were reported by the
+# owner in the first playtest, and both were the same bug.
+#
+# Position readback cannot catch these. A killed jump changes only the
+# velocity -- the host leaves the position exactly where we put it -- so a
+# position diff sees nothing.
+
+neutral
+frames 5
+expect_state WAIT
+
+# ----------------------------------------------------- stomp bounce, upward --
+# Full hop, then get bounced near the top of the fall.
+jump down
+frames 1
+expect_state KNEEBEND
+frames 4
+expect_state JUMP_F
+jump up
+
+# Well past the apex and falling hard.
+frames 45
+expect_state FALL
+
+# SMB1 stores $FC. The adapter converts -(-4)/0.08 = +50.0 source units.
+#
+# The impulse frame shows the imposed value EXACTLY: falcon_tick applies
+# gravity, then falcon_resolve replaces the velocity outright. Gravity resumes
+# from the following tick. The in-game ring shows the same shape --
+# vy 50.00 on the stomp frame, 46.60 on the next.
+host_impose_vy 50.0
+frames 1
+expect_vel_air_y 49.9 50.1
+note bounced
+
+# Gravity takes it from there at a constant 3.4/frame -- the host supplies the
+# impulse, Falcon supplies the physics.
+frames 1
+expect_vel_air_y 46.5 46.7
+frames 1
+expect_vel_air_y 43.1 43.3
+
+# Still airborne, not landed, because the impulse was upward.
+expect_state FALL
+
+# ------------------------------------------------- killed jump, downward --
+frames 60
+expect_state WAIT
+
+jump down
+frames 1
+expect_state KNEEBEND
+frames 4
+expect_state JUMP_F
+jump up
+
+# Rising fast. SMB1 stores $01 for a head that hit something solid; the
+# adapter converts -(1)/0.08 = -12.5 source units, i.e. now moving DOWN.
+frames 3
+host_impose_vy -12.5
+frames 1
+expect_vel_air_y -12.55 -12.45
+note jump-killed-against-a-block
+
+# And it keeps falling rather than resuming the rise.
+frames 1
+expect_vel_air_y -15.95 -15.85
+frames 1
+expect_vel_air_y -19.35 -19.25
+frames 60
+expect_state WAIT

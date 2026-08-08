@@ -907,8 +907,24 @@ void falcon_resolve(FalconFighter *f, const FalconCollision *hit)
         if (hit->hit_ceiling && f->vel_air_y > 0.0) f->vel_air_y = 0.0;
         if (hit->hit_wall) f->vel_air_x = 0.0;
 
-        if (hit->grounded) {
+        /*
+         * ADAPTATION. The host launched us. Adopt it outright -- this is the
+         * host's world acting on the character (a stomp bounce, a spring, a
+         * shattered block, a killed jump), and the fighter has no model for
+         * any of it. Applied after the ceiling clamp above so an imposed
+         * velocity wins: a host that both reports a ceiling and hands us a
+         * velocity is describing one event, and its number is the specific one.
+         */
+        if (hit->has_imposed_vy) f->vel_air_y = hit->imposed_vy;
+
+        /* An upward impulse means we are emphatically not landing, whatever
+         * the host's footing check said a frame ago. */
+        if (hit->grounded && !(hit->has_imposed_vy && hit->imposed_vy > 0.0)) {
             enter_landing(f);
+            return;
+        }
+        if (hit->has_imposed_vy && hit->imposed_vy > 0.0) {
+            f->grounded = 0;
             return;
         }
     } else {
@@ -916,7 +932,21 @@ void falcon_resolve(FalconFighter *f, const FalconCollision *hit)
 
         /* Walked off an edge. */
         if (!hit->grounded) {
+            /*
+             * ADAPTATION, restoring a source behaviour the port had dropped.
+             * ftPhysicsSetGroundVelTransferAir (0x800D87D0) writes
+             *     vel_air.x = lr * floor_angle.y * vel_ground.x
+             * on EVERY ground physics tick, so in the source a fighter leaving
+             * the ground already carries its world-space ground velocity --
+             * ftCommonFallSetStatus then only clamps it. This port kept ground
+             * velocity solely in vel_ground_x and projected it at the output,
+             * so vel_air_x was still zero here and walking off a ledge dropped
+             * all horizontal momentum. Do the transfer, then let enter_fall
+             * clamp exactly as ftCommonFallSetStatus does.
+             */
+            f->vel_air_x = f->vel_ground_x * (double)f->lr;
             enter_fall(f);
+            if (hit->has_imposed_vy) f->vel_air_y = hit->imposed_vy;
             return;
         }
     }

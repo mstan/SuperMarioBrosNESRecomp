@@ -59,3 +59,9 @@ unsigned long game_smash64_air_frames(void);
  * opened and every jump was a full hop -- the M3 behaviour this replaces. */
 unsigned long game_smash64_squat_frames(void);
 unsigned long game_smash64_launch_frames(void);
+
+/* Frames on which SMB1 imposed a vertical velocity of its own -- a stomp
+ * bounce, a jumpspring, a shattered brick, or a jump killed against a block --
+ * and Falcon adopted it. Zero across a run that stomped something means those
+ * events are being discarded again. */
+unsigned long game_smash64_imposed_frames(void);

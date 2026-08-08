@@ -22,6 +22,8 @@
  *   jump down|up          jump button state (edge is derived)
  *   neutral               stick to 0,0 and jump up
  *   pos_y <units>         teleport above the floor (+y is up)
+ *   host_impose_vy <v>    host imposes a vertical velocity for ONE frame
+ *                         (stomp bounce, spring, killed jump), source units
  *   host_launch           host says airborne, cause = LAUNCHED
  *   host_fall             host says airborne, cause = FELL (walked off a ledge)
  *   host_land             host says grounded again
@@ -112,12 +114,23 @@ static void emit_row(const FalconFighter *f, const FalconInputRaw *in,
  * the harness is testing the controller, not collision. M4 is where geometry
  * gets interesting.
  */
+/* Set by host_impose_vy, consumed by the next single frame -- host vertical
+ * events are one-frame impulses, exactly as SMB1 delivers them. */
+static int    g_impose_pending;
+static double g_impose_vy;
+
 static void resolve_flat_floor(FalconFighter *f, const FalconMotion *m,
                                FalconCollision *hit)
 {
     memset(hit, 0, sizeof(*hit));
     hit->actual_dx = m->requested_dx;
     hit->actual_dy = m->requested_dy;
+
+    if (g_impose_pending) {
+        hit->has_imposed_vy = 1;
+        hit->imposed_vy = g_impose_vy;
+        g_impose_pending = 0;
+    }
 
     if (f->grounded) {
         hit->grounded = 1;
@@ -202,6 +215,16 @@ static int run_script(const char *path)
             } else {
                 printf("  ok  frame %-5ld state == %s\n", g_frame, want);
             }
+        } else if (!strcmp(cmd, "host_impose_vy")) {
+            /*
+             * Stand in for a host that launches the character for reasons the
+             * fighter has no model of. SMB1 does this by storing its own
+             * Player_Y_Speed -- a stomp bounce, a jumpspring, a shattered
+             * brick, or a jump killed against a block -- and it is a ONE-FRAME
+             * impulse, not a sustained state.
+             */
+            g_impose_pending = 1;
+            g_impose_vy = atof(arg);
         } else if (!strcmp(cmd, "expect_vel_air_y")) {
             check_range("vel_air_y", f.vel_air_y, arg);
         } else if (!strcmp(cmd, "expect_peak_y")) {

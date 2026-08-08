@@ -63,6 +63,18 @@ typedef struct {
     int    hit_ceiling;
     int    hit_floor;
     int    hit_wall;
+
+    /*
+     * ADAPTATION. The host imposed its own vertical velocity this frame, in
+     * SOURCE units, +y up. Not from the source game: in Smash the fighter owns
+     * its vertical motion outright, but SMB1 launches the player for reasons
+     * the fighter has no model of -- a stomp bounce off a Goomba, a jumpspring,
+     * a shattered brick, a ceiling that kills the jump. Those are the host's
+     * world acting on the character, which is squarely the host's half of the
+     * contract, so the fighter adopts them rather than modelling them.
+     */
+    int    has_imposed_vy;
+    double imposed_vy;
 } FalconCollision;
 
 /*

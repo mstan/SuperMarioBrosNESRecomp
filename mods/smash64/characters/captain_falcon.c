@@ -108,6 +108,8 @@ static void cf_resolve(ForeignState *state, const ForeignCollisionResult *hit)
     c.hit_ceiling = hit->hit_ceiling;
     c.hit_floor = hit->hit_floor;
     c.hit_wall = hit->hit_wall;
+    c.has_imposed_vy = hit->has_imposed_vy;
+    c.imposed_vy = hit->imposed_vy;
 
     falcon_resolve(&s_fighter, &c);
 
@@ -115,6 +117,25 @@ static void cf_resolve(ForeignState *state, const ForeignCollisionResult *hit)
     state->y = s_fighter.pos_y;
     state->grounded = s_fighter.grounded;
     state->state = s_fighter.state;
+
+    /*
+     * Publish velocity AFTER resolve, not just after tick.
+     *
+     * falcon_resolve is where the host's answer lands -- a wall zeroing
+     * vel_air_x, a ceiling zeroing vel_air_y, a stomp bounce replacing it
+     * outright. Without this the ring reports the velocity the fighter WANTED
+     * at tick time and never the one it ended the frame with, so a bounce that
+     * worked and a bounce that was discarded look identical in the trace.
+     *
+     * Measured: a stomp showed imposed_vy +50.00 on the same row as
+     * vy -66.00, which reads as "the impulse was ignored" when in fact it had
+     * been applied a few microseconds earlier in the same function.
+     */
+    state->vx = s_fighter.grounded
+                    ? (s_fighter.vel_ground_x * (double)s_fighter.lr)
+                    : s_fighter.vel_air_x;
+    state->vy = s_fighter.vel_air_y;
+    state->fast_fall = s_fighter.is_fastfall;
 }
 
 /* Delegates to the ported module so a trace can never disagree with the
