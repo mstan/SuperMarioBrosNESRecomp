@@ -23,6 +23,7 @@ add_executable(SuperMarioBrosRecomp
     extras.c
     game_voxel.c
     game_smash64.c
+    game_smash64_render.c
     mods/widescreen_plugin.c
     mods/voxel_plugin.c
     mods/smash64_player_plugin.c

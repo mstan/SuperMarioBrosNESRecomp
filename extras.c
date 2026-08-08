@@ -15,6 +15,7 @@
 #include "verify_mode.h"
 #include "game_voxel.h"
 #include "game_smash64.h"
+#include "game_smash64_render.h"
 #include "watchdog.h"
 #ifdef ENABLE_NESTOPIA_ORACLE
 #include "nestopia_bridge.h"
@@ -241,6 +242,7 @@ void game_on_init(void) {
     ws_apply_init();
     game_voxel_init();
     game_smash64_init();
+    game_smash64_render_init();
 
     s_debug_enabled = check_debug_ini();
 
@@ -550,6 +552,7 @@ void game_fill_frame_record(void *record) {
 
 void game_post_render(uint32_t *framebuf) {
     game_voxel_post_render(framebuf);
+    game_smash64_render_post_render(framebuf);
 }
 
 /* ---- Debug command handler (SMB-specific) ---- */
