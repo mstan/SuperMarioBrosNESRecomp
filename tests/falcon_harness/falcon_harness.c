@@ -21,8 +21,17 @@
  *   stick_y <-80..80>     set synthetic stick Y
  *   jump down|up          jump button state (edge is derived)
  *   neutral               stick to 0,0 and jump up
+ *   pos_y <units>         teleport above the floor (+y is up)
+ *   host_launch           host says airborne, cause = LAUNCHED
+ *   host_fall             host says airborne, cause = FELL (walked off a ledge)
+ *   host_land             host says grounded again
  *   expect_state <NAME>   assert the current state, non-zero exit on failure
  *   note <text>           annotate the trace
+ *
+ * The host_* commands stand in for a host game that keeps its own jump trigger
+ * and ledge detection -- which is what SMB1 does. They are the only way to
+ * reach the reconciliation branch at the top of falcon_tick; the fighter's own
+ * kneebend path never goes through it.
  */
 #include "../../mods/smash64/ssb_ported/falcon_locomotion.h"
 
@@ -126,6 +135,28 @@ static int run_script(const char *path)
         } else if (!strcmp(cmd, "neutral")) {
             in.stick_x = in.stick_y = 0;
             in.jump_held = 0;
+        } else if (!strcmp(cmd, "pos_y")) {
+            /* Place the fighter above the flat floor, so a host-driven fall has
+             * somewhere to fall from. +y is up in this world. */
+            f.pos_y = atof(arg);
+        } else if (!strcmp(cmd, "host_launch")) {
+            /*
+             * Simulate a host that owns its own jump trigger: it reports the
+             * fighter airborne, with the cause set to LAUNCHED. This is exactly
+             * what the SMB1 adapter does when InitJS sets Player_State = 1, and
+             * it is the only way the reconciliation path in falcon_tick gets
+             * exercised -- the fighter's own kneebend path never reaches it.
+             */
+            f.grounded = 0;
+            f.host_air_cause = 1;   /* FOREIGN_AIR_LAUNCHED */
+        } else if (!strcmp(cmd, "host_fall")) {
+            /* Host walked us off a ledge: airborne, no impulse. */
+            f.grounded = 0;
+            f.host_air_cause = 2;   /* FOREIGN_AIR_FELL */
+        } else if (!strcmp(cmd, "host_land")) {
+            /* Host reports we are standing on something again. */
+            f.grounded = 1;
+            f.host_air_cause = 0;   /* FOREIGN_AIR_NONE */
         } else if (!strcmp(cmd, "note")) {
             snprintf(pending_note, sizeof(pending_note), "%s", arg);
         } else if (!strcmp(cmd, "expect_state")) {

@@ -1,0 +1,29 @@
+# M3: walking off a ledge is NOT a jump.
+#
+# SMB1 reports Player_State = 2 when the floor stops being under you
+# (PlayerBGCollision's SetFallS path), which the adapter maps to
+# air_cause = FELL. grounded = 0 alone cannot distinguish this from a launched
+# jump, and guessing from the pad is wrong because the adapter samples input a
+# frame before SMB1 acts on it -- so if this regresses, walking off a ledge
+# launches you upward.
+
+stick_x 80
+frames 20
+expect_state RUN
+
+# Off the edge of a tall ledge, so there is room to fall.
+note host-walks-us-off-a-ledge
+pos_y 2000
+host_fall
+frames 1
+expect_state FALL
+
+# Still falling ten frames later. A mistaken jump would have gone up and come
+# back; a mistaken kneebend would read KNEEBEND here. FALL rather than
+# FALL_AERIAL also proves no jump was consumed on the way off the ledge.
+frames 10
+expect_state FALL
+
+# Landed, back to ground locomotion with the stick still held.
+frames 60
+expect_state WALK_FAST

@@ -1,8 +1,9 @@
 # SMB1 player adapter
 
-**Status: M2 COMPLETE** (`beads-2dw.2.1.3`). Falcon owns horizontal ground
-movement in World 1-1. SMB1 keeps jump, gravity, vertical collision,
-horizontal collision and position integration.
+**Status: M2 + M3 COMPLETE** (`beads-2dw.2.1.3`, `beads-2dw.2.1.4`). Falcon
+owns horizontal movement and vertical motion — jump velocity, gravity, terminal
+velocity, fast fall and air drift. SMB1 still decides **when** a jump starts and
+when a landing happens, and owns all collision and every scripted sequence.
 
 Every address below was confirmed in Ghidra (`nes/SuperMarioBrosNES`) before
 being read or written — framework RULE 0 — and the confirming instruction is
@@ -41,6 +42,59 @@ addr = 0xB5CC           # ImposeFriction
 
 That one line is the entire generated-code diff for M2, which is why the
 regen (`beads-2dw.2.2`) was landed separately.
+
+### The second hook: `MovePlayerVertically $BF4D`
+
+M3's hook, and the reason it has to be a hook at all rather than a set of
+numbers fed to SMB1:
+
+```asm
+MovePlayerVertically:
+    ldx #$00
+    lda VerticalPipeEntry-ish guards ($0747, $070E)   ; jumpspring / pipe
+    lda VerticalForce      ; $0709 — the gravity amount
+    sta $00
+    lda #$04               ; <-- MAXIMUM Y SPEED
+    jmp ImposeGravitySprObj ; $BFAD -> ImposeGravity $BFD7
+```
+
+`ImposeGravity`, decoded from the ROM, does three things:
+
+```
+YMF_Dummy   += Y_MoveForce                    ; sub-fraction accumulate
+Y_Position  += Y_Speed, sign-extended into Y_HighPos
+Y_MoveForce += gravity, carry into Y_Speed, then CLAMP Y_Speed to the max
+```
+
+That `#$04` caps the player's fall at **4 px/frame**. Falcon's terminal velocity
+is 5.28 px/frame and his fast fall is 8.00. The clamp is applied *inside* the
+routine, after the gravity add, so it cannot be pre-empted from outside: feeding
+SMB1 Falcon's gravity would silently delete fast fall. So we skip the routine
+and integrate ourselves, with no clamp.
+
+Vertical **collision** is untouched — `PlayerBGCollision` runs separately, after
+`PlayerMovementSubs`, and still corrects the position we wrote. This stays
+"controller proposes, SMB1 resolves".
+
+Reached only from `ExitMov1` at the tail of `LRAir`, i.e. only while airborne,
+so the hook never fires on a ground frame.
+
+#### The handoff frame belongs to SMB1
+
+SMB1 decides to jump **during** the frame (`InitJS`, inside `PlayerPhysicsSub`),
+but the controller ticks at VBlank, **before** the frame. On the very frame the
+host launches, Falcon is still in jumpsquat with `vel_air_y = 0`.
+
+Integrating that moves the player zero pixels — and SMB1's foot check then lands
+him on the spot. Measured, before the guard: the ring showed a single `JUMP_F`
+frame followed immediately by `LANDING_LIGHT`, and the jump visibly did not
+happen at all.
+
+So when the hook finds the controller still reporting `grounded`, it returns 0
+and lets the original run for that one frame. The cost is the difference between
+SMB1's -5 px and Falcon's -6.7 px, once. By the next VBlank `Player_State` is 1,
+the controller reconciles into a real jump, and every frame after that is ours.
+The same guard covers walking off a ledge.
 
 ### Rejected: hooking `PlayerCtrlRoutine $B0E9`
 
@@ -116,11 +170,22 @@ condition, and every other value is a sequence that must stay native. This is
 better than a hand-maintained list of scripted states: it is the game's own
 dispatch table.
 
-Second condition, an M2 simplification: `Player_State $001D == 0` (on the
-ground). While airborne, SMB1's own air physics run untouched and the
-controller is **not ticked** — its air simulation would disagree with SMB1's
-jump and inject a wrong speed on touchdown. The controller holds its ground
-state and resumes on landing. M3 takes the air properly.
+Second condition, `Player_State $001D`. The encoding is from the
+disassembly — `PlayerPhysicsSub $B450` compares `#$03` for climbing, `InitJS
+$B4A0` stores `#$01`, and `PlayerBGCollision`'s `SetFallS` path stores `#$02`:
+
+| `Player_State` | Meaning | Ownership |
+|---|---|---|
+| 0 | on ground | FOREIGN |
+| 1 | jumping / swimming | FOREIGN |
+| 2 | falling | FOREIGN |
+| 3 | climbing a vine | SCRIPTED |
+| 4 | killed | SCRIPTED |
+
+M2 restricted this to 0; M3 opened 1 and 2. State 1 doubles as swimming, which
+`SwimmingFlag` distinguishes — water levels are out of M3's scope, so a swim is
+currently driven as a jump. That is tracked with the scripted-state handoffs in
+M5.
 
 The ownership check runs **twice**: once per frame in
 `game_smash64_update_input` to publish it and record a trace row, and again
@@ -140,8 +205,34 @@ introduced into SMB1.
 | `$0057` | `Player_X_Speed` | `round(requested_dx * 1.28)`, clamped ±127 | the velocity `MoveObjectHorizontally` integrates |
 | `$0700` | `Player_XSpeedAbsolute` | `abs(Player_X_Speed)` | **not decoration** — `$B51C` reads it to pick the speed tier and `$B4BB` reads it to scale jump height, so a stale value makes Falcon jump like a walking Mario |
 
-Everything else Falcon needs lives host-side in the ported module, per the
-host-owned-state rule. No contention for a guest byte.
+Three more from the vertical hook, all of them bytes `ImposeGravity` itself
+writes:
+
+| Address | Name | Value | Why SMB1 needs it |
+|---|---|---|---|
+| `$00CE` | `Player_Y_Position` | integrated from Falcon's `vel_air_y × 0.08` | the position everything else reads |
+| `$00B5` | `Player_Y_HighPos` | carry/borrow out of the above | the high half of the 16-bit coordinate |
+| `$009F` | `Player_Y_Speed` | `round(dy_px)` | collision bias, the landing / heavy-landing check and the player graphics handler all read it, and a stale value makes them disagree with the motion |
+
+`Player_Y_MoveForce $0433` and `Player_YMF_Dummy $0416` are **not** written:
+they are SMB1's subpixel accumulator, and ours lives host-side at full
+precision. Everything else Falcon needs lives host-side in the ported module,
+per the host-owned-state rule. No contention for a guest byte.
+
+### Reading SMB1's answer back
+
+The horizontal path detects a refused move by reading `Player_X_Speed` back and
+watching `SideCollisionTimer`. The vertical path is the exact twin: the hook
+remembers the 16-bit Y it wrote, and the next VBlank compares it against what is
+actually there. A difference means `PlayerBGCollision` overruled us — upward
+becomes `hit_ceiling`, downward `hit_floor` — and the delta is converted back
+into the controller's units and sign for `nes_foreign_resolve`.
+
+Without it, running into the underside of the 1-1 brick row left Falcon pressing
+upward at +32 units/frame for three frames while SMB1 silently pinned him: the
+pixels were right, but the controller believed it was still rising. That is the
+same class of mistake as the wall the player could tunnel through before the
+horizontal check existed.
 
 **Not written, deliberately:** `PlayerFacingDir $0033`. SMB1 sets it from raw
 input, which agrees with Falcon's facing in every case M2 exercises. It becomes
@@ -211,10 +302,46 @@ back correctly — which is the ownership state machine working, not a bug.
 
 ---
 
-## 7. Known-open for M3+
+### M3, same run
 
-- **Air is SMB1's.** Falcon's jump, gravity, air drift, fast fall and landing
-  are M3. Today a jump is Mario's.
+Full hop from a run, World 1-1, from the ring (`native_y` is
+`Player_Y_Position`, which grows downward):
+
+```
+f251  KNEEBEND       vy    0.00   y 176      A pressed; SMB1 has not launched yet
+f252  JUMP_F         vy  +83.60   y 171      host launched, controller reconciled
+f258  JUMP_F         vy  +63.20   y 135
+f267  JUMP_F         vy  +32.60   y 100
+f276  JUMP_F         vy   +2.00   y  86      apex, hit_ceiling = 0 (genuine apex)
+f281  FALL           vy  -15.00   y  87
+f291  FALL           vy  -49.00   y 111
+f292  LANDING_LIGHT  vy    0.00   y 112      hit_floor = 1
+```
+
+- Rise of **90 px** — five and a half NES tiles, against Mario's own ~4.
+- Gravity is a constant 3.4 units/frame the whole way: `83.6, 80.2, 76.8, …`,
+  Falcon's `A_GRAVITY`, not SMB1's `JumpMForceData`.
+- `hit_floor` fires exactly on touchdown; `hit_ceiling` never fires on this
+  jump, which is how we know the flat apex is an apex and not a brick row.
+- Before the M3 hook was enabled the same script produced 5,5,5,5,4,4,4… — the
+  signature of SMB1's own `PlayerYSpdData` + `JumpMForceData`. That difference
+  is what proves the takeover, and it is worth keeping as the check.
+
+Harness coverage: `tests/falcon_harness/host_launch.script` and
+`host_ledge_fall.script` exercise the reconciliation branch directly, which the
+fighter's own kneebend path never reaches. `ctest --test-dir build_harness`
+runs 7/7.
+
+---
+
+## 7. Known-open for M4+
+
+- **Jumpsquat and short hop are SMB1's.** The host owns jump *timing*, so
+  Falcon's 4-frame kneebend window and the short-hop rule it gates are not
+  reachable; every jump is a full hop. Taking those would mean contesting
+  `Player_State`, which M3 deliberately does not do.
+- **Swimming is driven as a jump.** `Player_State == 1` doubles as swimming;
+  water levels are M5.
 - **No swept collision.** The controller is told its motion was granted in
   full; SMB1 refuses it at a wall by not advancing the position. At 6.4 px/frame
   that is a real tunnelling exposure — `beads-2dw.2.1.5` (M4), and

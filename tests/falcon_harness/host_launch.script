@@ -1,0 +1,35 @@
+# M3: the host owns the jump trigger.
+#
+# SMB1 decides when you jump -- InitJS ($B4A0) sets Player_State = 1 after its
+# own A-press check -- and the adapter reports that as grounded = 0 with
+# air_cause = LAUNCHED. Falcon must then take off under his OWN jump velocity
+# rather than SMB1's -4 px/frame, without ever running his kneebend.
+#
+# This is the path the game actually takes. If it regresses, Falcon either
+# jumps like Mario or does not leave the ground at all.
+
+stick_x 80
+frames 20
+expect_state RUN
+
+note host-launches-us
+host_launch
+frames 1
+expect_state JUMP_F
+
+# Takeoff velocity is +83.6 units/frame (= 6.7 px at 0.08 px/unit), against
+# SMB1's own -4. Gravity is 3.4/frame, so the apex is ~25 frames up and ~1085
+# units high = 87 px, a little over five NES tiles.
+frames 25
+expect_state JUMP_F
+
+# Past the apex, JUMP_F gives way to FALL, and the fall accelerates to
+# tvel_base = 66 units (5.28 px/frame) -- above SMB1's 4 px/frame cap, which is
+# the whole reason we integrate this ourselves.
+frames 10
+expect_state FALL
+
+# The flat floor catches us and the reconciliation turns that into a landing,
+# then back to ground locomotion with the stick still held.
+frames 60
+expect_state WALK_FAST

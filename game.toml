@@ -121,3 +121,15 @@ bank0 = [
 # resolved by the game's own rules. The hook is inert unless the mod enables it.
 [[mod_function_hook]]
 addr = 0xB5CC           # ImposeFriction
+
+# ... and SMB1's vertical integrator, for the same reason plus one more: the
+# routine hard-caps the player's fall at 4 px/frame (LDA #4 before the tail-call
+# into ImposeGravitySprObj $BFAD -> ImposeGravity $BFD7, where CMP $0002 clamps).
+# Falcon's terminal velocity is 5.28 px/frame and his fast fall is 8.00, so
+# handing SMB1 our gravity would silently delete fast fall. The clamp is applied
+# inside the routine, after the add, so it cannot be pre-empted from outside.
+#
+# Vertical COLLISION is unaffected -- PlayerBGCollision runs separately and still
+# corrects the position we wrote. Inert unless the mod enables it.
+[[mod_function_hook]]
+addr = 0xBF4D           # MovePlayerVertically

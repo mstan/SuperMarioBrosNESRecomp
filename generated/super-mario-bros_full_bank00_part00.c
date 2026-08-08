@@ -14640,6 +14640,7 @@ label_BF4C:; /* ExXMove */
 }
 
 void func_BF4D_b0(void) { /* MovePlayerVertically */
+    if (nes_mod_function_entry(0xBF4Du)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_BF4D_b0");
 #endif

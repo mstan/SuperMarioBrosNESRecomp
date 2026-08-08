@@ -83,9 +83,23 @@ typedef struct {
     double pos_y;
 
     int    lr;              /* -1 left, +1 right */
-    int    grounded;
     int    is_fastfall;
     int    jumps_used;
+
+    /*
+     * Host truth, written by the bridge before each falcon_tick. Not from the
+     * source game -- in Smash the fighter owns the ground check, but here the
+     * host game owns its own collision, jump trigger and ledge detection, so
+     * these are how it tells us.
+     *
+     * host_air_cause matches ForeignAirCause: 0 none, 1 launched, 2 fell. When
+     * grounded goes to 0 without our own state machine having caused it, this
+     * is what distinguishes "the host started a jump" (apply jump velocity)
+     * from "the host walked us off a ledge" (just fall). grounded alone is
+     * ambiguous and the input is a frame behind the host's decision.
+     */
+    int    grounded;
+    int    host_air_cause;
 
     /* Stick-tap buffers, per ftmain.c:1320-1345. 1 on the frame the stick
      * crosses the +/-20 deadzone, counting up while held, pinned to 254

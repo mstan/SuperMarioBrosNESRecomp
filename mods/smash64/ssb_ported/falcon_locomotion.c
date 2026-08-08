@@ -835,6 +835,37 @@ void falcon_tick(FalconFighter *f, const FalconInputRaw *in, FalconMotion *out)
 
     update_tap_buffers(f, in);
 
+    /*
+     * Reconcile with the host before anything else.
+     *
+     * `grounded` is host truth -- only the host game knows whether the player
+     * is standing on something. When the host reports a transition the state
+     * machine did not initiate, adopt it: the host owns the DECISION to leave
+     * or reach the ground, and Falcon owns what happens as a result.
+     *
+     * This is what lets a host keep its own jump trigger and landing detection
+     * while Falcon still supplies the jump velocity, gravity and air physics.
+     */
+    if (!f->grounded && !is_air_state(f->state)) {
+        if (f->host_air_cause == 1 /* FOREIGN_AIR_LAUNCHED */) {
+            /* Take off with Falcon's own jump velocity, from the full-hop
+             * button path -- short hop needs the jumpsquat window, which needs
+             * the host to hand over its jump timing too. */
+            f->kneebend_input_source = KB_INPUT_BUTTON;
+            f->kneebend_is_shorthop = 0;
+            f->kneebend_jump_force = in->stick_y;
+            enter_jump(f, in);
+        } else {
+            /* Walked off a ledge, or otherwise airborne with no impulse. No
+             * jump is consumed, so the character can still jump from here. */
+            enter_fall(f);
+            f->jumps_used = 0;
+        }
+        f->grounded = 0;
+    } else if (f->grounded && is_air_state(f->state)) {
+        enter_landing(f);
+    }
+
     /* Animation advances before the procs observe it, per ftanim.c:83. */
     f->anim_frame += 1.0;
     f->state_frame += 1.0;

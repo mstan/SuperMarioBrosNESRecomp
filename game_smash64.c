@@ -5,9 +5,11 @@
  * controller must not see: NES RAM layout, SMB1's fixed-point velocity
  * representation, and its scripted player states.
  *
- * M2 SCOPE: horizontal ground movement only. SMB1 keeps its jump, gravity,
- * vertical collision, horizontal collision and position integration. We supply
- * the horizontal velocity and nothing else. See docs/smb1_player_adapter.md.
+ * SCOPE (M2 + M3): Falcon supplies the horizontal velocity AND the vertical
+ * motion -- jump velocity, gravity, terminal velocity, fast fall and air drift.
+ * SMB1 keeps everything else: it decides WHEN you jump and when you have landed,
+ * it owns horizontal and vertical collision, and every scripted player sequence
+ * stays native. See docs/smb1_player_adapter.md.
  *
  * Every address below was confirmed in Ghidra (nes/SuperMarioBrosNES) before
  * being read or written -- framework RULE 0 -- and the confirming instruction
@@ -89,6 +91,36 @@
 #define SMB1_IMPOSE_FRICTION_ADDR 0xB5CC
 #define SMASH64_FRICTION_HOOK_ID  "super-mario-bros.smash64.impose-friction"
 
+/*
+ * MovePlayerVertically ($BF4D), the player's own vertical integrator. It loads
+ * VerticalForce ($0709) as the gravity amount, sets a max Y speed of 4, and
+ * tail-calls ImposeGravitySprObj -> ImposeGravity ($BFD7) with X = 0.
+ *
+ * We SKIP it and integrate ourselves, because that max-speed clamp is fatal to
+ * Falcon: SMB1 caps the player's fall at 4 px/frame while Falcon's terminal
+ * velocity is 5.28 and his fast fall is 8.00. Feeding SMB1 our numbers and
+ * letting it integrate would silently discard fast fall entirely -- the clamp
+ * is applied inside the routine, after the gravity add, so there is no way to
+ * pre-empt it from outside.
+ *
+ * ImposeGravity, decoded, does exactly three things (and we reproduce the parts
+ * that matter with Falcon's constants and no clamp):
+ *     YMF_Dummy   += Y_MoveForce            ; sub-fraction accumulate
+ *     Y_Position  += Y_Speed + carry        ; sign-extended into Y_HighPos
+ *     Y_MoveForce += gravity, carry into Y_Speed, then clamp Y_Speed to max
+ *
+ * Vertical COLLISION is not here -- it lives in PlayerBGCollision, runs
+ * separately, and still corrects our position. So this remains
+ * "controller proposes, SMB1 resolves".
+ */
+#define SMB1_MOVE_PLAYER_VERTICALLY_ADDR 0xBF4D
+#define SMASH64_VERTICAL_HOOK_ID "super-mario-bros.smash64.move-vertically"
+
+/* SMB1 vertical scale differs from horizontal: Player_Y_Speed is in WHOLE
+ * pixels per frame (PlayerYSpdData $B432 = -4,-4,-4,-5,-5,-2,-1) with
+ * Player_Y_MoveForce as a 1/256 fraction. Horizontal was 1/16 px. */
+#define SMB1_YSPEED_PER_PX 1.0
+
 /* ------------------------------------------------------------------ */
 /* Mod state                                                          */
 /* ------------------------------------------------------------------ */
@@ -107,6 +139,20 @@ static int8_t   s_wrote_xspeed = 0;      /* what the hook wrote last frame, so a
                                           * SMB1 refusing the motion */
 static unsigned long s_owned_frames = 0;
 static unsigned long s_wall_frames = 0;
+static unsigned long s_air_frames = 0;
+static int s_friction_ran = 0;           /* did ImposeFriction fire this frame */
+static double s_y_sub = 0.0;             /* vertical subpixel remainder, kept
+                                          * host-side rather than contending
+                                          * for SMB1's fraction bytes */
+static int s_wrote_y = 0;                /* 16-bit player Y the vertical hook
+                                          * last wrote, so a corrected readback
+                                          * is detectable as SMB1 refusing the
+                                          * motion -- the vertical twin of
+                                          * s_wrote_xspeed */
+static int s_wrote_y_valid = 0;
+static int s_y_before = 0;               /* 16-bit player Y at hook entry */
+static double s_wrote_dy_px = 0.0;       /* sign of that motion: SMB1's Y grows
+                                          * downward, so < 0 was rising */
 
 /* NES pad bits: bit7=A bit6=B bit5=Select bit4=Start
  *               bit3=Up bit2=Down bit1=Left bit0=Right */
@@ -131,10 +177,19 @@ static ForeignOwnership decide_ownership(void)
     if (g_ram[GameEngineSubroutine] != SMB1_GAMEMODE_PLAYER_CTRL)
         return FOREIGN_OWNERSHIP_SCRIPTED;
 
-    /* M2 SIMPLIFICATION: Falcon owns the ground, SMB1 owns the air. While
-     * Player_State is nonzero the player is jumping/falling and SMB1's own air
-     * physics run untouched. M3 takes the air properly. */
-    if (g_ram[Player_State] != 0) return FOREIGN_OWNERSHIP_NATIVE;
+    /*
+     * M3: Falcon owns the air too. The state encoding is from the disassembly
+     * (PlayerPhysicsSub $B450 compares #$03 for climbing; PlayerBGCollision's
+     * SetFallS path stores #$02; InitJS stores #$01):
+     *     0 on ground   1 jumping/swimming   2 falling   3 climbing   4 killed
+     * 0..2 are ordinary locomotion and ours. 3 is a vine, 4 is death, and both
+     * are native modes we do not model.
+     *
+     * Note 1 doubles as swimming. SwimmingFlag distinguishes them and water
+     * levels are out of scope for M3, so a swim would currently be driven as a
+     * jump; that is tracked with the scripted-state handoffs in M5.
+     */
+    if (g_ram[Player_State] > 2) return FOREIGN_OWNERSHIP_SCRIPTED;
 
     return FOREIGN_OWNERSHIP_FOREIGN;
 }
@@ -195,6 +250,7 @@ void game_smash64_update_input(uint64_t frame_count)
     int wall;
 
     s_frame = frame_count;
+    s_friction_ran = 0;
     if (!s_enabled || !s_selected) return;
 
     sample_input(&fin);
@@ -210,8 +266,20 @@ void game_smash64_update_input(uint64_t frame_count)
 
     fs = nes_foreign_state();
     if (fs) {
-        /* SMB1 is the authority on standing on ground. */
-        fs->grounded = (g_ram[Player_State] == 0);
+        /*
+         * SMB1 is the authority on standing on ground, and on how we left it.
+         * InitJS ($B4A0) stores Player_State = 1 only after an A-press check,
+         * so 1 is a deliberate launch; PlayerBGCollision's SetFallS path stores
+         * 2 when the floor stops being there. That distinction cannot be
+         * recovered from `grounded`, and it cannot be guessed from the pad
+         * either -- we sample input at VBlank, one frame before SMB1 acts on it.
+         */
+        uint8_t pstate = g_ram[Player_State];
+
+        fs->grounded = (pstate == 0);
+        fs->air_cause = (pstate == 1) ? FOREIGN_AIR_LAUNCHED
+                      : (pstate == 2) ? FOREIGN_AIR_FELL
+                                      : FOREIGN_AIR_NONE;
     }
 
     /*
@@ -244,10 +312,42 @@ void game_smash64_update_input(uint64_t frame_count)
      * horizontal ground movement; M4 replaces it with a real swept query
      * against SMB1's block buffer.
      */
+    /*
+     * Vertical readback -- the exact twin of the horizontal wall check above,
+     * and needed for the same reason. PlayerBGCollision runs after
+     * MovePlayerVertically and corrects the 16-bit player Y when it hits
+     * something, so comparing what we wrote last frame against what is there
+     * now tells us whether SMB1 accepted the motion.
+     *
+     * Without this, running into the underside of the 1-1 brick row left Falcon
+     * pressing upward into it for three frames at +32 units/frame while SMB1
+     * silently clamped him: the pixels were right but the controller believed it
+     * was still rising, which is the same class of mistake as the wall the
+     * player could tunnel through before the horizontal check existed.
+     */
     memset(&hit, 0, sizeof(hit));
     hit.actual_dx = move.requested_dx;
     hit.grounded = (g_ram[Player_State] == 0);
     hit.hit_wall = wall;
+
+    if (s_wrote_y_valid) {
+        int now_y = ((int)(int8_t)g_ram[Player_Y_HighPos] * 256) +
+                    (int)g_ram[Player_Y_Position];
+
+        if (now_y != s_wrote_y) {
+            if (s_wrote_dy_px < 0.0)      hit.hit_ceiling = 1;
+            else if (s_wrote_dy_px > 0.0) hit.hit_floor = 1;
+            /* Our subpixel remainder describes a position SMB1 has overruled. */
+            s_y_sub = 0.0;
+        }
+
+        /* Back into the controller's units and sign: SMB1's Y grows downward,
+         * Falcon's grows upward, and the one scale constant undoes the
+         * projection the hook applied. */
+        hit.actual_dy = -(double)(now_y - s_y_before) / FALCON_TO_SMB1_PX;
+        s_wrote_y_valid = 0;
+    }
+
     nes_foreign_resolve(&hit);
 }
 
@@ -258,6 +358,18 @@ void game_smash64_update_input(uint64_t frame_count)
  * survives to MoveObjectHorizontally ($BF0F), which applies it with SMB1's own
  * collision. Returning 0 runs the original unchanged.
  */
+static void write_xspeed(int8_t xspeed)
+{
+    /* The two bytes ImposeFriction itself writes. Player_XSpeedAbsolute is not
+     * decoration: $B51C reads it to pick the speed tier and $B4BB reads it to
+     * scale jump height, so leaving it stale would make Falcon jump like a
+     * walking Mario. */
+    g_ram[Player_X_Speed] = (uint8_t)xspeed;
+    g_ram[Player_XSpeedAbsolute] =
+        (uint8_t)((xspeed < 0) ? -(int)xspeed : (int)xspeed);
+    s_wrote_xspeed = xspeed;
+}
+
 static int impose_friction_hook(uint16_t addr)
 {
     int8_t xspeed;
@@ -275,17 +387,103 @@ static int impose_friction_hook(uint16_t addr)
 
     xspeed = s_xspeed;
 
-    /* The two bytes ImposeFriction itself writes. Player_XSpeedAbsolute is not
-     * decoration: $B51C reads it to pick the speed tier and $B4BB reads it to
-     * scale jump height, so leaving it stale would make Falcon jump like a
-     * walking Mario. */
-    g_ram[Player_X_Speed] = (uint8_t)xspeed;
-    g_ram[Player_XSpeedAbsolute] =
-        (uint8_t)((xspeed < 0) ? -(int)xspeed : (int)xspeed);
-    s_wrote_xspeed = xspeed;
+    write_xspeed(xspeed);
+    s_friction_ran = 1;
 
     nes_foreign_trace_note_native((int32_t)xspeed,
                                   (int32_t)g_ram[Player_Y_Position]);
+    return 1;
+}
+
+/*
+ * Replaces MovePlayerVertically ($BF4D) while Falcon owns the player.
+ *
+ * Integrates Falcon's vertical velocity into SMB1's 16-bit player Y
+ * (Player_Y_HighPos:Player_Y_Position) with no speed clamp, keeping the
+ * subpixel remainder host-side rather than contending for SMB1's fraction
+ * bytes. Returns 1 to skip SMB1's own integrator and its 4px/frame cap.
+ */
+static int move_player_vertically_hook(uint16_t addr)
+{
+    const ForeignState *fs;
+    double dy_px;
+    int whole;
+    int pos, high;
+
+    (void)addr;
+
+    if (decide_ownership() != FOREIGN_OWNERSHIP_FOREIGN) return 0;
+
+    fs = nes_foreign_state();
+    if (!fs) return 0;
+
+    /*
+     * The handoff frame belongs to SMB1.
+     *
+     * SMB1 decides to jump DURING the frame -- InitJS ($B4A0), inside
+     * PlayerPhysicsSub -- but the controller ticks at VBlank, BEFORE the frame.
+     * So on the very frame the host launches, Falcon is still in jumpsquat with
+     * vel_air_y = 0. Integrating that moves the player zero pixels, and SMB1's
+     * foot check lands him again on the spot: measured, the jump simply did not
+     * happen, and the trace showed one JUMP_F frame followed straight by
+     * LANDING_LIGHT.
+     *
+     * Running the original for that one frame costs the difference between
+     * SMB1's -5 px and Falcon's -6.7 px, once. By the next VBlank Player_State
+     * is 1, the controller reconciles into a real jump, and every frame after
+     * this one is ours. The same guard covers walking off a ledge.
+     */
+    if (fs->grounded) return 0;
+
+    /* Falcon's vel_air_y is +UP in his own units; SMB1's Y grows DOWNWARD. */
+    dy_px = -(fs->vy) * FALCON_TO_SMB1_PX;
+
+    s_y_sub += dy_px;
+    whole = (int)s_y_sub;          /* truncate toward zero, either sign */
+    s_y_sub -= (double)whole;
+
+    pos  = (int)g_ram[Player_Y_Position];
+    high = (int8_t)g_ram[Player_Y_HighPos];
+    s_y_before = (high * 256) + pos;
+
+    pos += whole;
+    while (pos < 0)    { pos += 256; high -= 1; }
+    while (pos > 255)  { pos -= 256; high += 1; }
+
+    g_ram[Player_Y_Position] = (uint8_t)pos;
+    g_ram[Player_Y_HighPos]  = (uint8_t)(int8_t)high;
+
+    /* Remember what we wrote so next frame can tell whether SMB1 kept it. */
+    s_wrote_y = (high * 256) + pos;
+    s_wrote_y_valid = 1;
+    s_wrote_dy_px = dy_px;
+
+    /* Keep SMB1's own view of vertical velocity consistent: collision bias,
+     * the landing/heavy-landing check and the player graphics handler all read
+     * Player_Y_Speed, and a stale value makes them disagree with the motion. */
+    {
+        int ys = (int)((dy_px >= 0.0) ? (dy_px + 0.5) : (dy_px - 0.5));
+        if (ys >  127) ys =  127;
+        if (ys < -128) ys = -128;
+        g_ram[Player_Y_Speed] = (uint8_t)(int8_t)ys;
+    }
+
+    /*
+     * SMB1 only calls ImposeFriction from LRAir when a direction is held
+     * (Left_Right_Buttons != 0), so on a neutral airborne frame our horizontal
+     * velocity would never reach the guest. That matters because Falcon's jump
+     * sets vel_air_x from the stick -- a neutral jump is supposed to drop your
+     * running momentum -- and without this the guest would keep the run speed
+     * until the next frame the stick was touched, then snap.
+     *
+     * MovePlayerVertically is the tail of the airborne path, so this lands one
+     * frame after MovePlayerHorizontally read the byte. One frame of lag on
+     * neutral air drift; the alternative is writing outside the game's own
+     * player-movement window, which is the thing we do not do.
+     */
+    if (!s_friction_ran) write_xspeed(s_xspeed);
+
+    s_air_frames++;
     return 1;
 }
 
@@ -301,6 +499,7 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_controller_id[0] = '\0';
     nes_foreign_set_ownership(FOREIGN_OWNERSHIP_NATIVE);
     nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 0);
+    nes_mod_set_function_hook_enabled(SMASH64_VERTICAL_HOOK_ID, 0);
 
     if (!enabled || !controller_id || !controller_id[0]) {
         nes_foreign_select(NULL);
@@ -322,11 +521,23 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_wrote_xspeed = 0;
     s_owned_frames = 0;
     s_wall_frames = 0;
+    s_air_frames = 0;
+    s_y_sub = 0.0;
+    s_wrote_y = 0;
+    s_wrote_y_valid = 0;
+    s_y_before = 0;
+    s_wrote_dy_px = 0.0;
 
     if (!nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 1)) {
         fprintf(stderr,
                 "[Smash64] ImposeFriction hook is not registered; SMB1 keeps "
                 "its own horizontal physics\n");
+        return;
+    }
+    if (!nes_mod_set_function_hook_enabled(SMASH64_VERTICAL_HOOK_ID, 1)) {
+        fprintf(stderr,
+                "[Smash64] MovePlayerVertically hook is not registered; SMB1 "
+                "keeps its own gravity\n");
         return;
     }
     s_enabled = 1;
@@ -370,12 +581,17 @@ void game_smash64_update(uint64_t frame_count)
 
 unsigned long game_smash64_owned_frames(void) { return s_owned_frames; }
 unsigned long game_smash64_wall_frames(void)  { return s_wall_frames; }
+unsigned long game_smash64_air_frames(void)   { return s_air_frames; }
 
 /* Registered before main() by mods/smash64_player_plugin.c; starts disabled,
  * so registration alone cannot change behaviour. */
 int game_smash64_register_hooks(void)
 {
-    return nes_mod_register_function_entry_plugin(
+    int ok = nes_mod_register_function_entry_plugin(
         SMASH64_FRICTION_HOOK_ID, SMB1_IMPOSE_FRICTION_ADDR,
         impose_friction_hook);
+    ok &= nes_mod_register_function_entry_plugin(
+        SMASH64_VERTICAL_HOOK_ID, SMB1_MOVE_PLAYER_VERTICALLY_ADDR,
+        move_player_vertically_hook);
+    return ok;
 }

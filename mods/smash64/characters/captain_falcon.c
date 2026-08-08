@@ -33,6 +33,7 @@ static void cf_reset(ForeignState *state)
     state->facing = 1.0f;
     state->grounded = 1;
     state->fast_fall = 0;
+    state->air_cause = FOREIGN_AIR_NONE;
 }
 
 static void cf_tick(ForeignState *state, const ForeignInput *input,
@@ -49,7 +50,11 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
     raw.jump_held = input->jump_held;
     raw.jump_pressed = input->jump_pressed;
 
+    /* Host truth in before the tick; the module reconciles a transition it
+     * did not initiate (see falcon_tick). air_cause is what tells a launched
+     * jump apart from a walked-off ledge. */
     s_fighter.grounded = state->grounded;
+    s_fighter.host_air_cause = (int)state->air_cause;
 
     falcon_tick(&s_fighter, &raw, &motion);
 
@@ -63,6 +68,9 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
     state->state_frame = (unsigned)s_fighter.state_frame;
     state->facing = (float)s_fighter.lr;
     state->fast_fall = s_fighter.is_fastfall;
+    state->grounded = s_fighter.grounded;
+    state->vx = out->vx;
+    state->vy = s_fighter.vel_air_y;
 }
 
 static void cf_resolve(ForeignState *state, const ForeignCollisionResult *hit)

@@ -10,8 +10,10 @@
  * representation, its scripted player states, and the one world-scale
  * conversion.
  *
- * M2 scope: horizontal ground movement only. SMB1 keeps jump, gravity,
- * vertical collision, horizontal collision and position integration.
+ * Scope (M2 + M3): Falcon supplies horizontal velocity and vertical motion
+ * (jump velocity, gravity, terminal velocity, fast fall, air drift). SMB1 still
+ * decides when a jump starts and when a landing happens, and owns all
+ * collision.
  *
  * See game_smash64.c for the Ghidra-confirmed addresses and
  * docs/smb1_player_adapter.md for the write log.
@@ -46,3 +48,7 @@ unsigned long game_smash64_owned_frames(void);
  * Player_X_Speed via ImpedePlayerMove and we honoured that. Nonzero proves the
  * collision feedback loop is live rather than silently ignored. */
 unsigned long game_smash64_wall_frames(void);
+
+/* Frames on which Falcon supplied the vertical motion, replacing SMB1's own
+ * integrator and its 4px/frame fall cap. */
+unsigned long game_smash64_air_frames(void);
