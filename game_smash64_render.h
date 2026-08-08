@@ -27,14 +27,15 @@
  *             up. Y = 0 is the screen row one past the OAM sprite's bottom
  *             edge (g_ram[0x03B8] + sprite height), matching the "foot" of
  *             the metasprite it replaces.
- *   world Z = depth around 0, existing purely to give the cube volume --
- *             there is no world geometry to align it with.
- * The camera sits at a fixed offset (back along -Z, up along +Y, a small
- * lateral X) from a look-at pinned to the cube's center, rather than
- * straight-on: a straight-on axis-aligned view of a box degenerates to a
- * flat square and would show no 3D cue at all. Exact pixel registration
- * with the OAM box it replaces is not a goal -- the visual mismatch between
- * a 3D actor and the flat 8-bit world is the point of M6, not a bug to hide.
+ *   world Z = model depth around 0; there is no host world geometry to align
+ *             it with.
+ * The camera remains perpendicular to the NES sprite plane for exact screen
+ * registration. Falcon's authored model is rotated 90 degrees into a true
+ * side profile, so facing changes read strictly left/right in this 2D game;
+ * the placeholder cube retains a small yaw so it does not collapse flat.
+ * Falcon is rendered into a 2x transparent surface and box-downsampled over
+ * the native frame. This antialiases only his mesh while all NES pixels stay
+ * untouched and sharp.
  */
 
 /* Register the OAM suppression predicate. Call once from game_on_init();

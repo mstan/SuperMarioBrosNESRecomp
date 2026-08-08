@@ -15,6 +15,9 @@
 #include "nes_runtime.h"
 #include "voxel_renderer.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 /* Cube extent, in world pixels (1 world unit = 1 NES pixel). Comparable to
  * the ~16x24px footprint of Mario's own 8x16 (or 8x8-doubled) metasprite so
  * the cube reads as roughly the same size as the sprite it replaces. */
@@ -36,6 +39,16 @@
  */
 #define FALCON_CAM_BACK         150.0f
 #define FALCON_CUBE_YAW_DEG      35.0f
+
+#define FALCON_SSAA_SCALE          2
+#define FALCON_SSAA_MAX_WIDTH   1024
+#define FALCON_SSAA_MAX_HEIGHT   480
+
+/* Falcon alone is rendered at 2x and box-filtered over the already complete
+ * NES frame.  This keeps every background tile and native sprite pixel-crisp
+ * while giving the now-32px fighter four coverage samples per output pixel. */
+static uint32_t
+    s_falcon_ssaa[FALCON_SSAA_MAX_WIDTH * FALCON_SSAA_MAX_HEIGHT];
 
 /* Flat placeholder color (a Falcon-blue). One 1x1 texel reused for every
  * face; nes_voxel_mesh_bind_texture's shade parameter fakes basic per-face
@@ -107,13 +120,73 @@ static void draw_cube_face(NesVoxelMeshVertex p0, NesVoxelMeshVertex p1,
     nes_voxel_mesh_triangle(p0, p2, p3);
 }
 
+static int falcon_ssaa_enabled(void) {
+    const char *value = getenv("NESRECOMP_FALCON_SSAA");
+    return !value || atoi(value) != 0;
+}
+
+static void composite_falcon_ssaa(uint32_t *framebuffer, int width,
+                                  int height) {
+    const int source_width = width * FALCON_SSAA_SCALE;
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            const int sx = x * FALCON_SSAA_SCALE;
+            const int sy = y * FALCON_SSAA_SCALE;
+            const uint32_t samples[4] = {
+                s_falcon_ssaa[sy * source_width + sx],
+                s_falcon_ssaa[sy * source_width + sx + 1],
+                s_falcon_ssaa[(sy + 1) * source_width + sx],
+                s_falcon_ssaa[(sy + 1) * source_width + sx + 1]
+            };
+            unsigned count = 0, red = 0, green = 0, blue = 0;
+            uint32_t destination;
+            unsigned dr, dg, db;
+            for (int i = 0; i < 4; ++i) {
+                if ((samples[i] >> 24) == 0) continue;
+                ++count;
+                red += (samples[i] >> 16) & 0xFFu;
+                green += (samples[i] >> 8) & 0xFFu;
+                blue += samples[i] & 0xFFu;
+            }
+            if (!count) continue;
+
+            destination = framebuffer[y * width + x];
+            dr = (destination >> 16) & 0xFFu;
+            dg = (destination >> 8) & 0xFFu;
+            db = destination & 0xFFu;
+            /* Averaging the covered model samples with one copy of the
+             * untouched NES pixel per uncovered subpixel is a 2x box filter
+             * in premultiplied-coverage form. */
+            red = (red + (4u - count) * dr + 2u) / 4u;
+            green = (green + (4u - count) * dg + 2u) / 4u;
+            blue = (blue + (4u - count) * db + 2u) / 4u;
+            framebuffer[y * width + x] =
+                0xFF000000u | (red << 16) | (green << 8) | blue;
+        }
+    }
+}
+
 void game_smash64_render_post_render(uint32_t *framebuffer) {
     NesVoxelCamera camera;
+    uint32_t *target = framebuffer;
+    int target_width = g_render_width;
+    int target_height = 240;
+    float output_scale = 1.0f;
     float cx, cz, foot_y;
     float x0, x1, y0, y1, z0, z1;
     NesVoxelMeshVertex a, b, c, d, e, f, g, h;
 
-    if (!game_smash64_active()) return;
+    if (!framebuffer || !game_smash64_active()) return;
+
+    if (falcon_ssaa_enabled() &&
+        g_render_width * FALCON_SSAA_SCALE <= FALCON_SSAA_MAX_WIDTH &&
+        240 * FALCON_SSAA_SCALE <= FALCON_SSAA_MAX_HEIGHT) {
+        output_scale = (float)FALCON_SSAA_SCALE;
+        target_width = g_render_width * FALCON_SSAA_SCALE;
+        target_height = 240 * FALCON_SSAA_SCALE;
+        target = s_falcon_ssaa;
+        memset(target, 0, (size_t)target_width * target_height * sizeof(*target));
+    }
 
     /*
      * World space IS screen space: X = framebuffer column, Y = 240 minus
@@ -125,18 +198,22 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
      * regardless of where the player went: a camera that follows its
      * subject cannot show the subject moving.)
      */
-    cx = (float)(g_ram[0x03AD] + g_widescreen_left) + 8.0f;
+    cx = ((float)(g_ram[0x03AD] + g_widescreen_left) + 8.0f) *
+        output_scale;
     cz = 0.0f;
     /* $03B8 is SMB1's 32px player-box top, not necessarily the top of the
      * small-Mario OAM pieces. Small Mario's one-row metasprite is emitted at
      * a +16px offset inside that box, so both sizes share the authoritative
      * foot row $03B8+32. Measured in ordinary 1-1 play: native_y=$B0 and the
      * floor begins at screen row $D0. */
-    foot_y = 240.0f - (float)(g_ram[0x03B8] + 32);
+    foot_y = (240.0f - (float)(g_ram[0x03B8] + 32)) * output_scale;
 
-    x0 = cx - FALCON_CUBE_HALF_WIDTH;  x1 = cx + FALCON_CUBE_HALF_WIDTH;
-    y0 = foot_y;                       y1 = foot_y + FALCON_CUBE_HEIGHT;
-    z0 = cz - FALCON_CUBE_HALF_DEPTH;  z1 = cz + FALCON_CUBE_HALF_DEPTH;
+    x0 = cx - FALCON_CUBE_HALF_WIDTH * output_scale;
+    x1 = cx + FALCON_CUBE_HALF_WIDTH * output_scale;
+    y0 = foot_y;
+    y1 = foot_y + FALCON_CUBE_HEIGHT * output_scale;
+    z0 = cz - FALCON_CUBE_HALF_DEPTH * output_scale;
+    z1 = cz + FALCON_CUBE_HALF_DEPTH * output_scale;
 
     /* Yaw the cube's corners around its own vertical axis (see the camera
      * comment): cos/sin of FALCON_CUBE_YAW_DEG, precomputed. */
@@ -172,22 +249,22 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
      * build_camera_basis's right vector cross(forward, world-up) come out
      * (-1,0,0) and the whole scene mirrors horizontally -- measured as the
      * cube rendering reflected about the screen center. */
-    camera.look_at_x = (float)g_render_width * 0.5f;
-    camera.look_at_y = 120.0f;
+    camera.look_at_x = (float)target_width * 0.5f;
+    camera.look_at_y = (float)target_height * 0.5f;
     camera.look_at_z = 0.0f;
     camera.eye_x = camera.look_at_x;
     camera.eye_y = camera.look_at_y;
-    camera.eye_z = FALCON_CAM_BACK;
-    camera.focal_scale = FALCON_CAM_BACK / (float)g_render_width;
+    camera.eye_z = FALCON_CAM_BACK * output_scale;
+    camera.focal_scale = camera.eye_z / (float)target_width;
     camera.center_y = 0.5f;
 
-    if (!nes_voxel_mesh_begin(framebuffer, g_render_width, 240, &camera))
+    if (!nes_voxel_mesh_begin(target, target_width, target_height, &camera))
         return;
 
     /* The real model is loaded lazily from the ignored local asset blob.
      * Missing or invalid assets deliberately leave the M6.2 cube intact so
      * a publishable checkout remains usable without proprietary data. */
-    if (!game_smash64_assets_draw(cx, foot_y)) {
+    if (!game_smash64_assets_draw(cx, foot_y, output_scale)) {
         draw_cube_face(e, f, g, h, 1.00f);  /* top */
         draw_cube_face(a, b, f, e, 0.85f);  /* front (z0, camera-facing) */
         draw_cube_face(d, c, g, h, 0.45f);  /* back */
@@ -197,4 +274,6 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
     }
 
     nes_voxel_mesh_end();
+    if (output_scale > 1.0f)
+        composite_falcon_ssaa(framebuffer, g_render_width, 240);
 }

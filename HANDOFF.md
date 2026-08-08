@@ -8,12 +8,13 @@ The defects shown in the owner's August 8 screenshots have been corrected in
 the current worktree. Fresh Release captures were generated after the final
 build and visually inspected, not accepted from script exit codes alone:
 
-- `C:\temp\falcon_qa_title.png`: normal SMB1 title/menu with no Falcon overlay;
-- `falcon_qa_idle.png`, `falcon_qa_run.png`, and `falcon_qa_walk.png`: readable
-  purple/red/yellow Falcon; rightward Run faces right and leftward Walk faces
-  left;
-- `falcon_qa_jump.png`, `falcon_accept_punch.png`, and
-  `falcon_accept_kick.png`: coherent articulated action poses.
+- `C:\temp\falcon_final_profile_title.png`: normal SMB1 title/menu with no
+  Falcon overlay;
+- `falcon_final_aa_on_idle.png`, `falcon_final_aa_on_run.png`, and
+  `falcon_final_aa_on_walk.png`: 28–32px-tall purple/red/yellow Falcon in a
+  true side profile; rightward Run faces right and leftward Walk faces left;
+- `falcon_final_profile_{jump,punch,kick}.png`: coherent articulated action
+  poses at the same Big-Mario-scale presentation.
 
 The fixes came from BattleShip's Smash 64 implementation rather than visual
 guesswork. Costume frame zero now evaluates Captain's material-animation
@@ -22,6 +23,13 @@ the mesh mirror follows Smash's authored +LR convention, and replacement
 ownership is gated on SMB1 `OperMode == 1` so stale gameplay state cannot draw
 Falcon over the title screen. The prior screenshots and commits `93f8741` and
 `7ce5406` remain useful failure evidence, not acceptance evidence.
+
+Owner follow-up found the first corrected presentation still too large and too
+three-quarter-facing. The final defaults are 32 native pixels high (Big Mario's
+box), 90 degrees (authored left/right side profile), and a Falcon-only 2x
+supersample/box-filter pass. Native NES pixels are never filtered. A/B captures
+show changes confined to Falcon's footprint; a 512px widescreen run also passes
+through the bounded 1024x480 mesh surface.
 
 Captain Falcon's implementation milestone ladder is present—locomotion, host
 collision/handoffs, corrected model/animation playback, representative combat,
@@ -34,6 +42,7 @@ bd -C F:\Software\beads\issues show beads-2dw.2.1.7 --json  # M6 rendering
 bd -C F:\Software\beads\issues show beads-2dw.2.1.8 --json  # M7 combat
 bd -C F:\Software\beads\issues show beads-do7 --json        # M8 audio
 bd -C F:\Software\beads\issues show beads-2dw.2.1.10 --json # final QA
+bd -C F:\Software\beads\issues show beads-2dw.1.10 --json   # mesh 2x SSAA
 ```
 
 ## Repositories
@@ -42,8 +51,8 @@ Both repositories use local branch `feat/smash64-player-replacement`.
 
 | Repo | Path | Relevant HEAD |
 |---|---|---|
-| Engine | `F:\Projects\nesrecomp\_wt-falcon-smb\nesrecomp` | `6cb121d` (mod PCM overlay mixer/audio-event ABI) |
-| Game | `F:\Projects\nesrecomp\_wt-falcon-smb` | current local HEAD; gitlink must point to `6cb121d` |
+| Engine | `F:\Projects\nesrecomp\_wt-falcon-smb\nesrecomp` | `c724785` (bounded 2x mesh targets; includes mod PCM overlay mixer) |
+| Game | `F:\Projects\nesrecomp\_wt-falcon-smb` | current local HEAD; gitlink must point to `c724785` |
 
 Never push either repository. The branch contains a direct port of an
 unlicensed decomp and depends on owner-only ROM-derived runtime assets.
@@ -133,9 +142,11 @@ to zero-based model slots by the baker. Blob version 2 stores BattleShip's
 source interpolation segments and tangent rates instead of flattening them
 into linear keys. Costume-zero primary colors come from reloc 332's
 `MatAnimJoint` programs, matching BattleShip's fighter-part material
-initialization. The runtime normalizes each pose to a 64-pixel readable height
-and uses a 60-degree three-quarter view. Missing model data uses the cube
-fallback.
+initialization. The runtime normalizes each pose to a 32-pixel Big-Mario-scale
+height and rotates the authored model 90 degrees into a strict side profile.
+`game_smash64_render.c` renders only Falcon at 2x, then box-downsamples coverage
+over the native frame; the NES background remains pixel-perfect. Missing model
+data uses the cube fallback.
 
 Audio uses `game_smash64_audio.c`: seven local cues for jump effort, "Falcon",
 "Punch", Falcon Kick, Punch impact, Kick swing, and Kick energy start. Missing
@@ -150,9 +161,9 @@ adaptations are in `docs/falcon_audio.md`.
   save states, reseed behavior, and mod-off regression.
 - M6 rendering: real Falcon model, textures, and authentic animation selection;
   corrected Figatree joint-slot mapping, source interpolation, costume-zero
-  material initialization, and facing convention; screenshot-verified idle,
-  bidirectional locomotion, jump, Falcon Punch, Falcon Kick, clean title, and
-  absent-asset fallback.
+  material initialization, facing convention, 32px side profile, and 2x edge
+  supersampling; screenshot-verified idle, bidirectional locomotion, jump,
+  Falcon Punch, Falcon Kick, clean title, widescreen, and absent-asset fallback.
 - M7 combat: Jab, forward tilt, neutral/forward/back air, Falcon Punch, Falcon
   Kick; source hit windows/damage; native SMB1 enemy defeat and `$51/$52` brick
   shatter; nonbreakable/special/boss filtering; save/load and mod-off coverage.

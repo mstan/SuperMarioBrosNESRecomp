@@ -16,8 +16,8 @@
 
 #define FALCON_BLOB_VERSION 2u
 #define FALCON_JOINT_COUNT 26u
-#define FALCON_RENDER_HEIGHT 64.0f
-#define FALCON_YAW_DEG 60.0f
+#define FALCON_RENDER_HEIGHT 32.0f
+#define FALCON_YAW_DEG 90.0f
 
 typedef struct FalconAssetJoint {
     int parent;
@@ -664,7 +664,8 @@ static NesVoxelMeshVertex render_vertex(const FalconAssetModel *model,
     return out;
 }
 
-int game_smash64_assets_draw(float center_x, float foot_y)
+int game_smash64_assets_draw(float center_x, float foot_y,
+                             float output_scale)
 {
     const ForeignState *state;
     const FalconAssetAnimation *animation;
@@ -699,8 +700,9 @@ int game_smash64_assets_draw(float center_x, float foot_y)
     pose_height = pose_max[1] - pose_min[1];
     if (pose_height < 1.0f)
         pose_height = s_model.bounds_max[1] - s_model.bounds_min[1];
+    if (output_scale <= 0.0f) output_scale = 1.0f;
     model_scale = env_float("NESRECOMP_FALCON_RENDER_HEIGHT",
-                            FALCON_RENDER_HEIGHT) / pose_height;
+                            FALCON_RENDER_HEIGHT) * output_scale / pose_height;
     /* Smash's +LR model orientation is opposite our screen-space projection.
      * Mirror the mesh against that authored convention, not against movement
      * directly; the old sign made rightward Run visibly face left. */
