@@ -26,6 +26,7 @@
  * instance.
  */
 #include "game_smash64.h"
+#include "game_smash64_audio.h"
 
 #include "foreign_controller.h"
 #include "mod_function_hooks.h"
@@ -664,6 +665,7 @@ void game_smash64_update_input(uint64_t frame_count)
 
     memset(&move, 0, sizeof(move));
     if (nes_foreign_tick(frame_count, &fin, &move)) {
+        game_smash64_audio_play_events(&move.audio, frame_count);
         s_attack = move.attack;
         if (wall) {
             move.requested_dx = 0.0;
@@ -1588,6 +1590,7 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
 
 void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
 {
+    game_smash64_audio_set_enabled(0);
     s_enabled = 0;
     s_selected = 0;
     s_announced = 0;
@@ -1683,6 +1686,7 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
                 "speed)\n");
     }
     s_enabled = 1;
+    game_smash64_audio_set_enabled(1);
 }
 
 int game_smash64_active(void)

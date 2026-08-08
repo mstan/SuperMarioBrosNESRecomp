@@ -1,0 +1,44 @@
+LOG falcon-m8-audio
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+
+# The source JumpAerial effort clip is adapted to SMB1's single jump.
+HOLD A
+WAIT 2
+RELEASE A
+WAIT 90
+
+# Signature Punch: "Falcon" on entry, then impact FGM + "Punch" at frame 42.
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 93
+
+# Signature Kick: voice + LightSwingL on entry, energy FGM at frame 12.
+HOLD DOWN
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE DOWN
+WAIT 90
+
+# A load during Punch windup must discard the playing host overlay. It must not
+# replay the already-consumed entry cue; the restored future impact should play
+# once on each continuation because both timelines genuinely reach frame 42.
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 20
+SAVE_STATE C:/temp/falcon_m8_audio.sav
+WAIT 27
+WAIT 10
+LOAD_STATE C:/temp/falcon_m8_audio.sav
+WAIT 27
+WAIT 10
+
+# Leave enough audio frames for RECOMP_AUDIO_DEBUG_DUMP_SECS=12 to write taps
+# after both post-load impact events, before the script's normal end.
+WAIT 300

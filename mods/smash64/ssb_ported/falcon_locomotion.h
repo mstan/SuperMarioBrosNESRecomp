@@ -161,11 +161,28 @@ typedef struct {
     int active;
 } FalconAttack;
 
+/* One-tick events corresponding to source motion-script audio commands. The
+ * values are cue ids at the controller boundary; FalconMotion stores a bitset
+ * so voice and FGM events can occur on the same frame without allocation. */
+typedef enum {
+    FALCON_AUDIO_JUMP_EFFORT = 1,
+    FALCON_AUDIO_PUNCH_FALCON,
+    FALCON_AUDIO_PUNCH_PUNCH,
+    FALCON_AUDIO_KICK,
+    FALCON_AUDIO_PUNCH_IMPACT,
+    FALCON_AUDIO_KICK_SWING,
+    FALCON_AUDIO_KICK_START,
+    FALCON_AUDIO_CUE_COUNT
+} FalconAudioCue;
+
+#define FALCON_AUDIO_CUE_BIT(cue) (1u << ((unsigned)(cue) - 1u))
+
 /* Motion the state machine wants this frame, before host collision. */
 typedef struct {
     double requested_dx;
     double requested_dy;
     FalconAttack attack;
+    uint32_t audio_cues;
 } FalconMotion;
 
 void falcon_reset(FalconFighter *f);

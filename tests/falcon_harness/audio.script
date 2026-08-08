@@ -1,0 +1,50 @@
+# Punch emits the two source motion-script voice syllables and impact FGM once.
+neutral
+attack down
+frames 1
+expect_state FALCON_PUNCH_GROUND
+expect_audio 0x2
+attack up
+frames 1
+expect_audio 0
+frames 40
+expect_audio 0
+frames 1
+expect_audio 0x14
+frames 1
+expect_audio 0
+frames 46
+expect_state WAIT
+
+# Kick emits its voice + swing at entry and the source energy FGM at frame 12.
+neutral
+stick_y -80
+attack down
+frames 1
+expect_state FALCON_KICK_GROUND
+expect_audio 0x28
+attack up
+frames 1
+expect_audio 0
+frames 10
+expect_audio 0
+frames 1
+expect_audio 0x40
+frames 1
+expect_audio 0
+frames 71
+expect_state WAIT
+
+# SMB1 has one jump, so the source JumpAerial effort cue maps to its launch.
+neutral
+jump down
+frames 1
+expect_state KNEEBEND
+expect_audio 0
+frames 3
+expect_audio 0
+frames 1
+expect_state JUMP_F
+expect_audio 0x1
+frames 1
+expect_audio 0

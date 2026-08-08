@@ -18,6 +18,13 @@ add_executable(falcon_harness
     ${CMAKE_CURRENT_SOURCE_DIR}/../../mods/smash64/ssb_ported/falcon_locomotion.c
 )
 
+add_executable(mod_audio_test
+    mod_audio_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../nesrecomp/runner/src/mod_audio.c
+)
+target_include_directories(mod_audio_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../nesrecomp/runner/include)
+
 if(MSVC)
     target_compile_definitions(falcon_harness PRIVATE _CRT_SECURE_NO_WARNINGS)
     target_compile_options(falcon_harness PRIVATE /W4)
@@ -31,10 +38,12 @@ endif()
 enable_testing()
 foreach(trace run_right dash_turn jump fast_fall short_hop
               host_launch host_ledge_fall jump_height_split
-              host_impulse combat)
+              host_impulse combat audio)
     add_test(NAME falcon_${trace}
              COMMAND falcon_harness
                      ${CMAKE_CURRENT_SOURCE_DIR}/${trace}.script
                      --csv ${CMAKE_CURRENT_BINARY_DIR}/trace_${trace}.csv)
 endforeach()
+
+add_test(NAME mod_audio COMMAND mod_audio_test)
 

@@ -32,6 +32,7 @@
  *   expect_attack <0|1>   assert whether a hitbox is active
  *   expect_damage <n>     assert the active hitbox damage
  *   expect_break <0|1>    assert the block-break property
+ *   expect_audio <mask>    assert exact FalconAudioCue bitset (decimal/hex)
  *   expect_vel_air_y <lo> <hi>  assert takeoff/air velocity is in [lo,hi]
  *   expect_peak_y <lo> <hi>     assert the highest pos_y since reset_peak
  *   reset_peak            start a new peak-height measurement here
@@ -93,7 +94,7 @@ static void emit_header(void)
         "frame,state,state_name,anim_frame,stick_x,stick_y,jump,attack,"
         "vel_ground_x,vel_air_x,vel_air_y,"
         "req_dx,req_dy,px_dx,px_dy,hit_active,damage,break_blocks,"
-        "pos_x,pos_y,lr,grounded,fastfall,tap_x,tap_y,note\n");
+        "audio_cues,pos_x,pos_y,lr,grounded,fastfall,tap_x,tap_y,note\n");
 }
 
 static void emit_row(const FalconFighter *f, const FalconInputRaw *in,
@@ -103,13 +104,14 @@ static void emit_row(const FalconFighter *f, const FalconInputRaw *in,
         "%ld,%d,%s,%.1f,%d,%d,%d,%d,"
         "%.6f,%.6f,%.6f,"
         "%.6f,%.6f,%.6f,%.6f,%d,%d,%d,"
-        "%.6f,%.6f,%d,%d,%d,%u,%u,%s\n",
+        "%u,%.6f,%.6f,%d,%d,%d,%u,%u,%s\n",
         g_frame, f->state, falcon_state_name(f->state), f->anim_frame,
         in->stick_x, in->stick_y, in->jump_held, in->attack_pressed,
         f->vel_ground_x, f->vel_air_x, f->vel_air_y,
         m->requested_dx, m->requested_dy,
         m->requested_dx * g_scale, m->requested_dy * g_scale,
         m->attack.active, m->attack.damage, m->attack.break_blocks,
+        (unsigned)m->audio_cues,
         f->pos_x, f->pos_y, f->lr, f->grounded, f->is_fastfall,
         (unsigned)f->tap_stick_x, (unsigned)f->tap_stick_y,
         note ? note : "");
@@ -233,6 +235,17 @@ static int run_script(const char *path)
         } else if (!strcmp(cmd, "expect_break")) {
             check_range("attack_break_blocks",
                         (double)m.attack.break_blocks, arg);
+        } else if (!strcmp(cmd, "expect_audio")) {
+            unsigned long want = strtoul(arg, NULL, 0);
+            if ((unsigned long)m.audio_cues != want) {
+                fprintf(stderr,
+                        "FAIL frame %ld: audio_cues = 0x%X, expected 0x%lX\n",
+                        g_frame, (unsigned)m.audio_cues, want);
+                g_failures++;
+            } else {
+                printf("  ok  frame %-5ld audio_cues == 0x%lX\n",
+                       g_frame, want);
+            }
         } else if (!strcmp(cmd, "host_impose_vy")) {
             /*
              * Stand in for a host that launches the character for reasons the

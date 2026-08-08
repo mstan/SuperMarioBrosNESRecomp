@@ -44,6 +44,7 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
     FalconInputRaw raw;
     FalconMotion motion;
     int was_kneebend;
+    unsigned cue;
 
     /* ForeignInput is normalised -1..+1; the ported module works in the source
      * game's own +/-80 stick range. */
@@ -99,6 +100,15 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
     out->attack.flags = motion.attack.break_blocks
                             ? FOREIGN_ATTACK_BREAK_BLOCKS : 0;
     out->attack.active = motion.attack.active;
+
+    for (cue = 1; cue < (unsigned)FALCON_AUDIO_CUE_COUNT; ++cue) {
+        if ((motion.audio_cues & FALCON_AUDIO_CUE_BIT(cue)) != 0 &&
+            out->audio.count < FOREIGN_AUDIO_EVENT_CAPACITY) {
+            ForeignAudioEvent *event = &out->audio.events[out->audio.count++];
+            event->cue = cue;
+            event->gain_percent = 100;
+        }
+    }
 
     state->state = s_fighter.state;
     state->state_frame = (unsigned)s_fighter.state_frame;

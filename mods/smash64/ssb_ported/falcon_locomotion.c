@@ -1012,6 +1012,46 @@ static void emit_attack(const FalconFighter *f, FalconMotion *out)
     }
 }
 
+/* Audio-command frames from 235_CaptainMainMotion.c:
+ *   Falcon Punch: "Falcon" on entry; punch FGM + "Punch" at frame 42.
+ *   Falcon Kick:  voice + LightSwingL on entry; SpecialNStart at frame 12.
+ * SMB1 has no aerial jump, so the source's JumpAerial effort clip is emitted
+ * on the one host-supported jump transition as the deliberate roster adapter.
+ */
+static void emit_audio(const FalconFighter *f, FalconMotion *out)
+{
+    const double t = f->state_frame;
+
+    if (t == 0.0) {
+        switch (f->state) {
+        case FL_JUMP_F:
+        case FL_JUMP_B:
+            out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_JUMP_EFFORT);
+            break;
+        case FL_FALCON_PUNCH_GROUND:
+        case FL_FALCON_PUNCH_AIR:
+            out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_PUNCH_FALCON);
+            break;
+        case FL_FALCON_KICK_GROUND:
+        case FL_FALCON_KICK_AIR:
+            out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_KICK);
+            out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_KICK_SWING);
+            break;
+        default:
+            break;
+        }
+    }
+
+    if ((f->state == FL_FALCON_PUNCH_GROUND ||
+         f->state == FL_FALCON_PUNCH_AIR) && t == 42.0) {
+        out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_PUNCH_PUNCH);
+        out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_PUNCH_IMPACT);
+    }
+    if ((f->state == FL_FALCON_KICK_GROUND ||
+         f->state == FL_FALCON_KICK_AIR) && t == 12.0)
+        out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_KICK_START);
+}
+
 void falcon_tick(FalconFighter *f, const FalconInputRaw *in, FalconMotion *out)
 {
     int was_air;
@@ -1076,6 +1116,7 @@ void falcon_tick(FalconFighter *f, const FalconInputRaw *in, FalconMotion *out)
             out->requested_dy = 0.0;
         }
         emit_attack(f, out);
+        emit_audio(f, out);
     }
 }
 
