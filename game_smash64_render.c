@@ -10,6 +10,7 @@
  */
 #include "game_smash64_render.h"
 
+#include "game_smash64_assets.h"
 #include "game_smash64.h"
 #include "nes_runtime.h"
 #include "voxel_renderer.h"
@@ -126,12 +127,12 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
      */
     cx = (float)(g_ram[0x03AD] + g_widescreen_left) + 8.0f;
     cz = 0.0f;
-    /* Foot row: OAM top + the metasprite's pixel height. Small Mario is one
-     * 8x16 row (16px), big Mario two (32px); PlayerSize $0754 is 1 when
-     * small. (Big crouching is drawn shorter, but its OAM top moves down to
-     * match, so top + 32 still lands on the foot row.) */
-    foot_y = 240.0f - (float)(g_ram[0x03B8] +
-                              (g_ram[0x0754] ? 16 : 32));
+    /* $03B8 is SMB1's 32px player-box top, not necessarily the top of the
+     * small-Mario OAM pieces. Small Mario's one-row metasprite is emitted at
+     * a +16px offset inside that box, so both sizes share the authoritative
+     * foot row $03B8+32. Measured in ordinary 1-1 play: native_y=$B0 and the
+     * floor begins at screen row $D0. */
+    foot_y = 240.0f - (float)(g_ram[0x03B8] + 32);
 
     x0 = cx - FALCON_CUBE_HALF_WIDTH;  x1 = cx + FALCON_CUBE_HALF_WIDTH;
     y0 = foot_y;                       y1 = foot_y + FALCON_CUBE_HEIGHT;
@@ -183,12 +184,17 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
     if (!nes_voxel_mesh_begin(framebuffer, g_render_width, 240, &camera))
         return;
 
-    draw_cube_face(e, f, g, h, 1.00f);  /* top */
-    draw_cube_face(a, b, f, e, 0.85f);  /* front (z0, camera-facing) */
-    draw_cube_face(d, c, g, h, 0.45f);  /* back */
-    draw_cube_face(a, e, h, d, 0.55f);  /* left */
-    draw_cube_face(b, c, g, f, 0.70f);  /* right */
-    draw_cube_face(a, d, c, b, 0.35f);  /* bottom */
+    /* The real model is loaded lazily from the ignored local asset blob.
+     * Missing or invalid assets deliberately leave the M6.2 cube intact so
+     * a publishable checkout remains usable without proprietary data. */
+    if (!game_smash64_assets_draw(cx, foot_y)) {
+        draw_cube_face(e, f, g, h, 1.00f);  /* top */
+        draw_cube_face(a, b, f, e, 0.85f);  /* front (z0, camera-facing) */
+        draw_cube_face(d, c, g, h, 0.45f);  /* back */
+        draw_cube_face(a, e, h, d, 0.55f);  /* left */
+        draw_cube_face(b, c, g, f, 0.70f);  /* right */
+        draw_cube_face(a, d, c, b, 0.35f);  /* bottom */
+    }
 
     nes_voxel_mesh_end();
 }

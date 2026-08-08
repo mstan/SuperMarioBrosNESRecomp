@@ -1,0 +1,371 @@
+#!/usr/bin/env python3
+"""Bake ignored SSB64 Falcon intermediates into one ignored runtime blob.
+
+This script contains no extracted data.  It consumes assets_ssb64/ (which is
+locally extracted from the owner's ROM and gitignored) and writes a compact
+little-endian file that the game-side C loader can parse without embedding a
+JSON or PNG implementation in the executable.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import struct
+from pathlib import Path
+
+from PIL import Image
+
+
+MAGIC = b"FLCN64B\0"
+VERSION = 1
+TRACK_IDS = {
+    "RotX": 0,
+    "RotY": 1,
+    "RotZ": 2,
+    "TraX": 3,
+    "TraY": 4,
+    "TraZ": 5,
+    "ScaX": 6,
+    "ScaY": 7,
+    "ScaZ": 8,
+}
+LOOPING_ANIMS = {"Wait", "Walk1", "Walk2", "Walk3", "Run", "CrouchIdle"}
+
+
+def load_json(path: Path):
+    with path.open("r", encoding="utf-8") as stream:
+        return json.load(stream)
+
+
+def decode_tri_word(word: int) -> tuple[int, int, int]:
+    """Decode one F3DEX2 triangle word (three doubled vertex slots)."""
+    return ((word >> 16 & 0xFF) // 2,
+            (word >> 8 & 0xFF) // 2,
+            (word & 0xFF) // 2)
+
+
+def texture_image(textures_dir: Path, symbol: str) -> Image.Image | None:
+    candidates = (
+        textures_dir / f"{symbol}.png",
+        textures_dir / f"{symbol}.index_preview.png",
+    )
+    for candidate in candidates:
+        if candidate.is_file():
+            return Image.open(candidate).convert("RGBA")
+    return None
+
+
+def fallback_pixel(symbol: str) -> bytes:
+    # Stable, visibly Falcon-ish fallback when a CI palette is unresolved.
+    value = sum((i + 1) * ord(ch) for i, ch in enumerate(symbol))
+    r = 40 + value % 72
+    g = 50 + (value // 7) % 72
+    b = 118 + (value // 17) % 100
+    return struct.pack("<I", 0xFF000000 | (r << 16) | (g << 8) | b)
+
+
+def rgba_to_argb_bytes(image: Image.Image) -> bytes:
+    out = bytearray()
+    rgba = image.tobytes()
+    for offset in range(0, len(rgba), 4):
+        r, g, b, a = rgba[offset:offset + 4]
+        out += struct.pack("<I", (a << 24) | (r << 16) | (g << 8) | b)
+    return bytes(out)
+
+
+class TextureCatalog:
+    def __init__(self, root: Path, palettes: dict[str, list[int]],
+                 dimensions: dict[str, list[int]]):
+        self.textures_dir = root / "textures"
+        self.palettes = palettes
+        self.dimensions = dimensions
+        self.records = []
+        self.ids = {}
+
+    def _add(self, key, symbol: str, width: int, height: int, pixels: bytes):
+        if key not in self.ids:
+            self.ids[key] = len(self.records)
+            self.records.append((symbol, width, height, pixels))
+        return self.ids[key]
+
+    def solid(self, argb: int) -> int:
+        return self._add(("solid", argb), f"solid_{argb:08x}", 1, 1,
+                         struct.pack("<I", argb))
+
+    def fallback(self, symbol: str) -> int:
+        image = texture_image(self.textures_dir, symbol)
+        if image is None:
+            return self._add(("fallback", symbol), symbol, 1, 1,
+                             fallback_pixel(symbol))
+        width, height = image.size
+        return self._add(("png", symbol), symbol, width, height,
+                         rgba_to_argb_bytes(image))
+
+    def ci(self, symbol: str, palette_symbol: str | None,
+           width: int, height: int, bpp: int) -> int:
+        if symbol in self.dimensions:
+            width, height = map(int, self.dimensions[symbol])
+        key = ("ci", symbol, palette_symbol, width, height, bpp)
+        if key in self.ids:
+            return self.ids[key]
+        raw_path = self.textures_dir / f"{symbol}.bin"
+        palette = self.palettes.get(palette_symbol or "")
+        expected = (width * height * bpp + 7) // 8
+        if (raw_path.is_file() and expected > raw_path.stat().st_size and
+                bpp == 4 and width % 2 == 0):
+            # CI4 display lists use a 16-bit load-block convention.  When no
+            # @tex annotation exists, the tile window can therefore report
+            # twice the stored pixel width.
+            width //= 2
+            key = ("ci", symbol, palette_symbol, width, height, bpp)
+            expected = (width * height * bpp + 7) // 8
+            if key in self.ids:
+                return self.ids[key]
+        if bpp not in (4, 8) or not raw_path.is_file() or not palette:
+            return self.fallback(symbol)
+        raw = raw_path.read_bytes()
+        if expected > len(raw):
+            return self.fallback(symbol)
+        raw = raw[:expected]
+        pixels = bytearray()
+        for pixel in range(width * height):
+            if bpp == 4:
+                value = raw[pixel // 2]
+                index = value >> 4 if pixel % 2 == 0 else value & 0x0F
+            else:
+                index = raw[pixel]
+            argb = palette[index] if index < len(palette) else 0xFFFF00FF
+            pixels += struct.pack("<I", argb)
+        label = f"{symbol}@{palette_symbol}"
+        return self._add(key, label, width, height, bytes(pixels))
+
+
+def decoded_tile_size(op: dict) -> tuple[int, int] | None:
+    """Decode a G_SETTILESIZE window, accounting for non-zero UL coords."""
+    w0, w1 = op.get("w0"), op.get("w1")
+    if not isinstance(w0, int) or not isinstance(w1, int):
+        return None
+    uls, ult = (w0 >> 12) & 0xFFF, w0 & 0xFFF
+    lrs, lrt = (w1 >> 12) & 0xFFF, w1 & 0xFFF
+    if lrs < uls or lrt < ult:
+        return None
+    return (lrs - uls) // 4 + 1, (lrt - ult) // 4 + 1
+
+
+def collect_model(root: Path):
+    model_dir = root / "model"
+    model = load_json(model_dir / "captain_model.json")
+    tree = model["trees"]["dCaptainModel_JointTree"]
+
+    # The extractor preserves the source END marker as a 27th depth-18 entry.
+    # It is not a drawable joint; the documented Falcon skeleton is 0..25.
+    joints = [j for j in tree["joints"] if int(j["index"]) < 26]
+    if len(joints) != 26:
+        raise ValueError(f"expected 26 Falcon joints, found {len(joints)}")
+
+    vertex_cache = {}
+    triangles = []
+    joint_ranges = []
+    bindings_path = root / "textures" / "material_bindings.json"
+    bindings = load_json(bindings_path) if bindings_path.is_file() else {}
+    joint_materials = bindings.get("joint_materials", [[] for _ in range(26)])
+    palettes = bindings.get("palettes_argb", {})
+    texture_dimensions = bindings.get("texture_dimensions", {})
+    catalog = TextureCatalog(root, palettes, texture_dimensions)
+
+    for joint in joints:
+        first = len(triangles)
+        dl_name = joint.get("dl")
+        if dl_name:
+            dl_path = model_dir / "dl" / f"{dl_name}.json"
+            ops = load_json(dl_path) if dl_path.is_file() else []
+            slots = [None] * 32
+            current_texture = 0xFFFF
+            current_image = None
+            current_palette = None
+            current_dims = None
+            current_bpp = 4
+            pending_dims = None
+            last_settimg = None
+            for op in ops:
+                opname = op.get("op")
+                if opname == "G_SETTILE" and op.get("tile") == 0:
+                    current_bpp = int(op.get("siz_bpp", current_bpp))
+                elif opname == "G_SETTILESIZE":
+                    pending_dims = decoded_tile_size(op)
+                elif opname == "G_SETTIMG":
+                    last_settimg = op.get("image")
+                elif opname == "G_LOADTLUT":
+                    if last_settimg in palettes:
+                        current_palette = last_settimg
+                        if current_image and current_dims:
+                            current_texture = catalog.ci(
+                                current_image, current_palette,
+                                current_dims[0], current_dims[1], current_bpp)
+                    last_settimg = None
+                elif opname == "G_DL":
+                    word = op.get("w1")
+                    materials = (joint_materials[int(joint["index"])]
+                                 if int(joint["index"]) < len(joint_materials)
+                                 else [])
+                    if isinstance(word, int) and word >> 24 == 0x0E:
+                        material_index = (word & 0x00FFFFFF) // 8
+                        if material_index < len(materials):
+                            material = materials[material_index]
+                            if material.get("format") == "CI":
+                                current_palette = material.get("palette_symbol")
+                                if current_image and current_dims:
+                                    current_texture = catalog.ci(
+                                        current_image, current_palette,
+                                        current_dims[0], current_dims[1],
+                                        current_bpp)
+                            else:
+                                current_texture = catalog.solid(
+                                    int(material["primary_argb"]))
+                        # The called material DL supplies the palette image;
+                        # prevent the preceding pixel SETTIMG from masquerading
+                        # as a static TLUT source when G_LOADTLUT follows.
+                        last_settimg = None
+                elif opname == "G_LOADBLOCK":
+                    if last_settimg and pending_dims:
+                        current_image = last_settimg
+                        current_dims = pending_dims
+                        current_texture = catalog.ci(
+                            current_image, current_palette,
+                            current_dims[0], current_dims[1], current_bpp)
+                    last_settimg = None
+                elif opname == "G_VTX":
+                    symbol = op.get("vbuf")
+                    if not symbol:
+                        continue
+                    if symbol not in vertex_cache:
+                        vertex_cache[symbol] = load_json(
+                            model_dir / "vtx" / f"{symbol}.json")
+                    vertices = vertex_cache[symbol]
+                    v0 = int(op.get("v0", 0))
+                    count = int(op.get("numv", len(vertices)))
+                    for offset, vertex in enumerate(vertices[:count]):
+                        if v0 + offset < len(slots):
+                            slots[v0 + offset] = vertex
+                elif opname in ("G_TRI1", "G_TRI2"):
+                    index_sets = []
+                    if opname == "G_TRI1":
+                        index_sets.append(tuple(int(x) for x in op["indices"]))
+                    else:
+                        index_sets.append(decode_tri_word(int(op["w0"])))
+                        index_sets.append(decode_tri_word(int(op["w1"])))
+                    for indices in index_sets:
+                        verts = [slots[index] if index < len(slots) else None
+                                 for index in indices]
+                        if any(vertex is None for vertex in verts):
+                            raise ValueError(
+                                f"{dl_name}: triangle {indices} references an unloaded slot")
+                        triangles.append({
+                            "joint": int(joint["index"]),
+                            "texture": current_texture,
+                            "vertices": verts,
+                        })
+        joint_ranges.append((first, len(triangles) - first))
+
+    return joints, joint_ranges, triangles, catalog.records
+
+
+def collect_animations(root: Path):
+    manifest = load_json(root / "anim" / "anim_manifest.json")
+    animations = []
+    tracks = []
+    keys = []
+
+    for entry in manifest:
+        if entry.get("status") != "ok":
+            continue
+        data = load_json(root / "anim" / entry["output"])
+        first_track = len(tracks)
+        duration = 0.0
+        for joint in data.get("joints", []):
+            joint_id = int(joint.get("joint_id", joint.get("joint_slot", 0) + 1))
+            if not 0 <= joint_id < 26:
+                continue
+            for track_name, frames in joint.get("keyframes", {}).items():
+                if track_name not in TRACK_IDS or not frames:
+                    continue
+                # Some scripts set two values at frame zero. Preserve the
+                # last write, matching the source interpreter's semantics.
+                unique = {}
+                for key in frames:
+                    unique[float(key["frame"])] = float(key["value"])
+                ordered = sorted(unique.items())
+                first_key = len(keys)
+                keys.extend(ordered)
+                duration = max(duration, ordered[-1][0])
+                tracks.append((joint_id, TRACK_IDS[track_name], first_key,
+                               len(ordered)))
+        name = str(data["canonical_name"])
+        animations.append((name, duration if duration > 0.0 else 1.0,
+                           1 if name in LOOPING_ANIMS else 0,
+                           first_track, len(tracks) - first_track))
+
+    return animations, tracks, keys
+
+
+def write_blob(root: Path, output: Path):
+    joints, joint_ranges, triangles, textures = collect_model(root)
+    animations, tracks, keys = collect_animations(root)
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("wb") as stream:
+        stream.write(MAGIC)
+        stream.write(struct.pack(
+            "<7I", VERSION, len(joints), len(triangles), len(textures),
+            len(animations), len(tracks), len(keys)))
+
+        for joint, (first_tri, tri_count) in zip(joints, joint_ranges):
+            parent = joint.get("parent")
+            parent = -1 if parent is None else int(parent)
+            values = [float(x) for key in ("translate", "rotate_rad", "scale")
+                      for x in joint[key]]
+            stream.write(struct.pack("<i9f2I", parent, *values,
+                                     first_tri, tri_count))
+
+        for triangle in triangles:
+            stream.write(struct.pack("<HH", triangle["joint"],
+                                     triangle["texture"]))
+            for vertex in triangle["vertices"]:
+                pos = [float(x) for x in vertex["pos"]]
+                uv = [float(x) for x in vertex["uv_texels"]]
+                stream.write(struct.pack("<5f", *(pos + uv)))
+
+        for _symbol, width, height, pixels in textures:
+            stream.write(struct.pack("<HHI", width, height, len(pixels)))
+            stream.write(pixels)
+
+        for name, duration, loop, first_track, track_count in animations:
+            encoded = name.encode("ascii")[:31]
+            stream.write(encoded + b"\0" * (32 - len(encoded)))
+            stream.write(struct.pack("<f3I", duration, loop, first_track,
+                                     track_count))
+
+        for joint, kind, first_key, key_count in tracks:
+            stream.write(struct.pack("<HH2I", joint, kind, first_key, key_count))
+
+        for frame, value in keys:
+            stream.write(struct.pack("<2f", frame, value))
+
+    print(f"wrote {output} ({output.stat().st_size} bytes): "
+          f"{len(joints)} joints, {len(triangles)} triangles, "
+          f"{len(textures)} textures, {len(animations)} animations, "
+          f"{len(tracks)} tracks, {len(keys)} keys")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("assets_root", type=Path)
+    parser.add_argument("output", type=Path)
+    args = parser.parse_args()
+    write_blob(args.assets_root.resolve(), args.output.resolve())
+
+
+if __name__ == "__main__":
+    main()

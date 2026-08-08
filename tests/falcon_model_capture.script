@@ -1,0 +1,18 @@
+LOG falcon-model-capture
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 30
+SCREENSHOT C:/temp/falcon_model_wait.png
+HOLD RIGHT
+WAIT 30
+SCREENSHOT C:/temp/falcon_model_run.png
+HOLD A
+WAIT 12
+SCREENSHOT C:/temp/falcon_model_jump.png
+RELEASE A
+WAIT 20
+RELEASE RIGHT
+EXIT 0

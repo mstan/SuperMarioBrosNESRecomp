@@ -23,6 +23,7 @@ add_executable(SuperMarioBrosRecomp
     extras.c
     game_voxel.c
     game_smash64.c
+    game_smash64_assets.c
     game_smash64_render.c
     mods/widescreen_plugin.c
     mods/voxel_plugin.c
@@ -50,6 +51,35 @@ target_include_directories(SuperMarioBrosRecomp PRIVATE
 )
 
 target_link_libraries(SuperMarioBrosRecomp PRIVATE ${SDL2_LIBRARIES})
+
+# The baker is publishable code; its inputs and output remain under the
+# ignored assets_ssb64 quarantine. A checkout without those local assets
+# simply omits this target and the runtime uses its cube fallback.
+set(FALCON_ASSET_ROOT "${CMAKE_SOURCE_DIR}/assets_ssb64")
+set(FALCON_RUNTIME_BLOB "${FALCON_ASSET_ROOT}/falcon_runtime.bin")
+if(EXISTS "${FALCON_ASSET_ROOT}/model/captain_model.json")
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_Interpreter_FOUND)
+        file(GLOB_RECURSE FALCON_ASSET_INPUTS CONFIGURE_DEPENDS
+            "${FALCON_ASSET_ROOT}/model/*.json"
+            "${FALCON_ASSET_ROOT}/textures/*.json"
+            "${FALCON_ASSET_ROOT}/textures/*.bin"
+            "${FALCON_ASSET_ROOT}/textures/*.png"
+            "${FALCON_ASSET_ROOT}/anim/*.json")
+        add_custom_command(
+            OUTPUT "${FALCON_RUNTIME_BLOB}"
+            COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_SOURCE_DIR}/tools/bake_falcon_runtime.py"
+                "${FALCON_ASSET_ROOT}" "${FALCON_RUNTIME_BLOB}"
+            DEPENDS
+                "${CMAKE_SOURCE_DIR}/tools/bake_falcon_runtime.py"
+                ${FALCON_ASSET_INPUTS}
+            COMMENT "Baking local-only Captain Falcon runtime assets"
+            VERBATIM)
+        add_custom_target(falcon_runtime_assets DEPENDS "${FALCON_RUNTIME_BLOB}")
+        add_dependencies(SuperMarioBrosRecomp falcon_runtime_assets)
+    endif()
+endif()
 
 if(WIN32)
     target_link_libraries(SuperMarioBrosRecomp PRIVATE ws2_32)

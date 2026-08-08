@@ -30,6 +30,10 @@ nestopia-core
 
 build_ui/
 
+# Local Python tooling bytecode
+__pycache__/
+*.pyc
+
 # Falcon harness build byproducts (traces are regenerated, not tracked)
 tests/falcon_harness/*.exe
 tests/falcon_harness/*.obj
