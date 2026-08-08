@@ -339,7 +339,9 @@ extern uint16_t g_rts_target;
 #define GetPRCmp func_D0D1
 #define BowserControl func_D07F
 #define B_FaceP func_D0B0
-#define PowerUpObjHandler func_BC85_b0
+/* PowerUpObjHandler: 0xBC85 is standalone-emitted in 2 banks (b0,b1) -- no unsuffixed alias emitted; use PowerUpObjHandler__b0 or PowerUpObjHandler__b1 explicitly */
+#define PowerUpObjHandler__b0 func_BC85_b0
+#define PowerUpObjHandler__b1 func_BC85_b1
 #define VineObjectHandler func_B94B_b0
 #define RunStarFlagObj func_D2D9
 #define JumpspringHandler func_B8BA_b0
@@ -611,7 +613,9 @@ extern uint16_t g_rts_target;
 #define ProcessAreaData func_9508_b0
 #define StoreMT func_9488_b0
 #define ImposeGravitySprObj func_BFAD_b0
-#define SetAnimSpd func_B5C5_b0
+/* SetAnimSpd: 0xB5C5 is standalone-emitted in 2 banks (b0,b1) -- no unsuffixed alias emitted; use SetAnimSpd__b0 or SetAnimSpd__b1 explicitly */
+#define SetAnimSpd__b0 func_B5C5_b0
+#define SetAnimSpd__b1 func_B5C5_b1
 #define SetAbsSpd func_B620_b0
 #define ExXMove func_BF4C_b0
 #define CheckTopOfBlock func_BE1F_b0
@@ -930,8 +934,6 @@ extern uint16_t g_rts_target;
 #define SideCheckLoop func_DD66
 #define TopStatusBarLine func_8752_b1
 #define RunBBSubs func_BA76_b1
-#define PowerUpObjHandler func_BC85_b1
-#define SetAnimSpd func_B5C5_b1
 #define BlstSJp func_F5D1
 #define GrowItemRegs func_F602
 #define N2Tone func_F538
