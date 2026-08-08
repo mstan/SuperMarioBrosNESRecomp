@@ -307,6 +307,12 @@ static int s_wrote_x = 0;      /* native (page*256+pos) X the horizontal hook
                                 * is detectable as SMB1 refusing the motion */
 static int s_wrote_x_valid = 0;
 static int s_x_before = 0;     /* native X at horizontal hook entry */
+
+/* Last frame's ownership, for the SCRIPTED->FOREIGN edge (M5). */
+static ForeignOwnership s_prev_ownership = FOREIGN_OWNERSHIP_NATIVE;
+static int s_reseed_this_frame = 0;   /* marks the ring row after the tick
+                                       * pushes it -- the note functions edit
+                                       * the LAST row, so ordering matters */
 /* Collision-flag bits accumulated inside the vertical hook, where the sweep
  * runs, and drained by the next update_input when the ForeignCollisionResult
  * is assembled. Sampling them at the later point read a different instant of
@@ -493,16 +499,28 @@ static ForeignOwnership decide_ownership(void)
         return FOREIGN_OWNERSHIP_SCRIPTED;
 
     /*
+     * M5: swimming stays native. SSB64 has no swim model, and Player_State 1
+     * doubles as jumping AND swimming, so without this gate a water level
+     * would be driven as an endless Falcon jump. SwimmingFlag is LEVEL-
+     * scoped: its one write site in the whole ROM is Entrance_GameTimerSetup
+     * ($9153 STY $0704 = AreaType==0, smb.asm:2794-2797; Ghidra byte-search
+     * found no other absolute store), so gating the whole level is exact,
+     * not an approximation.
+     */
+    if (g_ram[SwimmingFlag])
+        return FOREIGN_OWNERSHIP_SCRIPTED;
+
+    /*
      * M3: Falcon owns the air too. The state encoding is from the disassembly
      * (PlayerPhysicsSub $B450 compares #$03 for climbing; PlayerBGCollision's
      * SetFallS path stores #$02; InitJS stores #$01):
-     *     0 on ground   1 jumping/swimming   2 falling   3 climbing   4 killed
-     * 0..2 are ordinary locomotion and ours. 3 is a vine, 4 is death, and both
-     * are native modes we do not model.
-     *
-     * Note 1 doubles as swimming. SwimmingFlag distinguishes them and water
-     * levels are out of scope for M3, so a swim would currently be driven as a
-     * jump; that is tracked with the scripted-state handoffs in M5.
+     *     0 on ground   1 jumping/swimming   2 falling   3 climbing
+     * 0..2 are ordinary locomotion and ours; 3 is a vine, a native mode we do
+     * not model. An earlier revision asserted 4 = killed; no store of #$04
+     * exists in smb.asm (all seven sta Player_State sites checked -- death
+     * goes through SetKRout, which stores #$01), and ownership safety never
+     * depended on it: GameEngineSubroutine leaves 8 for the whole death
+     * sequence and gates first, above.
      */
     if (g_ram[Player_State] > 2) return FOREIGN_OWNERSHIP_SCRIPTED;
 
@@ -577,7 +595,43 @@ void game_smash64_update_input(uint64_t frame_count)
      * what the ring showed before, because the hook only fires from SMB1's own
      * movement path and scripted sequences never reach it.
      */
-    nes_foreign_set_ownership(decide_ownership());
+    {
+        ForeignOwnership now = decide_ownership();
+        int reseed = 0;
+
+        /*
+         * M5: a scripted sequence handing back is a fresh start for the
+         * FIGHTER, not just for SMB1. Nothing ticks the controller while
+         * ownership is SCRIPTED, so vel_ground_x, the move state and every
+         * mid-gesture buffer (kneebend, turn, stick-tap) freeze at whatever
+         * they held when ownership left -- a dash frozen into a pipe would
+         * come out of the far end as a full-speed phantom dash SMB1 never
+         * asked for. (The death edge happens to self-heal because resolve
+         * keeps running during the animation and routes through a landing
+         * that zeroes velocity -- measured, frame 649 of the death-edge
+         * trace -- but that is an accident of that one sequence, not a
+         * contract.) nes_foreign_select's own contract is a full reset, so
+         * re-selecting is the reseed; the adapter's own accumulators
+         * describe trajectories from before the sequence and go with it.
+         * SMB1 normalizes facing itself on every re-entry (PlayerRdy,
+         * smb.asm:5480-5483, forces PlayerFacingDir = 1), matching the
+         * reset's facing default.
+         */
+        if (s_prev_ownership == FOREIGN_OWNERSHIP_SCRIPTED &&
+            now == FOREIGN_OWNERSHIP_FOREIGN) {
+            nes_foreign_select(s_controller_id);
+            s_y_sub = 0.0;
+            s_x_sub = 0.0;
+            s_wrote_xspeed = 0;
+            s_wrote_x_valid = 0;
+            s_wrote_y_valid = 0;
+            s_wrote_yspeed_valid = 0;
+            reseed = 1;
+        }
+        s_prev_ownership = now;
+        nes_foreign_set_ownership(now);
+        s_reseed_this_frame = reseed;
+    }
 
     fs = nes_foreign_state();
     if (fs) {
@@ -634,6 +688,13 @@ void game_smash64_update_input(uint64_t frame_count)
          */
         s_wrote_yspeed_valid = 0;
         s_wrote_y_valid = 0;
+    }
+
+    /* The tick above pushed this frame's ring row; stamp it now if this was
+     * the reseed edge. */
+    if (s_reseed_this_frame) {
+        nes_foreign_trace_note_reseed();
+        s_reseed_this_frame = 0;
     }
 
     /*
@@ -1273,6 +1334,8 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_wrote_x = 0;
     s_wrote_x_valid = 0;
     s_x_before = 0;
+    s_prev_ownership = FOREIGN_OWNERSHIP_NATIVE;
+    s_reseed_this_frame = 0;
 
     {
         const char *e = getenv("NESRECOMP_SMASH64_SWEEP_NOBLOCK");
