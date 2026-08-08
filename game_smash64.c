@@ -224,6 +224,85 @@ static int32_t player_native_x(void)
            (int32_t)g_ram[Player_X_Position];
 }
 
+/* ------------------------------------------------------------------ */
+/* M4 -- asking SMB1's own tiles where the player may go               */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Host-defined bits in ForeignCollisionResult.flags, recorded in the ring's
+ * collision_flags column. These say what SMB1's OWN block buffer thinks about
+ * where the controller has actually put the player, which is a different
+ * question from whether SMB1 bothered to act on it.
+ */
+#define SMASH64_CF_HEAD_IN_SOLID 0x0001u
+#define SMASH64_CF_FEET_IN_SOLID 0x0002u
+
+/*
+ * Index into BlockBuffer_X_Adder / BlockBuffer_Y_Adder for the player's
+ * current size and posture. Mirrors ChkCollSize ($DBB1 region, smb.asm:11867)
+ * exactly, including the order of the tests: BlockBufferAdderData ($E3AD) is
+ * {$00, $07, $0e} and SMB1 walks Y down from 2.
+ */
+static uint8_t block_adder_index(void)
+{
+    if (g_ram[CrouchingFlag]) return 0x0e;
+    if (g_ram[PlayerSize])    return 0x0e;
+    if (g_ram[SwimmingFlag])  return 0x07;
+    return 0x00;
+}
+
+/*
+ * Ask SMB1 whether the metatile at the player's head (or feet) is solid, for a
+ * CANDIDATE vertical position.
+ *
+ * This calls the game's own lookup rather than reimplementing its address
+ * math. BlockBufferCollision ($E3F0) reads SprObject_X_Position / PageLoc /
+ * Y_Position for the object in X (0 = player), converts to a block-buffer
+ * index and returns the metatile in A. It touches only scratch $02-$07, so it
+ * is safe as a query provided we restore that scratch, the position byte we
+ * moved, and the CPU registers.
+ *
+ * Deliberately NOT calling CheckForCoinMTiles, which HeadChk and DoFootCheck
+ * both use here: despite the name it is not a predicate, it queues the
+ * coin-grab sound as a side effect. CheckForSolidMTiles ($DF8F) is a genuine
+ * predicate -- GetMTileAttrib plus a compare, registers only -- and returns
+ * its answer in carry.
+ *
+ * Reimplementing any of this in C would be a second copy of ROM logic that
+ * silently drifts; the game's tiles stay the only source of truth.
+ */
+static int smb1_solid_at(int y_pos, int feet)
+{
+    CPU6502State save_cpu = g_cpu;
+    uint8_t save_scratch[6];
+    uint8_t save_y = g_ram[Player_Y_Position];
+    uint8_t tile;
+    int solid = 0;
+
+    memcpy(save_scratch, &g_ram[0x02], sizeof save_scratch); /* $02..$07 */
+
+    g_ram[Player_Y_Position] = (uint8_t)(y_pos & 0xFF);
+
+    /* BlockBufferColli_Head does not set X (only _Side does), so the caller
+     * owns it. Y selects the adder pair; _Feet increments it on entry. */
+    g_cpu.X = 0;
+    g_cpu.Y = block_adder_index();
+    if (feet) BlockBufferColli_Feet();
+    else      BlockBufferColli_Head();
+    tile = g_cpu.A;
+
+    if (tile != 0) {
+        g_cpu.A = tile;
+        CheckForSolidMTiles();
+        solid = g_cpu.C ? 1 : 0;   /* cmp: carry set = at or above solid base */
+    }
+
+    memcpy(&g_ram[0x02], save_scratch, sizeof save_scratch);
+    g_ram[Player_Y_Position] = save_y;
+    g_cpu = save_cpu;
+    return solid;
+}
+
 static ForeignOwnership decide_ownership(void)
 {
     if (!s_enabled || !s_selected) return FOREIGN_OWNERSHIP_NATIVE;
@@ -458,10 +537,20 @@ void game_smash64_update_input(uint64_t frame_count)
             hit.imposed_vy = -(double)now_ys / FALCON_TO_SMB1_PX;
             s_imposed_frames++;
 
-            /* Downward impulse while we were rising is SMB1 stopping the jump
-             * against something solid; report it as a ceiling too so the ring
-             * and the controller both see the collision, not just the number. */
-            if (now_ys > 0 && s_wrote_dy_px < 0.0) hit.hit_ceiling = 1;
+            /*
+             * We were rising and SMB1 replaced our upward speed with something
+             * that is not upward: it stopped the jump against something solid.
+             * Report a ceiling so the ring and the controller see the
+             * COLLISION and not merely a number.
+             *
+             * The test is >= 0, not > 0, because SMB1 expresses a block bump as
+             * Player_Y_Speed = 0 (PlayerHeadCollision, smb.asm:11252) and only
+             * a solid-tile stop as $01. Testing > 0 missed the commonest case
+             * of all -- measured: bumping a ? block gave imposed 0.00 with
+             * hit_ceiling 0, which read as "nothing happened" in the ring even
+             * though the bump had been applied correctly.
+             */
+            if (now_ys >= 0 && s_wrote_dy_px < 0.0) hit.hit_ceiling = 1;
 
             /* Our subpixel remainder describes a trajectory SMB1 has replaced. */
             s_y_sub = 0.0;
@@ -485,6 +574,26 @@ void game_smash64_update_input(uint64_t frame_count)
          * projection the hook applied. */
         hit.actual_dy = -(double)(now_y - s_y_before) / FALCON_TO_SMB1_PX;
         s_wrote_y_valid = 0;
+    }
+
+    /*
+     * M4 step 1 -- OBSERVE before changing the movement path.
+     *
+     * Ask SMB1's own block buffer whether the position we just wrote is inside
+     * solid geometry. This changes nothing; it only records a verdict in the
+     * ring, and it answers a question the existing columns cannot: hit_ceiling
+     * says "SMB1 pushed back", which is silent both when SMB1 never noticed and
+     * when it noticed in a way we failed to read. HEAD_IN_SOLID says "he is in
+     * the wall right now", which is the actual clipping symptom.
+     *
+     * Cheap enough to run unconditionally: two block-buffer lookups per frame,
+     * only while Falcon owns the player.
+     */
+    if (nes_foreign_ownership() == FOREIGN_OWNERSHIP_FOREIGN) {
+        int y_now = (int)g_ram[Player_Y_Position];
+
+        if (smb1_solid_at(y_now, 0)) hit.flags |= SMASH64_CF_HEAD_IN_SOLID;
+        if (smb1_solid_at(y_now, 1)) hit.flags |= SMASH64_CF_FEET_IN_SOLID;
     }
 
     nes_foreign_resolve(&hit);
