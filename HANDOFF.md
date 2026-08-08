@@ -2,11 +2,28 @@
 
 Date: 2026-08-08
 
-Captain Falcon's first complete milestone ladder is finished: authentic
-locomotion, host collision/handoffs, real model and animation playback,
-representative grounded/aerial combat, native SMB1 enemy/block consequences,
-and original voice/move audio. The central Beads tracker remains the source of
-truth:
+## Current visual QA status: FAILED / work remains
+
+Do not treat commits `93f8741` or `7ce5406` as final visual acceptance. A
+fresh interactive title-screen capture from the launched Release build,
+`C:\Users\Matthew\Documents\ShareX\Screenshots\2026-08\SuperMarioBrosRecomp_67ZewrnuT5.png`,
+still shows an incorrect Falcon presentation. The model is becoming more
+recognizable, but its title-screen pose/silhouette is malformed and much too
+large, overlapping the logo and menu. The walk animation also faces/poses in
+the opposite direction: holding right moves the player right, but the model's
+walk cycle visually reads as walking left (and vice versa).
+
+This screenshot supersedes the earlier QA closure. The Falcon Beads epic and
+final-QA child were reopened. Next-session work should diagnose model-facing
+and animation-space mirroring plus title-screen presentation, then repeat
+fresh interactive screenshot review. Do not declare visual completion from
+script exit codes or the existing `C:\temp\falcon_*` captures.
+
+Captain Falcon's implementation milestone ladder is present—locomotion, host
+collision/handoffs, model and animation playback, representative combat,
+native SMB1 enemy/block consequences, and original voice/move audio—but final
+visual acceptance is reopened for the defects above. The central Beads tracker
+remains the source of truth:
 
 ```powershell
 bd -C F:\Software\beads\issues show beads-2dw.2.1 --json
