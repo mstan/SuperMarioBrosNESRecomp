@@ -236,6 +236,25 @@ static int32_t player_native_x(void)
  */
 #define SMASH64_CF_HEAD_IN_SOLID 0x0001u
 #define SMASH64_CF_FEET_IN_SOLID 0x0002u
+#define SMASH64_CF_SWEPT_CEILING 0x0004u
+#define SMASH64_CF_SWEPT_FLOOR   0x0008u
+/* The sweep actually stepped and probed this frame. Without this, "no sweep
+ * block" is ambiguous between "nothing was in the way" and "the sweep never
+ * got a chance to look", and those need completely different fixes. */
+#define SMASH64_CF_SWEPT_RAN     0x0010u
+
+/* What the per-pixel sweep stopped on last frame, if anything. Consumed by the
+ * next update_input, which is the next time a ForeignCollisionResult is built. */
+#define SMASH64_SWEEP_NONE    0
+#define SMASH64_SWEEP_CEILING 1
+#define SMASH64_SWEEP_FLOOR   2
+static int s_swept_block = SMASH64_SWEEP_NONE;
+static int s_swept_ran = 0;
+/* Collision-flag bits accumulated inside the vertical hook, where the sweep
+ * runs, and drained by the next update_input when the ForeignCollisionResult
+ * is assembled. Sampling them at the later point read a different instant of
+ * the frame -- see the drain site. */
+static uint32_t s_pending_flags = 0;
 
 /*
  * Index into BlockBuffer_X_Adder / BlockBuffer_Y_Adder for the player's
@@ -589,12 +608,41 @@ void game_smash64_update_input(uint64_t frame_count)
      * Cheap enough to run unconditionally: two block-buffer lookups per frame,
      * only while Falcon owns the player.
      */
-    if (nes_foreign_ownership() == FOREIGN_OWNERSHIP_FOREIGN) {
-        int y_now = (int)g_ram[Player_Y_Position];
+    /*
+     * Overlap verdict, measured INSIDE the hook rather than here.
+     *
+     * It used to be sampled at this point, which is a different instant in the
+     * frame from the sweep: the screen scrolls between the two, and the block
+     * buffer is indexed off the player's screen position, so the same Y could
+     * answer differently in the two places. That produced a genuinely
+     * contradictory trace -- a frame flagged both SWEPT_RAN and HEAD_IN_SOLID,
+     * i.e. "the sweep stepped and found nothing solid, and the position it
+     * chose is solid". Both readings were honest; they were of different
+     * moments. Now the sweep and the overlap check see one instant.
+     */
+    hit.flags |= s_pending_flags;
+    s_pending_flags = 0;
 
-        if (smb1_solid_at(y_now, 0)) hit.flags |= SMASH64_CF_HEAD_IN_SOLID;
-        if (smb1_solid_at(y_now, 1)) hit.flags |= SMASH64_CF_FEET_IN_SOLID;
+    /*
+     * The sweep's own verdict, independent of whether SMB1 chose to react.
+     *
+     * This is the part that does not depend on the game noticing: the position
+     * we wrote is never inside geometry, whatever SMB1's once-per-frame gates
+     * decide. If SMB1 also reacts, its Player_Y_Speed lands via the imposed_vy
+     * path above and is the more specific answer; this only ensures the
+     * controller is told it stopped.
+     */
+    if (s_swept_block == SMASH64_SWEEP_CEILING) {
+        hit.hit_ceiling = 1;
+        hit.flags |= SMASH64_CF_SWEPT_CEILING;
+    } else if (s_swept_block == SMASH64_SWEEP_FLOOR) {
+        hit.hit_floor = 1;
+        hit.flags |= SMASH64_CF_SWEPT_FLOOR;
     }
+    if (s_swept_ran) hit.flags |= SMASH64_CF_SWEPT_RAN;
+    s_swept_block = SMASH64_SWEEP_NONE;
+    s_swept_ran = 0;
+    s_pending_flags = 0;
 
     nes_foreign_resolve(&hit);
 }
@@ -694,12 +742,80 @@ static int move_player_vertically_hook(uint16_t addr)
     high = (int8_t)g_ram[Player_Y_HighPos];
     s_y_before = (high * 256) + pos;
 
-    pos += whole;
-    while (pos < 0)    { pos += 256; high -= 1; }
-    while (pos > 255)  { pos -= 256; high += 1; }
+    /*
+     * M4 step 2 -- walk the motion one pixel at a time against SMB1's own
+     * tiles instead of teleporting the whole delta.
+     *
+     * WHY ONE PIXEL, AND WHY STOP *AT* THE BLOCKED POSITION RATHER THAN
+     * BEFORE IT. SMB1 resolves its own vertical collisions, and both of its
+     * checks are gated on how far INTO a metatile the player is:
+     *
+     *   DoFootCheck  ldy $04 / cpy #$05 / bcc LandPlyr   -- lands only when
+     *                the coordinate's low nybble is < 5
+     *   HeadChk      ldy $04 / cpy #$04 / bcc DoFootCheck -- bumps only when
+     *                it is >= 4
+     *
+     * The adders (BlockBuffer_Y_Adder $E3D1) are +32 for the feet and +4 for
+     * the head, so the feet cross into a new tile row exactly when
+     * Y = 0 (mod 16) and the head when Y = 12 (mod 16). Those are precisely
+     * the coordinates at which the two gates above fire. Stepping one pixel
+     * and stopping on the first solid probe therefore parks the player on the
+     * coordinate SMB1 is looking for -- the sweep FEEDS the game's own
+     * collision rather than replacing it.
+     *
+     * Stopping one pixel SHORT instead would be worse than doing nothing: the
+     * feet would never enter the floor tile, LandPlyr would never run, and the
+     * player would hover a pixel above the ground forever.
+     *
+     * Only the leading edge is probed -- feet when descending, head when
+     * rising -- because that is the edge SMB1 itself tests for that direction.
+     */
+    {
+        int step = (whole > 0) ? 1 : -1;
+        int left = (whole >= 0) ? whole : -whole;
+        int feet = (whole > 0);
+
+        while (left-- > 0) {
+            int cand = pos + step;
+            int cand_hi = high;
+
+            s_swept_ran = 1;
+
+            while (cand < 0)   { cand += 256; cand_hi -= 1; }
+            while (cand > 255) { cand -= 256; cand_hi += 1; }
+
+            /*
+             * Mirror SMB1's own "don't even look" guards, so we never invent a
+             * collision where the game has none. Getting this wrong would be
+             * catastrophic in the obvious way: a pit must stay fatal.
+             *   DoFootCheck skips entirely at Y >= $CF (smb.asm:11916)
+             *   HeadChk skips below PlayerBGUpperExtent, $20 big / $10 small
+             */
+            if (cand_hi == 1 &&
+                (feet ? (cand < 0xCF)
+                      : (cand >= (g_ram[PlayerSize] ? 0x10 : 0x20))) &&
+                smb1_solid_at(cand, feet)) {
+                pos = cand;
+                high = cand_hi;
+                s_swept_block = feet ? SMASH64_SWEEP_FLOOR
+                                     : SMASH64_SWEEP_CEILING;
+                break;
+            }
+
+            pos = cand;
+            high = cand_hi;
+        }
+    }
 
     g_ram[Player_Y_Position] = (uint8_t)pos;
     g_ram[Player_Y_HighPos]  = (uint8_t)(int8_t)high;
+
+    /* Did we end the frame inside geometry? Measured here, at the same instant
+     * as the sweep above, so the two can never contradict each other. */
+    if (high == 1) {
+        if (smb1_solid_at(pos, 0)) s_pending_flags |= SMASH64_CF_HEAD_IN_SOLID;
+        if (smb1_solid_at(pos, 1)) s_pending_flags |= SMASH64_CF_FEET_IN_SOLID;
+    }
 
     /* Remember what we wrote so next frame can tell whether SMB1 kept it. */
     s_wrote_y = (high * 256) + pos;
@@ -880,6 +996,7 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_wrote_yspeed = 0;
     s_wrote_yspeed_valid = 0;
     s_imposed_frames = 0;
+    s_swept_block = SMASH64_SWEEP_NONE;
 
     if (!nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 1)) {
         fprintf(stderr,
