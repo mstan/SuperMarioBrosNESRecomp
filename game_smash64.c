@@ -310,10 +310,34 @@ static int smb1_solid_at(int y_pos, int feet)
     else      BlockBufferColli_Head();
     tile = g_cpu.A;
 
+    /*
+     * The predicate is NOT the same for the two edges, and getting this wrong
+     * silently disabled the whole downward sweep once already.
+     *
+     * HEAD: HeadChk asks CheckForSolidMTiles ($DF8F), which answers "is this
+     * the kind of thing you BUMP" -- SolidMTileUpperExt is {$10,$61,$88,$c4}
+     * indexed by the metatile's 2 MSB, and carry is set only at or above that
+     * base.
+     *
+     * FEET: DoFootCheck never calls it. It treats ANY NONZERO metatile as
+     * floor (smb.asm:11926 `bne ChkFootMTile`) and then excludes climbables.
+     * That distinction is not cosmetic: 1-1's ground metatile is $54, whose
+     * 2 MSB select threshold $61, so $54 < $61 and CheckForSolidMTiles calls
+     * ordinary ground NOT SOLID. Using it for the feet meant the probe
+     * answered "no floor" while standing on the floor, and the downward sweep
+     * could never fire. Measured: the sweep stepped through the landing row at
+     * ny=176 without blocking.
+     */
     if (tile != 0) {
-        g_cpu.A = tile;
-        CheckForSolidMTiles();
-        solid = g_cpu.C ? 1 : 0;   /* cmp: carry set = at or above solid base */
+        if (feet) {
+            g_cpu.A = tile;
+            CheckForClimbMTiles();
+            solid = g_cpu.C ? 0 : 1;   /* climbable is not floor */
+        } else {
+            g_cpu.A = tile;
+            CheckForSolidMTiles();
+            solid = g_cpu.C ? 1 : 0;   /* cmp: carry set = at or above base */
+        }
     }
 
     memcpy(&g_ram[0x02], save_scratch, sizeof save_scratch);
