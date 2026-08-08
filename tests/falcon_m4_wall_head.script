@@ -1,0 +1,25 @@
+LOG falcon-m4-wall-head
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+TURBO ON
+HOLD RIGHT
+WAIT 45
+# This jump strikes the underside of the first question-block row.
+HOLD A
+WAIT 30
+RELEASE A
+WAIT 350
+# Hold against the first pipe long enough to compare the per-pixel sweep
+# verdict with SMB1's one-frame-later ImpedePlayerMove response.
+SCREENSHOT C:/temp/falcon_m4_wall_head.png
+HOLD A
+WAIT 30
+RELEASE A
+WAIT 150
+TURBO OFF
+RELEASE RIGHT
+WAIT 30
+EXIT 0

@@ -114,7 +114,7 @@ SCRIPTED→FOREIGN). Character layer (`mods/smash64/characters/captain_falcon.c`
 `game_smash64_render.c` (OAM suppression + tracking 3D cube via the engine's
 `nes_voxel_mesh_*` API). Ring columns incl. collision_flags bits: 0x1
 HEAD_IN_SOLID 0x2 FEET_IN_SOLID 0x4/0x8 SWEPT_CEILING/FLOOR 0x10 SWEPT_RAN
-0x20 SWEPT_WALL 0x40 SIDE_SWEPT_RAN 0x80 WALL_READBACK.
+0x20 SWEPT_WALL 0x40 SIDE_SWEPT_RAN.
 
 ## What is DONE (verified, committed)
 

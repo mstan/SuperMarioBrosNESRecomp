@@ -71,7 +71,6 @@
 /* Player_X_Speed        $0057  written by $B5CC (ImposeFriction) and   */
 /*                              zeroed by $DF6D (ImpedePlayerMove)      */
 /* Player_XSpeedAbsolute $0700  written by $B5CC, read by $B51C/$B4BB   */
-/* SideCollisionTimer    $0785  set to 16 by $DF68 (ImpedePlayerMove)   */
 /*                                                                     */
 /* The GameRoutines jump table at $B04F was decoded straight out of     */
 /* the ROM and gives the complete ownership map:                        */
@@ -201,9 +200,6 @@ static uint8_t  s_prev_buttons = 0;
 static uint64_t s_frame = 0;
 static int8_t   s_xspeed = 0;            /* this frame's velocity, computed in
                                           * update_input, written by the hook */
-static int8_t   s_wrote_xspeed = 0;      /* what the hook wrote last frame, so a
-                                          * zeroed readback is detectable as
-                                          * SMB1 refusing the motion */
 static unsigned long s_owned_frames = 0;
 static unsigned long s_wall_frames = 0;
 static unsigned long s_air_frames = 0;
@@ -216,8 +212,7 @@ static double s_y_sub = 0.0;             /* vertical subpixel remainder, kept
 static int s_wrote_y = 0;                /* 16-bit player Y the vertical hook
                                           * last wrote, so a corrected readback
                                           * is detectable as SMB1 refusing the
-                                          * motion -- the vertical twin of
-                                          * s_wrote_xspeed */
+                                          * motion */
 static int s_wrote_y_valid = 0;
 static int8_t s_wrote_yspeed = 0;        /* Player_Y_Speed the vertical hook
                                           * last wrote, so SMB1 overwriting it
@@ -277,14 +272,9 @@ static int32_t player_native_x(void)
  * block" is ambiguous between "nothing was in the way" and "the sweep never
  * got a chance to look", and those need completely different fixes. */
 #define SMASH64_CF_SWEPT_RAN     0x0010u
-/* Horizontal twins. SIDE_SWEPT_RAN exists for the identical ambiguity. The
- * WALL_READBACK bit records the legacy ImpedePlayerMove inference (zeroed
- * X speed / SideCollisionTimer) so a trace can compare the sweep's verdict
- * against SMB1's own reaction offline; once the two agree over the harness
- * scripts the readback bit goes away with the inference itself. */
+/* Horizontal twins. SIDE_SWEPT_RAN exists for the identical ambiguity. */
 #define SMASH64_CF_SWEPT_WALL     0x0020u
 #define SMASH64_CF_SIDE_SWEPT_RAN 0x0040u
-#define SMASH64_CF_WALL_READBACK  0x0080u
 
 /* What the per-pixel sweep stopped on last frame, if anything. Consumed by the
  * next update_input, which is the next time a ForeignCollisionResult is built. */
@@ -627,7 +617,6 @@ void game_smash64_update_input(uint64_t frame_count)
             nes_foreign_select(s_controller_id);
             s_y_sub = 0.0;
             s_x_sub = 0.0;
-            s_wrote_xspeed = 0;
             s_wrote_x_valid = 0;
             s_wrote_y_valid = 0;
             s_wrote_yspeed_valid = 0;
@@ -656,20 +645,13 @@ void game_smash64_update_input(uint64_t frame_count)
                                       : FOREIGN_AIR_NONE;
     }
 
-    /*
-     * The horizontal sweep's own verdict is now the wall authority (M4). The
-     * ImpedePlayerMove inference below -- zeroed Player_X_Speed ($DF6D) or
-     * SideCollisionTimer ($DF68) -- still fires when SMB1 reacts to the
-     * position the sweep parked at, and is kept as a CROSS-CHECK, recorded
-     * in its own ring bit so the two verdicts can be compared offline. Once
-     * they agree across the harness scripts the inference gets deleted; the
-     * sweep sees the wall on the frame of contact, the readback one frame
-     * late, which at 6.4 px/frame was the difference between a wall and a
-     * tunnel.
-     */
-    wall = s_x_swept_wall ||
-           (s_wrote_xspeed != 0 && (int8_t)g_ram[Player_X_Speed] == 0) ||
-           (g_ram[SideCollisionTimer] != 0);
+    /* The per-pixel horizontal sweep is the wall authority. The former
+     * X-speed/SideCollisionTimer inference was deliberately removed after
+     * sustained agreement coverage: it was one frame late and could keep a
+     * stale timer classified as a fresh wall. The exact position readback
+     * below remains, because it reconciles any native ejection SMB1 performs
+     * after the hook (notably inside a one-tile concavity). */
+    wall = s_x_swept_wall;
 
     memset(&move, 0, sizeof(move));
     if (nes_foreign_tick(frame_count, &fin, &move)) {
@@ -888,17 +870,12 @@ void game_smash64_update_input(uint64_t frame_count)
     s_swept_ran = 0;
     s_pending_flags = 0;
 
-    /* Horizontal drain -- same lifecycle as the vertical bits above. The
-     * WALL_READBACK bit re-derives the legacy inference in isolation so the
-     * ring can show sweep-vs-readback agreement per frame. */
+    /* Horizontal drain -- same lifecycle as the vertical bits above. */
     if (s_x_swept_wall) {
         hit.hit_wall = 1;
         hit.flags |= SMASH64_CF_SWEPT_WALL;
     }
     if (s_x_swept_ran) hit.flags |= SMASH64_CF_SIDE_SWEPT_RAN;
-    if ((s_wrote_xspeed != 0 && (int8_t)g_ram[Player_X_Speed] == 0) ||
-        (g_ram[SideCollisionTimer] != 0))
-        hit.flags |= SMASH64_CF_WALL_READBACK;
     s_x_swept_wall = 0;
     s_x_swept_ran = 0;
 
@@ -921,7 +898,6 @@ static void write_xspeed(int8_t xspeed)
     g_ram[Player_X_Speed] = (uint8_t)xspeed;
     g_ram[Player_XSpeedAbsolute] =
         (uint8_t)((xspeed < 0) ? -(int)xspeed : (int)xspeed);
-    s_wrote_xspeed = xspeed;
 }
 
 static int impose_friction_hook(uint16_t addr)
@@ -1316,7 +1292,6 @@ static int jumpsquat_hook(uint16_t addr)
  * (unlike a cross-process ABI) because get/set run in the same build. */
 typedef struct {
     int8_t   xspeed;
-    int8_t   wrote_xspeed;
     double   y_sub;
     double   x_sub;
     int32_t  wrote_y;
@@ -1341,7 +1316,7 @@ typedef struct {
     uint32_t pending_flags;
 } AdapterSaveFields;
 
-#define SMASH64_ADAPTER_SAVESTATE_VERSION 1
+#define SMASH64_ADAPTER_SAVESTATE_VERSION 2
 
 /*
  * Returns 0 bytes while the mod is off. There is no adapter trajectory to
@@ -1357,7 +1332,6 @@ static int game_smash64_savestate_get(uint8_t *buf, int cap)
     if (cap < (int)(1 + sizeof f)) return -1;
 
     f.xspeed              = s_xspeed;
-    f.wrote_xspeed        = s_wrote_xspeed;
     f.y_sub               = s_y_sub;
     f.x_sub               = s_x_sub;
     f.wrote_y             = s_wrote_y;
@@ -1398,7 +1372,6 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
     memcpy(&f, buf + 1, sizeof f);
 
     s_xspeed              = f.xspeed;
-    s_wrote_xspeed        = f.wrote_xspeed;
     s_y_sub               = f.y_sub;
     s_x_sub               = f.x_sub;
     s_wrote_y             = f.wrote_y;
@@ -1453,7 +1426,6 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     }
 
     s_xspeed = 0;
-    s_wrote_xspeed = 0;
     s_owned_frames = 0;
     s_wall_frames = 0;
     s_air_frames = 0;
@@ -1515,8 +1487,9 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
          * exposure. Say so, for the same reason the jumpsquat hook does. */
         fprintf(stderr,
                 "[Smash64] MovePlayerHorizontally hook is not registered; "
-                "horizontal motion is unswept (readback wall detection, "
-                "tunnelling exposure at dash speed)\n");
+                "horizontal motion uses native integration with one-frame-"
+                "late position reconciliation (tunnelling exposure at dash "
+                "speed)\n");
     }
     s_enabled = 1;
 }

@@ -1,0 +1,17 @@
+LOG falcon-m4-one-tile-gap
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+# Block_Buffer_1 is $0500 (unique Ghidra table at $939B). At the initial
+# camera position, $05B6 is floor row $B0, world tile column 6 (x=96..111).
+# Removing exactly this metatile creates a one-tile gap in otherwise flat 1-1.
+WRITE_RAM8 05B6 00
+DUMP_RAM 05B0 10
+HOLD RIGHT
+WAIT 80
+RELEASE RIGHT
+SCREENSHOT C:/temp/falcon_m4_one_tile_gap.png
+WAIT 2
+EXIT 0

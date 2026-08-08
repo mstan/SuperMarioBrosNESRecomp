@@ -312,10 +312,11 @@ per the host-owned-state rule. No contention for a guest byte.
 
 ### Reading SMB1's answer back
 
-The horizontal path detects a refused move by reading `Player_X_Speed` back and
-watching `SideCollisionTimer`. The vertical path is the exact twin: the hook
-remembers the 16-bit Y it wrote, and the next VBlank compares it against what is
-actually there. A difference means `PlayerBGCollision` overruled us — upward
+The horizontal path uses the per-pixel sweep as its wall authority, then
+reconciles the exact world X on the next VBlank if SMB1 performed a native
+ejection after the hook. The vertical path is the exact twin: the hook remembers
+the 16-bit Y it wrote, and the next VBlank compares it against what is actually
+there. A difference means `PlayerBGCollision` overruled us — upward
 becomes `hit_ceiling`, downward `hit_floor` — and the delta is converted back
 into the controller's units and sign for `nes_foreign_resolve`.
 
@@ -505,12 +506,23 @@ line — the `$B450` hook.
   scroll driver). Measured: dash pins flush at native_x 434 against 1-1's
   first pipe (probe adder 13 → pixel 447, last column before the tile at
   448), zero penetration over ~400 contact frames, one frame of wall latency
-  removed. The legacy `ImpedePlayerMove` readback stays as a ring-visible
-  cross-check (`WALL_READBACK` 0x80) until the harness scripts show sustained
-  agreement, then gets deleted. `nes_foreign_sweep` in the engine remains
+  removed. The legacy X-speed/`SideCollisionTimer` inference was deleted after
+  sustained wall, fast-fall, and one-tile-gap agreement runs; exact position
+  reconciliation remains for native ejections after the hook. `nes_foreign_sweep`
+  in the engine remains
   unused: its last-unblocked semantics don't fit a host that resolves its own
   collisions and needs the overlap; if a second game needs it, add an
   inclusive-stop mode to the helper rather than copying this adapter's loop.
+- **M4 closure coverage is durable.** `tests/falcon_m4_wall_head.script` holds
+  Falcon against the first pipe and also records the first question-row head
+  bump (`hit_ceiling=1`, imposed Y velocity adopted). The 22-phase
+  `falcon_m4_fastfall.script` covers changing landing residues. The
+  `falcon_m4_one_tile_gap.script` removes exactly block-buffer cell `$05B6`
+  (row `$B0`, column 6): Falcon leaves ground, falls one tile, lands on the
+  intact lower layer at native Y 192, and stays pinned against the concavity
+  rather than tunnelling through its side. On the final build no trace uses
+  the retired collision-flag bit `$80`; the sweep reports wall contacts and
+  exact X readback reconciles SMB1's post-hook ejection in the concavity.
 - **`TurnRun` is an adaptation**, not Falcon's real run-turn — the original is
   animation-driven. See `falcon_movement_dependency.md` §6.
 - **Two provisional durations** (`FL_DASH`, landings) still need the Figatree
