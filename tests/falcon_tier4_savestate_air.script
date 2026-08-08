@@ -1,0 +1,18 @@
+LOG falcon-tier4-savestate-air
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 20
+HOLD RIGHT
+HOLD A
+WAIT 10
+SAVE_STATE C:/temp/falcon_tier4_air.sav
+WAIT 18
+LOAD_STATE C:/temp/falcon_tier4_air.sav
+WAIT 18
+RELEASE A
+RELEASE RIGHT
+WAIT 30
+EXIT 0

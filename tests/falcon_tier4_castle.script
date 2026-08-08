@@ -1,0 +1,17 @@
+LOG falcon-tier4-castle-1-4
+WAIT 60
+# World 1-4, again selected only before SMB1 calls LoadAreaPointer.
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 03
+WRITE_RAM8 760 04
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+ASSERT_RAM8 0704 00
+HOLD RIGHT
+WAIT 120
+RELEASE RIGHT
+SCREENSHOT C:/temp/falcon_tier4_castle.png
+WAIT 2
+EXIT 0

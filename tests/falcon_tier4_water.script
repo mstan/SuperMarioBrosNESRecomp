@@ -1,0 +1,16 @@
+LOG falcon-tier4-water-2-2
+WAIT 60
+# Enter World 2-2 through SMB1's native area loader. These three selector
+# bytes are set before START; no live level state is patched.
+WRITE_RAM8 75F 01
+WRITE_RAM8 75C 01
+WRITE_RAM8 760 01
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT_RAM8 0704 01
+WAIT 90
+SCREENSHOT C:/temp/falcon_tier4_water.png
+WAIT 2
+EXIT 0

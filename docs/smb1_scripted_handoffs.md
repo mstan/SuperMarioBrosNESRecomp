@@ -266,19 +266,25 @@ interactions produce; there is no fourth mechanism to add.
 
 ---
 
-## 5. Open coverage (M5.7, not yet run)
+## 5. Tier-4 coverage (M5.7, completed 2026-08-07)
 
-- Water level run to exercise the `SwimmingFlag` gate against real
-  gameplay (§2.2) — not yet reachable quickly from World 1-1.
-- Both pipe types (side and vertical) run against a pre-reseed build to
-  demonstrate the predicted phantom-dash, then against the fixed build to
-  confirm it is closed — not yet built; the reseed shipped as the
-  class-closing fix without a pipe-specific repro (the death-edge repro
-  was built instead, and it was the one that produced the measured
-  correction in §1).
-- Castle level run (mixed hazards, per the M5 description).
-- A/B run with the mod disabled, as a regression baseline.
+The remaining end-to-end matrix is captured by the checked-in
+`tests/falcon_tier4_*.script` scripts:
 
-No claim in this document depends on that coverage landing; it documents
-what the code does now for every item the audit named, and separately
-what has and has not yet been *exercised* end to end.
+- World 2-2 reaches ordinary play with `SwimmingFlag == 1` and remains
+  `SCRIPTED`, leaving SMB1's native swim physics in control.
+- World 1-2's native vertical-pipe entrance returns to `FOREIGN` at frame 605
+  with `reseeded=1`, zero Falcon velocity, and native position `(40,48)`.
+- A deterministic dispatch through SMB1's native `SideExitPipeEntry` routine
+  reaches the alternate area, returns to `FOREIGN` at frame 367 with
+  `reseeded=1`, and settles normally without inherited velocity.
+- World 1-4 reaches ordinary castle play under Falcon ownership.
+- With the package feature disabled, the same runner starts and plays stock
+  Mario, does not arm the Smash64 controller, and emits no `ftring` file.
+- Savestates taken mid-`KNEEBEND` and mid-air reproduce every ring field on
+  their replayed frame ranges (11 and 17 duplicated frames respectively).
+
+These tests validate the current fixed build. The earlier death-edge A/B in
+§1 remains the isolated before/after proof of the general reseed defect; the
+two pipe cases close the real transition coverage without maintaining a
+second intentionally broken binary.

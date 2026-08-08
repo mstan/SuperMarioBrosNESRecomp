@@ -1,0 +1,16 @@
+LOG falcon-tier4-savestate-kneebend
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 20
+HOLD A
+WAIT 2
+SAVE_STATE C:/temp/falcon_tier4_kneebend.sav
+WAIT 12
+LOAD_STATE C:/temp/falcon_tier4_kneebend.sav
+WAIT 12
+RELEASE A
+WAIT 30
+EXIT 0

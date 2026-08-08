@@ -1,0 +1,17 @@
+LOG falcon-tier4-side-pipe-native-dispatch
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+# Dispatch SMB1's native SideExitPipeEntry ($0E == 2).  $06DE is the
+# native ChangeAreaTimer decremented by that routine; $0086 is aligned so
+# EnterSidePipe completes its fixed rightward movement before area reload.
+WRITE_RAM8 0086 31
+WRITE_RAM8 06DE 10
+WRITE_RAM8 000E 02
+WAIT_RAM8 000E 08
+WAIT 60
+SCREENSHOT C:/temp/falcon_tier4_pipe_exit.png
+WAIT 2
+EXIT 0
