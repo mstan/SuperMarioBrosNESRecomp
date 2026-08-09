@@ -225,8 +225,11 @@ data uses the cube fallback.
 
 Audio uses `game_smash64_audio.c`: seven local cues for jump effort, "Falcon",
 "Punch", Falcon Kick, Punch impact, Kick swing, and Kick energy start. Missing
-clips are a silent fallback. Exact table provenance and documented N64-FGM
-adaptations are in `docs/falcon_audio.md`.
+clips are a silent fallback. The FGM cues now resolve trigger indices through
+BattleShip's `B1_sounds2` sound array and render their authored pitch/envelope,
+fork, and stop timing; this removes the old `B1_sounds1/wave_019` guitar-like
+tail. Exact table provenance, renderer timing, spectral A/B evidence, and the
+sample-exact runtime capture are in `docs/falcon_audio.md`.
 
 ## Completed milestones and evidence
 

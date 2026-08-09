@@ -19,13 +19,14 @@ checkout `4fc1128`). Its US data exposes the original route as
 | "Falcon" | voice 348, articulation 208, trigger 90 | `B1_sounds2/wave_090.aiff` |
 | "Punch" | voice 347, articulation 209, trigger 91 | `B1_sounds2/wave_091.aiff` |
 | Falcon Kick call | voice 346, articulation 210, trigger 92 | `B1_sounds2/wave_092.aiff` |
-| Punch impact | FGM 184 -> 187, articulation 146, instrument 11 | `B1_sounds1/wave_019.aiff` |
-| Kick opening swing | FGM 41, articulation 173, instrument 18 | `B1_sounds1/wave_053.aiff` |
-| Kick energy start | FGM 183 -> 186, articulation 147, instrument 11 | `B1_sounds1/wave_019.aiff` |
+| Punch impact | FGM 184 -> 187 + fork 0; articulations 146/7; triggers 11/4 | `B1_sounds2/wave_011.aiff` + `wave_004.aiff` |
+| Kick opening swing | FGM 41, articulation 173, trigger 18 | `B1_sounds2/wave_018.aiff` |
+| Kick energy start | FGM 183 -> 186, articulation 147, trigger 11 | `B1_sounds2/wave_011.aiff` |
 
-The four voice articulations and instrument 11 specify approximately -1200
-cents. BattleShip's `audio.c` configures a 32000 Hz synthesizer, and the FGM
-path in `n_env.c` sends `alCents2Ratio(unk2C + unk30)` directly to
+The four voice articulations and the Falcon energy articulations specify
+approximately -1200 cents. BattleShip's `audio.c` configures a 32000 Hz
+synthesizer, and the FGM path in `n_env.c` sends
+`alCents2Ratio(unk2C + unk30)` directly to
 `n_alSynStartVoiceParams`; an `ALWaveTable` carries no independent source-rate
 field. The original byte stream is therefore consumed at an effective 16000
 samples/second. The decomp preview AIFF's 44100 Hz header is export metadata,
@@ -34,12 +35,19 @@ resampling to the runner's 44100 Hz. The LightSwingL path combines +550 and
 -400 cents, so its representative waveform is rendered at +150 cents against
 the 32000 Hz synthesizer.
 
-The original FGM interpreter also applies evolving envelopes, repeated notes,
-and (for the Punch impact) a forked explosion voice. Reimplementing that whole
-N64 synthesizer is outside this host adapter. The local previews preserve the
-identified source waveform and pitch; Punch/Kick FGM envelopes and the selected
-middle-range swing waveform are documented audio adaptations. Voice samples
-and their pitch are direct.
+The FGM trigger operand indexes the 322-entry `B1_sounds2` sound array loaded
+as BattleShip's first audio bank. It is not a `B1_sounds1` instrument index.
+The previous extractor confused those namespaces and played
+`B1_sounds1/wave_019` for both Falcon energy cues; that looped tonal sample was
+the reported guitar-like tail.
+
+The local extractor now renders the authored subset of the FGM interpreter:
+the 184 -> 187 Punch pitch sequence and its forked voice 0, the 183 -> 186 Kick
+pitch/envelope sequence, and the FGM 41 LightSwingL pitch. It advances at
+BattleShip's `184 / 32000`-second FGM tick and applies the source stop/release
+ramp. The runtime still receives ordinary bounded PCM one-shots; no FGM engine
+or ROM data is linked into the executable. Voice samples and their pitch remain
+direct.
 
 The ignored reproducibility helper is:
 
@@ -93,6 +101,16 @@ the restored timeline fires normally.
   `t2_bridge_in` exactly (367500/367500 samples). Corrected voice durations are
   0.218005 s (jump), 0.564014 s ("Falcon"), 0.938005 s ("Punch"), and
   0.829002 s (Kick).
+- FGM route correction capture
+  `C:\temp\falcon_audio_fgm_fix_20260809`: all seven corrected clips load and
+  queue at the authored source frames. Reconstructing the complete 720-frame
+  `t2_bridge_in` stream from `t1_apu`, cue chronology, regenerated clips,
+  integer gains, save-load stop, overlap, and final saturation is sample-exact
+  (529200/529200 samples). Correct FGM durations are 1.127778 s (Punch impact
+  including fork 0), 0.810748 s (Kick energy start), and 0.187052 s
+  (LightSwingL). `C:\temp\falcon_{punch,kick}_audio_spectrum_compare.png`
+  contrasts the removed narrow tonal `B1_sounds1/wave_019` tail with the
+  broadband authored `B1_sounds2` FGM routes.
 - `tests/falcon_tier4_mod_off.script`: holding B with the package disabled
   produces no Smash64 controller, asset, audio-load, or cue log.
 - Temporarily withholding the ignored audio directory produces exactly one

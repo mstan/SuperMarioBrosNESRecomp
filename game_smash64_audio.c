@@ -30,9 +30,12 @@ static FalconAudioAsset s_assets[] = {
     { FALCON_AUDIO_PUNCH_FALCON,  "falcon",      "falcon_punch_falcon.wav",  88, 0 },
     { FALCON_AUDIO_PUNCH_PUNCH,   "punch",       "falcon_punch_punch.wav",   92, 0 },
     { FALCON_AUDIO_KICK,          "kick",        "falcon_kick.wav",          90, 0 },
-    { FALCON_AUDIO_PUNCH_IMPACT,  "punch-impact","falcon_punch_impact.wav",  58, 0 },
-    { FALCON_AUDIO_KICK_SWING,    "kick-swing",  "falcon_kick_swing.wav",    55, 0 },
-    { FALCON_AUDIO_KICK_START,    "kick-start",  "falcon_kick_start.wav",    55, 0 },
+    { FALCON_AUDIO_PUNCH_IMPACT,  "punch-impact",
+      "falcon_punch_impact_fgm.wav", 58, 0 },
+    { FALCON_AUDIO_KICK_SWING,    "kick-swing",
+      "falcon_kick_swing_fgm.wav", 55, 0 },
+    { FALCON_AUDIO_KICK_START,    "kick-start",
+      "falcon_kick_start_fgm.wav", 55, 0 },
 };
 
 static int s_enabled;
