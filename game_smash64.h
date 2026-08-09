@@ -37,6 +37,11 @@ void game_smash64_update_input(uint64_t frame_count);
 /* Called every VBlank after NMI. */
 void game_smash64_update(uint64_t frame_count);
 
+/* PC-scoped RAM-read adaptation used by extras.c. Only PlayerBGCollision's
+ * size/crouch geometry reads are changed; native gameplay consequences keep
+ * the real hidden Mario power-up state. */
+uint8_t game_smash64_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val);
+
 /* 1 while Falcon is actually driving the player this frame. */
 int game_smash64_active(void);
 
@@ -53,11 +58,13 @@ int game_smash64_still_presentation_active(void);
 typedef enum Smash64ScriptedPresentation {
     SMASH64_SCRIPTED_PRESENTATION_NONE = 0,
     SMASH64_SCRIPTED_PRESENTATION_FLAGPOLE,
-    SMASH64_SCRIPTED_PRESENTATION_WALK
+    SMASH64_SCRIPTED_PRESENTATION_WALK,
+    SMASH64_SCRIPTED_PRESENTATION_PIPE_SIDE,
+    SMASH64_SCRIPTED_PRESENTATION_PIPE_VERTICAL
 } Smash64ScriptedPresentation;
 
 /* Presentation-only replacements for native scripted movement that visibly
- * represents the player: flagpole sliding and entrance/end-level autowalk.
+ * represents the player: pipes, flagpole sliding, and entrance/end autowalk.
  * SMB1 retains complete ownership of movement, timing, and progression. */
 Smash64ScriptedPresentation game_smash64_scripted_presentation(void);
 

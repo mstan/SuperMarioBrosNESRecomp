@@ -1,0 +1,32 @@
+LOG falcon-directional-special-trace-qa
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 90
+
+# B one VBlank before Down must still enter Down-B, then return to control.
+HOLD B
+WAIT 2
+HOLD DOWN
+WAIT 2
+RELEASE B
+RELEASE DOWN
+WAIT 100
+
+# B one VBlank before Up must enter Falcon Dive, not Punch.
+HOLD B
+WAIT 2
+HOLD UP
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 150
+
+# Neutral B remains Falcon Punch after the single grace VBlank.
+HOLD B
+WAIT 3
+RELEASE B
+WAIT 70
+EXIT 0

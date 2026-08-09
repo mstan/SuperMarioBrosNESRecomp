@@ -8,6 +8,32 @@
 
 #include "super-mario-bros_full_decls.h"
 
+void func_9BAC_b0(void) { /* ChkLrgObjLength */
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_9BAC_b0");
+#endif
+label_9BAC:; /* ChkLrgObjLength */
+    /* $9BAC: 20 */ nes_instruction_boundary(0x9BAC, 6); func_9BBB_b0();
+label_9BAF:; /* ChkLrgObjFixedLength */
+    /* $9BAF: BD */ nes_instruction_boundary(0x9BAF, 4); g_cpu.A = nes_read((0x0730 + g_cpu.X) & 0xFFFF); FLAG_NZ(g_cpu.A);
+label_9BB2:;
+    /* $9BB2: 18 */ nes_instruction_boundary(0x9BB2, 2); g_cpu.C = 0;
+label_9BB3:;
+    /* $9BB3: 10 */ nes_instruction_boundary(0x9BB3, 2); if (!g_cpu.N) { maybe_trigger_vblank(1); goto label_9BBA; }
+label_9BB5:;
+    /* $9BB5: 98 */ nes_instruction_boundary(0x9BB5, 2); g_cpu.A = g_cpu.Y; FLAG_NZ(g_cpu.A);
+label_9BB6:;
+    /* $9BB6: 9D */ nes_instruction_boundary(0x9BB6, 5); nes_write((0x0730 + g_cpu.X) & 0xFFFF, g_cpu.A);
+label_9BB9:;
+    /* $9BB9: 38 */ nes_instruction_boundary(0x9BB9, 2); g_cpu.C = 1;
+label_9BBA:; /* LenSet */
+    /* $9BBA: 60 */ nes_instruction_boundary(0x9BBA, 6); 
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+    return;
+}
+
 void func_9BBB_b0(void) { /* GetLrgObjAttrib */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_9BBB_b0");

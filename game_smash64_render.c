@@ -139,7 +139,7 @@ static int falcon_ssaa_enabled(void) {
 }
 
 static void composite_falcon_ssaa(uint32_t *framebuffer, int width,
-                                  int height) {
+                                  int height, int behind_background) {
     const int source_width = width * FALCON_SSAA_SCALE;
     /* The first four tile rows are SMB1's fixed HUD. Native player sprites
      * are clipped as they leave the playfield; never paint the replacement
@@ -157,6 +157,9 @@ static void composite_falcon_ssaa(uint32_t *framebuffer, int width,
             unsigned count = 0, red = 0, green = 0, blue = 0;
             uint32_t destination;
             unsigned dr, dg, db;
+            if (behind_background &&
+                ppu_renderer_background_opaque(x, y))
+                continue;
             for (int i = 0; i < 4; ++i) {
                 if ((samples[i] >> 24) == 0) continue;
                 ++count;
@@ -182,6 +185,21 @@ static void composite_falcon_ssaa(uint32_t *framebuffer, int width,
     }
 }
 
+static void restore_falcon_priority(uint32_t *framebuffer,
+                                    const uint32_t *before,
+                                    int width, int height,
+                                    int behind_background) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            if (y < SMB1_PLAYFIELD_TOP ||
+                (behind_background &&
+                 ppu_renderer_background_opaque(x, y))) {
+                framebuffer[y * width + x] = before[y * width + x];
+            }
+        }
+    }
+}
+
 void game_smash64_render_post_render(uint32_t *framebuffer) {
     NesVoxelCamera camera;
     uint32_t *target = framebuffer;
@@ -195,6 +213,8 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
     int death_active;
     int still_active;
     int preserve_status_bar = 0;
+    int preserve_native_frame = 0;
+    int behind_background = 0;
     Smash64ScriptedPresentation scripted_presentation;
     float x0, x1, y0, y1, z0, z1;
     NesVoxelMeshVertex a, b, c, d, e, f, g, h;
@@ -203,6 +223,11 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
     death_active = game_smash64_death_presentation_active();
     still_active = game_smash64_still_presentation_active();
     scripted_presentation = game_smash64_scripted_presentation();
+    behind_background =
+        (scripted_presentation == SMASH64_SCRIPTED_PRESENTATION_PIPE_SIDE ||
+         scripted_presentation ==
+             SMASH64_SCRIPTED_PRESENTATION_PIPE_VERTICAL) &&
+        (g_ram[Player_SprAttrib] & 0x20) != 0;
     if (!game_smash64_active() && !death_active && !still_active &&
         scripted_presentation == SMASH64_SCRIPTED_PRESENTATION_NONE) {
         /* OperMode and the game-engine dispatch can briefly leave their death
@@ -231,6 +256,11 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
         target_height = 240 * FALCON_SSAA_SCALE;
         target = s_falcon_ssaa;
         memset(target, 0, (size_t)target_width * target_height * sizeof(*target));
+    } else if ((size_t)g_render_width * 240u <=
+               sizeof(s_falcon_ssaa) / sizeof(s_falcon_ssaa[0])) {
+        preserve_native_frame = 1;
+        memcpy(s_falcon_ssaa, framebuffer,
+               (size_t)g_render_width * 240u * sizeof(*framebuffer));
     } else if (g_render_width <= FALCON_SSAA_MAX_WIDTH) {
         preserve_status_bar = 1;
         memcpy(s_native_status_bar, framebuffer,
@@ -378,7 +408,11 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
 
     nes_voxel_mesh_end();
     if (output_scale > 1.0f) {
-        composite_falcon_ssaa(framebuffer, g_render_width, 240);
+        composite_falcon_ssaa(framebuffer, g_render_width, 240,
+                              behind_background);
+    } else if (preserve_native_frame) {
+        restore_falcon_priority(framebuffer, s_falcon_ssaa,
+                                g_render_width, 240, behind_background);
     } else if (preserve_status_bar) {
         memcpy(framebuffer, s_native_status_bar,
                (size_t)g_render_width * SMB1_PLAYFIELD_TOP *

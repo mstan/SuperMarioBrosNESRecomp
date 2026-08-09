@@ -635,7 +635,7 @@ static void enter_falcon_dive_landing(FalconFighter *f)
  * 235_CaptainMainMotion.c; only this compact input mapping is new. */
 static void enter_ground_attack(FalconFighter *f, const FalconInputRaw *in)
 {
-    if (in->stick_y <= -20) {
+    if (in->stick_y <= -40) {
         set_status(f, FL_FALCON_KICK_GROUND);
     } else if (in->stick_y >= 40) {
         enter_falcon_dive(f, 1);
@@ -649,7 +649,7 @@ static void enter_ground_attack(FalconFighter *f, const FalconInputRaw *in)
 
 static void enter_air_attack(FalconFighter *f, const FalconInputRaw *in)
 {
-    if (in->stick_y <= -20) {
+    if (in->stick_y <= -40) {
         set_status(f, FL_FALCON_KICK_AIR);
     } else if (in->stick_y >= 40) {
         enter_falcon_dive(f, 0);

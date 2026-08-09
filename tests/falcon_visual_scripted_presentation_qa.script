@@ -47,4 +47,20 @@ SCREENSHOT C:/temp/falcon_scripted_entrance_04.png
 WAIT 4
 SCREENSHOT C:/temp/falcon_scripted_entrance_08.png
 WAIT 2
+
+# VerticalPipeEntry ($03) has its own planted pipe pose. This controlled
+# presentation branch supplements the real $07/$0752=2 vertical exit captured
+# by falcon_slot0_pipe_clearance_qa.script.
+LOAD_STATE C:/temp/falcon_visual_scripted_presentation_base.sav
+WAIT 2
+WRITE_RAM8 000E 03
+WRITE_RAM8 03C4 00
+ASSERT_RAM8 000E 03
+WAIT 2
+SCREENSHOT C:/temp/falcon_scripted_pipe_vertical_00.png
+WAIT 2
+WRITE_RAM8 03C4 20
+WAIT 2
+SCREENSHOT C:/temp/falcon_scripted_pipe_vertical_behind.png
+WAIT 2
 EXIT 0

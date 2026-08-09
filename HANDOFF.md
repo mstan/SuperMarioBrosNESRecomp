@@ -29,22 +29,50 @@ Exact turn/event captures are isolated behind save-state reloads and render
 settling; frames 12, 13, and 14 now have distinct hashes. Additional captures
 show FallSpecial plus special-landing entry, midpoint, and completion.
 
-The latest Falcon Kick direction concern was rechecked against the actual
-mirrored captures. The corrected Kick-only `-90` degree yaw is right: its yellow
-boot leads screen travel and CaptainSpecial2 trails behind for both facings.
-The large asymmetric flame was nevertheless biased in front of the fighter and
-could obscure the body enough to read backward. The pending presentation patch
-moves only that attached card behind Falcon; yaw, roll, texture extent, timing,
-and root trajectory remain source-derived. Fresh Release frame-12/16/20 mirrors
-again show the boot/body on the leading edge and the plume behind for both
-facings. The depth change does not eliminate the plume's visual dominance at
-native scale, so owner playtest remains the acceptance gate before closing the
-reopened Down-B Bead.
+The latest Falcon Kick direction concern exposed a host-only body-yaw override
+that contradicted BattleShip: Captain's TopN remains at the standard
+`lr * +90`-degree side view for Down-B, while only the CaptainSpecial2 effect
+has its own authored yaw/air roll. The Kick-only `-90` override is now removed;
+the attached card remains behind Falcon with its source transform unchanged.
+Fresh Release frame-12/16/20 mirrors show the boot/body on the leading edge and
+the plume trailing for both facings. Because the large asymmetric plume still
+dominates the native-scale silhouette, owner playtest remains the acceptance
+gate before closing the reopened Down-B Bead.
 
-Ground Falcon Dive emits `force_airborne` once. Adapter save record v5 bridges
+Ground Falcon Dive emits `force_airborne` once. Adapter save record v6 bridges
 the source animation's subpixel startup across SMB1's integer floor state only
 until the first successful upward whole-pixel sweep; the latest save/replay QA
 proves the planted startup resumes into the same frame-13 lift (`Y $B0->$A6`).
+
+Directional specials now use the Smash 64 stick thresholds (`>= +40` for
+Up-B, `<= -40` for Down-B) with a one-VBlank NES-pad grace period when B is
+pressed from neutral. Direction-first and same-frame chords remain immediate;
+B followed by Up or Down on the next VBlank resolves to the directional move,
+while neutral B resolves to Falcon Punch one VBlank later. The fresh foreign
+trace records `FALCON_KICK_GROUND` at frame 321, `FALCON_DIVE_GROUND` at 422,
+and `FALCON_PUNCH_GROUND` at 573. Adapter save record v6 serializes the pending
+edge, and an exact v5 migration restores all older owner state with no pending
+edge so existing local slots remain usable.
+
+Falcon now presents a stable Big-Mario collision profile independent of the
+hidden native powerup size. Both the high-precision sweep and the four native
+`PlayerBGCollision` geometry reads see the same Big profile. PC-scoped RAM-read
+hooks leave the actual size/crouch bytes untouched, so later native gameplay
+still uses the real power-up state (including bump-vs-shatter brick behavior).
+The slot-0 regression walks both native size values through a true
+32-pixel/two-block-high corridor and rejects a 16-pixel control. Its QA command
+also paints the matching test tiles into the nametable, so
+`C:\temp\falcon_clearance_32_big_mid.png` visibly confirms Falcon inside the
+two-block opening rather than relying only on an X-coordinate assertion.
+
+Pipe dispatches `$02` (side ingress), `$03` (vertical ingress), and `$07` with
+`AltEntranceControl == $02` (vertical egress) now suppress Mario and render a
+Falcon pipe pose. Occlusion uses the exact background-opaque coverage captured
+by the PPU renderer for the most recently rendered frame, so Falcon passes
+behind the pipe instead of being drawn over it. The real slot-0 run asserts
+the `$02` and `$07/$0752 == $02` phases and captures partial side entry, full
+occlusion, helmet emergence, and the ready Falcon on top of the pipe under
+`C:\temp\falcon_slot0_pipe_*.png`.
 
 The defects shown in the owner's August 8 screenshots have been corrected in
 the current worktree. Fresh Release captures were generated after the final
@@ -384,10 +412,12 @@ captures show Falcon in all three states rather than a false one-frame Mario.
   wait at least two frames before loading another savestate or changing the
   pose, or the PNG will record the replacement state instead.
 - Scripted presentation is keyed narrowly to SMB1
-  `GameEngineSubroutine` values `$04` (flagpole), `$05` (end-level walk), and
-  `$07` (entrance walk). SMB1 retains all motion and progression. Flagpole uses
-  a fixed calm source Fall pose because the extracted Smash set has no ladder
-  or pole motion; both walks advance source `Walk2`.
+  `GameEngineSubroutine` values `$02` (side pipe), `$03` (vertical pipe), `$04`
+  (flagpole), `$05` (end-level walk), and `$07` (entrance walk or vertical pipe
+  exit when `AltEntranceControl == $02`). SMB1 retains all motion and
+  progression. Flagpole uses a fixed calm source Fall pose because the
+  extracted Smash set has no ladder or pole motion; horizontal walks advance
+  source `Walk2`, while vertical pipe travel uses the planted `CrouchIdle`.
 - World 1-2's black backdrop is useful for the purple/yellow ground poses, but
   can hide Falcon's darkest lower-leg polygons during aerial kicks. The aerial
   sequence QA repeats consecutive Fair/Bair frames against World 1-1's light

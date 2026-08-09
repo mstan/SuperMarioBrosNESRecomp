@@ -56,6 +56,15 @@ addr = 0x03B3           # Misc_Rel_XPos
 [[ram_read_hook]]
 addr = 0x03D1           # Enemy_OffscreenBits (GetMaskedOffScrBits collision gate)
 
+# Falcon presents one stable Big-Mario collision envelope even when hidden
+# Mario health says small/crouched. game_smash64_ram_read_hook changes these
+# values only at PlayerBGCollision's four geometry reads; later
+# PlayerHeadCollision reads retain native size for bump-vs-shatter behavior.
+[[ram_read_hook]]
+addr = 0x0714           # CrouchingFlag
+[[ram_read_hook]]
+addr = 0x0754           # PlayerSize
+
 # SMB inline indexed dispatch: JSR $8E04 pops return address to find a
 # 2-byte LE address table immediately after the JSR. Dispatches via A register.
 [[inline_dispatch]]
@@ -166,3 +175,9 @@ addr = 0xB450           # PlayerPhysicsSub
 # swept distance. Inert unless the mod enables it.
 [[mod_function_hook]]
 addr = 0xBF09           # MovePlayerHorizontally
+
+# BoundingBoxCore is shared, but the player control byte is element zero.
+# The enabled callback keeps only that element on SMB1's Big-Mario envelope so
+# Falcon cannot inherit Small Mario's one-tile contact box.
+[[mod_function_hook]]
+addr = 0xE29C           # BoundingBoxCore

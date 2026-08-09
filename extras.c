@@ -401,6 +401,7 @@ void game_run_main(void) {
 int game_dispatch_override(uint16_t addr) { (void)addr; return 0; }
 
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
+    val = game_smash64_ram_read_hook(pc, addr, val);
     if (!ws_sim_active()) return val;
 
     /* ---- Sidecar re-arm: SprObject_Rel_XPos reads (any PC) ----

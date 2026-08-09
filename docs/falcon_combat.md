@@ -58,7 +58,7 @@ then returns to normal fall.
 Because FalconDive's pre-launch TransN rise is smaller than one NES pixel,
 the SMB adapter preserves the controller's single departure edge until its
 first successful upward whole-pixel sweep. This host-side quantization bridge
-is saved in adapter record v5, releases as soon as Falcon visibly separates
+is saved in adapter record v6 (with exact v5 migration), releases as soon as Falcon visibly separates
 from the floor, and is cleared on any scripted/native ownership handoff.
 
 SMB1 has no persistent fighter-capture object. Its safe adaptation applies the

@@ -1253,16 +1253,6 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
             state->state == FL_FALCON_PUNCH_AIR) {
             yaw_degrees = env_float("NESRECOMP_FALCON_PUNCH_YAW_DEG",
                                     yaw_degrees);
-        } else if (state->state == FL_FALCON_KICK_GROUND ||
-                   state->state == FL_FALCON_KICK_GROUND_AIR ||
-                   state->state == FL_FALCON_KICK_LANDING ||
-                   state->state == FL_FALCON_KICK_AIR ||
-                   state->state == FL_FALCON_KICK_BOUND) {
-            /* DownSpecial's extended boot reads backward under the generic
-             * +90-degree side projection.  The authored pose needs the
-             * opposite side view so its lead foot agrees with root travel;
-             * CaptainSpecial2 keeps its independent lr-authored transform. */
-            yaw_degrees = env_float("NESRECOMP_FALCON_KICK_YAW_DEG", -90.0f);
         }
         yaw_rad = yaw_degrees *
             (3.14159265358979323846f / 180.0f);
@@ -1344,15 +1334,24 @@ int game_smash64_assets_draw_scripted(float center_x, float foot_y,
                                       int scripted_presentation,
                                       float presentation_frame)
 {
-    const char *animation = scripted_presentation ==
-                                    SMASH64_SCRIPTED_PRESENTATION_WALK
-                                ? "Walk2"
-                                : "Fall";
+    const char *animation;
+    if (scripted_presentation == SMASH64_SCRIPTED_PRESENTATION_WALK ||
+        scripted_presentation == SMASH64_SCRIPTED_PRESENTATION_PIPE_SIDE) {
+        animation = "Walk2";
+    } else if (scripted_presentation ==
+               SMASH64_SCRIPTED_PRESENTATION_PIPE_VERTICAL) {
+        animation = "CrouchIdle";
+    } else {
+        animation = "Fall";
+    }
     /* The extracted set has no ledge/ladder motion. A calm source Fall pose
      * is the nearest authentic side-on silhouette for a vertical flagpole;
      * SMB1 supplies the actual slide. Autowalk advances Walk2 at source rate. */
     if (scripted_presentation == SMASH64_SCRIPTED_PRESENTATION_FLAGPOLE)
         presentation_frame = 4.0f;
+    else if (scripted_presentation ==
+             SMASH64_SCRIPTED_PRESENTATION_PIPE_VERTICAL)
+        presentation_frame = 0.0f;
     return draw_model(center_x, foot_y, output_scale, 0, 0, animation,
                       0.0f, presentation_frame);
 }

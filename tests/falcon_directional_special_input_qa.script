@@ -1,0 +1,56 @@
+LOG falcon-directional-special-input-qa
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 90
+SAVE_STATE C:/temp/falcon_directional_special_base.sav
+
+# Direction first: existing direct chord behavior remains immediate.
+HOLD DOWN
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE DOWN
+WAIT 18
+SCREENSHOT C:/temp/falcon_input_down_then_b.png
+WAIT 2
+
+# B first by one VBlank: the adapter's grace frame must select Down-B rather
+# than irrevocably committing neutral Falcon Punch.
+LOAD_STATE C:/temp/falcon_directional_special_base.sav
+WAIT 2
+HOLD B
+WAIT 2
+HOLD DOWN
+WAIT 2
+RELEASE B
+RELEASE DOWN
+WAIT 18
+SCREENSHOT C:/temp/falcon_input_b_then_down.png
+WAIT 2
+
+# The same one-frame ordering must select Falcon Dive for Up-B.
+LOAD_STATE C:/temp/falcon_directional_special_base.sav
+WAIT 2
+HOLD B
+WAIT 2
+HOLD UP
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 20
+SCREENSHOT C:/temp/falcon_input_b_then_up.png
+WAIT 2
+
+# A directionless B edge still becomes Falcon Punch after the one-frame grace.
+LOAD_STATE C:/temp/falcon_directional_special_base.sav
+WAIT 2
+HOLD B
+WAIT 3
+RELEASE B
+WAIT 44
+SCREENSHOT C:/temp/falcon_input_neutral_b.png
+WAIT 2
+EXIT 0

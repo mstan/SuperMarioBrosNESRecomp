@@ -94,6 +94,8 @@ _Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
 /* value is a scripted sequence that must stay native.                  */
 /* ------------------------------------------------------------------ */
 #define SMB1_GAMEMODE_PLAYER_CTRL 8
+#define SMB1_GAMEMODE_SIDE_PIPE 2
+#define SMB1_GAMEMODE_VERTICAL_PIPE 3
 #define SMB1_GAMEMODE_FLAGPOLE_SLIDE 4
 #define SMB1_GAMEMODE_PLAYER_END_LEVEL 5
 #define SMB1_GAMEMODE_PLAYER_ENTRANCE 7
@@ -167,6 +169,8 @@ _Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
  */
 #define SMB1_MOVE_PLAYER_HORIZONTALLY_ADDR 0xBF09
 #define SMASH64_HORIZONTAL_HOOK_ID "super-mario-bros.smash64.move-horizontally"
+#define SMB1_BOUNDING_BOX_CORE_ADDR 0xE29C
+#define SMASH64_BOUNDING_BOX_HOOK_ID "super-mario-bros.smash64.player-bounds"
 
 /* M5.5 save-state hook id -- the adapter half. See game_smash64_savestate_get
  * below for the layout and what it deliberately omits. */
@@ -221,6 +225,11 @@ static int  s_selected = 0;
 static int  s_announced = 0;
 
 static uint8_t  s_prev_buttons = 0;
+/* NES keyboard/controller events can place B one VBlank ahead of the d-pad
+ * direction the player intended to press with it. Defer only a directionless
+ * B edge for one frame; simultaneous and direction-first specials remain
+ * immediate, while neutral Falcon Punch gains one frame of latency. */
+static int s_attack_grace_pending;
 static uint64_t s_frame = 0;
 static int8_t   s_xspeed = 0;            /* this frame's velocity, computed in
                                           * update_input, written by the hook */
@@ -359,9 +368,9 @@ static uint32_t s_pending_flags = 0;
  */
 static uint8_t block_adder_index(void)
 {
-    if (g_ram[CrouchingFlag]) return 0x0e;
-    if (g_ram[PlayerSize])    return 0x0e;
-    if (g_ram[SwimmingFlag])  return 0x07;
+    /* Falcon always uses SMB1's Big-Mario collision envelope regardless of
+     * the hidden native power-up size. Its Y+8/Y+24 side probes fit a true
+     * 32px passage with margin but still reject a 16px passage. */
     return 0x00;
 }
 
@@ -592,7 +601,19 @@ static void sample_input(ForeignInput *out)
     out->jump_held    = (b & PAD_A) != 0;
     out->jump_pressed = (pressed & PAD_A) != 0;
     out->down_pressed = (pressed & PAD_DOWN) != 0;
-    out->attack_pressed = (pressed & PAD_B) != 0;
+    if (pressed & PAD_B) {
+        if (left || right || up || down) {
+            out->attack_pressed = 1;
+            s_attack_grace_pending = 0;
+        } else {
+            s_attack_grace_pending = 1;
+        }
+    } else if (s_attack_grace_pending) {
+        /* The current-frame stick is deliberately sampled here: this is the
+         * one-frame grace that turns B->Up/Down into the intended special. */
+        out->attack_pressed = 1;
+        s_attack_grace_pending = 0;
+    }
     out->raw_buttons  = b;
 
     s_prev_buttons = b;
@@ -663,6 +684,7 @@ void game_smash64_update_input(uint64_t frame_count)
             s_wrote_y_valid = 0;
             s_wrote_yspeed_valid = 0;
             s_contact_pending = 0;
+            s_attack_grace_pending = 0;
             s_forced_airborne_pending = 0;
             s_forced_airborne_frames = 0;
             reseed = 1;
@@ -674,6 +696,7 @@ void game_smash64_update_input(uint64_t frame_count)
              * death, or other native/scripted handoff even for one frame. */
             s_forced_airborne_pending = 0;
             s_forced_airborne_frames = 0;
+            s_attack_grace_pending = 0;
         }
         s_reseed_this_frame = reseed;
     }
@@ -753,6 +776,7 @@ void game_smash64_update_input(uint64_t frame_count)
     } else {
         memset(&s_attack, 0, sizeof(s_attack));
         s_contact_pending = 0;
+        s_attack_grace_pending = 0;
         s_forced_airborne_pending = 0;
         s_forced_airborne_frames = 0;
         /* SMB1 owns the player; keep our idea of velocity in step with it so
@@ -1124,11 +1148,11 @@ static int move_player_vertically_hook(uint16_t addr)
              * collision where the game has none. Getting this wrong would be
              * catastrophic in the obvious way: a pit must stay fatal.
              *   DoFootCheck skips entirely at Y >= $CF (smb.asm:11916)
-             *   HeadChk skips below PlayerBGUpperExtent, $20 big / $10 small
+             *   HeadChk skips below PlayerBGUpperExtent, $20 big / $10 small.
+             * Falcon's stable profile is always the Big $20 extent.
              */
             if (cand_hi == 1 &&
-                (feet ? (cand < 0xCF)
-                      : (cand >= (g_ram[PlayerSize] ? 0x10 : 0x20))) &&
+                (feet ? (cand < 0xCF) : (cand >= 0x20)) &&
                 smb1_solid_at(cand, feet)) {
                 pos = cand;
                 high = cand_hi;
@@ -1558,6 +1582,35 @@ static int jumpsquat_hook(uint16_t addr)
     return 0;
 }
 
+/* BoundingBoxCore is shared, but index zero is the player entry and enemy
+ * calls use later SprObj_BoundBoxCtrl elements. Reasserting only element zero
+ * at each entry gives Falcon the matching Big-Mario contact box without
+ * changing PlayerSize, CrouchingFlag, health, graphics, or any enemy box. */
+static int bounding_box_core_hook(uint16_t addr)
+{
+    (void)addr;
+    if (g_cpu.X == 0 && g_cpu.Y == 0 &&
+        decide_ownership() == FOREIGN_OWNERSHIP_FOREIGN)
+        g_ram[Player_BoundBoxCtrl] = 0;
+    return 0;
+}
+
+uint8_t game_smash64_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val)
+{
+    if (decide_ownership() != FOREIGN_OWNERSHIP_FOREIGN)
+        return val;
+
+    /* PlayerBGCollision $DC64: geometry selection only.
+     * $DC9A/$DC9F choose BlockBufferAdderData and $DCB1/$DCB4 choose
+     * PlayerBGUpperExtent. Later reads in PlayerHeadCollision are deliberately
+     * untouched so small Falcon bumps a brick instead of shattering it. */
+    if (addr == CrouchingFlag && (pc == 0xDC9A || pc == 0xDCB4))
+        return 0;
+    if (addr == PlayerSize && (pc == 0xDC9F || pc == 0xDCB1))
+        return 0;
+    return val;
+}
+
 /* ------------------------------------------------------------------ */
 /* Save state -- the adapter half (M5.5)                              */
 /*                                                                    */
@@ -1602,6 +1655,7 @@ typedef struct {
     int32_t  x_before;
     int32_t  prev_ownership;
     uint8_t  prev_buttons;     /* sample_input's edge-detect latch */
+    int32_t  attack_grace_pending;
     /* Undrained per-frame collision verdicts, set inside a movement hook
      * and consumed by the NEXT update_input. Saving mid-frame, between the
      * hook and that drain, would otherwise lose the very event a trace is
@@ -1617,7 +1671,36 @@ typedef struct {
     ForeignAttackHitbox attack;
 } AdapterSaveFields;
 
-#define SMASH64_ADAPTER_SAVESTATE_VERSION 5
+/* Version 5 is the immediately preceding layout. Keep a reader because the
+ * owner's live slot 0/1 saves were made with it; the new input grace latch is
+ * safely initialized clear when those records are restored. */
+typedef struct {
+    int8_t   xspeed;
+    double   y_sub;
+    double   x_sub;
+    int32_t  wrote_y;
+    int32_t  wrote_y_valid;
+    int8_t   wrote_yspeed;
+    int32_t  wrote_yspeed_valid;
+    int32_t  y_before;
+    double   wrote_dy_px;
+    int32_t  wrote_x;
+    int32_t  wrote_x_valid;
+    int32_t  x_before;
+    int32_t  prev_ownership;
+    uint8_t  prev_buttons;
+    int32_t  swept_block;
+    int32_t  swept_ran;
+    int32_t  x_swept_wall;
+    int32_t  x_swept_ran;
+    uint32_t pending_flags;
+    int32_t  contact_pending;
+    int32_t  forced_airborne_pending;
+    uint32_t forced_airborne_frames;
+    ForeignAttackHitbox attack;
+} AdapterSaveFieldsV5;
+
+#define SMASH64_ADAPTER_SAVESTATE_VERSION 6
 
 /*
  * Returns 0 bytes while the mod is off. There is no adapter trajectory to
@@ -1646,6 +1729,7 @@ static int game_smash64_savestate_get(uint8_t *buf, int cap)
     f.x_before            = s_x_before;
     f.prev_ownership      = (int32_t)s_prev_ownership;
     f.prev_buttons        = s_prev_buttons;
+    f.attack_grace_pending = s_attack_grace_pending;
     f.swept_block         = s_swept_block;
     f.swept_ran           = s_swept_ran;
     f.x_swept_wall        = s_x_swept_wall;
@@ -1671,10 +1755,41 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
     AdapterSaveFields f;
 
     if (len == 0) return 1;
-    if (len != (int)(1 + sizeof f)) return 0;
-    if (buf[0] != SMASH64_ADAPTER_SAVESTATE_VERSION) return 0;
-
-    memcpy(&f, buf + 1, sizeof f);
+    memset(&f, 0, sizeof f);
+    if (buf[0] == SMASH64_ADAPTER_SAVESTATE_VERSION &&
+        len == (int)(1 + sizeof f)) {
+        memcpy(&f, buf + 1, sizeof f);
+    } else if (buf[0] == 5 &&
+               len == (int)(1 + sizeof(AdapterSaveFieldsV5))) {
+        AdapterSaveFieldsV5 old;
+        memcpy(&old, buf + 1, sizeof old);
+        f.xspeed = old.xspeed;
+        f.y_sub = old.y_sub;
+        f.x_sub = old.x_sub;
+        f.wrote_y = old.wrote_y;
+        f.wrote_y_valid = old.wrote_y_valid;
+        f.wrote_yspeed = old.wrote_yspeed;
+        f.wrote_yspeed_valid = old.wrote_yspeed_valid;
+        f.y_before = old.y_before;
+        f.wrote_dy_px = old.wrote_dy_px;
+        f.wrote_x = old.wrote_x;
+        f.wrote_x_valid = old.wrote_x_valid;
+        f.x_before = old.x_before;
+        f.prev_ownership = old.prev_ownership;
+        f.prev_buttons = old.prev_buttons;
+        f.attack_grace_pending = 0;
+        f.swept_block = old.swept_block;
+        f.swept_ran = old.swept_ran;
+        f.x_swept_wall = old.x_swept_wall;
+        f.x_swept_ran = old.x_swept_ran;
+        f.pending_flags = old.pending_flags;
+        f.contact_pending = old.contact_pending;
+        f.forced_airborne_pending = old.forced_airborne_pending;
+        f.forced_airborne_frames = old.forced_airborne_frames;
+        f.attack = old.attack;
+    } else {
+        return 0;
+    }
 
     s_xspeed              = f.xspeed;
     s_y_sub               = f.y_sub;
@@ -1690,6 +1805,7 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
     s_x_before            = f.x_before;
     s_prev_ownership      = (ForeignOwnership)f.prev_ownership;
     s_prev_buttons        = f.prev_buttons;
+    s_attack_grace_pending = f.attack_grace_pending;
     s_swept_block         = f.swept_block;
     s_swept_ran           = f.swept_ran;
     s_x_swept_wall        = f.x_swept_wall;
@@ -1714,6 +1830,7 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_announced = 0;
     memset(&s_attack, 0, sizeof(s_attack));
     s_contact_pending = 0;
+    s_attack_grace_pending = 0;
     s_forced_airborne_pending = 0;
     s_forced_airborne_frames = 0;
     s_controller_id[0] = '\0';
@@ -1722,6 +1839,7 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     nes_mod_set_function_hook_enabled(SMASH64_VERTICAL_HOOK_ID, 0);
     nes_mod_set_function_hook_enabled(SMASH64_JUMPSQUAT_HOOK_ID, 0);
     nes_mod_set_function_hook_enabled(SMASH64_HORIZONTAL_HOOK_ID, 0);
+    nes_mod_set_function_hook_enabled(SMASH64_BOUNDING_BOX_HOOK_ID, 0);
 
     if (!enabled || !controller_id || !controller_id[0]) {
         nes_foreign_select(NULL);
@@ -1742,6 +1860,7 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_xspeed = 0;
     memset(&s_attack, 0, sizeof(s_attack));
     s_contact_pending = 0;
+    s_attack_grace_pending = 0;
     s_forced_airborne_pending = 0;
     s_forced_airborne_frames = 0;
     s_owned_frames = 0;
@@ -1809,6 +1928,11 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
                 "late position reconciliation (tunnelling exposure at dash "
                 "speed)\n");
     }
+    if (!nes_mod_set_function_hook_enabled(SMASH64_BOUNDING_BOX_HOOK_ID, 1)) {
+        fprintf(stderr,
+                "[Smash64] BoundingBoxCore hook is not registered; Falcon "
+                "contact bounds may follow hidden Mario size\n");
+    }
     s_enabled = 1;
     game_smash64_audio_set_enabled(1);
 }
@@ -1846,6 +1970,12 @@ Smash64ScriptedPresentation game_smash64_scripted_presentation(void)
         return SMASH64_SCRIPTED_PRESENTATION_NONE;
 
     subroutine = g_ram[GameEngineSubroutine];
+    if (subroutine == SMB1_GAMEMODE_SIDE_PIPE)
+        return SMASH64_SCRIPTED_PRESENTATION_PIPE_SIDE;
+    if (subroutine == SMB1_GAMEMODE_VERTICAL_PIPE ||
+        (subroutine == SMB1_GAMEMODE_PLAYER_ENTRANCE &&
+         g_ram[AltEntranceControl] == 2))
+        return SMASH64_SCRIPTED_PRESENTATION_PIPE_VERTICAL;
     if (subroutine == SMB1_GAMEMODE_FLAGPOLE_SLIDE)
         return SMASH64_SCRIPTED_PRESENTATION_FLAGPOLE;
     if (subroutine == SMB1_GAMEMODE_PLAYER_END_LEVEL ||
@@ -1908,6 +2038,9 @@ int game_smash64_register_hooks(void)
     ok &= nes_mod_register_function_entry_plugin(
         SMASH64_HORIZONTAL_HOOK_ID, SMB1_MOVE_PLAYER_HORIZONTALLY_ADDR,
         move_player_horizontally_hook);
+    ok &= nes_mod_register_function_entry_plugin(
+        SMASH64_BOUNDING_BOX_HOOK_ID, SMB1_BOUNDING_BOX_CORE_ADDR,
+        bounding_box_core_hook);
 
     /* Unconditional, like the function hooks above: registering a savestate
      * hook does not by itself change behaviour, since get() returns 0 bytes
