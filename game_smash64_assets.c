@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FALCON_BLOB_VERSION 3u
+#define FALCON_BLOB_VERSION 4u
 #define FALCON_JOINT_COUNT 26u
 #define FALCON_RENDER_HEIGHT 32.0f
 #define FALCON_YAW_DEG 88.0f
@@ -29,6 +29,12 @@
 #define FALCON_PUNCH_EFFECT_FIRST_FRAME 42u
 #define FALCON_PUNCH_EFFECT_END_FRAME   55u
 #define FALCON_PUNCH_EFFECT_TEXTURES     3u
+/* fp->joints[23] is model slot 19 after TopN/TransN/XRotN/YRotN. */
+#define FALCON_KICK_EFFECT_JOINT          19u
+#define FALCON_KICK_EFFECT_FIRST_FRAME    12u
+#define FALCON_KICK_EFFECT_END_FRAME      32u
+#define FALCON_KICK_EFFECT_TEXTURES        2u
+#define FALCON_ROOT_TRACK_JOINT        0xFFFFu
 
 typedef struct FalconAssetJoint {
     int parent;
@@ -355,6 +361,10 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
             FALCON_PUNCH_EFFECT_TEXTURES ||
         !range_is_safe(model->punch_effect_texture_first,
                        model->punch_effect_texture_count,
+                       model->texture_count) ||
+        !range_is_safe(model->punch_effect_texture_first +
+                           model->punch_effect_texture_count,
+                       FALCON_KICK_EFFECT_TEXTURES,
                        model->texture_count))
         return 0;
 
@@ -438,7 +448,8 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
         track->kind = read_u16(&reader);
         track->first_key = read_u32(&reader);
         track->key_count = read_u32(&reader);
-        if (track->joint >= model->joint_count || track->kind > 8 ||
+        if ((track->joint >= model->joint_count &&
+             track->joint != FALCON_ROOT_TRACK_JOINT) || track->kind > 8 ||
             !track->key_count ||
             !range_is_safe(track->first_key, track->key_count,
                            model->segment_count))
@@ -576,7 +587,10 @@ static const char *animation_for_state(int state)
     case FL_FALCON_PUNCH_GROUND: return "FalconPunchGround";
     case FL_FALCON_PUNCH_AIR: return "FalconPunchAir";
     case FL_FALCON_KICK_GROUND: return "DownSpecial";
+    case FL_FALCON_KICK_GROUND_AIR: return "VelocityXDownSpecialAir";
+    case FL_FALCON_KICK_LANDING: return "LandingDownSpecial";
     case FL_FALCON_KICK_AIR: return "DownSpecialAir";
+    case FL_FALCON_KICK_BOUND: return "FalconDiveEnd1";
     default: return "Wait";
     }
 }
@@ -634,6 +648,47 @@ static float sample_track(const FalconAssetModel *model,
     return segments[track->key_count - 1].value_target;
 }
 
+int game_smash64_assets_root_delta(const char *animation_name, float frame,
+                                   float *delta_y, float *delta_z)
+{
+    const FalconAssetAnimation *animation;
+    float previous = frame > 0.0f ? frame - 1.0f : frame;
+    float y_now = 0.0f, y_previous = 0.0f;
+    float z_now = 0.0f, z_previous = 0.0f;
+    int have_y = 0, have_z = 0;
+    uint32_t i;
+
+    if (delta_y) *delta_y = 0.0f;
+    if (delta_z) *delta_z = 0.0f;
+    if (!animation_name || !ensure_loaded()) return 0;
+    animation = find_animation(&s_model, animation_name);
+    if (!animation) return 0;
+    if (frame > animation->duration) frame = animation->duration;
+    if (previous > animation->duration) previous = animation->duration;
+
+    for (i = 0; i < animation->track_count; ++i) {
+        const FalconAssetTrack *track =
+            &s_model.tracks[animation->first_track + i];
+        if (track->joint != FALCON_ROOT_TRACK_JOINT) continue;
+        if (track->kind == 4u) {
+            y_now = sample_track(&s_model, track, frame);
+            y_previous = sample_track(&s_model, track, previous);
+            have_y = 1;
+        } else if (track->kind == 5u) {
+            z_now = sample_track(&s_model, track, frame);
+            z_previous = sample_track(&s_model, track, previous);
+            have_z = 1;
+        }
+    }
+    if (!have_y && !have_z) return 0;
+    /* Captain's TopN scale is exactly attr->size = 1.05. Translation values
+     * have already been decoded from Figatree's quarter-unit representation
+     * by the baker, so this is the only remaining source-space scale. */
+    if (delta_y) *delta_y = (y_now - y_previous) * 1.05f;
+    if (delta_z) *delta_z = (z_now - z_previous) * 1.05f;
+    return 1;
+}
+
 static void apply_animation(const FalconAssetModel *model,
                             const FalconAssetAnimation *animation, float frame,
                             float t[FALCON_JOINT_COUNT][3],
@@ -651,6 +706,7 @@ static void apply_animation(const FalconAssetModel *model,
         const FalconAssetTrack *track =
             &model->tracks[animation->first_track + i];
         float value = sample_track(model, track, frame);
+        if (track->joint == FALCON_ROOT_TRACK_JOINT) continue;
         if (track->kind < 3) r[track->joint][track->kind] = value;
         else if (track->kind < 6) t[track->joint][track->kind - 3] = value;
         else s[track->joint][track->kind - 6] = value;
@@ -798,6 +854,129 @@ static void draw_falcon_punch_effect(
     nes_voxel_mesh_triangle(vertices[0], vertices[3], vertices[1]);
 }
 
+static NesVoxelMeshVertex render_kick_effect_vertex(
+    Mat4 joint_world, float card_y, float card_z, float u, float v,
+    const float pose_min[3], const float pose_max[3],
+    float center_x, float foot_y, float facing, float source_lr,
+    float model_scale, float yaw_rad, float output_scale, float roll_rad,
+    float scale_y, float scale_z, float rotate_x_rad)
+{
+    static const float origin[3] = { 0.0f, 0.0f, 0.0f };
+    NesVoxelMeshVertex out;
+    float point[3];
+    float x, y, z, base_x, base_y, source_y, source_z;
+    float screen_x, screen_y;
+    float yaw_cos = cosf(yaw_rad), yaw_sin = sinf(yaw_rad);
+    float roll_cos = cosf(roll_rad), roll_sin = sinf(roll_rad);
+    float rotate_x_cos = cosf(rotate_x_rad);
+    float rotate_x_sin = sinf(rotate_x_rad);
+
+    mat_point(joint_world, origin, point);
+    x = (point[0] - (pose_min[0] + pose_max[0]) * 0.5f) * facing;
+    y = point[1] - pose_min[1];
+    z = (point[2] - (pose_min[2] + pose_max[2]) * 0.5f) * facing;
+    base_x = center_x + (x * yaw_cos - z * yaw_sin) * model_scale;
+    base_y = foot_y + y * model_scale;
+
+    /* CaptainSpecial2's authored quad lies in source Y/Z (X is zero), from
+     * Z=-2 back to Z=-1246. The effect root first turns that card +/-90
+     * degrees around Y, making negative Z trail behind the kick, and the
+     * direct-air variant then rolls the resulting screen-plane card +/-60
+     * degrees around Z. Keeping those source axes matters: treating the card
+     * as already-X/Y made one facing disappear offscreen and put the ground
+     * flame in front of the boot. */
+    card_y *= scale_y;
+    card_z *= scale_z;
+    source_y = card_y * rotate_x_cos - card_z * rotate_x_sin;
+    source_z = card_y * rotate_x_sin + card_z * rotate_x_cos;
+    screen_x = source_lr * source_z;
+    screen_y = source_y;
+    out.x = base_x +
+        (screen_x * roll_cos - screen_y * roll_sin) * model_scale;
+    out.y = base_y +
+        (screen_x * roll_sin + screen_y * roll_cos) * model_scale;
+    out.z = (x * yaw_sin + z * yaw_cos) * model_scale + output_scale;
+    out.u = u;
+    out.v = v;
+    return out;
+}
+
+static void draw_falcon_kick_effect(
+    const FalconAssetModel *model, const ForeignState *state,
+    Mat4 world[FALCON_JOINT_COUNT], const float pose_min[3],
+    const float pose_max[3], float center_x, float foot_y, float facing,
+    float model_scale, float yaw_rad, float output_scale)
+{
+    const FalconAssetTexture *texture;
+    NesVoxelMeshVertex vertices[4];
+    uint32_t phase, texture_index;
+    float source_lr, roll_rad = 0.0f;
+    float effect_scale_y, effect_scale_z, rotate_x_rad;
+    static const float scale_y_cycle[4] = { 1.0f, 0.84f, 1.2f, 0.9f };
+    static const float scale_z_cycle[4] = { 1.0f, 0.84f, 1.2f, 0.6f };
+    static const float rotate_x_degrees[4] = {
+        -1.5f, -8.55f, -15.6f, -8.55f
+    };
+
+    if (state->state != FL_FALCON_KICK_GROUND &&
+        state->state != FL_FALCON_KICK_AIR)
+        return;
+    if (state->state_frame < (double)FALCON_KICK_EFFECT_FIRST_FRAME ||
+        state->state_frame >= (double)FALCON_KICK_EFFECT_END_FRAME)
+        return;
+
+    phase = (uint32_t)state->state_frame - FALCON_KICK_EFFECT_FIRST_FRAME;
+    texture_index = model->punch_effect_texture_first +
+        model->punch_effect_texture_count +
+        (phase / 2u) % FALCON_KICK_EFFECT_TEXTURES;
+    texture = &model->textures[texture_index];
+    source_lr = state->facing < 0.0f ? -1.0f : 1.0f;
+    if (state->state == FL_FALCON_KICK_AIR)
+        roll_rad = -source_lr *
+            env_float("NESRECOMP_FALCON_KICK_AIR_ROLL_DEG", 60.0f) *
+            (3.14159265358979323846f / 180.0f);
+    /* CaptainSpecial2's loop scales source Y/Z as
+     * 1/1 -> .84/.84 -> 1.2/1.2 -> .9/.6 -> 1/1 while RotX travels from
+     * -1.5 to -15.6 degrees and back over two-frame cubic commands. At NES
+     * cadence we retain the authored endpoints plus their midpoint and,
+     * crucially, the non-uniform .9/.6 squash. */
+    effect_scale_y = scale_y_cycle[phase % 4u];
+    effect_scale_z = scale_z_cycle[phase % 4u];
+    rotate_x_rad = rotate_x_degrees[phase % 4u] *
+        (3.14159265358979323846f / 180.0f);
+
+    vertices[0] = render_kick_effect_vertex(
+        world[FALCON_KICK_EFFECT_JOINT], 467.0f, -2.0f, 0.0f, 48.0f,
+        pose_min, pose_max, center_x, foot_y, facing, source_lr,
+        model_scale, yaw_rad, output_scale, roll_rad,
+        effect_scale_y, effect_scale_z, rotate_x_rad);
+    vertices[1] = render_kick_effect_vertex(
+        world[FALCON_KICK_EFFECT_JOINT], -467.0f, -2.0f, 0.0f, 0.0f,
+        pose_min, pose_max, center_x, foot_y, facing, source_lr,
+        model_scale, yaw_rad, output_scale, roll_rad,
+        effect_scale_y, effect_scale_z, rotate_x_rad);
+    vertices[2] = render_kick_effect_vertex(
+        world[FALCON_KICK_EFFECT_JOINT], -467.0f, -1246.0f, 48.0f, 0.0f,
+        pose_min, pose_max, center_x, foot_y, facing, source_lr,
+        model_scale, yaw_rad, output_scale, roll_rad,
+        effect_scale_y, effect_scale_z, rotate_x_rad);
+    vertices[3] = render_kick_effect_vertex(
+        world[FALCON_KICK_EFFECT_JOINT], 467.0f, -1246.0f, 48.0f, 48.0f,
+        pose_min, pose_max, center_x, foot_y, facing, source_lr,
+        model_scale, yaw_rad, output_scale, roll_rad,
+        effect_scale_y, effect_scale_z, rotate_x_rad);
+
+    nes_voxel_mesh_bind_texture(texture->pixels, texture->width,
+                                texture->height, texture->width, 1.0f, 1);
+    /* The source effect material is two-sided. Mirroring Falcon changes the
+     * projected winding of this alpha card, so submit both windings instead
+     * of letting one facing vanish behind host back-face culling. */
+    nes_voxel_mesh_triangle(vertices[3], vertices[2], vertices[1]);
+    nes_voxel_mesh_triangle(vertices[0], vertices[3], vertices[1]);
+    nes_voxel_mesh_triangle(vertices[1], vertices[2], vertices[3]);
+    nes_voxel_mesh_triangle(vertices[1], vertices[3], vertices[0]);
+}
+
 static NesVoxelMeshVertex render_death_vertex(
     Mat4 matrix, const FalconAssetVertex *vertex,
     const float pose_min[3], const float pose_max[3],
@@ -904,6 +1083,16 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
             state->state == FL_FALCON_PUNCH_AIR) {
             yaw_degrees = env_float("NESRECOMP_FALCON_PUNCH_YAW_DEG",
                                     yaw_degrees);
+        } else if (state->state == FL_FALCON_KICK_GROUND ||
+                   state->state == FL_FALCON_KICK_GROUND_AIR ||
+                   state->state == FL_FALCON_KICK_LANDING ||
+                   state->state == FL_FALCON_KICK_AIR ||
+                   state->state == FL_FALCON_KICK_BOUND) {
+            /* DownSpecial's extended boot reads backward under the generic
+             * +90-degree side projection.  The authored pose needs the
+             * opposite side view so its lead foot agrees with root travel;
+             * CaptainSpecial2 keeps its independent lr-authored transform. */
+            yaw_degrees = env_float("NESRECOMP_FALCON_KICK_YAW_DEG", -90.0f);
         }
         yaw_rad = yaw_degrees *
             (3.14159265358979323846f / 180.0f);
@@ -958,6 +1147,9 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
         draw_falcon_punch_effect(&s_model, state, world, pose_min, pose_max,
                                  center_x, anchor_y, facing, model_scale,
                                  yaw_rad, output_scale);
+        draw_falcon_kick_effect(&s_model, state, world, pose_min, pose_max,
+                                center_x, anchor_y, facing, model_scale,
+                                yaw_rad, output_scale);
     }
     return 1;
 }

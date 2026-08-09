@@ -28,7 +28,10 @@
  *   host_launch           host says airborne, cause = LAUNCHED
  *   host_fall             host says airborne, cause = FELL (walked off a ledge)
  *   host_land             host says grounded again
+ *   host_wall             report one wall collision on the next frame
+ *   reset                 reset fighter, input, and pending host events
  *   expect_state <NAME>   assert the current state, non-zero exit on failure
+ *   expect_grounded <0|1> assert the fighter's current kinetic mode
  *   expect_attack <0|1>   assert whether a hitbox is active
  *   expect_damage <n>     assert the active hitbox damage
  *   expect_break <0|1>    assert the block-break property
@@ -126,6 +129,7 @@ static void emit_row(const FalconFighter *f, const FalconInputRaw *in,
  * events are one-frame impulses, exactly as SMB1 delivers them. */
 static int    g_impose_pending;
 static double g_impose_vy;
+static int    g_wall_pending;
 
 static void resolve_flat_floor(FalconFighter *f, const FalconMotion *m,
                                FalconCollision *hit)
@@ -138,6 +142,10 @@ static void resolve_flat_floor(FalconFighter *f, const FalconMotion *m,
         hit->has_imposed_vy = 1;
         hit->imposed_vy = g_impose_vy;
         g_impose_pending = 0;
+    }
+    if (g_wall_pending) {
+        hit->hit_wall = 1;
+        g_wall_pending = 0;
     }
 
     if (f->grounded) {
@@ -214,6 +222,15 @@ static int run_script(const char *path)
             /* Host reports we are standing on something again. */
             f.grounded = 1;
             f.host_air_cause = 0;   /* FOREIGN_AIR_NONE */
+        } else if (!strcmp(cmd, "host_wall")) {
+            g_wall_pending = 1;
+        } else if (!strcmp(cmd, "reset")) {
+            falcon_reset(&f);
+            memset(&in, 0, sizeof(in));
+            memset(&m, 0, sizeof(m));
+            jump_was_down = attack_is_down = attack_was_down = 0;
+            g_impose_pending = g_wall_pending = 0;
+            g_peak_y = 0.0;
         } else if (!strcmp(cmd, "note")) {
             snprintf(pending_note, sizeof(pending_note), "%s", arg);
         } else if (!strcmp(cmd, "expect_state")) {
@@ -230,6 +247,8 @@ static int run_script(const char *path)
             }
         } else if (!strcmp(cmd, "expect_attack")) {
             check_range("attack_active", (double)m.attack.active, arg);
+        } else if (!strcmp(cmd, "expect_grounded")) {
+            check_range("grounded", (double)f.grounded, arg);
         } else if (!strcmp(cmd, "expect_damage")) {
             check_range("attack_damage", (double)m.attack.damage, arg);
         } else if (!strcmp(cmd, "expect_break")) {

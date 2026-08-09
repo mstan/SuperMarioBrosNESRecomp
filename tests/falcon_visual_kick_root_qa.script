@@ -1,0 +1,118 @@
+LOG falcon-visual-kick-root-qa-world-1-1
+WAIT 60
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 00
+WRITE_RAM8 760 01
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+ASSERT_RAM8 000E 08
+WAIT 120
+# Move away from the room's left wall so a correctly trailing right-facing
+# effect remains entirely visible instead of being clipped by the viewport.
+HOLD RIGHT
+WAIT 12
+RELEASE RIGHT
+WAIT 8
+SAVE_STATE C:/temp/falcon_visual_kick_root_base.sav
+
+# Direct aerial Down-B, right-facing. Consecutive two-frame samples expose the
+# source TransN arc and the dedicated 12..31 kick card; a single still cannot.
+HOLD A
+WAIT 5
+RELEASE A
+WAIT 10
+HOLD DOWN
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE DOWN
+SCREENSHOT C:/temp/falcon_kick_air_right_00.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_kick_air_right_04.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_kick_air_right_08.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_kick_air_right_12.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_kick_air_right_16.png
+SAVE_STATE C:/temp/falcon_kick_air_right_active.sav
+WAIT 4
+SCREENSHOT C:/temp/falcon_kick_air_right_20.png
+WAIT 2
+LOAD_STATE C:/temp/falcon_kick_air_right_active.sav
+WAIT 4
+SCREENSHOT C:/temp/falcon_kick_air_right_20_reload.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_kick_air_right_28.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_kick_air_right_36.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_kick_air_right_44.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_kick_air_right_52.png
+WAIT 2
+
+# Establish room and left-facing control, then mirror the same source frames.
+LOAD_STATE C:/temp/falcon_visual_kick_root_base.sav
+WAIT 2
+HOLD RIGHT
+WAIT 12
+RELEASE RIGHT
+WAIT 6
+HOLD LEFT
+WAIT 8
+RELEASE LEFT
+WAIT 6
+SAVE_STATE C:/temp/falcon_visual_kick_root_left.sav
+HOLD A
+WAIT 5
+RELEASE A
+WAIT 10
+HOLD DOWN
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE DOWN
+SCREENSHOT C:/temp/falcon_kick_air_left_00.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_kick_air_left_04.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_kick_air_left_08.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_kick_air_left_12.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_kick_air_left_16.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_kick_air_left_20.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_kick_air_left_28.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_kick_air_left_36.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_kick_air_left_44.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_kick_air_left_52.png
+WAIT 2
+
+# Grounded Kick verifies the same source effect remains foot-attached without
+# the direct-air -60-degree roll.
+LOAD_STATE C:/temp/falcon_visual_kick_root_base.sav
+WAIT 2
+HOLD DOWN
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE DOWN
+WAIT 10
+SCREENSHOT C:/temp/falcon_kick_ground_right_12.png
+WAIT 6
+SCREENSHOT C:/temp/falcon_kick_ground_right_18.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_kick_ground_right_26.png
+WAIT 6
+SCREENSHOT C:/temp/falcon_kick_ground_right_32.png
+WAIT 2
+ASSERT_RAM8 000E 08
+EXIT 0

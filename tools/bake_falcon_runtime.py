@@ -19,7 +19,7 @@ from PIL import Image
 
 
 MAGIC = b"FLCN64B\0"
-VERSION = 3
+VERSION = 4
 TRACK_IDS = {
     "RotX": 0,
     "RotY": 1,
@@ -41,7 +41,8 @@ LOOPING_ANIMS = {"Wait", "Walk1", "Walk2", "Walk3", "Run", "CrouchIdle"}
 # streams 1..25 to baked model joints 0..24 exactly as Smash does.
 AUXILIARY_ROOT_ANIMS = {
     "TurnRun", "JumpB", "JumpAerialB", "FalconPunchGround",
-    "DownSpecial", "LandingDownSpecial", "DownSpecialAir",
+    "DownSpecial", "VelocityXDownSpecialAir", "LandingDownSpecial",
+    "DownSpecialAir", "FalconDive", "FalconDiveEnd1", "FalconDiveEnd2",
 }
 
 INTERP_HOLD = 0
@@ -54,6 +55,12 @@ FALCON_PUNCH_PALETTE_OFFSET = 0x58
 FALCON_PUNCH_TEXTURE_OFFSETS = (0x80, 0x288, 0x490)
 FALCON_PUNCH_TEXTURE_WIDTH = 32
 FALCON_PUNCH_TEXTURE_HEIGHT = 32
+
+FALCON_KICK_RELOC_SIZE = 0x65E0
+FALCON_KICK_PALETTE_OFFSET = 0x30
+FALCON_KICK_TEXTURE_OFFSETS = (0x4E0, 0x58)
+FALCON_KICK_TEXTURE_WIDTH = 48
+FALCON_KICK_TEXTURE_HEIGHT = 48
 
 
 def load_json(path: Path):
@@ -149,6 +156,48 @@ def collect_falcon_punch_textures(root: Path):
         records.append((f"FalconPunch{frame}",
                         FALCON_PUNCH_TEXTURE_WIDTH,
                         FALCON_PUNCH_TEXTURE_HEIGHT, bytes(pixels)))
+    return records
+
+
+def collect_falcon_kick_textures(root: Path):
+    """Decode CaptainSpecial2's two authored CI4 Falcon Kick cards.
+
+    BattleShip reloc file 350 supplies a shared RGBA16 palette at 0x30 and
+    two 48x48 CI4 frames at 0x4E0 and 0x58. The odd source order is the
+    MObjSub sprite order used by the effect's material animation.
+    """
+    source = root / "effects" / "CaptainSpecial2.bin"
+    if not source.is_file():
+        raise FileNotFoundError(
+            f"missing {source}; extract BattleShip reloc file 350 from the "
+            "owner's Smash 64 ROM before baking")
+    data = source.read_bytes()
+    if len(data) != FALCON_KICK_RELOC_SIZE:
+        raise ValueError(
+            f"{source} is {len(data)} bytes; expected "
+            f"{FALCON_KICK_RELOC_SIZE} bytes")
+
+    palette = []
+    for index in range(16):
+        offset = FALCON_KICK_PALETTE_OFFSET + index * 2
+        palette.append(rgba16_to_argb(
+            int.from_bytes(data[offset:offset + 2], "big")))
+
+    records = []
+    pixel_count = FALCON_KICK_TEXTURE_WIDTH * FALCON_KICK_TEXTURE_HEIGHT
+    byte_count = pixel_count // 2
+    for frame, offset in enumerate(FALCON_KICK_TEXTURE_OFFSETS):
+        packed = data[offset:offset + byte_count]
+        if len(packed) != byte_count:
+            raise ValueError(f"truncated Falcon Kick texture frame {frame}")
+        pixels = bytearray()
+        for pixel in range(pixel_count):
+            value = packed[pixel // 2]
+            palette_index = value >> 4 if pixel % 2 == 0 else value & 0x0F
+            pixels += struct.pack("<I", palette[palette_index])
+        records.append((f"FalconKick{frame}",
+                        FALCON_KICK_TEXTURE_WIDTH,
+                        FALCON_KICK_TEXTURE_HEIGHT, bytes(pixels)))
     return records
 
 
@@ -375,7 +424,7 @@ def _track_segments(joint: dict):
         if opname == "SetTargetRate":
             for track in op.get("tracks", []):
                 raw = op["payload"][track]
-                state_for(track)["rate"] = raw_to_units(track, raw)
+                state_for(track)["rate"] = raw_to_rate_units(track, raw)
             continue
         if opname not in {
             "SetValBlock", "SetVal", "SetValRateBlock", "SetValRate",
@@ -395,7 +444,7 @@ def _track_segments(joint: dict):
 
             if opname.startswith("SetValRate"):
                 raw_rate = payload[1]
-                rate_target = raw_to_units(track, raw_rate)
+                rate_target = raw_to_rate_units(track, raw_rate)
                 kind = INTERP_CUBIC
             elif opname.startswith("SetVal0Rate"):
                 rate_target = 0.0
@@ -407,7 +456,12 @@ def _track_segments(joint: dict):
                 rate_target = 0.0
                 kind = INTERP_LINEAR
 
-            if is_block:
+            # Timed non-blocking commands start an interpolation just like
+            # their Block counterparts; they merely let this joint stream
+            # continue parsing until another command supplies the wait. This
+            # matters especially for Falcon Kick's TransN stream, where TraZ
+            # travels during blocks owned by TraY.
+            if duration > 0.0:
                 segments.setdefault(track, []).append((
                     frame, duration, base, target, rate_base, rate_target, kind
                 ))
@@ -442,6 +496,25 @@ def raw_to_units(track: str, raw: int) -> float:
     raise ValueError(f"unknown Figatree track {track}")
 
 
+def raw_to_rate_units(track: str, raw: int) -> float:
+    """Decode ftAnimGetTargetValue(..., value_or_step=1).
+
+    BattleShip's rate table deliberately differs from its target-value table:
+    rotation remains /512, translation is /32 (not /4), and scale is /8192
+    (not /4096). Treating a translation tangent like a position made cubic
+    Falcon motions overshoot by eight times and visibly warp/snap.
+    """
+    if track.startswith("Rot"):
+        return raw / 512.0
+    if track == "TraI":
+        return raw / 16384.0
+    if track.startswith("Tra"):
+        return raw / 32.0
+    if track.startswith("Sca"):
+        return raw / 8192.0
+    raise ValueError(f"unknown Figatree track {track}")
+
+
 def collect_animations(root: Path):
     manifest = load_json(root / "anim" / "anim_manifest.json")
     animations = []
@@ -464,9 +537,15 @@ def collect_animations(root: Path):
                 "joint_slot", int(joint.get("joint_id", 1)) - 1))
             if name in AUXILIARY_ROOT_ANIMS:
                 if joint_index == 0:
-                    continue
-                joint_index -= 1
-            if not 0 <= joint_index < 26:
+                    # Keep the hidden TransN stream in the ignored runtime
+                    # blob for source-root-motion sampling, but never apply it
+                    # to the visible skeleton. 0xFFFF is outside the 26 model
+                    # joints and is recognized by the runtime loader as the
+                    # animation-motion track sentinel.
+                    joint_index = 0xFFFF
+                else:
+                    joint_index -= 1
+            if joint_index != 0xFFFF and not 0 <= joint_index < 26:
                 continue
             joint_segments, joint_duration = _track_segments(joint)
             duration = max(duration, joint_duration)
@@ -490,6 +569,8 @@ def write_blob(root: Path, output: Path):
     effect_texture_first = len(textures)
     effect_textures = collect_falcon_punch_textures(root)
     textures.extend(effect_textures)
+    kick_effect_textures = collect_falcon_kick_textures(root)
+    textures.extend(kick_effect_textures)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("wb") as stream:
@@ -537,7 +618,8 @@ def write_blob(root: Path, output: Path):
           f"{len(joints)} joints, {len(triangles)} triangles, "
           f"{len(textures)} textures, {len(animations)} animations, "
           f"{len(tracks)} tracks, {len(segments)} interpolation segments, "
-          f"{len(effect_textures)} Falcon Punch effect frames")
+          f"{len(effect_textures)} Falcon Punch effect frames, "
+          f"{len(kick_effect_textures)} Falcon Kick effect frames")
 
 
 def main() -> None:

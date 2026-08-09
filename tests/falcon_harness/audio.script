@@ -32,7 +32,7 @@ frames 1
 expect_audio 0x40
 frames 1
 expect_audio 0
-frames 71
+frames 72
 expect_state WAIT
 
 # SMB1 has one jump, so the source JumpAerial effort cue maps to its launch.

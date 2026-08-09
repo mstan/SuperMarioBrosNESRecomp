@@ -16,6 +16,7 @@
 #include "captain_falcon.h"
 
 #include "foreign_controller.h"
+#include "game_smash64_assets.h"
 #include "mod_savestate.h"
 
 #include <string.h>
@@ -24,6 +25,25 @@
  * the SMB1 path; this one serves any host that drives the controller through
  * the generic interface. */
 static FalconFighter s_fighter;
+
+static const char *root_motion_animation(void)
+{
+    switch (s_fighter.state) {
+    case FL_FALCON_KICK_GROUND:
+        return "DownSpecial";
+    case FL_FALCON_KICK_GROUND_AIR:
+        return (s_fighter.grounded || s_fighter.state_frame < 16.0)
+                   ? "VelocityXDownSpecialAir" : NULL;
+    case FL_FALCON_KICK_LANDING:
+        return "LandingDownSpecial";
+    case FL_FALCON_KICK_AIR:
+        return "DownSpecialAir";
+    case FL_FALCON_KICK_BOUND:
+        return "FalconDiveEnd1";
+    default:
+        return NULL;
+    }
+}
 
 static void cf_reset(ForeignState *state)
 {
@@ -65,6 +85,27 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
 
     falcon_tick(&s_fighter, &raw, &motion);
 
+    {
+        const char *animation = root_motion_animation();
+        float delta_y, delta_z;
+        if (animation && game_smash64_assets_root_delta(
+                             animation, (float)s_fighter.state_frame,
+                             &delta_y, &delta_z)) {
+            if (!s_fighter.grounded) {
+                s_fighter.vel_air_x =
+                    (double)delta_z * (double)s_fighter.lr;
+                s_fighter.vel_air_y = (double)delta_y;
+                motion.requested_dx = s_fighter.vel_air_x;
+                motion.requested_dy = s_fighter.vel_air_y;
+            } else {
+                s_fighter.vel_ground_x = (double)delta_z;
+                motion.requested_dx =
+                    (double)delta_z * (double)s_fighter.lr;
+                motion.requested_dy = 0.0;
+            }
+        }
+    }
+
     /*
      * Publish the jumpsquat handshake (ForeignJumpPhase). Falcon's jump height
      * is chosen inside KneeBend -- ftCommonKneeBendProcUpdate flags a short hop
@@ -87,9 +128,14 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
 
     out->requested_dx = motion.requested_dx;
     out->requested_dy = motion.requested_dy;
-    out->vx = s_fighter.vel_ground_x * (double)s_fighter.lr;
+    out->vx = s_fighter.grounded
+                  ? s_fighter.vel_ground_x * (double)s_fighter.lr
+                  : s_fighter.vel_air_x;
     out->vy = s_fighter.vel_air_y;
     out->state = s_fighter.state;
+    out->force_airborne =
+        s_fighter.state == FL_FALCON_KICK_BOUND &&
+        s_fighter.state_frame <= 1.0;
     out->attack.offset_x = motion.attack.offset_x;
     out->attack.offset_y = motion.attack.offset_y;
     out->attack.width = motion.attack.width;

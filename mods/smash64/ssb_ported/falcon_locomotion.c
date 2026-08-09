@@ -134,8 +134,11 @@ static const double s_state_length[FL_STATE_COUNT] = {
     [FL_ATTACK_AIR_B]         = 35.0,
     [FL_FALCON_PUNCH_GROUND]  = 89.0,
     [FL_FALCON_PUNCH_AIR]     = 89.0,
-    [FL_FALCON_KICK_GROUND]   = 84.0,
-    [FL_FALCON_KICK_AIR]      = 49.0,
+    [FL_FALCON_KICK_GROUND]      = 85.0,
+    [FL_FALCON_KICK_GROUND_AIR]  = 30.0,
+    [FL_FALCON_KICK_LANDING]     = 45.0,
+    [FL_FALCON_KICK_AIR]         = 50.0,
+    [FL_FALCON_KICK_BOUND]       = 60.0,
 };
 
 /* Turn / TurnRun set motion flag1 from the script at these frames —
@@ -173,7 +176,10 @@ const char *falcon_state_name(int state)
         case FL_FALCON_PUNCH_GROUND: return "FALCON_PUNCH_GROUND";
         case FL_FALCON_PUNCH_AIR: return "FALCON_PUNCH_AIR";
         case FL_FALCON_KICK_GROUND: return "FALCON_KICK_GROUND";
+        case FL_FALCON_KICK_GROUND_AIR: return "FALCON_KICK_GROUND_AIR";
+        case FL_FALCON_KICK_LANDING: return "FALCON_KICK_LANDING";
         case FL_FALCON_KICK_AIR: return "FALCON_KICK_AIR";
+        case FL_FALCON_KICK_BOUND: return "FALCON_KICK_BOUND";
     }
     return "?";
 }
@@ -197,7 +203,8 @@ static int is_air_state(int s)
            s == FL_JUMP_AERIAL_B || s == FL_FALL || s == FL_FALL_AERIAL ||
            s == FL_ATTACK_AIR_N || s == FL_ATTACK_AIR_F ||
            s == FL_ATTACK_AIR_B || s == FL_FALCON_PUNCH_AIR ||
-           s == FL_FALCON_KICK_AIR;
+           s == FL_FALCON_KICK_GROUND_AIR ||
+           s == FL_FALCON_KICK_AIR || s == FL_FALCON_KICK_BOUND;
 }
 
 /* True once the state's animation has run out. Length 0 means looping. */
@@ -478,6 +485,19 @@ static void enter_landing(FalconFighter *f)
     set_status(f, heavy ? FL_LANDING_HEAVY : FL_LANDING_LIGHT);
 }
 
+/* ftCaptainSpecialLwLandingSetStatus: direct aerial Falcon Kick has its own
+ * root-motion landing pose and one-frame impact, rather than generic aerial
+ * landing lag. */
+static void enter_falcon_kick_landing(FalconFighter *f)
+{
+    f->grounded = 1;
+    f->jumps_used = 0;
+    f->is_fastfall = 0;
+    f->vel_ground_x = 0.0;
+    f->vel_air_x = f->vel_air_y = 0.0;
+    set_status(f, FL_FALCON_KICK_LANDING);
+}
+
 /* M7 combat selection is an NES-pad adaptation around authentic SSB64 move
  * scripts: B is the attack button, with the d-pad choosing the move. The
  * attack timing and damage emitted below come from
@@ -690,8 +710,10 @@ static void proc_update(FalconFighter *f, const FalconInputRaw *in)
     case FL_FTILT:
     case FL_FALCON_PUNCH_GROUND:
     case FL_FALCON_KICK_GROUND:
-        if (f->state == FL_FALCON_KICK_GROUND && f->state_frame == 12.0)
-            f->vel_ground_x = 90.0;
+        if (anim_ended(f)) enter_wait(f);
+        break;
+
+    case FL_FALCON_KICK_LANDING:
         if (anim_ended(f)) enter_wait(f);
         break;
 
@@ -707,11 +729,17 @@ static void proc_update(FalconFighter *f, const FalconInputRaw *in)
     case FL_ATTACK_AIR_B:
     case FL_FALCON_PUNCH_AIR:
     case FL_FALCON_KICK_AIR:
+    case FL_FALCON_KICK_BOUND:
         if (f->state == FL_FALCON_PUNCH_AIR && f->state_frame == 40.0)
             f->vel_air_x = 65.0 * (double)f->lr;
-        if (f->state == FL_FALCON_KICK_AIR && f->state_frame == 12.0)
-            f->vel_air_x = 80.0 * (double)f->lr;
         if (anim_ended(f)) enter_fall(f);
+        break;
+
+    case FL_FALCON_KICK_GROUND_AIR:
+        if (anim_ended(f)) {
+            if (f->grounded) enter_wait(f);
+            else enter_fall(f);
+        }
         break;
 
     default:
@@ -849,8 +877,10 @@ static void proc_physics(FalconFighter *f, const FalconInputRaw *in)
         break;
 
     case FL_FALCON_KICK_GROUND:
-        phys_ground_friction(f,
-            (f->state_frame >= 12.0 && f->state_frame < 32.0) ? 2.0 : A_TRACTION);
+    case FL_FALCON_KICK_LANDING:
+        /* Source velocity comes from the hidden TransN animation stream. The
+         * host asset bridge samples it and writes the resulting velocity back
+         * into this fighter before collision resolution. */
         break;
 
     case FL_WALK_SLOW:
@@ -896,8 +926,18 @@ static void proc_physics(FalconFighter *f, const FalconInputRaw *in)
     case FL_ATTACK_AIR_F:
     case FL_ATTACK_AIR_B:
     case FL_FALCON_PUNCH_AIR:
-    case FL_FALCON_KICK_AIR:
         phys_air_tick(f, in);
+        break;
+
+    case FL_FALCON_KICK_GROUND_AIR:
+        /* The continuation owns TransN through source script frame 15, then
+         * flag0 changes this status to ordinary air friction. */
+        if (!f->grounded && f->state_frame >= 16.0) phys_air_tick(f, in);
+        break;
+
+    case FL_FALCON_KICK_AIR:
+    case FL_FALCON_KICK_BOUND:
+        /* Direct-air Kick and wall-bound use authored TransN on every frame. */
         break;
 
     default:
@@ -1007,6 +1047,10 @@ static void emit_attack(const FalconFighter *f, FalconMotion *out)
         if (t >= 12.0 && t < 32.0)
             set_attack(out, 300.0, 150.0, 520.0, 250.0, 15, 82.0, 25.0, 1);
         break;
+    case FL_FALCON_KICK_LANDING: /* source one-frame landing impact */
+        if (t <= 1.0)
+            set_attack(out, 0.0, 140.0, 400.0, 280.0, 12, 20.0, 20.0, 1);
+        break;
     default:
         break;
     }
@@ -1059,6 +1103,13 @@ void falcon_tick(FalconFighter *f, const FalconInputRaw *in, FalconMotion *out)
     if (out) memset(out, 0, sizeof(*out));
     update_tap_buffers(f, in);
 
+    /* Bound is entered from a grounded wall contact but source
+     * mpCommonSetFighterAir takes effect immediately. The host may still
+     * report its prior grounded byte on this first tick; preserve the forced
+     * air kinetics long enough for the bridge's one-tick airborne request. */
+    if (f->state == FL_FALCON_KICK_BOUND && f->state_frame == 0.0)
+        f->grounded = 0;
+
     /*
      * Reconcile with the host before anything else.
      *
@@ -1070,7 +1121,15 @@ void falcon_tick(FalconFighter *f, const FalconInputRaw *in, FalconMotion *out)
      * This is what lets a host keep its own jump trigger and landing detection
      * while Falcon still supplies the jump velocity, gravity and air physics.
      */
-    if (!f->grounded && !is_air_state(f->state)) {
+    if (!f->grounded && f->state == FL_FALCON_KICK_GROUND) {
+        /* Source map handling changes kinetics immediately on floor loss but
+         * preserves DownSpecial until its frame-32 flag selects the dedicated
+         * VelocityXDownSpecialAir continuation. */
+        f->grounded = 0;
+        f->jumps_used = 1;
+        if (f->state_frame >= 32.0)
+            set_status(f, FL_FALCON_KICK_GROUND_AIR);
+    } else if (!f->grounded && !is_air_state(f->state)) {
         if (f->host_air_cause == 1 /* FOREIGN_AIR_LAUNCHED */) {
             /* Take off with Falcon's own jump velocity, from the full-hop
              * button path -- short hop needs the jumpsquat window, which needs
@@ -1087,7 +1146,15 @@ void falcon_tick(FalconFighter *f, const FalconInputRaw *in, FalconMotion *out)
         }
         f->grounded = 0;
     } else if (f->grounded && is_air_state(f->state)) {
-        enter_landing(f);
+        if (f->state == FL_FALCON_KICK_GROUND_AIR) {
+            /* A ground-origin Kick may regain the floor without changing its
+             * continuation status; only direct aerial Kick uses the impact
+             * landing motion. */
+        } else if (f->state == FL_FALCON_KICK_AIR) {
+            enter_falcon_kick_landing(f);
+        } else {
+            enter_landing(f);
+        }
     }
 
     /* Animation advances before the procs observe it, per ftanim.c:83. */
@@ -1122,7 +1189,7 @@ void falcon_tick(FalconFighter *f, const FalconInputRaw *in, FalconMotion *out)
 
 void falcon_resolve(FalconFighter *f, const FalconCollision *hit)
 {
-    int in_air = is_air_state(f->state);
+    int in_air = !f->grounded;
 
     f->pos_x += hit->actual_dx;
     f->pos_y += hit->actual_dy;
@@ -1131,7 +1198,15 @@ void falcon_resolve(FalconFighter *f, const FalconCollision *hit)
         /* Sign convention: the host reports +y as DOWN, the source works in
          * +y UP. The adapter converts; here vel_air_y > 0 is upward. */
         if (hit->hit_ceiling && f->vel_air_y > 0.0) f->vel_air_y = 0.0;
-        if (hit->hit_wall) f->vel_air_x = 0.0;
+        if (hit->hit_wall) {
+            f->vel_air_x = 0.0;
+            if (f->state == FL_FALCON_KICK_GROUND &&
+                f->state_frame >= 12.0 && f->state_frame < 32.0) {
+                set_status(f, FL_FALCON_KICK_BOUND);
+                f->grounded = 0;
+                return;
+            }
+        }
 
         /*
          * ADAPTATION. The host launched us. Adopt it outright -- this is the
@@ -1146,7 +1221,16 @@ void falcon_resolve(FalconFighter *f, const FalconCollision *hit)
         /* An upward impulse means we are emphatically not landing, whatever
          * the host's footing check said a frame ago. */
         if (hit->grounded && !(hit->has_imposed_vy && hit->imposed_vy > 0.0)) {
-            enter_landing(f);
+            if (f->state == FL_FALCON_KICK_GROUND ||
+                f->state == FL_FALCON_KICK_GROUND_AIR) {
+                f->grounded = 1;
+                f->vel_ground_x = f->vel_air_x * (double)f->lr;
+                f->vel_air_x = f->vel_air_y = 0.0;
+            } else if (f->state == FL_FALCON_KICK_AIR) {
+                enter_falcon_kick_landing(f);
+            } else {
+                enter_landing(f);
+            }
             return;
         }
         if (hit->has_imposed_vy && hit->imposed_vy > 0.0) {
@@ -1154,7 +1238,15 @@ void falcon_resolve(FalconFighter *f, const FalconCollision *hit)
             return;
         }
     } else {
-        if (hit->hit_wall) f->vel_ground_x = 0.0;
+        if (hit->hit_wall) {
+            f->vel_ground_x = 0.0;
+            if (f->state == FL_FALCON_KICK_GROUND &&
+                f->state_frame >= 12.0 && f->state_frame < 32.0) {
+                set_status(f, FL_FALCON_KICK_BOUND);
+                f->grounded = 0;
+                return;
+            }
+        }
 
         /* Walked off an edge. */
         if (!hit->grounded) {
@@ -1171,7 +1263,14 @@ void falcon_resolve(FalconFighter *f, const FalconCollision *hit)
              * clamp exactly as ftCommonFallSetStatus does.
              */
             f->vel_air_x = f->vel_ground_x * (double)f->lr;
-            enter_fall(f);
+            if (f->state == FL_FALCON_KICK_GROUND) {
+                f->jumps_used = 1;
+                f->grounded = 0;
+                if (f->state_frame >= 32.0)
+                    set_status(f, FL_FALCON_KICK_GROUND_AIR);
+            } else {
+                enter_fall(f);
+            }
             if (hit->has_imposed_vy) f->vel_air_y = hit->imposed_vy;
             return;
         }
@@ -1183,7 +1282,7 @@ void falcon_resolve(FalconFighter *f, const FalconCollision *hit)
 /* Save states -- see mod_savestate.h in the engine                   */
 /* ------------------------------------------------------------------ */
 
-#define FALCON_SAVESTATE_VERSION 2
+#define FALCON_SAVESTATE_VERSION 3
 
 int falcon_serialize(const FalconFighter *f, uint8_t *buf, int cap)
 {

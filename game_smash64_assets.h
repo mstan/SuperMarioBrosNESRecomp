@@ -14,6 +14,12 @@
 int game_smash64_assets_draw(float center_x, float foot_y,
                              float output_scale);
 
+/* Sample one frame of an animation's hidden Smash 64 TransN stream. Values
+ * are returned in Falcon source units after Captain's exact 1.05 TopN scale;
+ * the SMB host performs its ordinary single world conversion afterward. */
+int game_smash64_assets_root_delta(const char *animation_name, float frame,
+                                   float *delta_y, float *delta_z);
+
 /* Draw the planted midpoint of Falcon's grounded Wait window. Used while
  * SMB1 owns a scripted power-up or injury transformation. */
 int game_smash64_assets_draw_idle(float center_x, float foot_y,

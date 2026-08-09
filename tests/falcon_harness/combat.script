@@ -31,7 +31,7 @@ expect_damage 15 15
 expect_break 1 1
 frames 20
 expect_attack 0 0
-frames 52
+frames 53
 expect_state WAIT
 
 # Up+B is the compact NES mapping for Jab1.

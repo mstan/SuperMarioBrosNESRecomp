@@ -683,6 +683,18 @@ void game_smash64_update_input(uint64_t frame_count)
     if (nes_foreign_tick(frame_count, &fin, &move)) {
         game_smash64_audio_play_events(&move.audio, frame_count);
         s_attack = move.attack;
+        if (move.force_airborne) {
+            /* Generic controller-to-host departure handshake. SetFallS
+             * ($DC82) writes Player_State=2 for SMB1's native falling state;
+             * Ghidra confirms `LDA #$02; STA $001D` at $DC82-$DC84. A move
+             * such as Falcon Kick's wall rebound leads for one tick, just as
+             * the jumpsquat LAUNCH handshake leads SMB's jump trigger. */
+            g_ram[Player_State] = 2;
+            if (fs) {
+                fs->grounded = 0;
+                fs->air_cause = FOREIGN_AIR_NONE;
+            }
+        }
         if (wall) {
             move.requested_dx = 0.0;
             s_wall_frames++;

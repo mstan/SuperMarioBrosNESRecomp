@@ -1,0 +1,37 @@
+# Ground-origin Falcon Kick changes kinetics at a ledge immediately but keeps
+# DownSpecial until the source frame-32 continuation gate.
+neutral
+stick_y -80
+attack down
+frames 1
+attack up
+frames 11
+expect_state FALCON_KICK_GROUND
+frames 1
+expect_attack 1 1
+pos_y 10000
+host_fall
+frames 1
+expect_state FALCON_KICK_GROUND
+expect_grounded 0 0
+roundtrip
+frames 19
+expect_state FALCON_KICK_GROUND
+frames 1
+expect_state FALCON_KICK_GROUND_AIR
+expect_grounded 0 0
+
+# The frame-12..31 grounded wall gate enters the dedicated rebound state and
+# forces air kinetics before any ordinary landing reconciliation can run.
+reset
+neutral
+stick_y -80
+attack down
+frames 1
+attack up
+frames 11
+host_wall
+frames 1
+expect_state FALCON_KICK_BOUND
+expect_grounded 0 0
+roundtrip
