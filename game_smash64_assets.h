@@ -25,6 +25,12 @@ int game_smash64_assets_root_delta(const char *animation_name, float frame,
 int game_smash64_assets_draw_idle(float center_x, float foot_y,
                                   float output_scale);
 
+/* Draw a neutral presentation while SMB1 owns native swimming. facing_right
+ * comes from SMB1's player-facing byte; the frozen foreign controller is not
+ * mutated merely to keep the render facing the direction of travel. */
+int game_smash64_assets_draw_swim(float center_x, float foot_y,
+                                  float output_scale, int facing_right);
+
 /* Draw a presentation-only source pose for SMB1-owned scripted movement.
  * Flagpole uses Falcon's closest available airborne pose; autowalk uses the
  * authentic middle walk cycle. */

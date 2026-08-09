@@ -2203,6 +2203,14 @@ int game_smash64_still_presentation_active(void)
            subroutine == SMB1_GAMEMODE_FIRE_FLOWER;
 }
 
+int game_smash64_swim_presentation_active(void)
+{
+    return s_enabled && s_selected &&
+           g_ram[OperMode] == SMB1_OPER_MODE_GAME &&
+           g_ram[GameEngineSubroutine] == SMB1_GAMEMODE_PLAYER_CTRL &&
+           g_ram[SwimmingFlag] != 0;
+}
+
 Smash64ScriptedPresentation game_smash64_scripted_presentation(void)
 {
     uint8_t subroutine;

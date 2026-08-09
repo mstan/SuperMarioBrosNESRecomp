@@ -1182,7 +1182,8 @@ static NesVoxelMeshVertex render_death_vertex(
 static int draw_model(float center_x, float anchor_y, float output_scale,
                       int death_mode, int still_mode,
                       const char *animation_override,
-                      float spin_radians, float animation_frame)
+                      float spin_radians, float animation_frame,
+                      int facing_override)
 {
     const ForeignState *state;
     const FalconAssetAnimation *animation;
@@ -1247,7 +1248,11 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
     /* Smash's +LR model orientation is opposite our screen-space projection.
      * Mirror the mesh against that authored convention, not against movement
      * directly; the old sign made rightward Run visibly face left. */
-    facing = state->facing < 0.0f ? 1.0f : -1.0f;
+    facing = (facing_override >= 0
+                  ? (facing_override ? 1.0f : -1.0f)
+                  : state->facing) < 0.0f
+                 ? 1.0f
+                 : -1.0f;
     {
         float yaw_degrees =
             env_float("NESRECOMP_FALCON_YAW_DEG", FALCON_YAW_DEG);
@@ -1321,14 +1326,21 @@ int game_smash64_assets_draw(float center_x, float foot_y,
                              float output_scale)
 {
     return draw_model(center_x, foot_y, output_scale, 0, 0, NULL,
-                      0.0f, 0.0f);
+                      0.0f, 0.0f, -1);
 }
 
 int game_smash64_assets_draw_idle(float center_x, float foot_y,
                                   float output_scale)
 {
     return draw_model(center_x, foot_y, output_scale, 0, 1, NULL,
-                      0.0f, 0.0f);
+                      0.0f, 0.0f, -1);
+}
+
+int game_smash64_assets_draw_swim(float center_x, float foot_y,
+                                  float output_scale, int facing_right)
+{
+    return draw_model(center_x, foot_y, output_scale, 0, 1, NULL,
+                      0.0f, 0.0f, facing_right ? 1 : 0);
 }
 
 int game_smash64_assets_draw_scripted(float center_x, float foot_y,
@@ -1355,7 +1367,7 @@ int game_smash64_assets_draw_scripted(float center_x, float foot_y,
              SMASH64_SCRIPTED_PRESENTATION_PIPE_VERTICAL)
         presentation_frame = 0.0f;
     return draw_model(center_x, foot_y, output_scale, 0, 0, animation,
-                      0.0f, presentation_frame);
+                      0.0f, presentation_frame, -1);
 }
 
 int game_smash64_assets_draw_death(float center_x, float center_y,
@@ -1363,5 +1375,5 @@ int game_smash64_assets_draw_death(float center_x, float center_y,
                                    float animation_frame)
 {
     return draw_model(center_x, center_y, output_scale, 1, 0, NULL,
-                      spin_radians, animation_frame);
+                      spin_radians, animation_frame, -1);
 }

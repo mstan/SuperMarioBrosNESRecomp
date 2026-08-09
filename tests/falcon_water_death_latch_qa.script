@@ -1,0 +1,35 @@
+LOG falcon-water-death-latch-qa
+WAIT 60
+# Enter World 2-2 through SMB1's native area selector.
+WRITE_RAM8 75F 01
+WRITE_RAM8 75C 01
+WRITE_RAM8 760 01
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT_RAM8 0704 01
+WAIT 90
+
+# This is a presentation-latch regression, not a life-cycle simulation. Pin
+# the same native dispatch values observed during death/control to prove an
+# ordinary water-control frame resets the one-death hide latch before the next
+# death presentation begins.
+WRITE_RAM8 000E 0B
+WAIT 2
+SCREENSHOT C:/temp/falcon_water_death_first.png
+WAIT 80
+WRITE_RAM8 000E 08
+WRITE_RAM8 00B5 01
+WRITE_RAM8 00CE A0
+WRITE_RAM8 03B8 A0
+WAIT 3
+ASSERT_RAM8 000E 08
+ASSERT_RAM8 0704 01
+SCREENSHOT C:/temp/falcon_water_death_respawn.png
+WAIT 2
+WRITE_RAM8 000E 0B
+WAIT 2
+SCREENSHOT C:/temp/falcon_water_death_second.png
+WAIT 2
+EXIT 0

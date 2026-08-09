@@ -11,6 +11,42 @@ RELEASE START
 WAIT_RAM8 000E 08
 WAIT_RAM8 0704 01
 WAIT 90
-SCREENSHOT C:/temp/falcon_tier4_water.png
+ASSERT_RAM8 0770 01
+ASSERT_RAM8 000E 08
+ASSERT_RAM8 0704 01
+WAIT 2
+SCREENSHOT C:/temp/falcon_tier4_water_idle.png
+
+# SMB1 remains authoritative for swimming. Exercise a native swim stroke and
+# both facings while Falcon replaces only the player presentation.
+HOLD RIGHT
+HOLD A
+WAIT 24
+RELEASE A
+ASSERT_RAM8 0033 01
+WAIT 2
+SCREENSHOT C:/temp/falcon_tier4_water_right.png
+RELEASE RIGHT
+
+HOLD LEFT
+HOLD A
+WAIT 24
+RELEASE A
+ASSERT_RAM8 0033 02
+WAIT 2
+SCREENSHOT C:/temp/falcon_tier4_water_left.png
+RELEASE LEFT
+
+# The overlay is derived from native RAM and must reappear immediately after a
+# mid-swim save/load without adding a Falcon savestate field.
+SAVE_STATE C:/temp/falcon_tier4_water_mid.sav
+HOLD RIGHT
+WAIT 12
+RELEASE RIGHT
+LOAD_STATE C:/temp/falcon_tier4_water_mid.sav
+WAIT 2
+ASSERT_RAM8 000E 08
+ASSERT_RAM8 0704 01
+SCREENSHOT C:/temp/falcon_tier4_water_reload.png
 WAIT 2
 EXIT 0

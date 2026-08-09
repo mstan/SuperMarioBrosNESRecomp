@@ -55,6 +55,10 @@ int game_smash64_death_presentation_active(void);
  * instead of exposing Mario's transformation frames. */
 int game_smash64_still_presentation_active(void);
 
+/* 1 during ordinary player control in a water area. SMB1 keeps native swim
+ * input and physics, while the renderer replaces only Mario's presentation. */
+int game_smash64_swim_presentation_active(void);
+
 typedef enum Smash64ScriptedPresentation {
     SMASH64_SCRIPTED_PRESENTATION_NONE = 0,
     SMASH64_SCRIPTED_PRESENTATION_FLAGPOLE,

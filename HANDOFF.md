@@ -40,6 +40,14 @@ leaving the open `build_falcon` recomp-ui session untouched:
 - ordinary pit rendering now incorporates positive `Player_Y_HighPos` pages.
   Slot07 shows one visible fall, stays empty instead of repeatedly wrapping
   Falcon to the top, loses one life, and produces one stable respawn.
+- water areas retain SMB1's native swimming input, physics, collision, enemies,
+  bubbles, and transitions, but ordinary player-control frames now suppress
+  Mario and render a neutral Falcon pose using SMB1's own left/right facing.
+  `tests/falcon_tier4_water.script` captures idle, both swim directions, and a
+  mid-swim save/load; the owner's F4 water save independently reproduces the
+  same Falcon-only presentation. A clean mod-off control still renders Mario.
+  `tests/falcon_water_death_latch_qa.script` additionally proves a water-control
+  respawn resets the Star-KO hide latch so a second death is visible.
 
 All of those gameplay checks use the isolated `build_falcon_qa` executable;
 the owner's open recomp-ui process remains running. The ROM dependency UI still

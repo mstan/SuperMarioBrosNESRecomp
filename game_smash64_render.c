@@ -94,6 +94,7 @@ static int smash64_suppress_player_sprite(int oam_slot, int x, int y,
     if (!game_smash64_active() &&
         !game_smash64_death_presentation_active() &&
         !game_smash64_still_presentation_active() &&
+        !game_smash64_swim_presentation_active() &&
         game_smash64_scripted_presentation() ==
             SMASH64_SCRIPTED_PRESENTATION_NONE) return 0;
 
@@ -212,6 +213,7 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
     float death_anim_frame = 0.0f;
     int death_active;
     int still_active;
+    int swim_active;
     int preserve_status_bar = 0;
     int preserve_native_frame = 0;
     int behind_background = 0;
@@ -222,6 +224,7 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
     if (!framebuffer) return;
     death_active = game_smash64_death_presentation_active();
     still_active = game_smash64_still_presentation_active();
+    swim_active = game_smash64_swim_presentation_active();
     scripted_presentation = game_smash64_scripted_presentation();
     behind_background =
         (scripted_presentation == SMASH64_SCRIPTED_PRESENTATION_PIPE_SIDE ||
@@ -229,6 +232,7 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
              SMASH64_SCRIPTED_PRESENTATION_PIPE_VERTICAL) &&
         (g_ram[Player_SprAttrib] & 0x20) != 0;
     if (!game_smash64_active() && !death_active && !still_active &&
+        !swim_active &&
         scripted_presentation == SMASH64_SCRIPTED_PRESENTATION_NONE) {
         /* OperMode and the game-engine dispatch can briefly leave their death
          * values during the native restart flow. Do not treat those transient
@@ -318,9 +322,10 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
         if (death_center_y < -FALCON_DEATH_HIDE_MARGIN * output_scale)
             s_falcon_death_hidden = 1;
         ++s_falcon_death_frame;
-    } else if (game_smash64_active()) {
-        /* Ordinary Falcon control proves SMB1 completed the prior death and
-         * respawn. The next PlayerDeath may now begin one fresh fall. */
+    } else if (game_smash64_active() || swim_active) {
+        /* Ordinary Falcon control or ordinary native swimming proves SMB1
+         * completed the prior death and respawn. The next PlayerDeath may now
+         * begin one fresh fall. */
         s_falcon_death_sequence_latched = 0;
         s_falcon_death_hidden = 0;
         s_falcon_death_frame = 0;
@@ -395,8 +400,12 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
                      : (still_active
                             ? game_smash64_assets_draw_idle(
                                   cx, foot_y, output_scale)
-                            : game_smash64_assets_draw(
-                                  cx, foot_y, output_scale)))))) {
+                            : (swim_active
+                                   ? game_smash64_assets_draw_swim(
+                                         cx, foot_y, output_scale,
+                                         g_ram[PlayerFacingDir] == 1)
+                                   : game_smash64_assets_draw(
+                                         cx, foot_y, output_scale))))))) {
         draw_cube_face(e, f, g, h, 1.00f);  /* top */
         draw_cube_face(a, b, f, e, 0.85f);  /* front (z0, camera-facing) */
         draw_cube_face(d, c, g, h, 0.45f);  /* back */
