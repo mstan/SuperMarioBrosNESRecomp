@@ -6,9 +6,9 @@ RELEASE START
 WAIT_RAM8 000E 08
 
 # The source JumpAerial effort clip is adapted to SMB1's single jump.
-HOLD A
+HOLD UP
 WAIT 2
-RELEASE A
+RELEASE UP
 WAIT 90
 
 # Signature Punch: "Falcon" on entry, then impact FGM + "Punch" at frame 42.

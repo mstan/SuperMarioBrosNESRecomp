@@ -148,9 +148,9 @@ WAIT 2
 # Air FalconDiveEnd2/1661 uses a distinct authored launch.
 LOAD_STATE C:/temp/falcon_upb_right_base.sav
 WAIT 2
-HOLD A
+HOLD UP
 WAIT 5
-RELEASE A
+RELEASE UP
 WAIT 8
 HOLD UP
 HOLD B
@@ -179,9 +179,9 @@ HOLD LEFT
 WAIT 8
 RELEASE LEFT
 WAIT 4
-HOLD A
+HOLD UP
 WAIT 5
-RELEASE A
+RELEASE UP
 WAIT 8
 HOLD UP
 HOLD B

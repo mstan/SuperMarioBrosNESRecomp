@@ -13,23 +13,21 @@ ASSERT_RAM8 000E 08
 WAIT 120
 SAVE_STATE C:/temp/falcon_visual_combat_base.sav
 
-# Up+B: Jab1 active frames 5..8.
-HOLD UP
-HOLD B
+# Neutral A: Jab1 active frames 5..8.
+HOLD A
 WAIT 2
-RELEASE B
-RELEASE UP
+RELEASE A
 WAIT 4
 SCREENSHOT C:/temp/falcon_qa_jab.png
 WAIT 2
 
-# Horizontal+B: forward tilt active frames 9..15.
+# Horizontal+A: forward tilt active frames 9..15.
 LOAD_STATE C:/temp/falcon_visual_combat_base.sav
 WAIT 2
 HOLD RIGHT
-HOLD B
+HOLD A
 WAIT 2
-RELEASE B
+RELEASE A
 RELEASE RIGHT
 WAIT 8
 SCREENSHOT C:/temp/falcon_qa_ftilt.png
@@ -57,46 +55,44 @@ WAIT 11
 SCREENSHOT C:/temp/falcon_qa_falcon_kick_ground.png
 WAIT 2
 
-# Air up+B: neutral air, strong active frames 4..7.
+# Air neutral A: neutral air, strong active frames 4..7.
 LOAD_STATE C:/temp/falcon_visual_combat_base.sav
 WAIT 2
-HOLD A
-WAIT 5
-RELEASE A
 HOLD UP
-HOLD B
-WAIT 2
-RELEASE B
+WAIT 5
 RELEASE UP
+HOLD A
+WAIT 2
+RELEASE A
 WAIT 3
 SCREENSHOT C:/temp/falcon_qa_nair.png
 WAIT 2
 
-# Air forward+B: forward air, first active phase begins at frame 7.
+# Air forward+A: forward air, first active phase begins at frame 7.
 LOAD_STATE C:/temp/falcon_visual_combat_base.sav
 WAIT 2
-HOLD A
+HOLD UP
 WAIT 5
-RELEASE A
+RELEASE UP
 HOLD RIGHT
-HOLD B
+HOLD A
 WAIT 2
-RELEASE B
+RELEASE A
 RELEASE RIGHT
 WAIT 6
 SCREENSHOT C:/temp/falcon_qa_fair.png
 WAIT 2
 
-# Air back+B: back air, active frames 7..18.
+# Air back+A: back air, active frames 7..18.
 LOAD_STATE C:/temp/falcon_visual_combat_base.sav
 WAIT 2
-HOLD A
+HOLD UP
 WAIT 5
-RELEASE A
+RELEASE UP
 HOLD LEFT
-HOLD B
+HOLD A
 WAIT 2
-RELEASE B
+RELEASE A
 RELEASE LEFT
 WAIT 6
 SCREENSHOT C:/temp/falcon_qa_bair.png
@@ -105,9 +101,9 @@ WAIT 2
 # Air neutral B: aerial Falcon Punch active frames 42..46.
 LOAD_STATE C:/temp/falcon_visual_combat_base.sav
 WAIT 2
-HOLD A
+HOLD UP
 WAIT 5
-RELEASE A
+RELEASE UP
 HOLD B
 WAIT 2
 RELEASE B
@@ -118,9 +114,9 @@ WAIT 2
 # Air down+B: aerial Falcon Kick active frames 12..31.
 LOAD_STATE C:/temp/falcon_visual_combat_base.sav
 WAIT 2
-HOLD A
+HOLD UP
 WAIT 5
-RELEASE A
+RELEASE UP
 HOLD DOWN
 HOLD B
 WAIT 2

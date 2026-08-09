@@ -19,9 +19,9 @@ SAVE_STATE C:/temp/falcon_visual_kick_root_base.sav
 
 # Direct aerial Down-B, right-facing. Consecutive two-frame samples expose the
 # source TransN arc and the dedicated 12..31 kick card; a single still cannot.
-HOLD A
+HOLD UP
 WAIT 5
-RELEASE A
+RELEASE UP
 WAIT 10
 HOLD DOWN
 HOLD B
@@ -66,9 +66,9 @@ WAIT 8
 RELEASE LEFT
 WAIT 6
 SAVE_STATE C:/temp/falcon_visual_kick_root_left.sav
-HOLD A
+HOLD UP
 WAIT 5
-RELEASE A
+RELEASE UP
 WAIT 10
 HOLD DOWN
 HOLD B

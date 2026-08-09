@@ -2,9 +2,9 @@
 # DownSpecial until the source frame-32 continuation gate.
 neutral
 stick_y -80
-attack down
+special down
 frames 1
-attack up
+special up
 frames 11
 expect_state FALCON_KICK_GROUND
 frames 1
@@ -26,9 +26,9 @@ expect_grounded 0 0
 reset
 neutral
 stick_y -80
-attack down
+special down
 frames 1
-attack up
+special up
 frames 11
 host_wall
 frames 1

@@ -2,7 +2,7 @@
 
 Date: 2026-08-09
 
-## Current QA status: Kick readability and final owner listening remain
+## Current QA status: final owner play/listen acceptance remains
 
 The current worktree adds BattleShip-derived Falcon Dive/Up-B on top of the
 previously accepted movement, presentation, Falcon Punch, and Falcon Kick
@@ -29,41 +29,61 @@ Exact turn/event captures are isolated behind save-state reloads and render
 settling; frames 12, 13, and 14 now have distinct hashes. Additional captures
 show FallSpecial plus special-landing entry, midpoint, and completion.
 
-The latest Falcon Kick direction concern exposed a host-only body-yaw override
-that contradicted BattleShip: Captain's TopN remains at the standard
-`lr * +90`-degree side view for Down-B, while only the CaptainSpecial2 effect
-has its own authored yaw/air roll. The Kick-only `-90` override is now removed;
-the attached card remains behind Falcon with its source transform unchanged.
-Fresh Release frame-12/16/20 mirrors show the boot/body on the leading edge and
-the plume trailing for both facings. Because the large asymmetric plume still
-dominates the native-scale silhouette, owner playtest remains the acceptance
-gate before closing the reopened Down-B Bead.
+The latest Falcon Kick direction concern had two host presentation causes.
+The unsupported Kick-only body-yaw override is removed, leaving Captain's
+BattleShip `lr * +90`-degree side view. The CaptainSpecial2 card geometry,
+facing, and air roll remain source-authored, while its texture U axis now
+matches the raw vertices: the boot/root edge (`z=-2`) uses `S≈48`, and the far
+taper (`z=-1246`) uses `S=0`. Fresh Release captures
+`C:\temp\falcon_kick_air_{right,left}_{12,16,20}.png` and
+`falcon_kick_ground_right_{12,18,26}.png` show the bright core at the leading
+boot and the taper trailing in both directions. Owner playtest remains the
+subjective acceptance gate before closing the reopened Down-B Bead.
 
-Ground Falcon Dive emits `force_airborne` once. Adapter save record v6 bridges
+Ground Falcon Dive emits `force_airborne` once. Adapter save record v7 bridges
 the source animation's subpixel startup across SMB1's integer floor state only
 until the first successful upward whole-pixel sweep; the latest save/replay QA
 proves the planted startup resumes into the same frame-13 lift (`Y $B0->$A6`).
+Exact v6 and v5 readers preserve the owner's existing local slots.
 
-Directional specials now use the Smash 64 stick thresholds (`>= +40` for
-Up-B, `<= -40` for Down-B) with a one-VBlank NES-pad grace period when B is
-pressed from neutral. Direction-first and same-frame chords remain immediate;
-B followed by Up or Down on the next VBlank resolves to the directional move,
-while neutral B resolves to Falcon Punch one VBlank later. The fresh foreign
-trace records `FALCON_KICK_GROUND` at frame 321, `FALCON_DIVE_GROUND` at 422,
-and `FALCON_PUNCH_GROUND` at 573. Adapter save record v6 serializes the pending
-edge, and an exact v5 migration restores all older owner state with no pending
-edge so existing local slots remain usable.
+The public controls now preserve Smash 64's split: A is normal, B is special,
+and a fresh Up-stick is Falcon's four-frame jump. Neutral A is Jab; horizontal
+A is FTilt/Fair/Bair; neutral or horizontal B is Falcon Punch because Smash 64
+has no Side-B; Down+B is Falcon Kick; Up+B is Falcon Dive. Directional specials
+use the source thresholds (`>= +40`, `<= -40`) with a one-VBlank NES-pad grace
+when B arrives first. Specials win a same-frame A+B chord. The fresh trace from
+`tests/falcon_input_map_qa.script` records Jab, FTilt, horizontal-B Punch,
+stick-jump, and NAir without an accidental SMB jump. Adapter record v7 saves
+the grace edge; v6/v5 migration restores it safely.
 
 Falcon now presents a stable Big-Mario collision profile independent of the
 hidden native powerup size. Both the high-precision sweep and the four native
 `PlayerBGCollision` geometry reads see the same Big profile. PC-scoped RAM-read
 hooks leave the actual size/crouch bytes untouched, so later native gameplay
 still uses the real power-up state (including bump-vs-shatter brick behavior).
+Two additional PC-scoped anchor reads (`$BD57/$BD5C`) align
+`Block_Y_Position` with the Big head probe without changing those gameplay
+consequences. `tests/falcon_mushroom_emergence_qa.script` and
+`C:\temp\falcon_mushroom_{00..80}.png` show the mushroom beginning in the
+contacted question-block layer, emerging one tile above it, and sliding there
+instead of spawning one block low and falling.
 The slot-0 regression walks both native size values through a true
 32-pixel/two-block-high corridor and rejects a 16-pixel control. Its QA command
 also paints the matching test tiles into the nametable, so
 `C:\temp\falcon_clearance_32_big_mid.png` visibly confirms Falcon inside the
 two-block opening rather than relying only on an X-coordinate assertion.
+
+The owner's F4 slot exposed a one-tile step down into another proven 32px
+cavity. The adapter now admits only that controlled descent when the lowered
+Big profile has clear head/side probes and a solid foot; it still rejects a
+16px tunnel and refuses the adaptation at SMB1's `$CF` no-collision band. The
+native 16px Y change is reconciled once into Falcon's controller position and
+serialized in adapter v7. The same repro also exposed wall-bound Kick root
+motion wrapping above SMB1's playfield: upward foreign sweeps now clamp at
+high-byte 1/Y `$20`, and wall-bound Kick stays airborne there only until its
+authored track turns downward. `tests/falcon_slot4_clearance_kick_qa.script`
+captures walk, Kick, peak, recovery, and asserts the player high byte never
+leaves the map.
 
 Pipe dispatches `$02` (side ingress), `$03` (vertical ingress), and `$07` with
 `AltEntranceControl == $02` (vertical egress) now suppress Mario and render a
@@ -121,8 +141,10 @@ build and visually inspected, not accepted from script exit codes alone:
   wrap cases show no Mario tile near or behind the HUD.
 - `C:\temp\falcon_high_jump_sequence_fixed_scale.png` and
   `falcon_short_jump_sequence_fixed_scale.png`: 17 full-hop frames and 13
-  short-hop frames. The fighter uses one bind-reference scale throughout, so
-  crouched and extended source poses no longer make the whole model pump or
+  short-hop frames from the former physical-A jump binding. They remain valid
+  scale-stability evidence, but the current public map uses Up-stick jump and
+  reserves A for normals. The fighter uses one bind-reference scale throughout,
+  so crouched and extended source poses do not make the whole model pump or
   stretch.
 - `C:\temp\falcon_watchdog_fix_contact.png` and
   `falcon_savestate_endless_loop_survived.png`: the owner's exact slot and a
@@ -265,9 +287,10 @@ The engine owns the reusable boundaries:
   saturating mix into the NES producer frame before shared volume/bridge.
 - voxel renderer: model mesh and texture submission.
 
-The SMB1 adapter in `game_smash64.c` owns the host details: four scoped 6502
-function-entry hooks, horizontal/vertical sweeps against SMB1's own block
-buffer, scripted ownership, native enemy defeat, and native brick shatter.
+The SMB1 adapter in `game_smash64.c` owns the host details: scoped 6502
+function-entry and PC-qualified RAM-read hooks, horizontal/vertical sweeps
+against SMB1's own block buffer, scripted ownership, native enemy defeat, and
+native brick shatter.
 Confirmed combat entries are `PlayerHeadCollision $BCED`, `BrickShatter $BE02`,
 and `ShellOrBlockDefeat $D795`.
 

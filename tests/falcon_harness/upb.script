@@ -3,12 +3,12 @@
 neutral
 pos_y 1000
 stick_y 80
-attack down
+special down
 frames 1
 expect_state FALCON_DIVE_GROUND
 expect_grounded 0 0
 expect_audio 0
-attack up
+special up
 frames 12
 expect_attack 0 0
 frames 1
@@ -43,10 +43,10 @@ pos_y 1000
 host_fall
 neutral
 stick_y 80
-attack down
+special down
 frames 1
 expect_state FALCON_DIVE_AIR
-attack up
+special up
 frames 13
 expect_state FALCON_DIVE_AIR
 expect_attack 1 1
@@ -73,9 +73,9 @@ reset
 pos_y 1000
 neutral
 stick_y 80
-attack down
+special down
 frames 1
-attack up
+special up
 stick_x -80
 frames 13
 expect_state FALCON_DIVE_GROUND
@@ -90,9 +90,9 @@ pos_y 1000
 host_fall
 neutral
 stick_y 80
-attack down
+special down
 frames 1
-attack up
+special up
 frames 13
 host_wall
 frames 1
@@ -105,9 +105,9 @@ pos_y 1000
 host_fall
 neutral
 stick_y 80
-attack down
+special down
 frames 1
-attack up
+special up
 frames 13
 pos_y 1000
 host_ceiling
@@ -148,9 +148,9 @@ reset
 pos_y 1000
 neutral
 stick_y 80
-attack down
+special down
 frames 1
-attack up
+special up
 frames 20
 host_land
 frames 1

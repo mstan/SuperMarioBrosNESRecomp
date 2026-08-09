@@ -1,0 +1,48 @@
+LOG falcon-input-map-qa
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 12
+
+# A is the primary attack: neutral Jab.
+HOLD A
+WAIT 2
+RELEASE A
+WAIT 4
+SCREENSHOT C:/temp/falcon_input_a_jab.png
+WAIT 20
+
+# Horizontal+A is forward tilt, not a host jump.
+HOLD RIGHT
+HOLD A
+WAIT 2
+RELEASE A
+RELEASE RIGHT
+WAIT 8
+SCREENSHOT C:/temp/falcon_input_a_right_ftilt.png
+WAIT 24
+
+# Horizontal+B remains Falcon Punch; Smash 64 has no Side-B.
+HOLD RIGHT
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE RIGHT
+WAIT 8
+SCREENSHOT C:/temp/falcon_input_b_right_punch.png
+WAIT 82
+
+# Up alone uses the source stick-jump path. A after takeoff is neutral air.
+HOLD UP
+WAIT 6
+RELEASE UP
+WAIT 4
+HOLD A
+WAIT 2
+RELEASE A
+WAIT 5
+SCREENSHOT C:/temp/falcon_input_a_air_nair.png
+WAIT 45
+EXIT 0

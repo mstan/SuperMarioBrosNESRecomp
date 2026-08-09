@@ -1,10 +1,10 @@
 # Punch emits the two source motion-script voice syllables and impact FGM once.
 neutral
-attack down
+special down
 frames 1
 expect_state FALCON_PUNCH_GROUND
 expect_audio 0x2
-attack up
+special up
 frames 1
 expect_audio 0
 frames 40
@@ -19,11 +19,11 @@ expect_state WAIT
 # Kick emits its voice + swing at entry and the source energy FGM at frame 12.
 neutral
 stick_y -80
-attack down
+special down
 frames 1
 expect_state FALCON_KICK_GROUND
 expect_audio 0x28
-attack up
+special up
 frames 1
 expect_audio 0
 frames 10

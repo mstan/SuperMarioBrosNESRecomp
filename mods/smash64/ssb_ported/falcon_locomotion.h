@@ -75,7 +75,8 @@ typedef struct {
     int stick_y;        /* -80 .. +80 */
     int jump_held;      /* jump button currently down */
     int jump_pressed;   /* jump button newly pressed this frame */
-    int attack_pressed; /* attack button newly pressed this frame */
+    int attack_pressed; /* primary/normal attack newly pressed */
+    int special_pressed;/* special attack newly pressed */
 } FalconInputRaw;
 
 /* What the host's collision permitted, in source units. */

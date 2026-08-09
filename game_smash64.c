@@ -28,6 +28,7 @@
 #include "game_smash64.h"
 #include "game_smash64_attack_policy.h"
 #include "game_smash64_audio.h"
+#include "mods/smash64/characters/captain_falcon.h"
 
 #include "foreign_controller.h"
 #include "mod_function_hooks.h"
@@ -179,10 +180,10 @@ _Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
 /*
  * PlayerPhysicsSub ($B450) -- M3.5, the jumpsquat window.
  *
- * SMB1 launches on the A button's RISING EDGE, which leaves Falcon's 4-frame
- * KneeBend nowhere to live, so his short hop was unreachable. We make SMB1 see
- * the press LATE: withhold the A bit for the squat, then present it on the
- * frame Falcon actually leaves the ground. See ForeignJumpPhase.
+ * SMB1 launches on the A button's rising edge, while Falcon's NES mapping uses
+ * A for primary attack and a fresh Up-stick for KneeBend. Hide physical A from
+ * SMB1 and synthesize its required edge only on the frame Falcon actually
+ * leaves the ground. See ForeignJumpPhase.
  *
  * WHY THIS ADDRESS AND NOT PlayerCtrlRoutine ($B0E9). $B0E9 is the obvious
  * candidate and it does not work: SaveJoyp lives INSIDE PlayerCtrlRoutine, a
@@ -204,9 +205,9 @@ _Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
 #define SMB1_PLAYER_PHYSICS_ADDR 0xB450
 #define SMASH64_JUMPSQUAT_HOOK_ID "super-mario-bros.smash64.jumpsquat"
 
-/* A_B_Buttons bits. A remains the jump handshake. B is sampled as Falcon's
- * attack button and masked at PlayerPhysicsSub so SMB1 does not also run or
- * throw a fireball on the same press. */
+/* A_B_Buttons bits. Physical A/B are Falcon's primary/special attacks and are
+ * masked at PlayerPhysicsSub. A is reintroduced only as SMB1's synthetic jump
+ * handshake; B never reaches its run/fireball readers while Falcon owns play. */
 #define SMB1_A_BUTTON_BIT 0x80
 #define SMB1_B_BUTTON_BIT 0x40
 
@@ -229,7 +230,7 @@ static uint8_t  s_prev_buttons = 0;
  * direction the player intended to press with it. Defer only a directionless
  * B edge for one frame; simultaneous and direction-first specials remain
  * immediate, while neutral Falcon Punch gains one frame of latency. */
-static int s_attack_grace_pending;
+static int s_special_grace_pending;
 static uint64_t s_frame = 0;
 static int8_t   s_xspeed = 0;            /* this frame's velocity, computed in
                                           * update_input, written by the hook */
@@ -250,6 +251,9 @@ static int s_friction_ran = 0;           /* did ImposeFriction fire this frame *
 static double s_y_sub = 0.0;             /* vertical subpixel remainder, kept
                                           * host-side rather than contending
                                           * for SMB1's fraction bytes */
+static double s_pending_external_dy = 0.0; /* controller-space Y displacement
+                                            * applied by a host-side atomic
+                                            * clearance adaptation */
 static int s_wrote_y = 0;                /* 16-bit player Y the vertical hook
                                           * last wrote, so a corrected readback
                                           * is detectable as SMB1 refusing the
@@ -529,6 +533,34 @@ static int smb1_side_solid_at(int x_pos, int page, int dir)
     return solid;
 }
 
+/* A two-tile-high tunnel can begin one tile below the platform Falcon is
+ * standing on. At the lip, a purely horizontal Big-Mario probe sees the roof
+ * before SMB1 has had a frame to discover the lower floor, so movement locks
+ * even though the adjacent cavity has a valid 32px opening. Admit only the
+ * exact one-tile controlled descent: the lowered Big profile must have clear
+ * head and side probes and at least one solid foot probe. SMB1 may put Falcon
+ * into Fall on the next frame if the other foot is unsupported; that is the
+ * intended step-down, not an invented standing platform. This never grants
+ * passage through a 16px tunnel. */
+static int smb1_can_step_down_one_tile(int x_pos, int page, int dir)
+{
+    uint8_t save_y = g_ram[Player_Y_Position];
+    int down_y;
+    int clear;
+
+    if (g_ram[Player_State] != 0 || g_ram[Player_Y_HighPos] != 1 ||
+        save_y >= 0xBF)
+        return 0;
+
+    down_y = (int)save_y + 16;
+    g_ram[Player_Y_Position] = (uint8_t)down_y;
+    clear = !smb1_side_solid_at(x_pos, page, dir) &&
+            !smb1_solid_at(down_y, 0) &&
+             smb1_solid_at(down_y, 1);
+    g_ram[Player_Y_Position] = save_y;
+    return clear;
+}
+
 static ForeignOwnership decide_ownership(void)
 {
     if (!s_enabled || !s_selected) return FOREIGN_OWNERSHIP_NATIVE;
@@ -578,8 +610,8 @@ static ForeignOwnership decide_ownership(void)
 /*
  * A d-pad press moves the synthetic stick 0 -> +/-1.0 in one frame, which the
  * controller reads as a full-deflection fresh stick tap. That makes dash,
- * dash->run, turn, brake, short hop, full hop and fast fall all reachable.
- * Walk is not reachable from neutral -- see
+ * dash->run, turn, brake, stick-jump and fast fall reachable. Walk is not
+ * reachable from neutral -- see
  * docs/smb1_player_adapter.md section 5.
  */
 static void sample_input(ForeignInput *out)
@@ -598,21 +630,24 @@ static void sample_input(ForeignInput *out)
     out->stick_x = (float)((right ? 1 : 0) - (left ? 1 : 0));
     out->stick_y = (float)((up ? 1 : 0) - (down ? 1 : 0));
 
-    out->jump_held    = (b & PAD_A) != 0;
-    out->jump_pressed = (pressed & PAD_A) != 0;
+    /* Smash's primary attack and special are distinct inputs. On the NES pad,
+     * A is the primary attack and B is the special. Jump remains available
+     * through Smash's fresh Up-stick path; the jumpsquat hook below masks A
+     * from SMB1 so an A normal cannot also trigger Mario's native jump. */
+    out->attack_pressed = (pressed & PAD_A) != 0;
     out->down_pressed = (pressed & PAD_DOWN) != 0;
     if (pressed & PAD_B) {
         if (left || right || up || down) {
-            out->attack_pressed = 1;
-            s_attack_grace_pending = 0;
+            out->special_pressed = 1;
+            s_special_grace_pending = 0;
         } else {
-            s_attack_grace_pending = 1;
+            s_special_grace_pending = 1;
         }
-    } else if (s_attack_grace_pending) {
+    } else if (s_special_grace_pending) {
         /* The current-frame stick is deliberately sampled here: this is the
          * one-frame grace that turns B->Up/Down into the intended special. */
-        out->attack_pressed = 1;
-        s_attack_grace_pending = 0;
+        out->special_pressed = 1;
+        s_special_grace_pending = 0;
     }
     out->raw_buttons  = b;
 
@@ -683,8 +718,9 @@ void game_smash64_update_input(uint64_t frame_count)
             s_wrote_x_valid = 0;
             s_wrote_y_valid = 0;
             s_wrote_yspeed_valid = 0;
+            s_pending_external_dy = 0.0;
             s_contact_pending = 0;
-            s_attack_grace_pending = 0;
+            s_special_grace_pending = 0;
             s_forced_airborne_pending = 0;
             s_forced_airborne_frames = 0;
             reseed = 1;
@@ -696,7 +732,8 @@ void game_smash64_update_input(uint64_t frame_count)
              * death, or other native/scripted handoff even for one frame. */
             s_forced_airborne_pending = 0;
             s_forced_airborne_frames = 0;
-            s_attack_grace_pending = 0;
+            s_special_grace_pending = 0;
+            s_pending_external_dy = 0.0;
         }
         s_reseed_this_frame = reseed;
     }
@@ -724,6 +761,19 @@ void game_smash64_update_input(uint64_t frame_count)
          * controller request; the trace therefore still exposes one edge.
          */
         if (s_forced_airborne_pending && pstate == 0) {
+            pstate = 2;
+            g_ram[Player_State] = 2;
+        }
+
+        /* A wall-bound Falcon Kick can press against the adapter's gameplay-
+         * top ceiling with its feet aligned to the underside roof row. SMB1
+         * mistakes that alignment for a floor and reports grounded, which
+         * would cancel Bound before its authentic root track turns downward.
+         * Keep only this screen-edge frame airborne; once Y moves below $20,
+         * ordinary host grounding regains authority immediately. */
+        if (fs->state == FL_FALCON_KICK_BOUND &&
+            g_ram[Player_Y_HighPos] == 1 &&
+            g_ram[Player_Y_Position] <= 0x20 && pstate == 0) {
             pstate = 2;
             g_ram[Player_State] = 2;
         }
@@ -776,7 +826,8 @@ void game_smash64_update_input(uint64_t frame_count)
     } else {
         memset(&s_attack, 0, sizeof(s_attack));
         s_contact_pending = 0;
-        s_attack_grace_pending = 0;
+        s_special_grace_pending = 0;
+        s_pending_external_dy = 0.0;
         s_forced_airborne_pending = 0;
         s_forced_airborne_frames = 0;
         /* SMB1 owns the player; keep our idea of velocity in step with it so
@@ -936,6 +987,16 @@ void game_smash64_update_input(uint64_t frame_count)
         }
         hit.actual_dx = (double)(now_x - s_x_before) / FALCON_TO_SMB1_PX;
         s_wrote_x_valid = 0;
+    }
+
+    /* The horizontal step-down adapter changes native Y after this frame's
+     * controller tick. Reconcile that host-authored displacement on the next
+     * resolve so Falcon's portable position cannot remain one tile above his
+     * rendered/native body. This is additive to any ordinary vertical
+     * readback that happened on the same frame. */
+    if (s_pending_external_dy != 0.0) {
+        hit.actual_dy += s_pending_external_dy;
+        s_pending_external_dy = 0.0;
     }
 
     /*
@@ -1143,6 +1204,19 @@ static int move_player_vertically_hook(uint16_t addr)
             while (cand < 0)   { cand += 256; cand_hi -= 1; }
             while (cand > 255) { cand -= 256; cand_hi += 1; }
 
+            /* SMB1 deliberately stops probing above its $20 gameplay extent,
+             * but foreign root motion can be much faster than Mario's capped
+             * jump and otherwise crosses high byte 1 -> 0 in one frame. Keep
+             * the foreign body below the HUD instead of allowing an unsigned
+             * wrap through the top of the map. Repeated authored root deltas
+             * simply press against this ceiling until the motion turns down. */
+            if (!feet && (cand_hi < 1 || (cand_hi == 1 && cand < 0x20))) {
+                pos = 0x20;
+                high = 1;
+                s_swept_block = SMASH64_SWEEP_CEILING;
+                if (!s_sweep_noblock) break;
+            }
+
             /*
              * Mirror SMB1's own "don't even look" guards, so we never invent a
              * collision where the game has none. Getting this wrong would be
@@ -1294,8 +1368,17 @@ static int move_player_horizontally_hook(uint16_t addr)
 
             if (cand_page >= 0 &&
                 smb1_side_solid_at(cand, cand_page, step)) {
-                s_x_swept_wall = 1;
-                if (!s_sweep_noblock) break;
+                if (!s_sweep_noblock &&
+                    smb1_can_step_down_one_tile(cand, cand_page, step)) {
+                    g_ram[Player_Y_Position] =
+                        (uint8_t)(g_ram[Player_Y_Position] + 16);
+                    s_y_sub = 0.0;
+                    s_pending_external_dy +=
+                        -16.0 / FALCON_TO_SMB1_PX;
+                } else {
+                    s_x_swept_wall = 1;
+                    if (!s_sweep_noblock) break;
+                }
             }
         }
     }
@@ -1495,7 +1578,8 @@ static void apply_pending_attack(void)
 /*
  * Runs at PlayerPhysicsSub ($B450) entry, before CheckForJumping ($B479).
  *
- * Withholds or presents SMB1's A bit so Falcon's KneeBend decides jump height.
+ * Withholds or presents SMB1's A bit so Falcon's A-normal input never also
+ * launches Mario, while Falcon's own Up-stick KneeBend decides jump timing.
  * Always returns 0 -- SMB1's physics runs unmodified; only one input byte moved.
  *
  * SCOPE OF THE WRITE. A_B_Buttons ($000A) is written by SMB1 itself every
@@ -1519,7 +1603,9 @@ static void apply_pending_attack(void)
  *                           vy 0 for the whole squat, so it is not reached.
  *   $B8E5 JumpspringHandler gated off below.
  *   $F05D ActionSwimming    gated off below.
- *   $B53A, $B62B            read B_Button ($40) only. Untouched.
+ *   $B53A, $B62B            read B_Button ($40). AFFECTED AND REQUIRED: B is
+ *                           masked while FOREIGN so SMB1 cannot also run or
+ *                           throw a fireball when Falcon starts a special.
  */
 static int jumpsquat_hook(uint16_t addr)
 {
@@ -1554,22 +1640,22 @@ static int jumpsquat_hook(uint16_t addr)
      */
     if (g_ram[JumpspringAnimCtrl] != 0) return 0;
 
+    /* Physical A is Falcon's primary attack. SMB1 must see it only on the
+     * controller-authored jump launch frame below; otherwise an A normal also
+     * enters InitJS and becomes an unintended Mario jump. */
+    g_ram[A_B_Buttons] &= (uint8_t)~SMB1_A_BUTTON_BIT;
+
     switch (fs->jump_phase) {
     case FOREIGN_JUMP_CHARGING:
-        /* Falcon is in KneeBend. Withhold the press -- do not consume it: the
-         * bit is only cleared for this frame, so SMB1's own edge detection
-         * stays intact and sees a clean edge when we present it. */
-        g_ram[A_B_Buttons] &= (uint8_t)~SMB1_A_BUTTON_BIT;
+        /* Falcon is in KneeBend. SMB1 receives one clean synthetic edge only
+         * when the source state machine publishes LAUNCH. */
         s_squat_frames++;
         break;
 
     case FOREIGN_JUMP_LAUNCH:
         /*
-         * Falcon left the ground this tick. FORCE the bit rather than merely
-         * stopping the mask: a short hop means the player released A during the
-         * squat, so SavedJoypadBits no longer carries it and SaveJoyp already
-         * wrote $000A without it. Without this, a short hop produces no jump at
-         * all -- silently, and it reads as the physics being wrong.
+         * Falcon left the ground this tick. FORCE the bit; physical A is an
+         * attack now, so the host jump edge is always synthetic.
          */
         g_ram[A_B_Buttons] |= (uint8_t)SMB1_A_BUTTON_BIT;
         s_launch_frames++;
@@ -1602,11 +1688,16 @@ uint8_t game_smash64_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val)
 
     /* PlayerBGCollision $DC64: geometry selection only.
      * $DC9A/$DC9F choose BlockBufferAdderData and $DCB1/$DCB4 choose
-     * PlayerBGUpperExtent. Later reads in PlayerHeadCollision are deliberately
-     * untouched so small Falcon bumps a brick instead of shattering it. */
-    if (addr == CrouchingFlag && (pc == 0xDC9A || pc == 0xDCB4))
+     * PlayerBGUpperExtent. $BD57/$BD5C choose the contacted block's Y anchor;
+     * they must use the same profile or a hidden-small Falcon spawns a powerup
+     * one tile too low. The earlier consequence reads in PlayerHeadCollision
+     * remain native, so small Falcon still bumps a brick instead of shattering
+     * it. */
+    if (addr == CrouchingFlag &&
+        (pc == 0xDC9A || pc == 0xDCB4 || pc == 0xBD57))
         return 0;
-    if (addr == PlayerSize && (pc == 0xDC9F || pc == 0xDCB1))
+    if (addr == PlayerSize &&
+        (pc == 0xDC9F || pc == 0xDCB1 || pc == 0xBD5C))
         return 0;
     return val;
 }
@@ -1643,6 +1734,7 @@ uint8_t game_smash64_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val)
 typedef struct {
     int8_t   xspeed;
     double   y_sub;
+    double   pending_external_dy;
     double   x_sub;
     int32_t  wrote_y;
     int32_t  wrote_y_valid;
@@ -1655,7 +1747,7 @@ typedef struct {
     int32_t  x_before;
     int32_t  prev_ownership;
     uint8_t  prev_buttons;     /* sample_input's edge-detect latch */
-    int32_t  attack_grace_pending;
+    int32_t  special_grace_pending;
     /* Undrained per-frame collision verdicts, set inside a movement hook
      * and consumed by the NEXT update_input. Saving mid-frame, between the
      * hook and that drain, would otherwise lose the very event a trace is
@@ -1671,9 +1763,39 @@ typedef struct {
     ForeignAttackHitbox attack;
 } AdapterSaveFields;
 
-/* Version 5 is the immediately preceding layout. Keep a reader because the
- * owner's live slot 0/1 saves were made with it; the new input grace latch is
- * safely initialized clear when those records are restored. */
+/* Version 6 added the B-special grace latch but predates the host-authored
+ * step-down displacement. Preserve it because the owner's active slots were
+ * created while that adapter was in use. */
+typedef struct {
+    int8_t   xspeed;
+    double   y_sub;
+    double   x_sub;
+    int32_t  wrote_y;
+    int32_t  wrote_y_valid;
+    int8_t   wrote_yspeed;
+    int32_t  wrote_yspeed_valid;
+    int32_t  y_before;
+    double   wrote_dy_px;
+    int32_t  wrote_x;
+    int32_t  wrote_x_valid;
+    int32_t  x_before;
+    int32_t  prev_ownership;
+    uint8_t  prev_buttons;
+    int32_t  special_grace_pending;
+    int32_t  swept_block;
+    int32_t  swept_ran;
+    int32_t  x_swept_wall;
+    int32_t  x_swept_ran;
+    uint32_t pending_flags;
+    int32_t  contact_pending;
+    int32_t  forced_airborne_pending;
+    uint32_t forced_airborne_frames;
+    ForeignAttackHitbox attack;
+} AdapterSaveFieldsV6;
+
+/* Version 5 predates both the B-special grace latch and the host-authored
+ * step-down displacement. Keep a reader because the owner's live slot 0/1
+ * saves were made with it; both later fields initialize safely clear. */
 typedef struct {
     int8_t   xspeed;
     double   y_sub;
@@ -1700,7 +1822,7 @@ typedef struct {
     ForeignAttackHitbox attack;
 } AdapterSaveFieldsV5;
 
-#define SMASH64_ADAPTER_SAVESTATE_VERSION 6
+#define SMASH64_ADAPTER_SAVESTATE_VERSION 7
 
 /*
  * Returns 0 bytes while the mod is off. There is no adapter trajectory to
@@ -1717,6 +1839,7 @@ static int game_smash64_savestate_get(uint8_t *buf, int cap)
 
     f.xspeed              = s_xspeed;
     f.y_sub               = s_y_sub;
+    f.pending_external_dy = s_pending_external_dy;
     f.x_sub               = s_x_sub;
     f.wrote_y             = s_wrote_y;
     f.wrote_y_valid       = s_wrote_y_valid;
@@ -1729,7 +1852,7 @@ static int game_smash64_savestate_get(uint8_t *buf, int cap)
     f.x_before            = s_x_before;
     f.prev_ownership      = (int32_t)s_prev_ownership;
     f.prev_buttons        = s_prev_buttons;
-    f.attack_grace_pending = s_attack_grace_pending;
+    f.special_grace_pending = s_special_grace_pending;
     f.swept_block         = s_swept_block;
     f.swept_ran           = s_swept_ran;
     f.x_swept_wall        = s_x_swept_wall;
@@ -1759,6 +1882,35 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
     if (buf[0] == SMASH64_ADAPTER_SAVESTATE_VERSION &&
         len == (int)(1 + sizeof f)) {
         memcpy(&f, buf + 1, sizeof f);
+    } else if (buf[0] == 6 &&
+               len == (int)(1 + sizeof(AdapterSaveFieldsV6))) {
+        AdapterSaveFieldsV6 old;
+        memcpy(&old, buf + 1, sizeof old);
+        f.xspeed = old.xspeed;
+        f.y_sub = old.y_sub;
+        f.pending_external_dy = 0.0;
+        f.x_sub = old.x_sub;
+        f.wrote_y = old.wrote_y;
+        f.wrote_y_valid = old.wrote_y_valid;
+        f.wrote_yspeed = old.wrote_yspeed;
+        f.wrote_yspeed_valid = old.wrote_yspeed_valid;
+        f.y_before = old.y_before;
+        f.wrote_dy_px = old.wrote_dy_px;
+        f.wrote_x = old.wrote_x;
+        f.wrote_x_valid = old.wrote_x_valid;
+        f.x_before = old.x_before;
+        f.prev_ownership = old.prev_ownership;
+        f.prev_buttons = old.prev_buttons;
+        f.special_grace_pending = old.special_grace_pending;
+        f.swept_block = old.swept_block;
+        f.swept_ran = old.swept_ran;
+        f.x_swept_wall = old.x_swept_wall;
+        f.x_swept_ran = old.x_swept_ran;
+        f.pending_flags = old.pending_flags;
+        f.contact_pending = old.contact_pending;
+        f.forced_airborne_pending = old.forced_airborne_pending;
+        f.forced_airborne_frames = old.forced_airborne_frames;
+        f.attack = old.attack;
     } else if (buf[0] == 5 &&
                len == (int)(1 + sizeof(AdapterSaveFieldsV5))) {
         AdapterSaveFieldsV5 old;
@@ -1777,7 +1929,7 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
         f.x_before = old.x_before;
         f.prev_ownership = old.prev_ownership;
         f.prev_buttons = old.prev_buttons;
-        f.attack_grace_pending = 0;
+        f.special_grace_pending = 0;
         f.swept_block = old.swept_block;
         f.swept_ran = old.swept_ran;
         f.x_swept_wall = old.x_swept_wall;
@@ -1793,6 +1945,7 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
 
     s_xspeed              = f.xspeed;
     s_y_sub               = f.y_sub;
+    s_pending_external_dy = f.pending_external_dy;
     s_x_sub               = f.x_sub;
     s_wrote_y             = f.wrote_y;
     s_wrote_y_valid       = f.wrote_y_valid;
@@ -1805,7 +1958,7 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
     s_x_before            = f.x_before;
     s_prev_ownership      = (ForeignOwnership)f.prev_ownership;
     s_prev_buttons        = f.prev_buttons;
-    s_attack_grace_pending = f.attack_grace_pending;
+    s_special_grace_pending = f.special_grace_pending;
     s_swept_block         = f.swept_block;
     s_swept_ran           = f.swept_ran;
     s_x_swept_wall        = f.x_swept_wall;
@@ -1830,7 +1983,8 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_announced = 0;
     memset(&s_attack, 0, sizeof(s_attack));
     s_contact_pending = 0;
-    s_attack_grace_pending = 0;
+    s_special_grace_pending = 0;
+    s_pending_external_dy = 0.0;
     s_forced_airborne_pending = 0;
     s_forced_airborne_frames = 0;
     s_controller_id[0] = '\0';
@@ -1860,7 +2014,8 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_xspeed = 0;
     memset(&s_attack, 0, sizeof(s_attack));
     s_contact_pending = 0;
-    s_attack_grace_pending = 0;
+    s_special_grace_pending = 0;
+    s_pending_external_dy = 0.0;
     s_forced_airborne_pending = 0;
     s_forced_airborne_frames = 0;
     s_owned_frames = 0;
@@ -1993,9 +2148,8 @@ void game_smash64_init(void)
                ctl && ctl->name ? ctl->name : "?", s_controller_id);
     }
     /* ASCII only: the Windows console codepage mangles non-ASCII here. */
-    printf("[Smash64] Falcon owns ground movement, air physics, and jump "
-           "timing (4-frame jumpsquat: tap A for a short hop). SMB1 keeps all "
-           "collision and every scripted sequence.\n");
+    printf("[Smash64] Controls: A normal, B special, Up jump (4-frame "
+           "jumpsquat). SMB1 keeps all collision and scripted sequences.\n");
     printf("[Smash64] Traces: TCP 'ftring', or NESRECOMP_FTRING_DUMP=<path>.\n");
 }
 

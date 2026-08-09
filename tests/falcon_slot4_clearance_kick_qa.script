@@ -1,0 +1,50 @@
+LOG falcon-slot4-clearance-kick-qa
+WAIT 2
+
+# Owner F4 reproduction: ordinary rightward travel must clear this geometry.
+LOAD_STATE build_falcon/Release/savestates/slot04.sav
+WAIT 3
+SCREENSHOT C:/temp/falcon_slot4_walk_start.png
+HOLD RIGHT
+# The first movement frame performs the host-side 16px controlled descent.
+# Save before the following VBlank drains its pending controller correction;
+# load must apply that correction exactly once, not lose or double it.
+WAIT 3
+SAVE_STATE C:/temp/falcon_slot4_step_pending.sav
+LOAD_STATE C:/temp/falcon_slot4_step_pending.sav
+WAIT 17
+SCREENSHOT C:/temp/falcon_slot4_walk_20.png
+WAIT 40
+SCREENSHOT C:/temp/falcon_slot4_walk_60.png
+RELEASE RIGHT
+WAIT 2
+
+# From the identical state, Down+B must remain on the map throughout Falcon
+# Kick rather than resolving below the floor.
+LOAD_STATE build_falcon/Release/savestates/slot04.sav
+WAIT 3
+HOLD DOWN
+WAIT 2
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE DOWN
+SCREENSHOT C:/temp/falcon_slot4_kick_00.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_slot4_kick_08.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_slot4_kick_16.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_slot4_kick_24.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_slot4_kick_32.png
+WAIT 24
+SCREENSHOT C:/temp/falcon_slot4_kick_end.png
+ASSERT_RAM8 00B5 01
+WAIT 32
+SCREENSHOT C:/temp/falcon_slot4_kick_recover_56.png
+ASSERT_RAM8 00B5 01
+WAIT 32
+SCREENSHOT C:/temp/falcon_slot4_kick_recover_88.png
+ASSERT_RAM8 00B5 01
+EXIT 0

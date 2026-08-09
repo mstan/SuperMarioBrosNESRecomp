@@ -58,12 +58,12 @@ RELEASE LEFT
 # Reload a real player-control state before the jump sequence.
 LOAD_STATE C:/temp/falcon_visual_locomotion_base.sav
 WAIT 2
-HOLD A
+HOLD UP
 WAIT 2
 SCREENSHOT C:/temp/falcon_qa_kneebend.png
 WAIT 3
 SCREENSHOT C:/temp/falcon_qa_jump.png
-RELEASE A
+RELEASE UP
 WAIT 30
 SCREENSHOT C:/temp/falcon_qa_fall.png
 HOLD DOWN

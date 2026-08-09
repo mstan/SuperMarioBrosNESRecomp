@@ -222,6 +222,10 @@ first act (`$BF09: LDA $070E / BNE ExXMove`), the former mirroring
 `CheckForJumping`'s jumpspring gate (`$B479`, cited in
 `smb1_player_adapter.md` §1).
 
+That decline is also the intentional exception to Falcon's ordinary A-button
+mask: physical A remains visible during `JumpspringAnimCtrl`, preserving SMB1's
+frame-specific spring boost even though A is a normal attack in ordinary play.
+
 **Classification: WORKS NATIVELY (via the shipped M4 imposed-velocity
 path)** — this is the bead's own conclusion ("Jumpsprings need NOTHING,
 already correct via M4 imposed_vy readback") and it checks out against the

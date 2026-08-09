@@ -102,7 +102,7 @@ static void check_range(const char *what, double have, const char *arg)
 static void emit_header(void)
 {
     fprintf(g_csv,
-        "frame,state,state_name,anim_frame,stick_x,stick_y,jump,attack,"
+        "frame,state,state_name,anim_frame,stick_x,stick_y,jump,attack,special,"
         "vel_ground_x,vel_air_x,vel_air_y,"
         "req_dx,req_dy,px_dx,px_dy,hit_active,damage,break_blocks,contact_only,"
         "audio_cues,pos_x,pos_y,lr,grounded,fastfall,tap_x,tap_y,note\n");
@@ -112,12 +112,13 @@ static void emit_row(const FalconFighter *f, const FalconInputRaw *in,
                      const FalconMotion *m, const char *note)
 {
     fprintf(g_csv,
-        "%ld,%d,%s,%.1f,%d,%d,%d,%d,"
+        "%ld,%d,%s,%.1f,%d,%d,%d,%d,%d,"
         "%.6f,%.6f,%.6f,"
         "%.6f,%.6f,%.6f,%.6f,%d,%d,%d,%d,"
         "%u,%.6f,%.6f,%d,%d,%d,%u,%u,%s\n",
         g_frame, f->state, falcon_state_name(f->state), f->anim_frame,
         in->stick_x, in->stick_y, in->jump_held, in->attack_pressed,
+        in->special_pressed,
         f->vel_ground_x, f->vel_air_x, f->vel_air_y,
         m->requested_dx, m->requested_dy,
         m->requested_dx * g_scale, m->requested_dy * g_scale,
@@ -191,6 +192,8 @@ static int run_script(const char *path)
     int jump_was_down = 0;
     int attack_is_down = 0;
     int attack_was_down = 0;
+    int special_is_down = 0;
+    int special_was_down = 0;
 
     if (!fp) { fprintf(stderr, "cannot open script: %s\n", path); return 2; }
 
@@ -216,10 +219,13 @@ static int run_script(const char *path)
             in.jump_held = !strncmp(arg, "down", 4);
         } else if (!strcmp(cmd, "attack")) {
             attack_is_down = !strncmp(arg, "down", 4);
+        } else if (!strcmp(cmd, "special")) {
+            special_is_down = !strncmp(arg, "down", 4);
         } else if (!strcmp(cmd, "neutral")) {
             in.stick_x = in.stick_y = 0;
             in.jump_held = 0;
             attack_is_down = 0;
+            special_is_down = 0;
         } else if (!strcmp(cmd, "pos_y")) {
             /* Place the fighter above the flat floor, so a host-driven fall has
              * somewhere to fall from. +y is up in this world. */
@@ -253,6 +259,7 @@ static int run_script(const char *path)
             memset(&in, 0, sizeof(in));
             memset(&m, 0, sizeof(m));
             jump_was_down = attack_is_down = attack_was_down = 0;
+            special_is_down = special_was_down = 0;
             g_impose_pending = g_wall_pending = g_ceiling_pending =
                 g_contact_pending = 0;
             g_peak_y = 0.0;
@@ -357,6 +364,9 @@ static int run_script(const char *path)
                 jump_was_down = in.jump_held;
                 in.attack_pressed = (attack_is_down && !attack_was_down);
                 attack_was_down = attack_is_down;
+                in.special_pressed =
+                    (special_is_down && !special_was_down);
+                special_was_down = special_is_down;
 
                 falcon_tick(&f, &in, &m);
                 resolve_flat_floor(&f, &m, &hit);

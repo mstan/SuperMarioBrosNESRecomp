@@ -629,49 +629,78 @@ static void enter_falcon_dive_landing(FalconFighter *f)
     set_status(f, FL_FALCON_DIVE_LANDING);
 }
 
-/* M7 combat selection is an NES-pad adaptation around authentic SSB64 move
- * scripts: B is the attack button, with the d-pad choosing the move. The
- * attack timing and damage emitted below come from
- * 235_CaptainMainMotion.c; only this compact input mapping is new. */
-static void enter_ground_attack(FalconFighter *f, const FalconInputRaw *in)
+/* The source keeps A normals and B specials on distinct logical inputs. The
+ * NES adapter supplies those edges independently; only the smaller set of
+ * source motions listed in FalconState is selectable here. */
+static void enter_ground_special(FalconFighter *f, const FalconInputRaw *in)
 {
     if (in->stick_y <= -40) {
         set_status(f, FL_FALCON_KICK_GROUND);
     } else if (in->stick_y >= 40) {
         enter_falcon_dive(f, 1);
-    } else if (iabs(in->stick_x) >= 20) {
-        f->lr = in->stick_x < 0 ? -1 : 1;
-        set_status(f, FL_FTILT);
     } else {
+        /* ftCommonSpecialNCheckInterruptCommon turns an opposite-facing
+         * neutral special before entering Falcon Punch. There is no Side-B
+         * in Smash 64, so horizontal+B still selects neutral special. */
+        if ((in->stick_x * f->lr) < 0)
+            f->lr = -f->lr;
         set_status(f, FL_FALCON_PUNCH_GROUND);
     }
 }
 
-static void enter_air_attack(FalconFighter *f, const FalconInputRaw *in)
+static void enter_air_special(FalconFighter *f, const FalconInputRaw *in)
 {
     if (in->stick_y <= -40) {
         set_status(f, FL_FALCON_KICK_AIR);
     } else if (in->stick_y >= 40) {
         enter_falcon_dive(f, 0);
-    } else if (iabs(in->stick_x) >= 20) {
-        set_status(f, (in->stick_x * f->lr) >= 0
-                          ? FL_ATTACK_AIR_F : FL_ATTACK_AIR_B);
     } else {
+        if ((in->stick_x * f->lr) < 0)
+            f->lr = -f->lr;
         set_status(f, FL_FALCON_PUNCH_AIR);
     }
+}
+
+static int check_ground_special(FalconFighter *f, const FalconInputRaw *in)
+{
+    if (!in->special_pressed) return 0;
+    enter_ground_special(f, in);
+    return 1;
+}
+
+static int check_air_special(FalconFighter *f, const FalconInputRaw *in)
+{
+    if (!in->special_pressed) return 0;
+    enter_air_special(f, in);
+    return 1;
 }
 
 static int check_ground_attack(FalconFighter *f, const FalconInputRaw *in)
 {
     if (!in->attack_pressed) return 0;
-    enter_ground_attack(f, in);
+    /* Up/Down tilts are not in the currently ported motion subset. Reserve
+     * their source inputs instead of lying by dispatching Jab or a special. */
+    if (iabs(in->stick_y) >= 20) return 1;
+    if (iabs(in->stick_x) >= 20) {
+        f->lr = in->stick_x < 0 ? -1 : 1;
+        set_status(f, FL_FTILT);
+    } else {
+        set_status(f, FL_JAB);
+    }
     return 1;
 }
 
 static int check_air_attack(FalconFighter *f, const FalconInputRaw *in)
 {
     if (!in->attack_pressed) return 0;
-    enter_air_attack(f, in);
+    /* Up/Down aerials are likewise not ported yet. */
+    if (iabs(in->stick_y) >= 20) return 1;
+    if (iabs(in->stick_x) >= 20) {
+        set_status(f, (in->stick_x * f->lr) >= 0
+                          ? FL_ATTACK_AIR_F : FL_ATTACK_AIR_B);
+    } else {
+        set_status(f, FL_ATTACK_AIR_N);
+    }
     return 1;
 }
 
@@ -909,6 +938,7 @@ static void proc_interrupt(FalconFighter *f, const FalconInputRaw *in)
     /* ftCommonWaitProcInterrupt -> ftCommonGroundCheckInterrupt,
      * fighter.h:47. Locomotion members, in the macro's own order. */
     case FL_WAIT:
+        if (check_ground_special(f, in)) return;
         if (check_ground_attack(f, in)) return;
         if (check_kneebend(f, in, 0)) return;
         if (check_dash(f, in))        return;
@@ -920,6 +950,7 @@ static void proc_interrupt(FalconFighter *f, const FalconInputRaw *in)
     case FL_WALK_SLOW:
     case FL_WALK_MIDDLE:
     case FL_WALK_FAST:
+        if (check_ground_special(f, in)) return;
         if (check_ground_attack(f, in)) return;
         if (check_kneebend(f, in, 0)) return;
         if (check_dash(f, in))        return;
@@ -934,6 +965,7 @@ static void proc_interrupt(FalconFighter *f, const FalconInputRaw *in)
     /* ftCommonDashProcInterrupt, 0x8013EA90 — representative combat check
      * restored ahead of the locomotion-only dash interrupts. */
     case FL_DASH:
+        if (check_ground_special(f, in)) return;
         if (check_ground_attack(f, in)) return;
         if (f->anim_frame > 5.0 && f->anim_frame <= 20.0) {
             /* Re-dash only when the stick is not already held forward. */
@@ -945,6 +977,7 @@ static void proc_interrupt(FalconFighter *f, const FalconInputRaw *in)
 
     /* ftCommonRunProcInterrupt, 0x8013EE50 */
     case FL_RUN:
+        if (check_ground_special(f, in)) return;
         if (check_ground_attack(f, in)) return;
         if (check_kneebend(f, in, 1))          return;
         if (check_turn_run_from_run(f, in))    return;
@@ -953,6 +986,7 @@ static void proc_interrupt(FalconFighter *f, const FalconInputRaw *in)
 
     /* ftCommonRunBrakeProcInterrupt, 0x8013EFB0 */
     case FL_RUN_BRAKE:
+        if (check_ground_special(f, in)) return;
         if (check_ground_attack(f, in)) return;
         if (check_kneebend(f, in, 1)) return;
         if (f->motion_flag1 && (f->anim_frame <= 4.0)) {
@@ -962,6 +996,7 @@ static void proc_interrupt(FalconFighter *f, const FalconInputRaw *in)
 
     /* ftCommonTurnProcInterrupt — dash-out-of-turn is the locomotion part. */
     case FL_TURN:
+        if (check_ground_special(f, in)) return;
         if (check_ground_attack(f, in)) return;
         if (check_kneebend(f, in, 0)) return;
         if (f->turn_flag1 && f->turn_lr_dash != 0 &&
@@ -974,6 +1009,7 @@ static void proc_interrupt(FalconFighter *f, const FalconInputRaw *in)
 
     /* ftCommonTurnRunProcInterrupt, 0x8013F1C0 */
     case FL_TURN_RUN:
+        if (check_ground_special(f, in)) return;
         if (check_ground_attack(f, in)) return;
         if (check_kneebend(f, in, 1)) return;
         break;
@@ -989,6 +1025,7 @@ static void proc_interrupt(FalconFighter *f, const FalconInputRaw *in)
     case FL_LANDING_LIGHT:
     case FL_LANDING_HEAVY:
         if (f->anim_frame < C_LANDING_INTERRUPT_BEGIN) break;
+        if (check_ground_special(f, in)) return;
         if (check_ground_attack(f, in)) return;
         if (check_kneebend(f, in, 0)) return;
         if (check_dash(f, in))        return;
@@ -1010,6 +1047,7 @@ static void proc_interrupt(FalconFighter *f, const FalconInputRaw *in)
     case FL_JUMP_AERIAL_B:
     case FL_FALL:
     case FL_FALL_AERIAL:
+        if (check_air_special(f, in)) return;
         if (check_air_attack(f, in)) return;
         break;
 

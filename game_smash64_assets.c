@@ -915,8 +915,9 @@ static NesVoxelMeshVertex render_kick_effect_vertex(
     out.y = base_y +
         (screen_x * roll_sin + screen_y * roll_cos) * model_scale;
     /* Keep CaptainSpecial2's attached fire card behind the kicking leg.
-     * Biasing it cameraward hid Falcon's already-small silhouette and made
-     * the bright trailing bulb read as the move's leading edge. */
+     * Biasing it cameraward hides Falcon's already-small silhouette. The
+     * source card's bright edge is rooted at the boot; its negative-Z end is
+     * the tapered trail (preserved by the source U coordinates below). */
     out.z = (x * yaw_sin + z * yaw_cos) * model_scale - output_scale;
     out.u = u;
     out.v = v;
@@ -968,22 +969,22 @@ static void draw_falcon_kick_effect(
         (3.14159265358979323846f / 180.0f);
 
     vertices[0] = render_kick_effect_vertex(
-        world[FALCON_KICK_EFFECT_JOINT], 467.0f, -2.0f, 0.0f, 48.0f,
+        world[FALCON_KICK_EFFECT_JOINT], 467.0f, -2.0f, 48.0f, 48.0f,
         pose_min, pose_max, center_x, foot_y, facing, source_lr,
         model_scale, yaw_rad, output_scale, roll_rad,
         effect_scale_y, effect_scale_z, rotate_x_rad);
     vertices[1] = render_kick_effect_vertex(
-        world[FALCON_KICK_EFFECT_JOINT], -467.0f, -2.0f, 0.0f, 0.0f,
+        world[FALCON_KICK_EFFECT_JOINT], -467.0f, -2.0f, 48.0f, 0.0f,
         pose_min, pose_max, center_x, foot_y, facing, source_lr,
         model_scale, yaw_rad, output_scale, roll_rad,
         effect_scale_y, effect_scale_z, rotate_x_rad);
     vertices[2] = render_kick_effect_vertex(
-        world[FALCON_KICK_EFFECT_JOINT], -467.0f, -1246.0f, 48.0f, 0.0f,
+        world[FALCON_KICK_EFFECT_JOINT], -467.0f, -1246.0f, 0.0f, 0.0f,
         pose_min, pose_max, center_x, foot_y, facing, source_lr,
         model_scale, yaw_rad, output_scale, roll_rad,
         effect_scale_y, effect_scale_z, rotate_x_rad);
     vertices[3] = render_kick_effect_vertex(
-        world[FALCON_KICK_EFFECT_JOINT], 467.0f, -1246.0f, 48.0f, 48.0f,
+        world[FALCON_KICK_EFFECT_JOINT], 467.0f, -1246.0f, 0.0f, 48.0f,
         pose_min, pose_max, center_x, foot_y, facing, source_lr,
         model_scale, yaw_rad, output_scale, roll_rad,
         effect_scale_y, effect_scale_z, rotate_x_rad);

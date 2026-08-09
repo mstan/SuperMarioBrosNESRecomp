@@ -8,16 +8,16 @@ TURBO ON
 HOLD RIGHT
 WAIT 45
 # This jump strikes the underside of the first question-block row.
-HOLD A
+HOLD UP
 WAIT 30
-RELEASE A
+RELEASE UP
 WAIT 350
 # Hold against the first pipe long enough to compare the per-pixel sweep
 # verdict with SMB1's one-frame-later ImpedePlayerMove response.
 SCREENSHOT C:/temp/falcon_m4_wall_head.png
-HOLD A
+HOLD UP
 WAIT 30
-RELEASE A
+RELEASE UP
 WAIT 150
 TURBO OFF
 RELEASE RIGHT

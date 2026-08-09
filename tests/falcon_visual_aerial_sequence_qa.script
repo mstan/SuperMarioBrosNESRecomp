@@ -14,13 +14,13 @@ SAVE_STATE C:/temp/falcon_visual_aerial_sequence_base.sav
 
 # Capture consecutive source frames so an extended kick can be judged as
 # motion, instead of accepting or rejecting one ambiguous projection.
-HOLD A
+HOLD UP
 WAIT 5
-RELEASE A
+RELEASE UP
 HOLD RIGHT
-HOLD B
+HOLD A
 WAIT 2
-RELEASE B
+RELEASE A
 RELEASE RIGHT
 SCREENSHOT C:/temp/falcon_qa_fair_00.png
 WAIT 2
@@ -39,13 +39,13 @@ WAIT 2
 
 LOAD_STATE C:/temp/falcon_visual_aerial_sequence_base.sav
 WAIT 2
-HOLD A
+HOLD UP
 WAIT 5
-RELEASE A
+RELEASE UP
 HOLD LEFT
-HOLD B
+HOLD A
 WAIT 2
-RELEASE B
+RELEASE A
 RELEASE LEFT
 SCREENSHOT C:/temp/falcon_qa_bair_00.png
 WAIT 2

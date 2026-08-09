@@ -9,10 +9,10 @@ SCREENSHOT C:/temp/falcon_model_wait.png
 HOLD RIGHT
 WAIT 30
 SCREENSHOT C:/temp/falcon_model_run.png
-HOLD A
+HOLD UP
 WAIT 12
 SCREENSHOT C:/temp/falcon_model_jump.png
-RELEASE A
+RELEASE UP
 WAIT 20
 RELEASE RIGHT
 EXIT 0

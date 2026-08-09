@@ -1,0 +1,53 @@
+LOG falcon-mushroom-emergence-qa
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+# Remove the first Goomba so this geometry test cannot hand control to SMB1's
+# damage sequence during Falcon's four-frame KneeBend.
+WRITE_RAM8 000F 00
+TURBO ON
+HOLD RIGHT
+WAIT 48
+RELEASE RIGHT
+WRITE_RAM8 000F 00
+
+# The first 1-1 question row supplies a native power-up block. Up is Falcon's
+# stick-jump adaptation; capture densely around contact and emergence.
+HOLD UP
+WAIT 6
+RELEASE UP
+SCREENSHOT C:/temp/falcon_mushroom_00.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_mushroom_02.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_mushroom_04.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_mushroom_06.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_mushroom_08.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_mushroom_12.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_mushroom_16.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_mushroom_24.png
+ASSERT_RAM8 0014 01
+ASSERT_RAM8 001B 2E
+ASSERT_RAM8 0023 05
+ASSERT_RAM8 00D4 84
+WAIT 16
+SCREENSHOT C:/temp/falcon_mushroom_40.png
+WAIT 16
+SCREENSHOT C:/temp/falcon_mushroom_56.png
+WAIT 16
+SCREENSHOT C:/temp/falcon_mushroom_72.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_mushroom_80.png
+DUMP_RAM 000F 20
+DUMP_RAM 00B6 20
+DUMP_RAM 00D7 10
+TURBO OFF
+WAIT 2
+EXIT 0

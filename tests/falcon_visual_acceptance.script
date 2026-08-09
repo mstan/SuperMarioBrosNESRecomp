@@ -30,11 +30,11 @@ RELEASE RIGHT
 
 LOAD_STATE C:/temp/falcon_visual_acceptance_base.sav
 WAIT 2
-HOLD A
+HOLD UP
 WAIT 15
 SCREENSHOT C:/temp/falcon_accept_jump.png
 WAIT 2
-RELEASE A
+RELEASE UP
 
 # Capture the source-active pose of Falcon Punch.
 LOAD_STATE C:/temp/falcon_visual_acceptance_base.sav

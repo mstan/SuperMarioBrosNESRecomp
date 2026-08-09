@@ -80,6 +80,7 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
     raw.jump_held = input->jump_held;
     raw.jump_pressed = input->jump_pressed;
     raw.attack_pressed = input->attack_pressed;
+    raw.special_pressed = input->special_pressed;
 
     /* Host truth in before the tick; the module reconciles a transition it
      * did not initiate (see falcon_tick). air_cause is what tells a launched

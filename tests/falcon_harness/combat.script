@@ -1,9 +1,9 @@
 # Grounded Falcon Punch: neutral B, source hit window 42..46.
 neutral
-attack down
+special down
 frames 1
 expect_state FALCON_PUNCH_GROUND
-attack up
+special up
 frames 41
 expect_attack 0 0
 frames 1
@@ -19,10 +19,10 @@ expect_state WAIT
 # Grounded Falcon Kick: down+B, source hit window 12..31.
 neutral
 stick_y -80
-attack down
+special down
 frames 1
 expect_state FALCON_KICK_GROUND
-attack up
+special up
 frames 11
 expect_attack 0 0
 frames 1
@@ -34,7 +34,7 @@ expect_attack 0 0
 frames 53
 expect_state WAIT
 
-# Horizontal+B maps to forward tilt while grounded.
+# Horizontal+A maps to forward tilt while grounded.
 neutral
 stick_x 80
 attack down
@@ -50,7 +50,7 @@ neutral
 frames 13
 expect_state WAIT
 
-# Horizontal+B chooses forward/back air relative to facing.
+# Horizontal+A chooses forward/back air relative to facing.
 neutral
 pos_y 10000
 host_fall
@@ -86,3 +86,48 @@ frames 12
 expect_attack 0 0
 frames 16
 expect_state FALL
+
+# Neutral+A reaches the source jab rather than a B special.
+reset
+neutral
+attack down
+frames 1
+expect_state JAB
+attack up
+frames 5
+expect_attack 1 1
+expect_damage 3 3
+frames 16
+expect_state WAIT
+
+# Neutral+A in the air reaches neutral air.
+reset
+pos_y 10000
+host_fall
+frames 1
+attack down
+frames 1
+expect_state ATTACK_AIR_N
+attack up
+frames 4
+expect_attack 1 1
+expect_damage 16 16
+
+# Horizontal+B is still neutral special (there is no Side-B in Smash 64),
+# and an opposite direction turns Falcon before Punch starts.
+reset
+neutral
+stick_x -80
+special down
+frames 1
+expect_state FALCON_PUNCH_GROUND
+expect_lr -1 -1
+special up
+
+# Source interrupt priority chooses B special when A and B rise together.
+reset
+neutral
+attack down
+special down
+frames 1
+expect_state FALCON_PUNCH_GROUND

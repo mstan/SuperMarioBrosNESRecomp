@@ -3,9 +3,11 @@
 **Status: M2 + M3 + M3.5 COMPLETE** (`beads-2dw.2.1.3`, `beads-2dw.2.1.4`,
 `beads-2dw.2.1.9`). Falcon owns horizontal movement, vertical motion — jump
 velocity, gravity, terminal velocity, fast fall and air drift — and, since M3.5,
-jump **timing**: his 4-frame jumpsquat runs and decides short hop versus full
-hop. SMB1 still decides when a landing happens, and owns all collision and every
-scripted sequence.
+jump **timing**: his 4-frame jumpsquat runs before a fresh Up-stick jump. SMB1
+still decides when a landing happens, and owns all collision and every scripted
+sequence. Physical A is now Smash's primary attack and B is special; the former
+physical-A short/full-hop binding documented in the historical M3.5 evidence
+below is no longer exposed by the NES control map.
 
 Every address below was confirmed in Ghidra (`nes/SuperMarioBrosNES`) before
 being read or written — framework RULE 0 — and the confirming instruction is
@@ -98,7 +100,7 @@ SMB1's -5 px and Falcon's -6.7 px, once. By the next VBlank `Player_State` is 1,
 the controller reconciles into a real jump, and every frame after that is ours.
 The same guard covers walking off a ledge.
 
-### The third hook: `PlayerPhysicsSub $B450` — M3.5, jump *timing*
+### The third hook: `PlayerPhysicsSub $B450` — jump-launch handshake
 
 M3 gave Falcon the jump *physics* and left SMB1 owning the jump *trigger*.
 `CheckForJumping $B479` fires `InitJS` on the A button's **rising edge**, so
@@ -108,10 +110,14 @@ bypassed SMB1's *own* variable jump height as a side effect (`JumpSwimSub` swaps
 `VerticalForce` for `VerticalForceDown` when A is released, and the `$BF4D` hook
 never reads `VerticalForce`), so there was no height variety left at all.
 
-The fix does **not** contest `Player_State`. It makes SMB1 see the press *late*:
-withhold the A bit in `A_B_Buttons $000A` for the squat, then present it on the
-frame Falcon actually leaves the ground. The controller announces the window
-through `ForeignState.jump_phase`; the adapter decides which byte carries it.
+The fix does **not** contest `Player_State`. The current NES mapping masks the
+physical A attack, then synthesizes SMB1's internal A bit in
+`A_B_Buttons $000A` only on the frame Falcon's Up-stick jumpsquat actually
+leaves the ground. The controller announces the window through
+`ForeignState.jump_phase`; the adapter decides which byte carries it. The same
+mechanism originally supported a physical-A short/full split; those
+measurements below are retained as controller/handshake history, not current
+public controls.
 
 **Why `$B450` and not `PlayerCtrlRoutine $B0E9`.** `$B0E9` is the obvious
 candidate for this too, and it does not work: `SaveJoyp` lives *inside*
@@ -152,18 +158,17 @@ these are downstream of the write within the same frame.
 | `$B37A` `JumpSwimSub` | `and #$80 / and $0D` | not reached — guarded by `ldy Player_Y_Speed / bpl DumpFall`, and Falcon is grounded with `vy 0` for the whole squat |
 | `$B8E5` `JumpspringHandler` | `and #$80` | **gated off** — masking would suppress the "press A on frame 3 of the bounce" boost, and `CheckForJumping` already declines while `JumpspringAnimCtrl` is set, so it would buy nothing |
 | `$F05D` `ActionSwimming` | `asl / bcs` | **gated off** — swim stroke animation extent |
-| `$B53A`, `$B62B` | `and #B_Button` (`$40`) | untouched; the mask is A-only |
+| `$B53A`, `$B62B` | `and #B_Button` (`$40`) | **affected and required** — B is masked during FOREIGN ownership so SMB1 cannot also run/fire while Falcon dispatches a special |
 
 So the hook declines entirely when `SwimmingFlag $0704` or
 `JumpspringAnimCtrl $070E` is set.
 
 #### LAUNCH must *set* the bit, not just stop masking
 
-A short hop means the player already released A, so `SavedJoypadBits` no longer
-carries it and `SaveJoyp` has already written `$000A` without it. If the hook
-only stopped suppressing, a short hop would produce **no jump at all** —
-silently, and it would read as the physics being wrong. So `FOREIGN_JUMP_LAUNCH`
-forces the bit on.
+Physical A no longer requests a jump, so `SavedJoypadBits` does not carry a
+jump bit at all. If the hook only stopped suppressing, the Up-stick jump would
+produce **no native launch**. `FOREIGN_JUMP_LAUNCH` therefore forces the
+internal A bit for that one host frame.
 
 #### The launch frame is the mirror of the handoff frame
 
@@ -337,15 +342,21 @@ contradicts — revisit at M3.
 
 `sample_input()` in `game_smash64.c`. A d-pad press moves the synthetic stick
 0 → ±80 in one frame, which by the source's tap rule is exactly a fresh stick
-tap — so dash, dash→run, brake, turn, short hop, full hop and fast fall are all
-reachable. See `falcon_movement_dependency.md` §7.
+tap. Dash, dash→run, brake, turn, stick jump, and fast fall are reachable. See
+`falcon_movement_dependency.md` §7.
 
 ```text
 LEFT / RIGHT  ->  stick_x -80 / +80   (opposing directions cancel)
 UP / DOWN     ->  stick_y +80 / -80
-A             ->  jump (held + rising edge)
-B             ->  reserved (candidate walk modifier)
+A             ->  primary attack (Jab/FTilt/NAir/Fair/Bair)
+B             ->  special (Punch; Down Kick; Up Dive)
+UP            ->  fresh-stick jump from the ground
 ```
+
+Smash's special selection runs before its normal selection, so a same-frame
+A+B chord selects B. A neutral B edge is deferred one VBlank to tolerate NES
+pad direction arriving a frame later; direction-first and same-frame chords
+remain immediate. Horizontal B is Falcon Punch because Smash 64 has no Side-B.
 
 **Correction to the M0 finding.** M0 said walk is unreachable from a d-pad.
 That is true *from neutral* — a d-pad always lands at 80 with a fresh tap, so
@@ -425,7 +436,12 @@ fighter's own kneebend path never reaches.
 
 ---
 
-### M3.5, short hop versus full hop
+### Historical M3.5 evidence: physical-A short hop versus full hop
+
+This section records the controller and launch-handshake validation performed
+before A became the primary attack. It remains useful evidence for the portable
+fighter logic, but its physical-A scripts are no longer current end-to-end NES
+controls.
 
 Two scripted runs, identical except for how long A is held. World 1-1, standing
 start (neutral stick, so `jump_force_button` gets `sq = 1` and the full force
@@ -475,16 +491,18 @@ line — the `$B450` hook.
   authentic to the source game, and it is alien to SMB1's. It belongs to the
   character, never to the runner — it only happens while the mod is on.
   Owner-playtested and accepted (2026-08-07, "jumping is good yes").
-- **The stick-based jump-height path is still unreachable.** M3.5 opened the
-  window for `KB_INPUT_BUTTON`; `kneebend_input_type` can also return
-  `KB_INPUT_STICK` on a fresh upward tap, and a d-pad UP press does produce one.
-  Not exercised or measured — it just is not reached in any trace so far.
+- **The stick-based jump path is now the public jump control.** A fresh d-pad
+  Up press enters `KB_INPUT_STICK`, runs the four-frame jumpsquat, and the
+  adapter synthesizes SMB1's launch bit. No physical-button short-hop binding
+  is currently exposed.
 - **Swimming keeps SMB1's rising-edge jump.** The jumpsquat hook declines
   entirely while `SwimmingFlag` is set, because masking A would reach the swim
   hold-check at `$B37A` and the stroke animation at `$F05D`. `Player_State == 1`
   doubles as swimming and water levels are M5, so this is deferred, not solved.
 - **Jumpsprings keep SMB1's behaviour too**, for the same reason — the boost
-  check at `$B8E5` reads the A bit later in the frame.
+  check at `$B8E5` reads the A bit later in the frame. This is the deliberate
+  exception to ordinary Falcon A masking: A can still request the native spring
+  boost while `JumpspringAnimCtrl` is nonzero.
 - **Swept collision: vertical DONE, horizontal open.** The vertical axis now
   walks the motion one pixel at a time against SMB1's own block buffer (§ the
   vertical hook). The tunnelling exposure it guards against is **measured, not

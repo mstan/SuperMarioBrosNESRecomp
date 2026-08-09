@@ -9,14 +9,30 @@ movement and maps overlaps to native SMB1 consequences.
 
 | Input | Ground | Air |
 |---|---|---|
-| B | Falcon Punch | Falcon Punch |
+| A | Jab | Neutral air |
+| Left/Right+A | Forward tilt | Forward/back air relative to facing |
+| Up/Down+A | Reserved; source normals not ported yet | Reserved; source aerials not ported yet |
+| B or Left/Right+B | Falcon Punch | Falcon Punch |
 | Down+B | Falcon Kick | Falcon Kick |
-| Left/Right+B | Forward tilt | Forward/back air relative to facing |
 | Up+B | Falcon Dive | Falcon Dive |
+| Up | Four-frame stick jump | Four-frame stick jump from ground only |
 
-A remains jump. While Falcon owns the player, B is masked at
-`PlayerPhysicsSub` so SMB1 cannot also run or throw a fireball. With the mod
-off, SMB1 sees B normally.
+A and B preserve Smash 64's primary/special split. The NES has no C buttons,
+so a fresh Up-stick is the jump adaptation; this reaches Falcon's authored
+four-frame `KneeBend`, but the old A-tap short-hop binding is no longer exposed.
+While Falcon owns the player, physical A and B are masked at
+`PlayerPhysicsSub` so SMB1 cannot also jump, run, or throw a fireball. The
+adapter synthesizes A only on Falcon's actual jump-launch frame. With the mod
+off, SMB1 sees both buttons normally. Jumpsprings are the intentional exception:
+while `JumpspringAnimCtrl` is active, native physical A remains visible so the
+original spring-boost timing still works.
+
+A neutral and horizontal reach the five normal motions currently present in
+the port (`Jab`, `FTilt`, `NAir`, `Fair`, `Bair`). Up/Down A are consumed and
+deliberately do nothing until their real source motions and hitboxes are ported;
+they never alias to a special. Smash 64 has no Side-B, so horizontal B remains
+Falcon Punch and an opposite direction turns Falcon before it begins. Specials
+have source interrupt priority if A and B rise on the same frame.
 
 ## Source fidelity and adaptations
 
@@ -58,7 +74,7 @@ then returns to normal fall.
 Because FalconDive's pre-launch TransN rise is smaller than one NES pixel,
 the SMB adapter preserves the controller's single departure edge until its
 first successful upward whole-pixel sweep. This host-side quantization bridge
-is saved in adapter record v6 (with exact v5 migration), releases as soon as Falcon visibly separates
+is saved in adapter record v7 (with exact v6 and v5 migration), releases as soon as Falcon visibly separates
 from the floor, and is cleared on any scripted/native ownership handoff.
 
 SMB1 has no persistent fighter-capture object. Its safe adaptation applies the
