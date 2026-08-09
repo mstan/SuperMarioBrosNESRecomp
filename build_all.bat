@@ -36,10 +36,8 @@ nesrecomp\build_recomp\NESRecomp.exe baserom.nes --game game.toml
 if !ERRORLEVEL! NEQ 0 ( echo REGEN FAILED & exit /b 2 )
 
 echo === STEP 3: Configure + build non-debug ===
-if not exist build_release (
-    cmake -S . -B build_release -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
-    if !ERRORLEVEL! NEQ 0 ( echo CMAKE FAILED & exit /b 3 )
-)
+cmake -S . -B build_release -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DNESRECOMP_REQUIRE_FALCON_OWNER_HELPER=ON
+if !ERRORLEVEL! NEQ 0 ( echo CMAKE FAILED & exit /b 3 )
 cmake --build build_release
 if !ERRORLEVEL! NEQ 0 ( echo BUILD FAILED & exit /b 4 )
 

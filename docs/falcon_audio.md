@@ -1,9 +1,10 @@
 # Captain Falcon audio
 
-Captain Falcon's voice and move audio is loaded only from the owner's ignored
-`assets_ssb64/audio/` local cache. No decoded sample, WAV, AIFF, ROM slice, or
-other SSB64-derived byte is linked into the executable or committed. A checkout
-without those files prints one fallback message and continues with NES audio.
+Captain Falcon's voice and move audio is derived on first play from the
+launcher-verified owner ROM into the user's external integrity-checked cache.
+No decoded sample, WAV, AIFF, ROM slice, or other SSB64-derived byte is linked
+into the executable, committed, or shipped. Release activation preloads all
+eleven clips and stays stock SMB if any one is unavailable or invalid.
 
 ## Source mapping
 
@@ -55,14 +56,19 @@ claim to implement every N64 audio opcode or the RSP mixer. The runtime still
 receives ordinary bounded PCM one-shots; no FGM engine or ROM data is linked
 into the executable. Voice samples and their pitch remain direct.
 
-The ignored reproducibility helper is:
+The release-facing reproducibility helper is:
 
 ```text
-py -3.12 assets_ssb64/tools_local/extract_falcon_audio.py
+py -3 tools/owner_ssb64/build_final_cache.py --rom <owned-us-v1-rom>
 ```
 
-It calls FFmpeg, writes eleven mono signed-16 44100 Hz WAVs plus a local
-manifest, and never writes outside `assets_ssb64/audio/`.
+It directly normalizes z64/v64/n64, verifies the canonical US v1.0 SHA-1,
+decodes `B1_sounds2` VADPCM and the focused FGM routes, and atomically publishes
+eleven mono signed-16 44100 Hz WAVs with the model runtime and final manifest.
+It needs no FFmpeg or decomp checkout and refuses to write inside the source
+tree. The four direct voice cues use deterministic 32-tap Kaiser-windowed sinc
+resampling; their accepted duration is unchanged and measured error versus the
+older FFmpeg previews is 0.21–0.26% RMS.
 
 ## Runtime cues
 
@@ -86,7 +92,8 @@ them into the APU's mono producer frame, and then lets the existing launcher
 volume and clock-domain bridge process the combined stream. It does not open a
 second SDL device.
 
-`NESRECOMP_SSB64_ASSETS=<root>` overrides the asset root. Set
+The release plugin sets `NESRECOMP_SSB64_ASSETS` to the verified immutable
+cache root. Developers can also set it explicitly. Set
 `NESRECOMP_SMASH64_AUDIO_TRACE=1` to log each successfully queued cue for
 scripted evidence; ordinary play does not log per cue.
 

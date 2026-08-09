@@ -569,6 +569,29 @@ static int ensure_loaded(void)
     return 0;
 }
 
+int game_smash64_assets_prepare_root(const char *root)
+{
+    char path[1024];
+    size_t len;
+    int written;
+    if (!root || !*root) return 0;
+    len = strlen(root);
+    written = snprintf(path, sizeof(path), "%s%sfalcon_runtime.bin", root,
+                       (root[len - 1] == '/' || root[len - 1] == '\\') ? "" : "/");
+    if (written < 0 || (size_t)written >= sizeof(path)) return 0;
+    free_model(&s_model);
+    memset(&s_model, 0, sizeof(s_model));
+    s_load_attempted = 1;
+    return load_path(path, &s_model);
+}
+
+void game_smash64_assets_clear(void)
+{
+    free_model(&s_model);
+    memset(&s_model, 0, sizeof(s_model));
+    s_load_attempted = 0;
+}
+
 static const char *animation_for_state(int state)
 {
     switch (state) {

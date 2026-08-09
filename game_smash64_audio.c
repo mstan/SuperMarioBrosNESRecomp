@@ -47,6 +47,7 @@ static FalconAudioAsset s_assets[] = {
 };
 
 static int s_enabled;
+static int s_prepared;
 static int s_trace;
 
 static NESModAudioClip load_wav(const char *path)
@@ -100,8 +101,8 @@ static NESModAudioClip load_asset(const char *filename)
     char *base;
     char root[1024];
 
-    clip = try_root(configured, filename);
-    if (clip) return clip;
+    if (configured && *configured)
+        return try_root(configured, filename);
     clip = try_root("assets_ssb64", filename);
     if (clip) return clip;
 
@@ -117,35 +118,70 @@ static NESModAudioClip load_asset(const char *filename)
     return clip;
 }
 
-void game_smash64_audio_set_enabled(int enabled)
+static void clear_assets(void)
 {
     size_t i;
-    int loaded = 0;
-
     s_enabled = 0;
     for (i = 0; i < sizeof(s_assets) / sizeof(s_assets[0]); ++i) {
         if (s_assets[i].clip)
             nes_mod_audio_unregister(s_assets[i].clip);
         s_assets[i].clip = NES_MOD_AUDIO_CLIP_INVALID;
     }
-    if (!enabled) return;
+    s_prepared = 0;
+}
+
+int game_smash64_audio_prepare_root(const char *root)
+{
+    size_t i;
+    clear_assets();
+    if (!root || !*root) return 0;
+    for (i = 0; i < sizeof(s_assets) / sizeof(s_assets[0]); ++i) {
+        s_assets[i].clip = try_root(root, s_assets[i].filename);
+        if (!s_assets[i].clip) {
+            clear_assets();
+            return 0;
+        }
+    }
+    s_prepared = 1;
+    return 1;
+}
+
+int game_smash64_audio_set_enabled(int enabled)
+{
+    size_t i;
+    int loaded = 0;
+    const int expected = (int)(sizeof(s_assets) / sizeof(s_assets[0]));
+
+    s_enabled = 0;
+    if (!enabled) {
+        clear_assets();
+        return 1;
+    }
 
     s_trace = 0;
     {
         const char *trace = SDL_getenv("NESRECOMP_SMASH64_AUDIO_TRACE");
         s_trace = trace && *trace && *trace != '0';
     }
-    for (i = 0; i < sizeof(s_assets) / sizeof(s_assets[0]); ++i) {
-        s_assets[i].clip = load_asset(s_assets[i].filename);
-        if (s_assets[i].clip) loaded++;
+    if (s_prepared) {
+        loaded = expected;
+    } else {
+        for (i = 0; i < sizeof(s_assets) / sizeof(s_assets[0]); ++i) {
+            s_assets[i].clip = load_asset(s_assets[i].filename);
+            if (s_assets[i].clip) loaded++;
+        }
     }
-    s_enabled = 1;
-    if (loaded)
+    if (loaded == expected) {
+        s_enabled = 1;
         fprintf(stderr, "[Smash64Audio] loaded %d/%u local Falcon clips\n",
                 loaded, (unsigned)(sizeof(s_assets) / sizeof(s_assets[0])));
-    else
-        fprintf(stderr,
-                "[Smash64Audio] local Falcon clips unavailable; continuing silently\n");
+        return 1;
+    }
+    fprintf(stderr,
+            "[Smash64Audio] required Falcon clips unavailable (%d/%d); "
+            "player replacement stays OFF\n", loaded, expected);
+    clear_assets();
+    return 0;
 }
 
 void game_smash64_audio_play_events(const ForeignAudioEvents *events,

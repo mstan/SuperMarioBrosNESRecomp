@@ -27,6 +27,7 @@
  */
 #include "game_smash64.h"
 #include "game_smash64_attack_policy.h"
+#include "game_smash64_assets.h"
 #include "game_smash64_audio.h"
 #include "mods/smash64/characters/captain_falcon.h"
 
@@ -2061,9 +2062,10 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
 /* Public                                                             */
 /* ------------------------------------------------------------------ */
 
-void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
+int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
 {
-    game_smash64_audio_set_enabled(0);
+    if (!enabled)
+        game_smash64_audio_set_enabled(0);
     s_enabled = 0;
     s_selected = 0;
     s_announced = 0;
@@ -2082,8 +2084,9 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     nes_mod_set_function_hook_enabled(SMASH64_BOUNDING_BOX_HOOK_ID, 0);
 
     if (!enabled || !controller_id || !controller_id[0]) {
+        game_smash64_assets_clear();
         nes_foreign_select(NULL);
-        return;
+        return 1;
     }
 
     snprintf(s_controller_id, sizeof s_controller_id, "%s", controller_id);
@@ -2094,7 +2097,7 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
         fprintf(stderr,
                 "[Smash64] No controller registered for '%s' - "
                 "player replacement stays OFF\n", s_controller_id);
-        return;
+        return 0;
     }
 
     s_xspeed = 0;
@@ -2141,13 +2144,13 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
         fprintf(stderr,
                 "[Smash64] ImposeFriction hook is not registered; SMB1 keeps "
                 "its own horizontal physics\n");
-        return;
+        return 0;
     }
     if (!nes_mod_set_function_hook_enabled(SMASH64_VERTICAL_HOOK_ID, 1)) {
         fprintf(stderr,
                 "[Smash64] MovePlayerVertically hook is not registered; SMB1 "
                 "keeps its own gravity\n");
-        return;
+        return 0;
     }
     if (!nes_mod_set_function_hook_enabled(SMASH64_JUMPSQUAT_HOOK_ID, 1)) {
         /* Not fatal: without it SMB1 launches on the A rising edge and every
@@ -2175,7 +2178,11 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
                 "contact bounds may follow hidden Mario size\n");
     }
     s_enabled = 1;
-    game_smash64_audio_set_enabled(1);
+    if (!game_smash64_audio_set_enabled(1)) {
+        game_smash64_set_mod_enabled(0, NULL);
+        return 0;
+    }
+    return 1;
 }
 
 int game_smash64_active(void)

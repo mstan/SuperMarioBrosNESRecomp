@@ -60,7 +60,8 @@ for future launches.
 The Captain Falcon player-replacement mod is included but remains disabled
 until you select a legally-owned Super Smash Bros. (USA), NTSC-U v1.0 ROM
 in the Mods screen. That ROM is verified locally and is never included in
-this package.
+this package. The first Falcon launch derives its model, animations, effects,
+and audio into your local user cache; those generated files are not shipped.
 
 Controls: arrow keys = D-Pad, Z = A, X = B, Enter = Start,
 Right Shift = Select. F5 turbo, F6 save state, F7 load state,
@@ -78,6 +79,7 @@ function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods)
 
   $required = @(
     'SuperMarioBrosRecomp.exe',
+    'falcon_owner_assets.exe',
     'SDL2.dll',
     'keybinds.ini',
     'README.txt'
@@ -228,7 +230,7 @@ function New-ReleaseZip([string]$kind) {
   New-Item -ItemType Directory -Force $stage | Out-Null
 
   Copy-Item $exe $stage
-  foreach ($extra in 'SDL2.dll', 'keybinds.ini') {
+  foreach ($extra in 'SDL2.dll', 'keybinds.ini', 'falcon_owner_assets.exe') {
     $p = Join-Path $bin $extra
     if (-not (Test-Path $p -PathType Leaf)) { throw "missing required runtime file at $p" }
     Copy-Item $p $stage

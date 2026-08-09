@@ -2,7 +2,7 @@
 
 Date: 2026-08-09
 
-## Current QA status: integrated owner playtest pending
+## Current QA status: release integration passing; final owner listen pending
 
 The current worktree also addresses the owner's latest playtest findings while
 leaving the open `build_falcon` recomp-ui session untouched:
@@ -13,9 +13,18 @@ leaving the open `build_falcon` recomp-ui session untouched:
   `e2929e10fccc0aa84e5776227e798abc07cedabf`. Missing, changed, wrong-region,
   or wrong-revision files fail closed at feature/package enable and are re-read
   at PLAY before activation. The ROM path is persisted, but ROM bytes are never
-  copied or packaged. This is presently an ownership/identity gate around the
-  existing local derived-asset cache; a clean-install extraction/cache path is
-  tracked separately as Bead `beads-3jk`.
+  copied or packaged. The bundled source-only helper now derives the complete
+  Falcon cache from that verified ROM on first play. The immutable final cache
+  contains only `falcon_runtime.bin`, eleven WAVs, and an integrity manifest in
+  the user's writable data directory; raw relocs and intermediates never enter
+  the final cache or release archive. Bead `beads-3jk` tracks this pipeline.
+- the direct owner-ROM model bake is byte-identical to the approved water-fix
+  baseline: 568,028 bytes, 26 joints, 319 triangles, 28 textures, 37
+  animations, SHA-256
+  `8A8E0AC01341584488DAD5681AE7563F3142EE15915FF154F5E3122C57146A3E`.
+  Fresh clean-install idle/run/jump screenshots show the approved purple,
+  yellow, red, and gold costume colors. The explicit rollback reference is
+  `backup/falcon-water-approved-20260809` at `7e4612a`.
 - aerial Down+A now uses source Figatree 1642 `AttackAirD`: 40 frames, active
   7 through 24, 14 damage, angle -80, and source `LightSwingL` with no invented
   particle. The SMB adaptation lets this downward normal break only `$51/$52`
@@ -262,8 +271,8 @@ Both repositories use local branch `feat/smash64-player-replacement`.
 
 | Repo | Path | Relevant HEAD |
 |---|---|---|
-| Engine | `F:\Projects\nesrecomp\_wt-falcon-smb\nesrecomp` | `5ef6145` (contact-only connection ABI/trace; includes forced-air, 2x mesh, and PCM work) |
-| Game | `F:\Projects\nesrecomp\_wt-falcon-smb` | current local HEAD; gitlink must point to `5ef6145` |
+| Engine | `F:\Projects\nesrecomp\_wt-falcon-smb\nesrecomp` | `403bb85` (verified committed owner-ROM path accessor) |
+| Game | `F:\Projects\nesrecomp\_wt-falcon-smb` | current local HEAD; gitlink must point to `403bb85` |
 
 The initial release may publish the community/decomp-derived controller under
 the project owner's permissive-use assumption. This is not a verified upstream
@@ -353,7 +362,7 @@ upstream attribution retained. The character bridge translates to/from the
 generic ABI.
 
 Presentation uses `game_smash64_assets.c`: 26 joints, 319 triangles,
-28 textures, and 36 animations. Figatree's one-based joint names are converted
+28 textures, and 37 animations. Figatree's one-based joint names are converted
 to zero-based model slots by the baker. Motions carrying BattleShip's auxiliary
 fighter-root flags omit their first host-owned root stream before joint
 binding; this corrects Falcon Punch, TurnRun, JumpB/JumpAerialB, Falcon Kick,
@@ -367,10 +376,12 @@ factor from the model's bind bounds, then uses animated bounds only to center
 and foot-anchor each pose. It rotates the authored model 88 degrees into a
 near-exact side profile.
 `game_smash64_render.c` renders only Falcon at 2x, then box-downsamples coverage
-over the native frame; the NES background remains pixel-perfect. Missing model
-data uses the cube fallback.
+over the native frame; the NES background remains pixel-perfect. Release mod
+activation preloads the exact owner cache and fails closed to stock SMB if the
+model or any required audio clip is unavailable; the cube remains a developer
+fallback only.
 
-Audio uses `game_smash64_audio.c`: eleven local cues for jump effort, "Falcon",
+Audio uses `game_smash64_audio.c`: eleven owner-cache cues for jump effort, "Falcon",
 "Punch", Falcon Kick, Punch impact, Kick swing, Kick energy start, Falcon Dive
 launch, Catch, throw explosion, and throw voice. Missing
 clips are a silent fallback. The focused offline FGM renderer resolves trigger

@@ -11,6 +11,9 @@
  * native-pixel presentation size to the current render target (1 for native,
  * 2 for the Falcon-only supersample surface).
  */
+int game_smash64_assets_prepare_root(const char *root);
+void game_smash64_assets_clear(void);
+
 int game_smash64_assets_draw(float center_x, float foot_y,
                              float output_scale);
 

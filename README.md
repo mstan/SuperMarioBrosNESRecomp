@@ -28,6 +28,20 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 2. Extract and run `SuperMarioBrosRecomp.exe`
 3. Select your Super Mario Bros. (World) ROM when prompted — the path is saved for future launches
 
+## Captain Falcon (bundled mod)
+
+Open **Mods**, select **Smash 64 Player Replacement**, and choose your legally
+owned **Super Smash Bros. (USA), NTSC-U v1.0** ROM. The launcher accepts z64,
+v64, or n64 byte order and verifies normalized SHA-1
+`e2929e10fccc0aa84e5776227e798abc07cedabf`. The mod cannot be enabled without
+that exact revision.
+
+On first play, the bundled helper derives Captain Falcon's model, animations,
+effects, and audio into an integrity-checked user cache. Neither the Smash 64
+ROM nor generated Falcon assets are included in the download or copied into
+the game directory. A is Falcon's normal attack, B is his special, and Up is
+his four-frame jump; Up+B is Falcon Dive and Down+B is Falcon Kick.
+
 ## Widescreen mod (experimental)
 
 An optional 16:9 mode renders the world beyond the NES's 256-px viewport
@@ -100,7 +114,9 @@ and does not patch the stock ROM or alter save data.
 
 ## Building from Source
 
-Prerequisites: Windows 10+, Visual Studio 2022, CMake 3.20+ (SDL2 is bundled)
+Prerequisites: Windows 10+, Visual Studio 2022, CMake 3.20+ (SDL2 is bundled).
+Release builds also require Python 3 with `PyInstaller` and `Pillow` to package
+the source-only owner-ROM cache helper.
 
 ```bash
 git clone https://github.com/mstan/SuperMarioBrosNESRecomp

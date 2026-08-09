@@ -22,7 +22,7 @@
 /* Launcher-facing switch, driven by the mod package. Selects the fighter by
  * ForeignController id; passing NULL or an unknown id leaves the mod off and
  * SMB1 completely stock. */
-void game_smash64_set_mod_enabled(int enabled, const char *controller_id);
+int game_smash64_set_mod_enabled(int enabled, const char *controller_id);
 
 /* Register the trusted function-entry hook. Called before main() from the mod
  * plugin; the hook starts DISABLED so registration cannot change behaviour. */
