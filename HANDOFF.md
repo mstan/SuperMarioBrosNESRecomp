@@ -35,6 +35,12 @@ build and visually inspected, not accepted from script exit codes alone:
   entrance dispatch states all suppress Mario and present Falcon. The separate
   `falcon_entrance_real_contact.png` follows the genuine World 1-2 native
   entrance through its settled playable state.
+- `C:\temp\falcon_real_flagpole_early_contact.png` and
+  `falcon_real_flagpole_late_contact.png`: 41 owner-provided-save captures of
+  the genuine World 1-1 pole contact, full descent, dismount, castle autowalk,
+  doorway entry, and native score countdown. Falcon remains visible throughout
+  with no Mario fallback; the owner separately playtested and accepted the
+  flagpole animation on August 8.
 - `C:\temp\falcon_high_jump_contact.png` and
   `falcon_hud_edge_contact.png`: a full high-jump arc and explicit top-edge
   wrap cases show no Mario tile near or behind the HUD.
