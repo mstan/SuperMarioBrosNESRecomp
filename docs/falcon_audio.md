@@ -1,7 +1,7 @@
 # Captain Falcon audio
 
 Captain Falcon's voice and move audio is loaded only from the owner's ignored
-`assets_ssb64/audio/` quarantine. No decoded sample, WAV, AIFF, ROM slice, or
+`assets_ssb64/audio/` local cache. No decoded sample, WAV, AIFF, ROM slice, or
 other SSB64-derived byte is linked into the executable or committed. A checkout
 without those files prints one fallback message and continues with NES audio.
 
@@ -66,7 +66,8 @@ manifest, and never writes outside `assets_ssb64/audio/`.
 
 ## Runtime cues
 
-The quarantined state machine emits allocation-free, one-tick cue ids through
+The community/decomp-derived state machine emits allocation-free, one-tick cue
+ids through
 `ForeignMoveResult.audio`. They match the source motion script:
 
 - jump effort on the supported jump transition (the source uses this clip for

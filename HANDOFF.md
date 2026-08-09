@@ -14,7 +14,7 @@ leaving the open `build_falcon` recomp-ui session untouched:
   or wrong-revision files fail closed at feature/package enable and are re-read
   at PLAY before activation. The ROM path is persisted, but ROM bytes are never
   copied or packaged. This is presently an ownership/identity gate around the
-  existing quarantined derived assets; a clean-install extraction/cache path is
+  existing local derived-asset cache; a clean-install extraction/cache path is
   tracked separately as Bead `beads-3jk`.
 - aerial Down+A now uses source Figatree 1642 `AttackAirD`: 40 frames, active
   7 through 24, 14 damage, angle -80, and source `LightSwingL` with no invented
@@ -265,13 +265,15 @@ Both repositories use local branch `feat/smash64-player-replacement`.
 | Engine | `F:\Projects\nesrecomp\_wt-falcon-smb\nesrecomp` | `5ef6145` (contact-only connection ABI/trace; includes forced-air, 2x mesh, and PCM work) |
 | Game | `F:\Projects\nesrecomp\_wt-falcon-smb` | current local HEAD; gitlink must point to `5ef6145` |
 
-Never push either repository. The branch contains a direct port of an
-unlicensed decomp and depends on owner-only ROM-derived runtime assets.
+The initial release may publish the community/decomp-derived controller under
+the project owner's permissive-use assumption. This is not a verified upstream
+license grant. Preserve the attribution in `THIRD-PARTY-LICENSES/README.md` and
+never publish owner-ROM-derived runtime assets.
 
 ## Hard rules
 
-1. Never push or publish either repo, `mods/smash64/ssb_ported/`, or anything
-   under `assets_ssb64/`.
+1. Never stage or package any ROM, ROM slice, or anything under
+   `assets_ssb64/`.
 2. `assets_ssb64/` is ignored. Never stage its model, animation, texture,
    audio, manifest, or baked runtime bytes.
 3. Never edit `generated/`. Fix the recompiler and regenerate.
@@ -344,9 +346,11 @@ native brick shatter.
 Confirmed combat entries are `PlayerHeadCollision $BCED`, `BrickShatter $BE02`,
 and `ShellOrBlockDefeat $D795`.
 
-Captain Falcon's state machine remains in the quarantined
-`mods/smash64/ssb_ported/falcon_locomotion.*`; the publishable character bridge
-only translates to/from the generic ABI.
+Captain Falcon's state machine is in the community/decomp-derived
+`mods/smash64/ssb_ported/falcon_locomotion.*`; for this initial release it is
+published under the project owner's permissive-use assumption, with its
+upstream attribution retained. The character bridge translates to/from the
+generic ABI.
 
 Presentation uses `game_smash64_assets.c`: 26 joints, 319 triangles,
 28 textures, and 36 animations. Figatree's one-based joint names are converted
@@ -432,11 +436,11 @@ overlays exactly (367,500/367,500 samples). BattleShip establishes a 32 kHz
 synthesizer and direct -1200-cent FGM voice ratio, so the voice bytes have a
 16 kHz effective playback clock before conversion to the runner's 44.1 kHz.
 Current-build mod-off screenshots show ordinary Mario with no Falcon asset or
-audio initialization. With the ignored asset quarantine temporarily withheld,
+audio initialization. With the ignored local asset cache temporarily withheld,
 Falcon retains control using the blue cube across idle/run/jump/Punch/Kick,
 startup emits one model and one silent-audio fallback, and the script exits
-cleanly. The quarantine and Falcon-enabled staged configuration were verified
-restored afterward.
+cleanly. The local asset cache and Falcon-enabled staged configuration were
+verified restored afterward.
 
 The standalone Up-B harness also models a physical ceiling (zero displacement
 and upward velocity without changing Falcon Dive state) and enumerates the
@@ -512,4 +516,5 @@ captures show Falcon in all three states rather than a false one-frame Mario.
 For any future fighter/change: build Release, run all 12 deterministic tests,
 collect a scripted in-game trace, exercise save/load and missing-assets, run the
 mod-off test, inspect `git diff --check`, commit engine/game separately, update
-the gitlink explicitly, and record the durable result in Beads. Never push.
+the gitlink explicitly, record the durable result in Beads, and use the release
+staging audit to confirm no owner-ROM or derived-asset payload is present.

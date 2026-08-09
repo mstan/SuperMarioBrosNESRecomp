@@ -35,10 +35,6 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $bin  = Join-Path $root 'build_release'
 $out  = Join-Path $root 'release'
-$unpublishedFalcon = Join-Path $root 'mods\smash64\ssb_ported\UNPUBLISHED.md'
-if (Test-Path -LiteralPath $unpublishedFalcon -PathType Leaf) {
-  throw "Captain Falcon still contains quarantined unpublished source; complete the clean-room/provenance gate before building a release"
-}
 New-Item -ItemType Directory -Force $out | Out-Null
 
 if (-not $SkipBuild) {

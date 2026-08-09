@@ -55,7 +55,8 @@ fighter. The ROM-derived reloc and baked pixels remain ignored local assets.
 
 The generic rectangular hitbox is a portable union around the source collision
 spheres because SMB1 has no joint-aware combat system. Falcon Kick and Falcon
-Dive retain their BattleShip TransN tracks in the quarantined runtime blob.
+Dive retain their BattleShip TransN tracks in the locally generated runtime
+blob, which is ignored and excluded from release payloads.
 The character bridge samples the exact current/next-frame root delta, removes
 it from the mesh pose, and projects it through the same host scale as every
 other source-space motion. This keeps model travel and collision travel on one

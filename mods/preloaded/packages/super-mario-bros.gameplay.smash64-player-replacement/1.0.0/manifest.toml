@@ -2,9 +2,9 @@ format_version = 1
 id = "super-mario-bros.gameplay.smash64-player-replacement"
 version = "1.0.0"
 name = "Smash 64 Player Replacement"
-author = "NESRecomp"
+author = "NESRecomp + SSB64 decomp contributors"
 description = "Drives Mario with a fighter's Super Smash Bros. 64 locomotion while Super Mario Bros. keeps its own world, enemies and rules. The stock ROM is not modified."
-license = "MIT"
+license = "MIT + assumed-permissive community-derived code"
 resolver = "declarative"
 save_compatibility = "stock"
 
