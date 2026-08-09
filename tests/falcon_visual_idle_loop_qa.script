@@ -1,0 +1,46 @@
+LOG falcon-visual-idle-loop-qa-world-1-2
+WAIT 60
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 01
+WRITE_RAM8 760 01
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+ASSERT_RAM8 000E 08
+
+# Ordinary control begins during the entrance drop. Wait for Falcon to land,
+# then sample more than one complete 65-frame grounded Wait cycle. The dense
+# samples around the wrap make a lifted foot or a loop seam visible in a
+# contact sheet instead of hiding it in one favorable still.
+WAIT 120
+SCREENSHOT C:/temp/falcon_idle_00.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_08.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_16.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_24.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_32.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_40.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_48.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_56.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_64.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_idle_66.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_74.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_82.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_90.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_98.png
+WAIT 2
+ASSERT_RAM8 000E 08
+EXIT 0

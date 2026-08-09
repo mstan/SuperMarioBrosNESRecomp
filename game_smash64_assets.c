@@ -17,7 +17,10 @@
 #define FALCON_BLOB_VERSION 2u
 #define FALCON_JOINT_COUNT 26u
 #define FALCON_RENDER_HEIGHT 32.0f
-#define FALCON_YAW_DEG 90.0f
+#define FALCON_YAW_DEG 88.0f
+#define FALCON_WAIT_GROUNDED_FIRST 37.0f
+#define FALCON_WAIT_GROUNDED_SPAN   4.0f
+#define FALCON_WAIT_RATE            0.25f
 
 typedef struct FalconAssetJoint {
     int parent;
@@ -637,6 +640,23 @@ static void apply_animation(const FalconAssetModel *model,
     }
 }
 
+static float presentation_animation_frame(const ForeignState *state)
+{
+    const char *forced = SDL_getenv("NESRECOMP_FALCON_ANIM_FRAME");
+    if (forced && *forced)
+        return env_float("NESRECOMP_FALCON_ANIM_FRAME",
+                         (float)state->state_frame);
+    if (state->state == FL_WAIT) {
+        const float extent = FALCON_WAIT_GROUNDED_SPAN * 2.0f;
+        float phase = fmodf((float)state->state_frame * FALCON_WAIT_RATE,
+                            extent);
+        if (phase > FALCON_WAIT_GROUNDED_SPAN)
+            phase = extent - phase;
+        return FALCON_WAIT_GROUNDED_FIRST + phase;
+    }
+    return (float)state->state_frame;
+}
+
 static NesVoxelMeshVertex render_vertex(const FalconAssetModel *model,
                                         Mat4 matrix,
                                         const FalconAssetVertex *vertex,
@@ -664,8 +684,39 @@ static NesVoxelMeshVertex render_vertex(const FalconAssetModel *model,
     return out;
 }
 
-int game_smash64_assets_draw(float center_x, float foot_y,
-                             float output_scale)
+static NesVoxelMeshVertex render_death_vertex(
+    Mat4 matrix, const FalconAssetVertex *vertex,
+    const float pose_min[3], const float pose_max[3],
+    float center_x, float center_y, float facing, float model_scale,
+    float yaw_rad, float spin_rad)
+{
+    NesVoxelMeshVertex out;
+    float point[3];
+    float x, y, z;
+    const float yaw_cos = cosf(yaw_rad);
+    const float yaw_sin = sinf(yaw_rad);
+    const float spin_cos = cosf(spin_rad);
+    const float spin_sin = sinf(spin_rad);
+    float screen_x;
+
+    mat_point(matrix, vertex->pos, point);
+    x = (point[0] - (pose_min[0] + pose_max[0]) * 0.5f) * facing;
+    y = point[1] - (pose_min[1] + pose_max[1]) * 0.5f;
+    z = (point[2] - (pose_min[2] + pose_max[2]) * 0.5f) * facing;
+    screen_x = (x * yaw_cos - z * yaw_sin) * model_scale;
+    y *= model_scale;
+
+    out.x = center_x + screen_x * spin_cos - y * spin_sin;
+    out.y = center_y + screen_x * spin_sin + y * spin_cos;
+    out.z = (x * yaw_sin + z * yaw_cos) * model_scale;
+    out.u = vertex->uv[0];
+    out.v = vertex->uv[1];
+    return out;
+}
+
+static int draw_model(float center_x, float anchor_y, float output_scale,
+                      int death_mode, float spin_radians,
+                      float animation_frame)
 {
     const ForeignState *state;
     const FalconAssetAnimation *animation;
@@ -687,9 +738,22 @@ int game_smash64_assets_draw(float center_x, float foot_y,
         memcpy(r[i], s_model.joints[i].rotate, sizeof(r[i]));
         memcpy(s[i], s_model.joints[i].scale, sizeof(s[i]));
     }
-    animation = find_animation(&s_model, animation_for_state(state->state));
+    /* Smash 64's DeadUpStar status uses the common DamageFall motion. The
+     * owner-only runtime currently carries Falcon's closest extracted aerial
+     * tumble (FallAerial), then the host applies the status' whole-body spin.
+     * Prefer DamageFlyTop automatically when a fuller local extraction adds
+     * it to the blob. */
+    animation = death_mode
+        ? find_animation(&s_model, "DamageFlyTop")
+        : find_animation(&s_model, animation_for_state(state->state));
+    if (death_mode && !animation)
+        animation = find_animation(&s_model, "FallAerial");
     if (!env_enabled("NESRECOMP_FALCON_BIND_POSE"))
-        apply_animation(&s_model, animation, (float)state->state_frame, t, r, s);
+        apply_animation(&s_model, animation,
+                        death_mode
+                            ? animation_frame
+                            : presentation_animation_frame(state),
+                        t, r, s);
     build_matrices(&s_model, t, r, s, world);
     /* Figatree root translations are absolute fighter-pose coordinates, not
      * SMB1 world motion. Anchor the animated mesh's current lowest point to
@@ -726,19 +790,48 @@ int game_smash64_assets_draw(float center_x, float foot_y,
                                             1.0f, 1);
             }
         }
-        a = render_vertex(&s_model, world[triangle->joint],
-                          &triangle->vertex[0], pose_min, pose_max,
-                          center_x, foot_y,
-                          facing, model_scale, yaw_rad);
-        b = render_vertex(&s_model, world[triangle->joint],
-                          &triangle->vertex[1], pose_min, pose_max,
-                          center_x, foot_y,
-                          facing, model_scale, yaw_rad);
-        c = render_vertex(&s_model, world[triangle->joint],
-                          &triangle->vertex[2], pose_min, pose_max,
-                          center_x, foot_y,
-                          facing, model_scale, yaw_rad);
+        if (death_mode) {
+            a = render_death_vertex(world[triangle->joint],
+                                    &triangle->vertex[0], pose_min, pose_max,
+                                    center_x, anchor_y, facing, model_scale,
+                                    yaw_rad, spin_radians);
+            b = render_death_vertex(world[triangle->joint],
+                                    &triangle->vertex[1], pose_min, pose_max,
+                                    center_x, anchor_y, facing, model_scale,
+                                    yaw_rad, spin_radians);
+            c = render_death_vertex(world[triangle->joint],
+                                    &triangle->vertex[2], pose_min, pose_max,
+                                    center_x, anchor_y, facing, model_scale,
+                                    yaw_rad, spin_radians);
+        } else {
+            a = render_vertex(&s_model, world[triangle->joint],
+                              &triangle->vertex[0], pose_min, pose_max,
+                              center_x, anchor_y,
+                              facing, model_scale, yaw_rad);
+            b = render_vertex(&s_model, world[triangle->joint],
+                              &triangle->vertex[1], pose_min, pose_max,
+                              center_x, anchor_y,
+                              facing, model_scale, yaw_rad);
+            c = render_vertex(&s_model, world[triangle->joint],
+                              &triangle->vertex[2], pose_min, pose_max,
+                              center_x, anchor_y,
+                              facing, model_scale, yaw_rad);
+        }
         nes_voxel_mesh_triangle(a, b, c);
     }
     return 1;
+}
+
+int game_smash64_assets_draw(float center_x, float foot_y,
+                             float output_scale)
+{
+    return draw_model(center_x, foot_y, output_scale, 0, 0.0f, 0.0f);
+}
+
+int game_smash64_assets_draw_death(float center_x, float center_y,
+                                   float output_scale, float spin_radians,
+                                   float animation_frame)
+{
+    return draw_model(center_x, center_y, output_scale, 1, spin_radians,
+                      animation_frame);
 }

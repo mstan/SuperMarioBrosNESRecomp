@@ -1,0 +1,24 @@
+LOG falcon-visual-idle-ground-qa-world-1-1
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+ASSERT_RAM8 000E 08
+
+# The light World 1-1 sky keeps Falcon's dark boot geometry visible. Sample a
+# complete 32-host-frame ping-pong of source Wait frames 37..41 and verify both
+# soles stay on the authoritative SMB1 foot row throughout.
+WAIT 120
+SCREENSHOT C:/temp/falcon_idle_ground_00.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_ground_08.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_ground_16.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_ground_24.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_idle_ground_32.png
+WAIT 2
+ASSERT_RAM8 000E 08
+EXIT 0

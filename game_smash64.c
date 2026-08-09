@@ -1704,6 +1704,13 @@ int game_smash64_active(void)
            nes_foreign_ownership() == FOREIGN_OWNERSHIP_FOREIGN;
 }
 
+int game_smash64_death_presentation_active(void)
+{
+    return s_enabled && s_selected &&
+           g_ram[OperMode] == SMB1_OPER_MODE_GAME &&
+           g_ram[GameEngineSubroutine] == 11;
+}
+
 void game_smash64_init(void)
 {
     if (!s_enabled) return;

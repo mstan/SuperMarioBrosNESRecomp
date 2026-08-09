@@ -15,6 +15,7 @@
 #include "nes_runtime.h"
 #include "voxel_renderer.h"
 
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -49,6 +50,13 @@
  * while giving the now-32px fighter four coverage samples per output pixel. */
 static uint32_t
     s_falcon_ssaa[FALCON_SSAA_MAX_WIDTH * FALCON_SSAA_MAX_HEIGHT];
+
+/* Presentation-only death clock. SMB1 still owns the PlayerDeath routine,
+ * life decrement, delay, and respawn; these values only drive the replacement
+ * mesh's falling Star-KO adaptation. */
+static int s_falcon_death_was_active;
+static unsigned s_falcon_death_frame;
+static float s_falcon_death_start_center_y;
 
 /* Flat placeholder color (a Falcon-blue). One 1x1 texel reused for every
  * face; nes_voxel_mesh_bind_texture's shade parameter fakes basic per-face
@@ -86,7 +94,8 @@ static int smash64_suppress_player_sprite(int oam_slot, int x, int y,
     (void)oam_slot;
     (void)user;
 
-    if (!game_smash64_active()) return 0;
+    if (!game_smash64_active() &&
+        !game_smash64_death_presentation_active()) return 0;
 
     player_x = g_ram[0x03AD];
     player_y = g_ram[0x03B8];
@@ -173,10 +182,20 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
     int target_height = 240;
     float output_scale = 1.0f;
     float cx, cz, foot_y;
+    float death_center_y = 0.0f;
+    float death_spin = 0.0f;
+    float death_anim_frame = 0.0f;
+    int death_active;
     float x0, x1, y0, y1, z0, z1;
     NesVoxelMeshVertex a, b, c, d, e, f, g, h;
 
-    if (!framebuffer || !game_smash64_active()) return;
+    if (!framebuffer) return;
+    death_active = game_smash64_death_presentation_active();
+    if (!game_smash64_active() && !death_active) {
+        s_falcon_death_was_active = 0;
+        s_falcon_death_frame = 0;
+        return;
+    }
 
     if (falcon_ssaa_enabled() &&
         g_render_width * FALCON_SSAA_SCALE <= FALCON_SSAA_MAX_WIDTH &&
@@ -207,6 +226,28 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
      * foot row $03B8+32. Measured in ordinary 1-1 play: native_y=$B0 and the
      * floor begins at screen row $D0. */
     foot_y = (240.0f - (float)(g_ram[0x03B8] + 32)) * output_scale;
+
+    if (death_active) {
+        const float frame = (float)s_falcon_death_frame;
+        if (!s_falcon_death_was_active) {
+            s_falcon_death_start_center_y =
+                240.0f - (float)(g_ram[0x03B8] + 16);
+            s_falcon_death_frame = 0;
+        }
+        /* DeadUpStar uses DamageFall while translating through depth for 180
+         * frames. In a side-view platformer, depth is unreadable, so preserve
+         * the tumble and adapt that travel into a gently accelerating fall. */
+        death_center_y = (s_falcon_death_start_center_y -
+                          (0.30f * frame + 0.018f * frame * frame)) *
+                         output_scale;
+        death_spin = frame * (18.0f * 3.14159265358979323846f / 180.0f);
+        death_anim_frame = frame * 0.5f;
+        s_falcon_death_was_active = 1;
+        ++s_falcon_death_frame;
+    } else {
+        s_falcon_death_was_active = 0;
+        s_falcon_death_frame = 0;
+    }
 
     x0 = cx - FALCON_CUBE_HALF_WIDTH * output_scale;
     x1 = cx + FALCON_CUBE_HALF_WIDTH * output_scale;
@@ -264,7 +305,11 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
     /* The real model is loaded lazily from the ignored local asset blob.
      * Missing or invalid assets deliberately leave the M6.2 cube intact so
      * a publishable checkout remains usable without proprietary data. */
-    if (!game_smash64_assets_draw(cx, foot_y, output_scale)) {
+    if (!(death_active
+              ? game_smash64_assets_draw_death(
+                    cx, death_center_y, output_scale, death_spin,
+                    death_anim_frame)
+              : game_smash64_assets_draw(cx, foot_y, output_scale))) {
         draw_cube_face(e, f, g, h, 1.00f);  /* top */
         draw_cube_face(a, b, f, e, 0.85f);  /* front (z0, camera-facing) */
         draw_cube_face(d, c, g, h, 0.45f);  /* back */

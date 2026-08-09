@@ -40,6 +40,11 @@ void game_smash64_update(uint64_t frame_count);
 /* 1 while Falcon is actually driving the player this frame. */
 int game_smash64_active(void);
 
+/* Presentation-only exception for SMB1's native PlayerDeath routine. Falcon
+ * never owns death physics or progression, but the renderer may replace the
+ * Mario death metasprite with a falling Smash-style tumble while this is 1. */
+int game_smash64_death_presentation_active(void);
+
 /* Frames on which Falcon supplied the horizontal velocity. Lets a scripted
  * run assert the takeover happened rather than inferring it from pixels. */
 unsigned long game_smash64_owned_frames(void);

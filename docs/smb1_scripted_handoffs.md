@@ -76,6 +76,19 @@ adapter doing anything extra.
 generically by `nes_foreign_tick`'s non-driving branch whenever the
 controller is not ticking (i.e. every frame ownership is `SCRIPTED`).
 
+**Death has a presentation-only exception.** Ownership still remains
+`SCRIPTED` for the complete `PlayerDeath` routine and none of Falcon's motion
+hooks run. `game_smash64_death_presentation_active()` only allows the renderer
+to suppress Mario's death metasprite and draw a falling, rotating Falcon mesh.
+BattleShip's `ftCommonDeadUpStarSetStatus` selects the common `DamageFall`
+motion, and `ftCommonDeadUpStarProcUpdate` translates it through depth for
+`FTCOMMON_DEADUP_WAIT` (180) frames. SMB1 has no readable depth axis, so the
+presentation preserves the tumble and maps that travel downward; native life
+loss, delay, and respawn remain untouched. The consecutive frames in
+`C:\temp\falcon_death_contact.png` verify rotation/downward travel and the
+absence of Mario, while `tests/falcon_tier4_death_respawn_qa.script` still
+waits for native subroutine `$08` to prove the ordinary respawn handoff.
+
 ---
 
 ## 2. The audit table
@@ -97,7 +110,7 @@ each value is active.
 | **8** | **`PlayerCtrlRoutine`** | 5496 | the ordinary-play value; `SaveJoyp` writes `A_B_Buttons` here every frame | `FOREIGN` (subject to the `SwimmingFlag` and `Player_State>2` sub-gates below) | **WORKS NATIVELY as the FOREIGN condition** — this is the value everything else in `smb1_player_adapter.md` is written against |
 | 9 | `PlayerChangeSize` | 5670 | gated on `TimerControl` reaching `$f8`/`$c4` (5672, 5675); flips `PlayerSize` via `InitChangeSize` (5691-5698) | `SCRIPTED` for the whole grow/shrink animation | **NEEDS ADAPTER (shipped)** — reseed on return; this is the "grow/shrink" item |
 | 10 | `PlayerInjuryBlink` | 5682 | gated on `TimerControl` (5684, 5686); falls through to `PlayerCtrlRoutine` (5688) between blink phases | `SCRIPTED` while blinking; note it *calls into* `PlayerCtrlRoutine` itself mid-sequence, which is the routine `decide_ownership()` also gates — so even that inner call declines correctly | **NEEDS ADAPTER (shipped)** — this is the "injury blink" item |
-| 11 | `PlayerDeath` | 5704 | gated on `TimerControl` reaching `$f0` (5706); calls `KillPlayer` (11365) which sets `Player_State=1` via `SetKRout` (11372, 11353-11354) and `Player_Y_Speed=$fc` (11370) | `SCRIPTED` | **NEEDS ADAPTER (shipped)** — see §1's measured death-edge finding; self-heals by accident, reseed makes it a contract instead |
+| 11 | `PlayerDeath` | 5704 | gated on `TimerControl` reaching `$f0` (5706); calls `KillPlayer` (11365) which sets `Player_State=1` via `SetKRout` (11372, 11353-11354) and `Player_Y_Speed=$fc` (11370) | `SCRIPTED`; render-only Falcon tumble, no ownership change | **NEEDS ADAPTER (shipped)** — see §1's measured death-edge finding; self-heals by accident, reseed makes it a contract instead |
 | 12 | `PlayerFireFlower` | 5717 | gated on `TimerControl==$c0` (5719); cycles `Player_SprAttrib` palette bits (5725-5731) | `SCRIPTED` for the whole freeze-and-flash | **NEEDS ADAPTER (shipped)** — this is the "fireflower freeze" item |
 
 ### 2.1 `Player_State $001D` — the second, finer-grained gate

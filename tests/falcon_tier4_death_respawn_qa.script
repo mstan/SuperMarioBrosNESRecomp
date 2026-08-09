@@ -31,12 +31,29 @@ WAIT 12
 RELEASE A
 WAIT 90
 
-# SMB1 owns the native death sequence (GameEngineSubroutine $0B), then the
-# adapter must reseed Falcon when ordinary control ($08) returns.
+# SMB1 owns death physics/progression (GameEngineSubroutine $0B), while the
+# presentation layer replaces Mario's death metasprite with Falcon's falling
+# Star-KO-style tumble. Sample enough consecutive poses to prove both rotation
+# and downward travel rather than accepting one favorable still. The adapter
+# must then reseed Falcon when ordinary control ($08) returns.
 WAIT_RAM8 000E 0B
-SCREENSHOT C:/temp/falcon_qa_death.png
-WAIT 2
 RELEASE RIGHT
+SCREENSHOT C:/temp/falcon_qa_death_00.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_qa_death_04.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_qa_death_08.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_qa_death_12.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_qa_death_16.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_qa_death_20.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_qa_death_24.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_qa_death_28.png
+WAIT 2
 WAIT_RAM8 000E 08
 WAIT 30
 ASSERT_RAM8 000E 08

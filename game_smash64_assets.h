@@ -13,3 +13,10 @@
  */
 int game_smash64_assets_draw(float center_x, float foot_y,
                              float output_scale);
+
+/* Draw Falcon around a center point in the aerial tumble used by the
+ * presentation-only SMB1 death replacement. spin_radians rotates the whole
+ * fighter in the 2D screen plane; SMB1 remains authoritative for life loss. */
+int game_smash64_assets_draw_death(float center_x, float center_y,
+                                   float output_scale, float spin_radians,
+                                   float animation_frame);

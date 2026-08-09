@@ -15,6 +15,12 @@ build and visually inspected, not accepted from script exit codes alone:
   true side profile; rightward Run faces right and leftward Walk faces left;
 - `falcon_final_profile_{jump,punch,kick}.png`: coherent articulated action
   poses at the same Big-Mario-scale presentation.
+- `C:\temp\falcon_idle_ground_contact.png`: five frames spanning the complete
+  revised idle loop on World 1-1's light background; both boots remain planted
+  and the large forward-foot lift is gone;
+- `C:\temp\falcon_death_contact.png`: eight consecutive death frames showing
+  Falcon rotating through distinct Star-KO-style angles while falling, with no
+  native Mario death sprite visible.
 
 The fixes came from BattleShip's Smash 64 implementation rather than visual
 guesswork. Costume frame zero now evaluates Captain's material-animation
@@ -26,10 +32,22 @@ Falcon over the title screen. The prior screenshots and commits `93f8741` and
 
 Owner follow-up found the first corrected presentation still too large and too
 three-quarter-facing. The final defaults are 32 native pixels high (Big Mario's
-box), 90 degrees (authored left/right side profile), and a Falcon-only 2x
+box), 88 degrees (an almost exact side profile with a 2-degree boot reveal), and a Falcon-only 2x
 supersample/box-filter pass. Native NES pixels are never filtered. A/B captures
 show changes confined to Falcon's footprint; a 512px widescreen run also passes
 through the bounded 1024x480 mesh surface.
+
+The later idle/death correction keeps Falcon's Wait animation inside source
+frames 37..41, a slow ping-pong window whose two foot meshes remain within the
+ground-contact tolerance. This deliberately omits the source Wait stream's
+large weight-shift/fidget from SMB1's continuously looping idle. During SMB1
+`PlayerDeath`, physics, life loss, timing, and respawn remain native/scripted;
+only presentation changes. Mario's metasprite is suppressed and Falcon uses a
+centered aerial pose, 18 degrees of screen-plane rotation per frame, and an
+accelerating downward screen-space path. BattleShip's `DeadUpStar` status is
+the reference: it uses the common `DamageFall` motion and a 180-frame depth
+translation. Depth is unreadable in SMB1's 2D view, so downward travel is the
+documented host adaptation.
 
 Captain Falcon's implementation milestone ladder is present—locomotion, host
 collision/handoffs, corrected model/animation playback, representative combat,
@@ -143,7 +161,7 @@ source interpolation segments and tangent rates instead of flattening them
 into linear keys. Costume-zero primary colors come from reloc 332's
 `MatAnimJoint` programs, matching BattleShip's fighter-part material
 initialization. The runtime normalizes each pose to a 32-pixel Big-Mario-scale
-height and rotates the authored model 90 degrees into a strict side profile.
+height and rotates the authored model 88 degrees into a near-exact side profile.
 `game_smash64_render.c` renders only Falcon at 2x, then box-downsamples coverage
 over the native frame; the NES background remains pixel-perfect. Missing model
 data uses the cube fallback.
@@ -162,8 +180,9 @@ adaptations are in `docs/falcon_audio.md`.
 - M6 rendering: real Falcon model, textures, and authentic animation selection;
   corrected Figatree joint-slot mapping, source interpolation, costume-zero
   material initialization, facing convention, 32px side profile, and 2x edge
-  supersampling; screenshot-verified idle, bidirectional locomotion, jump,
-  Falcon Punch, Falcon Kick, clean title, widescreen, and absent-asset fallback.
+  supersampling; screenshot-verified planted idle, falling death tumble,
+  bidirectional locomotion, jump, Falcon Punch, Falcon Kick, clean title,
+  widescreen, and absent-asset fallback.
 - M7 combat: Jab, forward tilt, neutral/forward/back air, Falcon Punch, Falcon
   Kick; source hit windows/damage; native SMB1 enemy defeat and `$51/$52` brick
   shatter; nonbreakable/special/boss filtering; save/load and mod-off coverage.
@@ -182,6 +201,8 @@ Key committed evidence/docs:
 - `tests/falcon_m8_audio.script`
 - `tests/falcon_visual_acceptance.script`
 - `tests/falcon_visual_locomotion_qa.script`
+- `tests/falcon_visual_idle_loop_qa.script`
+- `tests/falcon_visual_idle_ground_qa.script`
 - `tests/falcon_visual_title_qa.script`
 - `tests/falcon_visual_combat_qa.script`
 - `tests/falcon_visual_aerial_sequence_qa.script`
@@ -217,6 +238,11 @@ message and a smoke run exits cleanly.
   score/sound effects.
 - Runtime assets are loaded lazily only when the mod is enabled. Mod-off must
   produce no asset-load log.
+- Falcon's planted SMB1 idle is a presentation adaptation over source Wait
+  frames 37..41. `NESRECOMP_FALCON_ANIM_FRAME` may force a source frame for
+  local visual diagnosis; it must not be set for acceptance runs.
+- The death tumble is presentation-only. Never move ownership of
+  `GameEngineSubroutine == $0B` away from SMB1 to implement it.
 - Never accept presentation from counters or load logs alone. Run
   `tests/falcon_visual_acceptance.script` and inspect all five native-resolution
   screenshots under `C:\temp\falcon_accept_*.png`; a coherent, recognizable
