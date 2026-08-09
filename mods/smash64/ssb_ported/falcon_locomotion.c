@@ -156,6 +156,7 @@ static const double s_state_length[FL_STATE_COUNT] = {
     [FL_FALCON_DIVE_FALL]        = 0.0,
     [FL_FALCON_DIVE_LANDING]     =
         DIVE_LANDING_SOURCE_LENGTH / DIVE_LANDING_ANIM_RATE,
+    [FL_ATTACK_AIR_LW]           = 40.0,
 };
 
 /* Turn / TurnRun set motion flag1 from the script at these frames —
@@ -203,6 +204,7 @@ const char *falcon_state_name(int state)
         case FL_FALCON_DIVE_THROW: return "FALCON_DIVE_THROW";
         case FL_FALCON_DIVE_FALL: return "FALCON_DIVE_FALL";
         case FL_FALCON_DIVE_LANDING: return "FALCON_DIVE_LANDING";
+        case FL_ATTACK_AIR_LW: return "ATTACK_AIR_LW";
     }
     return "?";
 }
@@ -225,7 +227,8 @@ static int is_air_state(int s)
     return s == FL_JUMP_F || s == FL_JUMP_B || s == FL_JUMP_AERIAL_F ||
            s == FL_JUMP_AERIAL_B || s == FL_FALL || s == FL_FALL_AERIAL ||
            s == FL_ATTACK_AIR_N || s == FL_ATTACK_AIR_F ||
-           s == FL_ATTACK_AIR_B || s == FL_FALCON_PUNCH_AIR ||
+           s == FL_ATTACK_AIR_B || s == FL_ATTACK_AIR_LW ||
+           s == FL_FALCON_PUNCH_AIR ||
            s == FL_FALCON_KICK_GROUND_AIR ||
            s == FL_FALCON_KICK_AIR || s == FL_FALCON_KICK_BOUND ||
            s == FL_FALCON_DIVE_GROUND || s == FL_FALCON_DIVE_AIR ||
@@ -693,8 +696,12 @@ static int check_ground_attack(FalconFighter *f, const FalconInputRaw *in)
 static int check_air_attack(FalconFighter *f, const FalconInputRaw *in)
 {
     if (!in->attack_pressed) return 0;
-    /* Up/Down aerials are likewise not ported yet. */
-    if (iabs(in->stick_y) >= 20) return 1;
+    if (in->stick_y <= -20) {
+        set_status(f, FL_ATTACK_AIR_LW);
+        return 1;
+    }
+    /* Up-air remains reserved until its source motion is ported. */
+    if (in->stick_y >= 20) return 1;
     if (iabs(in->stick_x) >= 20) {
         set_status(f, (in->stick_x * f->lr) >= 0
                           ? FL_ATTACK_AIR_F : FL_ATTACK_AIR_B);
@@ -888,6 +895,7 @@ static void proc_update(FalconFighter *f, const FalconInputRaw *in)
     case FL_ATTACK_AIR_N:
     case FL_ATTACK_AIR_F:
     case FL_ATTACK_AIR_B:
+    case FL_ATTACK_AIR_LW:
     case FL_FALCON_PUNCH_AIR:
     case FL_FALCON_KICK_AIR:
     case FL_FALCON_KICK_BOUND:
@@ -1121,6 +1129,7 @@ static void proc_physics(FalconFighter *f, const FalconInputRaw *in)
     case FL_ATTACK_AIR_N:
     case FL_ATTACK_AIR_F:
     case FL_ATTACK_AIR_B:
+    case FL_ATTACK_AIR_LW:
     case FL_FALCON_PUNCH_AIR:
         phys_air_tick(f, in);
         break;
@@ -1250,6 +1259,14 @@ static void emit_attack(const FalconFighter *f, FalconMotion *out)
         if (t >= 7.0 && t < 19.0)
             set_attack(out, -250.0, 240.0, 390.0, 280.0, 16, -72.0, 34.0, 0);
         break;
+    case FL_ATTACK_AIR_LW: /* source active 7..<25, damage 14 */
+        if (t >= 7.0 && t < 25.0)
+            /* Conservative union of joint-26 r330 and joint-5 r190. The
+             * downward extent intentionally reaches eligible bricks below
+             * Falcon; SMB's tile whitelist still protects floors and items. */
+            set_attack(out, 0.0, -60.0, 500.0, 400.0,
+                       14, 0.0, -80.0, 1);
+        break;
     case FL_FALCON_PUNCH_GROUND:
     case FL_FALCON_PUNCH_AIR: /* active 42..46, damage 24/25/26 */
         if (t >= 42.0 && t < 47.0)
@@ -1325,6 +1342,8 @@ static void emit_audio(const FalconFighter *f, FalconMotion *out)
     if ((f->state == FL_FALCON_DIVE_GROUND ||
          f->state == FL_FALCON_DIVE_AIR) && t == 13.0)
         out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_DIVE_LAUNCH);
+    if (f->state == FL_ATTACK_AIR_LW && t == 7.0)
+        out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_KICK_SWING);
     /* Catch is entered by the host collision resolve after this tick's event
      * emission. Its first observable controller tick is therefore frame 1. */
     if (f->state == FL_FALCON_DIVE_CATCH && t == 1.0)

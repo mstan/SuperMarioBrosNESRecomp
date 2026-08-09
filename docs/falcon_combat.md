@@ -11,7 +11,7 @@ movement and maps overlaps to native SMB1 consequences.
 |---|---|---|
 | A | Jab | Neutral air |
 | Left/Right+A | Forward tilt | Forward/back air relative to facing |
-| Up/Down+A | Reserved; source normals not ported yet | Reserved; source aerials not ported yet |
+| Up/Down+A | Reserved; source normals not ported yet | Up+A reserved; Down+A is DownAir |
 | B or Left/Right+B | Falcon Punch | Falcon Punch |
 | Down+B | Falcon Kick | Falcon Kick |
 | Up+B | Falcon Dive | Falcon Dive |
@@ -27,10 +27,10 @@ off, SMB1 sees both buttons normally. Jumpsprings are the intentional exception:
 while `JumpspringAnimCtrl` is active, native physical A remains visible so the
 original spring-boost timing still works.
 
-A neutral and horizontal reach the five normal motions currently present in
-the port (`Jab`, `FTilt`, `NAir`, `Fair`, `Bair`). Up/Down A are consumed and
-deliberately do nothing until their real source motions and hitboxes are ported;
-they never alias to a special. Smash 64 has no Side-B, so horizontal B remains
+A neutral and horizontal reach `Jab`, `FTilt`, `NAir`, `Fair`, and `Bair`.
+Down+A in the air reaches the authentic `AttackAirD`; Up+A and grounded Up/Down
+A remain consumed and reserved until their real source motions are ported.
+They never alias to a special. Smash 64 has no Side-B, so horizontal B remains
 Falcon Punch and an opposite direction turns Falcon before it begins. Specials
 have source interrupt priority if A and B rise on the same frame.
 
@@ -60,6 +60,13 @@ The character bridge samples the exact current/next-frame root delta, removes
 it from the mesh pose, and projects it through the same host scale as every
 other source-space motion. This keeps model travel and collision travel on one
 authored trajectory.
+
+DownAir uses Figatree 1642 and the source motion's 40-frame duration. Its two
+joint spheres are represented by one conservative host union, active at source
+frames 7 through 24 for 14 damage and angle -80. `LightSwingL` plays once at
+frame 7; the source authors no particle effect for this normal. Breaking an
+ordinary brick beneath Falcon is an intentional SMB terrain adaptation and
+does not reuse Down+B's fire card or root motion.
 
 Falcon Dive is split exactly by source action: grounded launch uses
 `FalconDive`/1658, aerial launch uses `FalconDiveEnd2`/1661, Catch uses
@@ -103,12 +110,27 @@ Only ordinary brick metatiles `$51` and `$52` are eligible for Punch/Kick
 terrain damage. The adapter presents the target to `PlayerHeadCollision` as a
 Big-Mario head contact, producing SMB1's own block-buffer/VRAM update, debris,
 50 points, and brick-shatter sound. Question blocks, pipes, scenery, castle
-tiles, and other nonbreakable metatiles are never passed to that routine.
+tiles, and other nonbreakable metatiles are never passed to that routine. After
+native shatter changes the collision cell to temporary `$23`, the adapter
+commits its eventual zero immediately so a broad multi-frame Falcon attack
+cannot leave a visually blank but collision-solid orphan when SMB1's two block
+object slots are busy.
 
 ## Evidence
 
 - `tests/falcon_harness/combat.script` checks all move selections, exact active
-  windows/damage, Punch/Kick break flags, and an active-window save roundtrip.
+  windows/damage, Punch/Kick/DownAir break flags, and active-window save
+  roundtrips.
+- `tests/falcon_dair_block_qa.script` captures DownAir startup, active, and
+  recovery frames, injects a fresh `$51` only after ascent, proves native blue
+  debris and an immediate `$00` collision result, and preserves adjacent `$54`.
+- `tests/falcon_air_downb_block_qa.script` independently performs aerial
+  Down+B, injects its fresh `$51` immediately before the source 12..<32 active
+  window, and proves Falcon Kick's unchanged authored descent breaks it,
+  preserves both `$54` neighbors, and lands on-map.
+- `tests/falcon_upb_block_barrier_qa.script` proves Dive cannot phase through a
+  five-brick ceiling or start a native block transaction, while the identical
+  ordinary stick jump still performs SMB1's `$52` bump.
 - `tests/falcon_harness/upb.script` checks the two launch states, frame-13
   20-damage contact-only window, confirmed Catch, Catch/Throw audio masks,
   Catch and Throw save roundtrips, special-fall drift/landing recovery, and

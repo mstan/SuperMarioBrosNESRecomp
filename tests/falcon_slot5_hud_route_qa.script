@@ -1,0 +1,29 @@
+LOG falcon-slot5-hud-route-qa
+WAIT 2
+LOAD_STATE build_falcon/Release/savestates/slot05.sav
+WAIT 3
+
+# Owner F5/slot 4 reproduction: World 1-2's legal warp-zone route deliberately
+# uses SMB1's high-byte-0 coordinates above the visible playfield.
+ASSERT_RAM8 074E 02
+ASSERT_RAM8 006D 0A
+ASSERT_RAM8 0086 72
+ASSERT_RAM8 00B5 01
+ASSERT_RAM8 00CE 60
+SCREENSHOT C:/temp/falcon_slot5_hud_route_start.png
+
+HOLD RIGHT
+HOLD UP
+WAIT_RAM8 00B5 00
+ASSERT_RAM8 006D 0A
+SCREENSHOT C:/temp/falcon_slot5_hud_route_above.png
+WAIT_RAM8 0086 7C
+ASSERT_RAM8 00B5 00
+SCREENSHOT C:/temp/falcon_slot5_hud_route_cross.png
+WAIT_RAM8 0086 B0
+ASSERT_RAM8 00B5 00
+SCREENSHOT C:/temp/falcon_slot5_hud_route_warp_side.png
+RELEASE RIGHT
+RELEASE UP
+WAIT 2
+EXIT 0

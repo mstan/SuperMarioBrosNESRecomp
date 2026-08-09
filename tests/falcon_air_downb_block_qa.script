@@ -1,0 +1,55 @@
+LOG falcon-air-downb-block-qa
+WAIT 60
+WRITE_RAM8 075F 00
+WRITE_RAM8 075C 00
+WRITE_RAM8 0760 01
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 120
+
+# Move away from the room edge and retain a deterministic right-facing base.
+HOLD RIGHT
+WAIT 12
+RELEASE RIGHT
+WAIT 8
+SAVE_STATE C:/temp/falcon_air_downb_block_base.sav
+
+# This is aerial Down+B (direct-air Falcon Kick), not Down+A/AttackAirLw.
+# Enter the sourced Kick first, then install a fresh collision-only $51 at
+# screen tile-top $80 immediately before its 12..<32 active window. Installing
+# a block before the jump would test native head collision instead of the move.
+HOLD UP
+WAIT 5
+RELEASE UP
+WAIT 8
+HOLD DOWN
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE DOWN
+SCREENSHOT C:/temp/falcon_air_downb_block_start.png
+WAIT 8
+WRITE_RAM8 0568 54
+WRITE_RAM8 0569 51
+WRITE_RAM8 056A 54
+ASSERT_RAM8 0568 54
+ASSERT_RAM8 0569 51
+ASSERT_RAM8 056A 54
+WAIT 3
+SCREENSHOT C:/temp/falcon_air_downb_block_active.png
+WAIT 6
+ASSERT_RAM8 0568 54
+ASSERT_RAM8 0569 00
+ASSERT_RAM8 056A 54
+ASSERT_RAM8 00B5 01
+SCREENSHOT C:/temp/falcon_air_downb_block_broken.png
+
+# Continue through the steep authored descent. Breaking the target must not
+# put Falcon below the map or leave the temporary $23 collision metatile.
+WAIT 12
+ASSERT_RAM8 0569 00
+ASSERT_RAM8 00B5 01
+SCREENSHOT C:/temp/falcon_air_downb_block_recover.png
+EXIT 0

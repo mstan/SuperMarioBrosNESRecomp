@@ -64,6 +64,8 @@ typedef enum {
     FL_FALCON_DIVE_THROW,
     FL_FALCON_DIVE_FALL,
     FL_FALCON_DIVE_LANDING,
+    /* Appended so existing serialized numeric states retain their meaning. */
+    FL_ATTACK_AIR_LW,
     FL_STATE_COUNT
 } FalconState;
 

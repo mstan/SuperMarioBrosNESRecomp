@@ -1,0 +1,64 @@
+LOG falcon-dair-block-qa
+WAIT 60
+WRITE_RAM8 075F 00
+WRITE_RAM8 075C 00
+WRITE_RAM8 0760 01
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 120
+HOLD RIGHT
+WAIT 12
+RELEASE RIGHT
+WAIT 8
+SAVE_STATE C:/temp/falcon_dair_base.sav
+
+# First pass is the owner-visible source-frame sequence.
+HOLD UP
+WAIT 5
+RELEASE UP
+WAIT 8
+HOLD DOWN
+HOLD A
+WAIT 2
+RELEASE A
+RELEASE DOWN
+SCREENSHOT C:/temp/falcon_dair_00.png
+WAIT 5
+SCREENSHOT C:/temp/falcon_dair_07.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_dair_15.png
+WAIT 10
+SCREENSHOT C:/temp/falcon_dair_25.png
+WAIT 15
+SCREENSHOT C:/temp/falcon_dair_end.png
+
+# Replay from the identical launch with a single eligible brick in the exact
+# source-active downward sphere union. Adjacent $54 is the protected control.
+# Install the synthetic target after the ascent: placing a block before the
+# jump changes native movement/head collision and no longer isolates DownAir.
+LOAD_STATE C:/temp/falcon_dair_base.sav
+WAIT 2
+HOLD UP
+WAIT 5
+RELEASE UP
+WAIT 8
+HOLD DOWN
+HOLD A
+WAIT 2
+RELEASE A
+RELEASE DOWN
+WAIT 5
+WRITE_RAM8 0568 51
+WRITE_RAM8 0569 54
+ASSERT_RAM8 0568 51
+ASSERT_RAM8 0569 54
+WAIT 3
+SCREENSHOT C:/temp/falcon_dair_block_active.png
+WAIT 4
+ASSERT_RAM8 0568 00
+ASSERT_RAM8 0569 54
+ASSERT_RAM8 00B5 01
+SCREENSHOT C:/temp/falcon_dair_block_broken.png
+EXIT 0

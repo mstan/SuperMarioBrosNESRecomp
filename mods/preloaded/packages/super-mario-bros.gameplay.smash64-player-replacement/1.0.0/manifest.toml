@@ -20,6 +20,16 @@ group = "Gameplay"
 exclusive_group = "player-controller"
 default_enabled = false
 
+[[external_rom]]
+feature = "smash64-player"
+id = "smash-64-us-v1"
+label = "Super Smash Bros. 64 ROM"
+description = "Select a legally owned Super Smash Bros. (USA), NTSC-U v1.0 ROM. z64, v64, and n64 byte orders are accepted and normalized before identity verification."
+format = "n64"
+identity = "Super Smash Bros. (USA), NTSC-U v1.0 (NALE)"
+size = 16777216
+normalized_sha1 = "e2929e10fccc0aa84e5776227e798abc07cedabf"
+
 [[option]]
 feature = "smash64-player"
 id = "character"

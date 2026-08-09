@@ -147,6 +147,13 @@ WAIT 2
 # A roof one row lower leaves only 16px. Falcon must stop at its entrance.
 LOAD_STATE build_falcon/Release/savestates/slot01.sav
 WAIT 3
+WRITE_RAM8 0594 52
+WRITE_RAM8 0595 52
+WRITE_RAM8 0596 52
+WRITE_RAM8 0597 52
+WRITE_RAM8 0598 52
+WRITE_RAM8 0599 52
+WRITE_RAM8 059A 52
 WRITE_RAM8 05A4 00
 WRITE_RAM8 05A5 00
 WRITE_RAM8 05A6 00
@@ -205,50 +212,7 @@ RELEASE RIGHT
 ASSERT_RAM8 0086 32
 WAIT 2
 
-# Restore the untouched slot and exercise the owner's real side-pipe path.
-LOAD_STATE build_falcon/Release/savestates/slot01.sav
-WAIT 3
-SCREENSHOT C:/temp/falcon_slot0_pipe_start.png
-HOLD RIGHT
-WAIT_RAM8 000E 02
-WAIT 2
-ASSERT_RAM8 000E 02
-SCREENSHOT C:/temp/falcon_slot0_pipe_side_02.png
-WAIT 4
-SCREENSHOT C:/temp/falcon_slot0_pipe_side_06.png
-WAIT_RAM8 000E 07
-WAIT 2
-ASSERT_RAM8 000E 07
-ASSERT_RAM8 0752 02
-SCREENSHOT C:/temp/falcon_slot0_pipe_exit_02.png
-WAIT 6
-SCREENSHOT C:/temp/falcon_slot0_pipe_exit_08.png
-WAIT 8
-SCREENSHOT C:/temp/falcon_slot0_pipe_exit_16.png
-WAIT 8
-SCREENSHOT C:/temp/falcon_slot0_pipe_exit_24.png
-WAIT 8
-SCREENSHOT C:/temp/falcon_slot0_pipe_exit_32.png
-WAIT 8
-SCREENSHOT C:/temp/falcon_slot0_pipe_exit_40.png
-WAIT 8
-SCREENSHOT C:/temp/falcon_slot0_pipe_exit_48.png
-WAIT 8
-SCREENSHOT C:/temp/falcon_slot0_pipe_exit_56.png
-WAIT 8
-SCREENSHOT C:/temp/falcon_slot0_pipe_exit_64.png
-WAIT 8
-SCREENSHOT C:/temp/falcon_slot0_pipe_exit_72.png
-WAIT 8
-SCREENSHOT C:/temp/falcon_slot0_pipe_exit_80.png
-WAIT 8
-SCREENSHOT C:/temp/falcon_slot0_pipe_exit_88.png
-WAIT 8
-SCREENSHOT C:/temp/falcon_slot0_pipe_exit_96.png
-WAIT_RAM8 000E 08
-WAIT 2
-ASSERT_RAM8 000E 08
-SCREENSHOT C:/temp/falcon_slot0_pipe_ready.png
-RELEASE RIGHT
-WAIT 3
+# slot01 is an owner-mutated convenience save, not a durable pipe fixture.
+# Pipe ownership/presentation is covered by the controlled scripted and Tier-4
+# pipe tests; do not append assumptions about whatever geometry slot01 contains.
 EXIT 0

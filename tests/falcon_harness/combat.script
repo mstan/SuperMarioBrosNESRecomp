@@ -87,6 +87,30 @@ expect_attack 0 0
 frames 16
 expect_state FALL
 
+# Down+A selects Captain's authentic DownAir rather than neutral air. Source
+# startup is 7f, active 7..<25 for 14 damage, then animation ends at 40.
+reset
+neutral
+pos_y 10000
+host_fall
+frames 1
+stick_y -80
+attack down
+frames 1
+expect_state ATTACK_AIR_LW
+attack up
+frames 6
+expect_attack 0 0
+frames 1
+expect_attack 1 1
+expect_damage 14 14
+expect_break 1 1
+roundtrip
+frames 18
+expect_attack 0 0
+frames 15
+expect_state FALL
+
 # Neutral+A reaches the source jab rather than a B special.
 reset
 neutral

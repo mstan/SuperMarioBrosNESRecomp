@@ -288,14 +288,13 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
      * floor begins at screen row $D0. */
     {
         int player_y = g_ram[Player_Rel_YPos];
-        /* SMB1's screen-relative byte wraps through $FF when the 32px player
-         * box rises above the top edge. Player_Y_HighPos is 0 for that upper
-         * page and 1 in the ordinary playfield (confirmed by the existing
-         * Ghidra-audited vertical adapter). Unwrap only the upper case; pit
-         * travel on page 2 must continue downward rather than reappear above
-         * the HUD. */
-        if (player_y >= 0xF0 && (int8_t)g_ram[Player_Y_HighPos] <= 0)
-            player_y -= 0x100;
+        /* SMB1's ordinary visible playfield is Y high page 1. Preserve the
+         * whole signed 16-bit displacement from that page: World 1-2's legal
+         * above-ceiling route continues well past $00f0, and treating only
+         * that first wrapped strip as negative makes Falcon reappear through
+         * the floor once the low byte reaches $ef. Conversely, pit travel on
+         * page 2 must remain below the screen instead of wrapping overhead. */
+        player_y += ((int)(int8_t)g_ram[Player_Y_HighPos] - 1) * 0x100;
         foot_y = (240.0f - (float)(player_y + 32)) * output_scale;
     }
 

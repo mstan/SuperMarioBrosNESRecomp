@@ -2,7 +2,49 @@
 
 Date: 2026-08-09
 
-## Current QA status: final owner play/listen acceptance remains
+## Current QA status: integrated owner playtest pending
+
+The current worktree also addresses the owner's latest playtest findings while
+leaving the open `build_falcon` recomp-ui session untouched:
+
+- the Falcon feature now declares a required owner-supplied Super Smash Bros.
+  64 USA v1.0 ROM. The generic Mods UI exposes Select/Change file controls and
+  status; z64/v64/n64 byte orders normalize in memory to canonical SHA-1
+  `e2929e10fccc0aa84e5776227e798abc07cedabf`. Missing, changed, wrong-region,
+  or wrong-revision files fail closed at feature/package enable and are re-read
+  at PLAY before activation. The ROM path is persisted, but ROM bytes are never
+  copied or packaged. This is presently an ownership/identity gate around the
+  existing quarantined derived assets; a clean-install extraction/cache path is
+  tracked separately as Bead `beads-3jk`.
+- aerial Down+A now uses source Figatree 1642 `AttackAirD`: 40 frames, active
+  7 through 24, 14 damage, angle -80, and source `LightSwingL` with no invented
+  particle. The SMB adaptation lets this downward normal break only `$51/$52`
+  bricks. `tests/falcon_dair_block_qa.script` and fresh captures show the active
+  pose, native debris, target `$00`, and adjacent `$54` unchanged.
+- direct-air Down+B remains the distinct source Falcon Kick state and already
+  carried a terrain-break flag. `tests/falcon_air_downb_block_qa.script` now
+  proves its unchanged 12..<32 hitbox breaks a fresh `$51`, preserves `$54`
+  neighbors, shows the corrected kick flame with native debris, and lands
+  on-map instead of dropping below the level.
+- Falcon Dive's upward sweep treats bumpable non-coin blocks as barriers, stops
+  before the blocked pixel, and suppresses native head-bump/shatter only for
+  Up-B. `tests/falcon_upb_block_barrier_qa.script` holds the entire launch under
+  five intact `$52` blocks with no block-object transaction; its ordinary-jump
+  control still bumps the same brick normally.
+- the artificial HUD clamp now applies only to wall-bound Down+B. The slot05
+  World 1-2 QA reaches high byte 0 and crosses the legal above-ceiling warp-zone
+  route, while the F4 wall-bound wrap regression remains contained. Falcon's
+  renderer now projects the full signed Y-high-page displacement relative to
+  normal page 1, so the high-byte-0 route stays above the ceiling instead of
+  wrapping his model through the floor when its low byte drops below `$f0`.
+- ordinary pit rendering now incorporates positive `Player_Y_HighPos` pages.
+  Slot07 shows one visible fall, stays empty instead of repeatedly wrapping
+  Falcon to the top, loses one life, and produces one stable respawn.
+
+All of those gameplay checks use the isolated `build_falcon_qa` executable;
+the owner's open recomp-ui process remains running. The ROM dependency UI still
+needs an owner-visible screenshot/pass after that session can safely use the
+new build, followed by one integrated playtest before these Beads close.
 
 The current worktree adds BattleShip-derived Falcon Dive/Up-B on top of the
 previously accepted movement, presentation, Falcon Punch, and Falcon Kick
@@ -89,10 +131,10 @@ Pipe dispatches `$02` (side ingress), `$03` (vertical ingress), and `$07` with
 `AltEntranceControl == $02` (vertical egress) now suppress Mario and render a
 Falcon pipe pose. Occlusion uses the exact background-opaque coverage captured
 by the PPU renderer for the most recently rendered frame, so Falcon passes
-behind the pipe instead of being drawn over it. The real slot-0 run asserts
-the `$02` and `$07/$0752 == $02` phases and captures partial side entry, full
-occlusion, helmet emergence, and the ready Falcon on top of the pipe under
-`C:\temp\falcon_slot0_pipe_*.png`.
+behind the pipe instead of being drawn over it. The durable scripted
+presentation QA pins `$02`, `$03`, and `$07/$0752 == $02` directly and captures
+each active phase without relying on the owner's mutable local save slots;
+Tier-4 pipe entry/exit tests retain the native transition mechanics coverage.
 
 The defects shown in the owner's August 8 screenshots have been corrected in
 the current worktree. Fresh Release captures were generated after the final

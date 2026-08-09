@@ -1,0 +1,36 @@
+LOG falcon-slot7-pit-death-qa
+WAIT 2
+LOAD_STATE build_falcon/Release/savestates/slot07.sav
+WAIT 3
+
+# Give the owner reproduction one spare life so the same run proves both the
+# single offscreen fall and the native respawn, rather than ending at Game Over.
+WRITE_RAM8 075A 01
+HOLD RIGHT
+WAIT 20
+SCREENSHOT C:/temp/falcon_slot7_fall_20.png
+WAIT 20
+SCREENSHOT C:/temp/falcon_slot7_fall_40.png
+WAIT 20
+SCREENSHOT C:/temp/falcon_slot7_fall_60.png
+WAIT 20
+SCREENSHOT C:/temp/falcon_slot7_fall_80.png
+WAIT 20
+SCREENSHOT C:/temp/falcon_slot7_fall_100.png
+WAIT 40
+SCREENSHOT C:/temp/falcon_slot7_fall_140.png
+WAIT_RAM8 000E 06
+RELEASE RIGHT
+WAIT 2
+ASSERT_RAM8 075A 00
+SCREENSHOT C:/temp/falcon_slot7_life_loss.png
+WAIT_RAM8 000E 08
+ASSERT_RAM8 0770 01
+ASSERT_RAM8 075A 00
+SCREENSHOT C:/temp/falcon_slot7_respawn.png
+WAIT 120
+ASSERT_RAM8 000E 08
+ASSERT_RAM8 0770 01
+ASSERT_RAM8 075A 00
+SCREENSHOT C:/temp/falcon_slot7_respawn_stable.png
+EXIT 0

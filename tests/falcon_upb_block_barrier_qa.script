@@ -1,0 +1,78 @@
+LOG falcon-upb-block-barrier-qa
+WAIT 60
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 00
+WRITE_RAM8 760 01
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+ASSERT_RAM8 000E 08
+WAIT 120
+ASSERT_RAM8 006D 00
+ASSERT_RAM8 0086 28
+ASSERT_RAM8 00B5 01
+ASSERT_RAM8 00CE B0
+ASSERT_RAM8 0754 01
+SAVE_STATE C:/temp/falcon_upb_block_barrier_base.sav
+
+# Put a five-brick ceiling across Dive's small authored horizontal drift. The
+# blocks exist in the collision buffer only; native PlayerHeadCollision would
+# expose a failure by replacing one with temporary blank $23 and starting a
+# block-object transaction.
+WRITE_RAM8 0581 52
+WRITE_RAM8 0582 52
+WRITE_RAM8 0583 52
+WRITE_RAM8 0584 52
+WRITE_RAM8 0585 52
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 14
+SCREENSHOT C:/temp/falcon_upb_block_barrier_active.png
+WAIT 8
+ASSERT_RAM8 0581 52
+ASSERT_RAM8 0582 52
+ASSERT_RAM8 0583 52
+ASSERT_RAM8 0584 52
+ASSERT_RAM8 0585 52
+ASSERT_RAM8 0026 00
+ASSERT_RAM8 0027 00
+ASSERT_RAM8 0784 00
+ASSERT_RAM8 00B5 01
+ASSERT_RAM8 00CE AC
+SCREENSHOT C:/temp/falcon_upb_block_barrier_held.png
+WAIT 32
+ASSERT_RAM8 0581 52
+ASSERT_RAM8 0582 52
+ASSERT_RAM8 0583 52
+ASSERT_RAM8 0584 52
+ASSERT_RAM8 0585 52
+ASSERT_RAM8 0026 00
+ASSERT_RAM8 0027 00
+ASSERT_RAM8 0784 00
+ASSERT_RAM8 00B5 01
+SCREENSHOT C:/temp/falcon_upb_block_barrier_recovery.png
+WAIT 2
+
+# Negative control: an ordinary Up-stick jump into the identical $52 must
+# retain SMB1's native bump transaction. This keeps ? blocks, mushrooms and
+# ordinary brick interactions independent from Dive's recovery-only barrier.
+LOAD_STATE C:/temp/falcon_upb_block_barrier_base.sav
+WAIT 2
+WRITE_RAM8 0581 52
+WRITE_RAM8 0582 52
+WRITE_RAM8 0583 52
+WRITE_RAM8 0584 52
+WRITE_RAM8 0585 52
+HOLD UP
+WAIT_RAM8 0583 23
+ASSERT_RAM8 03E4 80
+ASSERT_RAM8 03E6 03
+ASSERT_RAM8 03E8 52
+SCREENSHOT C:/temp/falcon_upb_block_ordinary_jump_control.png
+RELEASE UP
+WAIT 2
+EXIT 0

@@ -1,22 +1,27 @@
 LOG falcon-slot4-clearance-kick-qa
 WAIT 2
 
-# Owner F4 reproduction: ordinary rightward travel must clear this geometry.
+# Owner F4 reproduction: the save contains orphaned $23 temporary blanks in
+# the visibly open 32px section. Right must enter that section, clear the
+# ghosts, and stop only at the real rendered brick pillar.
 LOAD_STATE build_falcon/Release/savestates/slot04.sav
 WAIT 3
+ASSERT_RAM8 0594 23
+ASSERT_RAM8 05A4 23
+ASSERT_RAM8 0597 52
+ASSERT_RAM8 05A7 52
 SCREENSHOT C:/temp/falcon_slot4_walk_start.png
 HOLD RIGHT
-# The first movement frame performs the host-side 16px controlled descent.
-# Save before the following VBlank drains its pending controller correction;
-# load must apply that correction exactly once, not lose or double it.
-WAIT 3
-SAVE_STATE C:/temp/falcon_slot4_step_pending.sav
-LOAD_STATE C:/temp/falcon_slot4_step_pending.sav
-WAIT 17
-SCREENSHOT C:/temp/falcon_slot4_walk_20.png
-WAIT 40
-SCREENSHOT C:/temp/falcon_slot4_walk_60.png
+WAIT 20
 RELEASE RIGHT
+ASSERT_RAM8 0086 62
+ASSERT_RAM8 0594 00
+ASSERT_RAM8 0595 00
+ASSERT_RAM8 0596 00
+ASSERT_RAM8 05A4 00
+ASSERT_RAM8 0597 52
+ASSERT_RAM8 05A7 52
+SCREENSHOT C:/temp/falcon_slot4_walk_under.png
 WAIT 2
 
 # From the identical state, Down+B must remain on the map throughout Falcon
@@ -40,6 +45,13 @@ WAIT 8
 SCREENSHOT C:/temp/falcon_slot4_kick_32.png
 WAIT 24
 SCREENSHOT C:/temp/falcon_slot4_kick_end.png
+ASSERT_RAM8 0594 00
+ASSERT_RAM8 0597 00
+ASSERT_RAM8 059A 00
+ASSERT_RAM8 05A4 00
+ASSERT_RAM8 05A7 00
+ASSERT_RAM8 05AA 00
+ASSERT_RAM8 05B7 54
 ASSERT_RAM8 00B5 01
 WAIT 32
 SCREENSHOT C:/temp/falcon_slot4_kick_recover_56.png

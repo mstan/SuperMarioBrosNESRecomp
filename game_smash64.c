@@ -378,6 +378,36 @@ static uint8_t block_adder_index(void)
     return 0x00;
 }
 
+/* PlayerHeadCollision writes $23 as a temporary blank while one of SMB1's
+ * two block-object slots owns the replacement animation. Falcon's formerly
+ * unbounded multi-brick pass could overwrite both slots before the updater
+ * consumed them, leaving a visually blank but collision-solid $23 in old
+ * saves. Repair only an ORPHAN: a live block state or replacement flag with
+ * the same BlockBufferColli scratch address still owns a legitimate $23. */
+static uint8_t settle_orphaned_blank_metatile(uint8_t tile)
+{
+    uint8_t ptr_lo;
+    uint8_t row;
+    uint16_t addr;
+
+    if (tile != 0x23) return tile;
+
+    ptr_lo = g_ram[0x06];
+    row = g_ram[0x02];
+    for (int i = 0; i < 2; ++i) {
+        if ((g_ram[Block_State + i] != 0 ||
+             g_ram[Block_RepFlag + i] != 0) &&
+            g_ram[Block_BBuf_Low + i] == ptr_lo &&
+            g_ram[Block_Orig_YPos + i] == row)
+            return tile;
+    }
+
+    addr = (uint16_t)(((uint16_t)g_ram[0x07] << 8) | ptr_lo);
+    addr = (uint16_t)(addr + row);
+    if (addr < sizeof g_ram) g_ram[addr] = 0;
+    return 0;
+}
+
 /*
  * Ask SMB1 whether the metatile at the player's head (or feet) is solid, for a
  * CANDIDATE vertical position.
@@ -398,7 +428,8 @@ static uint8_t block_adder_index(void)
  * Reimplementing any of this in C would be a second copy of ROM logic that
  * silently drifts; the game's tiles stay the only source of truth.
  */
-static int smb1_solid_at(int y_pos, int feet)
+static int smb1_solid_at(int y_pos, int feet,
+                         int head_bumpables_are_barriers)
 {
     CPU6502State save_cpu = g_cpu;
     uint8_t save_scratch[6];
@@ -416,7 +447,8 @@ static int smb1_solid_at(int y_pos, int feet)
     g_cpu.Y = block_adder_index();
     if (feet) BlockBufferColli_Feet();
     else      BlockBufferColli_Head();
-    tile = g_cpu.A;
+    tile = settle_orphaned_blank_metatile(g_cpu.A);
+    g_cpu.A = tile;
 
     /*
      * The predicate is NOT the same for the two edges, and getting this wrong
@@ -441,6 +473,15 @@ static int smb1_solid_at(int y_pos, int feet)
             g_cpu.A = tile;
             CheckForClimbMTiles();
             solid = g_cpu.C ? 0 : 1;   /* climbable is not floor */
+        } else if (head_bumpables_are_barriers &&
+                   tile != 0xC2 && tile != 0xC3) {
+            /* Native HeadChk deliberately classifies bricks and item blocks
+             * below SolidMTileUpperExt as BUMPABLE, then lets
+             * PlayerHeadCollision animate or shatter them. Falcon Dive is a
+             * recovery move, not a head-bump attack: for its upward sweep
+             * only, those same non-coin metatiles are physical barriers.
+             * Coins remain pass-through so SMB1 can collect them normally. */
+            solid = 1;
         } else {
             g_cpu.A = tile;
             CheckForSolidMTiles();
@@ -516,14 +557,20 @@ static int smb1_side_solid_at(int x_pos, int page, int dir)
      * [$08,$D0) (smb.asm:11988-11991). Probing outside them would invent
      * walls in the status bar and below the pit line. */
     if (py >= 0x20 && py < 0xE4) {
+        uint8_t tile;
         g_cpu.Y = (uint8_t)(base + (dir < 0 ? 3 : 5));
         BlockBufferColli_Side();
-        if (side_tile_is_wall(g_cpu.A, 1)) solid = 1;
+        tile = settle_orphaned_blank_metatile(g_cpu.A);
+        g_cpu.A = tile;
+        if (side_tile_is_wall(tile, 1)) solid = 1;
     }
     if (!solid && py >= 0x08 && py < 0xD0) {
+        uint8_t tile;
         g_cpu.Y = (uint8_t)(base + (dir < 0 ? 4 : 6));
         BlockBufferColli_Side();
-        if (side_tile_is_wall(g_cpu.A, 0)) solid = 1;
+        tile = settle_orphaned_blank_metatile(g_cpu.A);
+        g_cpu.A = tile;
+        if (side_tile_is_wall(tile, 0)) solid = 1;
     }
 
     memcpy(&g_ram[0x02], save_scratch, sizeof save_scratch);
@@ -555,8 +602,8 @@ static int smb1_can_step_down_one_tile(int x_pos, int page, int dir)
     down_y = (int)save_y + 16;
     g_ram[Player_Y_Position] = (uint8_t)down_y;
     clear = !smb1_side_solid_at(x_pos, page, dir) &&
-            !smb1_solid_at(down_y, 0) &&
-             smb1_solid_at(down_y, 1);
+            !smb1_solid_at(down_y, 0, 0) &&
+             smb1_solid_at(down_y, 1, 0);
     g_ram[Player_Y_Position] = save_y;
     return clear;
 }
@@ -1204,13 +1251,13 @@ static int move_player_vertically_hook(uint16_t addr)
             while (cand < 0)   { cand += 256; cand_hi -= 1; }
             while (cand > 255) { cand -= 256; cand_hi += 1; }
 
-            /* SMB1 deliberately stops probing above its $20 gameplay extent,
-             * but foreign root motion can be much faster than Mario's capped
-             * jump and otherwise crosses high byte 1 -> 0 in one frame. Keep
-             * the foreign body below the HUD instead of allowing an unsigned
-             * wrap through the top of the map. Repeated authored root deltas
-             * simply press against this ceiling until the motion turns down. */
-            if (!feet && (cand_hi < 1 || (cand_hi == 1 && cand < 0x20))) {
+            /* Wall-bound Falcon Kick has very large upward authored root
+             * deltas and previously wrapped through the HUD forever. Contain
+             * that hazardous special only. Ordinary jumps and Dive must keep
+             * SMB1's native high-byte-0 representation: World 1-2 deliberately
+             * routes the player above the ceiling to its hidden warp zone. */
+            if (!feet && fs->state == FL_FALCON_KICK_BOUND &&
+                (cand_hi < 1 || (cand_hi == 1 && cand < 0x20))) {
                 pos = 0x20;
                 high = 1;
                 s_swept_block = SMASH64_SWEEP_CEILING;
@@ -1225,16 +1272,30 @@ static int move_player_vertically_hook(uint16_t addr)
              *   HeadChk skips below PlayerBGUpperExtent, $20 big / $10 small.
              * Falcon's stable profile is always the Big $20 extent.
              */
-            if (cand_hi == 1 &&
-                (feet ? (cand < 0xCF) : (cand >= 0x20)) &&
-                smb1_solid_at(cand, feet)) {
-                pos = cand;
-                high = cand_hi;
-                s_swept_block = feet ? SMASH64_SWEEP_FLOOR
-                                     : SMASH64_SWEEP_CEILING;
-                /* Diagnostic mode records the would-have-blocked position in
-                 * the ring but lets the motion run to the full delta. */
-                if (!s_sweep_noblock) break;
+            {
+                int dive_head_barrier =
+                    !feet &&
+                    (fs->state == FL_FALCON_DIVE_GROUND ||
+                     fs->state == FL_FALCON_DIVE_AIR);
+                if (cand_hi == 1 &&
+                    (feet ? (cand < 0xCF) : (cand >= 0x20)) &&
+                    smb1_solid_at(cand, feet, dive_head_barrier)) {
+                    /* Ordinary contact parks at the first blocked coordinate
+                     * so SMB1's alignment-gated collision can resolve it.
+                     * Dive deliberately suppresses native HeadChk to avoid a
+                     * bump/shatter transaction, so it must stay one pixel
+                     * BEFORE the barrier or repeated root deltas creep through
+                     * it one pixel per frame. */
+                    if (!dive_head_barrier) {
+                        pos = cand;
+                        high = cand_hi;
+                    }
+                    s_swept_block = feet ? SMASH64_SWEEP_FLOOR
+                                         : SMASH64_SWEEP_CEILING;
+                    /* Diagnostic mode records the would-have-blocked position
+                     * in the ring but lets the motion run to the full delta. */
+                    if (!s_sweep_noblock) break;
+                }
             }
 
             pos = cand;
@@ -1260,8 +1321,10 @@ static int move_player_vertically_hook(uint16_t addr)
     /* Did we end the frame inside geometry? Measured here, at the same instant
      * as the sweep above, so the two can never contradict each other. */
     if (high == 1) {
-        if (smb1_solid_at(pos, 0)) s_pending_flags |= SMASH64_CF_HEAD_IN_SOLID;
-        if (smb1_solid_at(pos, 1)) s_pending_flags |= SMASH64_CF_FEET_IN_SOLID;
+        if (smb1_solid_at(pos, 0, 0))
+            s_pending_flags |= SMASH64_CF_HEAD_IN_SOLID;
+        if (smb1_solid_at(pos, 1, 0))
+            s_pending_flags |= SMASH64_CF_FEET_IN_SOLID;
     }
 
     /* Remember what we wrote so next frame can tell whether SMB1 kept it. */
@@ -1274,6 +1337,16 @@ static int move_player_vertically_hook(uint16_t addr)
      * Player_Y_Speed, and a stale value makes them disagree with the motion. */
     {
         int ys = (int)((dy_px >= 0.0) ? (dy_px + 0.5) : (dy_px - 0.5));
+        /* The sweep already stopped Falcon Dive at this ceiling. Publishing
+         * its still-negative authored speed would make native HeadChk enter
+         * PlayerHeadCollision, bumping or shattering $51/$52 according to the
+         * hidden Mario size and creating the illusion that Up-B phases through
+         * blocks. A small non-upward value preserves the solid tile while
+         * resolve receives hit_ceiling. */
+        if (s_swept_block == SMASH64_SWEEP_CEILING &&
+            (fs->state == FL_FALCON_DIVE_GROUND ||
+             fs->state == FL_FALCON_DIVE_AIR))
+            ys = 1;
         if (ys >  127) ys =  127;
         if (ys < -128) ys = -128;
         g_ram[Player_Y_Speed] = (uint8_t)(int8_t)ys;
@@ -1491,6 +1564,14 @@ static int break_smb1_brick(int world_col, int tile_top)
     g_cpu.A = tile;
     PlayerHeadCollision();
     broke = (g_ram[addr] == 0x23);
+    if (broke) {
+        /* An ordinary Big-Mario $51/$52 shatter ultimately restores zero.
+         * Commit that collision value now: Falcon's broad attack must not
+         * depend on one of only two asynchronous block slots to make an
+         * already-blank cell traversable. The live slot still owns debris,
+         * score, sound, and its redundant later zero/VRAM replacement. */
+        g_ram[addr] = 0;
+    }
 
     memcpy(&g_ram[0x00], save_scratch, sizeof save_scratch);
     g_ram[PlayerSize] = save_size;
@@ -1517,8 +1598,13 @@ static int break_bricks_in_attack(double left, double right,
 
     for (int row = first_row; row <= last_row; ++row) {
         int tile_top = row * 16;
-        for (int col = first_col; col <= last_col; ++col)
+        for (int col = first_col; col <= last_col; ++col) {
             broken += break_smb1_brick(col, tile_top);
+            /* SMB1 has exactly two block-object slots. Do not overwrite one
+             * before BlockObjMT_Updater consumes it later this frame; an
+             * active multi-frame attack can take the next pair next frame. */
+            if (broken >= 2) return broken;
+        }
     }
     return broken;
 }

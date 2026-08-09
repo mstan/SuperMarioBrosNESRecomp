@@ -48,9 +48,8 @@ WAIT 4
 SCREENSHOT C:/temp/falcon_scripted_entrance_08.png
 WAIT 2
 
-# VerticalPipeEntry ($03) has its own planted pipe pose. This controlled
-# presentation branch supplements the real $07/$0752=2 vertical exit captured
-# by falcon_slot0_pipe_clearance_qa.script.
+# VerticalPipeEntry ($03) has its own planted pipe pose. The other pipe
+# dispatch variants are pinned independently below.
 LOAD_STATE C:/temp/falcon_visual_scripted_presentation_base.sav
 WAIT 2
 WRITE_RAM8 000E 03
@@ -62,5 +61,30 @@ WAIT 2
 WRITE_RAM8 03C4 20
 WAIT 2
 SCREENSHOT C:/temp/falcon_scripted_pipe_vertical_behind.png
+WAIT 2
+
+# SidePipeEntry ($02) and the vertical-exit flavor of PlayerEntrance ($07 with
+# AltEntranceControl=$02) are pinned directly so their presentation evidence
+# cannot depend on a mutable owner save or level geometry.
+LOAD_STATE C:/temp/falcon_visual_scripted_presentation_base.sav
+WAIT 2
+WRITE_RAM8 0086 31
+WRITE_RAM8 06DE 10
+WRITE_RAM8 000E 02
+ASSERT_RAM8 000E 02
+WAIT 2
+SCREENSHOT C:/temp/falcon_scripted_pipe_side_02.png
+WAIT 2
+
+LOAD_STATE C:/temp/falcon_visual_scripted_presentation_base.sav
+WAIT 2
+WRITE_RAM8 0752 02
+WRITE_RAM8 000E 07
+ASSERT_RAM8 000E 07
+ASSERT_RAM8 0752 02
+WAIT 2
+SCREENSHOT C:/temp/falcon_scripted_pipe_exit_02.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_scripted_pipe_exit_06.png
 WAIT 2
 EXIT 0
