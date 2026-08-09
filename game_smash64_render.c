@@ -4,9 +4,9 @@
  * screen-to-world convention.
  *
  * Deliberately thin and read-only against game_smash64.c: everything here
- * either reads game_smash64_active() or reads g_ram's screen-space player
- * mirror bytes, and only ever writes into the presentation framebuffer via
- * the voxel mesh API. Nothing here touches NES RAM, ownership, or physics.
+ * reads a presentation predicate or g_ram's screen-space player mirror bytes,
+ * and only ever writes into the presentation framebuffer via the voxel mesh
+ * API. Nothing here touches NES RAM, ownership, or physics.
  */
 #include "game_smash64_render.h"
 
@@ -84,9 +84,9 @@ static int smb1_sprite_height(void) {
  * sprite's own [x, x+8) x [y, y+height) extent -- every OAM piece of
  * Mario's metasprite falls inside it, and nothing else does.
  *
- * Self-gates on game_smash64_active(): with the mod off (or scripted), this
- * always returns 0 and ppu_render_frame draws every sprite exactly as
- * before.
+ * Self-gates on the ordinary and narrowly scoped scripted presentation
+ * predicates. With the mod off this always returns 0 and ppu_render_frame
+ * draws every sprite exactly as before.
  */
 static int smash64_suppress_player_sprite(int oam_slot, int x, int y,
                                           void *user) {
@@ -95,7 +95,8 @@ static int smash64_suppress_player_sprite(int oam_slot, int x, int y,
     (void)user;
 
     if (!game_smash64_active() &&
-        !game_smash64_death_presentation_active()) return 0;
+        !game_smash64_death_presentation_active() &&
+        !game_smash64_still_presentation_active()) return 0;
 
     player_x = g_ram[0x03AD];
     player_y = g_ram[0x03B8];
@@ -108,7 +109,7 @@ static int smash64_suppress_player_sprite(int oam_slot, int x, int y,
 void game_smash64_render_init(void) {
     /* The predicate self-gates, so registering it before the mod is ever
      * enabled changes nothing -- ppu_render_frame calls it every frame, and
-     * it returns 0 until game_smash64_active() does. */
+     * it returns 0 until a Falcon presentation predicate does. */
     ppu_renderer_set_sprite_suppress(smash64_suppress_player_sprite, NULL);
 }
 
@@ -186,12 +187,14 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
     float death_spin = 0.0f;
     float death_anim_frame = 0.0f;
     int death_active;
+    int still_active;
     float x0, x1, y0, y1, z0, z1;
     NesVoxelMeshVertex a, b, c, d, e, f, g, h;
 
     if (!framebuffer) return;
     death_active = game_smash64_death_presentation_active();
-    if (!game_smash64_active() && !death_active) {
+    still_active = game_smash64_still_presentation_active();
+    if (!game_smash64_active() && !death_active && !still_active) {
         s_falcon_death_was_active = 0;
         s_falcon_death_frame = 0;
         return;
@@ -309,7 +312,9 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
               ? game_smash64_assets_draw_death(
                     cx, death_center_y, output_scale, death_spin,
                     death_anim_frame)
-              : game_smash64_assets_draw(cx, foot_y, output_scale))) {
+              : (still_active
+                     ? game_smash64_assets_draw_idle(cx, foot_y, output_scale)
+                     : game_smash64_assets_draw(cx, foot_y, output_scale)))) {
         draw_cube_face(e, f, g, h, 1.00f);  /* top */
         draw_cube_face(a, b, f, e, 0.85f);  /* front (z0, camera-facing) */
         draw_cube_face(d, c, g, h, 0.45f);  /* back */

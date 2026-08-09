@@ -1,0 +1,47 @@
+LOG falcon-visual-transform-qa-world-1-1
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+ASSERT_RAM8 000E 08
+WAIT 120
+
+# Exercise the three Ghidra-confirmed scripted presentation states directly.
+# SMB1 still owns each routine; the renderer must hold one planted Falcon pose
+# and suppress every Mario metasprite frame until ordinary control resumes.
+WRITE_RAM8 000E 09
+ASSERT_RAM8 000E 09
+WAIT 2
+SCREENSHOT C:/temp/falcon_transform_mushroom_00.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_transform_mushroom_08.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_transform_mushroom_16.png
+
+WRITE_RAM8 000E 08
+WAIT 2
+WRITE_RAM8 000E 0A
+ASSERT_RAM8 000E 0A
+WAIT 2
+SCREENSHOT C:/temp/falcon_transform_damage_00.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_transform_damage_08.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_transform_damage_16.png
+
+WRITE_RAM8 000E 08
+WAIT 2
+WRITE_RAM8 000E 0C
+ASSERT_RAM8 000E 0C
+WAIT 2
+SCREENSHOT C:/temp/falcon_transform_fireflower_00.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_transform_fireflower_08.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_transform_fireflower_16.png
+
+WRITE_RAM8 000E 08
+WAIT 2
+ASSERT_RAM8 000E 08
+EXIT 0

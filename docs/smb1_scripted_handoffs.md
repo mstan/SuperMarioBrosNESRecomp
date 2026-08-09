@@ -89,6 +89,18 @@ loss, delay, and respawn remain untouched. The consecutive frames in
 absence of Mario, while `tests/falcon_tier4_death_respawn_qa.script` still
 waits for native subroutine `$08` to prove the ordinary respawn handoff.
 
+**Power-up and injury scripts have a visually inert exception.** The same
+ownership rule applies to `PlayerChangeSize` (`$09`), `PlayerInjuryBlink`
+(`$0A`), and `PlayerFireFlower` (`$0C`): every controller/physics hook still
+declines. While one of those values is active,
+`game_smash64_still_presentation_active()` only keeps Mario's metasprite
+suppressed and draws Falcon at planted Wait frame 39. SMB1 continues changing
+`PlayerSize`, `PlayerStatus`, timers, and collision exactly as before; Falcon
+does not shrink, grow, blink, or palette-cycle. The nine fresh frames in
+`C:\temp\falcon_transform_contact.png` cover all three subroutines, and
+`tests/falcon_visual_transform_qa.script` asserts the dispatch values before
+each capture and restores ordinary `$08` control afterward.
+
 ---
 
 ## 2. The audit table
@@ -108,10 +120,10 @@ each value is active.
 | 6 | `PlayerLoseLife` | 2854 | decrements `NumberofLives` (2860), sets `OperMode`/`GameOverModeValue` if out of lives | `SCRIPTED` | **NEEDS ADAPTER (shipped)** — reseed on the respawn-edge re-entry |
 | 7 | `PlayerEntrance` | 5432 | autowalk-in via `AutoControlPlayer` (5439, 5448); finishes through `PlayerRdy` (5480-5483) | `SCRIPTED` for the whole autowalk | **NEEDS ADAPTER (shipped)** — reseed on the transition to `GameEngineSubroutine=8`; this is the "entrance/`PlayerEntrance`" item |
 | **8** | **`PlayerCtrlRoutine`** | 5496 | the ordinary-play value; `SaveJoyp` writes `A_B_Buttons` here every frame | `FOREIGN` (subject to the `SwimmingFlag` and `Player_State>2` sub-gates below) | **WORKS NATIVELY as the FOREIGN condition** — this is the value everything else in `smb1_player_adapter.md` is written against |
-| 9 | `PlayerChangeSize` | 5670 | gated on `TimerControl` reaching `$f8`/`$c4` (5672, 5675); flips `PlayerSize` via `InitChangeSize` (5691-5698) | `SCRIPTED` for the whole grow/shrink animation | **NEEDS ADAPTER (shipped)** — reseed on return; this is the "grow/shrink" item |
-| 10 | `PlayerInjuryBlink` | 5682 | gated on `TimerControl` (5684, 5686); falls through to `PlayerCtrlRoutine` (5688) between blink phases | `SCRIPTED` while blinking; note it *calls into* `PlayerCtrlRoutine` itself mid-sequence, which is the routine `decide_ownership()` also gates — so even that inner call declines correctly | **NEEDS ADAPTER (shipped)** — this is the "injury blink" item |
+| 9 | `PlayerChangeSize` | 5670 | gated on `TimerControl` reaching `$f8`/`$c4` (5672, 5675); flips `PlayerSize` via `InitChangeSize` (5691-5698) | `SCRIPTED` for the whole grow/shrink animation; render-only planted Falcon hold | **NEEDS ADAPTER (shipped)** — reseed on return; this is the "grow/shrink" item |
+| 10 | `PlayerInjuryBlink` | 5682 | gated on `TimerControl` (5684, 5686); falls through to `PlayerCtrlRoutine` (5688) between blink phases | `SCRIPTED` while blinking; render-only planted Falcon hold; the inner `PlayerCtrlRoutine` still declines | **NEEDS ADAPTER (shipped)** — this is the "injury blink" item |
 | 11 | `PlayerDeath` | 5704 | gated on `TimerControl` reaching `$f0` (5706); calls `KillPlayer` (11365) which sets `Player_State=1` via `SetKRout` (11372, 11353-11354) and `Player_Y_Speed=$fc` (11370) | `SCRIPTED`; render-only Falcon tumble, no ownership change | **NEEDS ADAPTER (shipped)** — see §1's measured death-edge finding; self-heals by accident, reseed makes it a contract instead |
-| 12 | `PlayerFireFlower` | 5717 | gated on `TimerControl==$c0` (5719); cycles `Player_SprAttrib` palette bits (5725-5731) | `SCRIPTED` for the whole freeze-and-flash | **NEEDS ADAPTER (shipped)** — this is the "fireflower freeze" item |
+| 12 | `PlayerFireFlower` | 5717 | gated on `TimerControl==$c0` (5719); cycles `Player_SprAttrib` palette bits (5725-5731) | `SCRIPTED` for the whole freeze-and-flash; render-only planted Falcon hold | **NEEDS ADAPTER (shipped)** — this is the "fireflower freeze" item |
 
 ### 2.1 `Player_State $001D` — the second, finer-grained gate
 

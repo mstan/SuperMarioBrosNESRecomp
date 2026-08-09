@@ -14,6 +14,11 @@
 int game_smash64_assets_draw(float center_x, float foot_y,
                              float output_scale);
 
+/* Draw the planted midpoint of Falcon's grounded Wait window. Used while
+ * SMB1 owns a scripted power-up or injury transformation. */
+int game_smash64_assets_draw_idle(float center_x, float foot_y,
+                                  float output_scale);
+
 /* Draw Falcon around a center point in the aerial tumble used by the
  * presentation-only SMB1 death replacement. spin_radians rotates the whole
  * fighter in the 2D screen plane; SMB1 remains authoritative for life loss. */

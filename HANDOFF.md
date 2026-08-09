@@ -21,6 +21,9 @@ build and visually inspected, not accepted from script exit codes alone:
 - `C:\temp\falcon_death_contact.png`: eight consecutive death frames showing
   Falcon rotating through distinct Star-KO-style angles while falling, with no
   native Mario death sprite visible.
+- `C:\temp\falcon_transform_contact.png`: three separated frames each for
+  mushroom/grow, damage/injury, and fire-flower scripts; all nine hold the same
+  planted Falcon pose with no Mario transformation frame visible.
 
 The fixes came from BattleShip's Smash 64 implementation rather than visual
 guesswork. Costume frame zero now evaluates Captain's material-animation
@@ -48,6 +51,14 @@ accelerating downward screen-space path. BattleShip's `DeadUpStar` status is
 the reference: it uses the common `DamageFall` motion and a 180-frame depth
 translation. Depth is unreadable in SMB1's 2D view, so downward travel is the
 documented host adaptation.
+
+SMB1's other player transformations are also presentation-only exceptions.
+During `PlayerChangeSize` (`$09`), `PlayerInjuryBlink` (`$0A`), and
+`PlayerFireFlower` (`$0C`), SMB1 retains exclusive ownership of timers, size,
+status, collision, and progression. The renderer suppresses Mario and holds
+Falcon at source Wait frame 39 (the midpoint of the planted 37..41 window), so
+mushroom pickup, shrinking after damage, blinking, and fire-flower palette
+cycling deliberately produce no Falcon visual change.
 
 Captain Falcon's implementation milestone ladder is present—locomotion, host
 collision/handoffs, corrected model/animation playback, representative combat,
@@ -203,6 +214,7 @@ Key committed evidence/docs:
 - `tests/falcon_visual_locomotion_qa.script`
 - `tests/falcon_visual_idle_loop_qa.script`
 - `tests/falcon_visual_idle_ground_qa.script`
+- `tests/falcon_visual_transform_qa.script`
 - `tests/falcon_visual_title_qa.script`
 - `tests/falcon_visual_combat_qa.script`
 - `tests/falcon_visual_aerial_sequence_qa.script`
@@ -243,6 +255,9 @@ message and a smoke run exits cleanly.
   local visual diagnosis; it must not be set for acceptance runs.
 - The death tumble is presentation-only. Never move ownership of
   `GameEngineSubroutine == $0B` away from SMB1 to implement it.
+- Grow/shrink, injury blink, and fire-flower are intentionally visually inert
+  for Falcon. Their `$09/$0A/$0C` routines must remain `SCRIPTED`; only sprite
+  suppression and the planted Falcon overlay persist through them.
 - Never accept presentation from counters or load logs alone. Run
   `tests/falcon_visual_acceptance.script` and inspect all five native-resolution
   screenshots under `C:\temp\falcon_accept_*.png`; a coherent, recognizable

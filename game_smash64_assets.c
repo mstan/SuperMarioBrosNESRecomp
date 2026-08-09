@@ -715,7 +715,7 @@ static NesVoxelMeshVertex render_death_vertex(
 }
 
 static int draw_model(float center_x, float anchor_y, float output_scale,
-                      int death_mode, float spin_radians,
+                      int death_mode, int still_mode, float spin_radians,
                       float animation_frame)
 {
     const ForeignState *state;
@@ -745,14 +745,19 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
      * it to the blob. */
     animation = death_mode
         ? find_animation(&s_model, "DamageFlyTop")
-        : find_animation(&s_model, animation_for_state(state->state));
+        : find_animation(&s_model,
+                         still_mode ? "Wait"
+                                    : animation_for_state(state->state));
     if (death_mode && !animation)
         animation = find_animation(&s_model, "FallAerial");
     if (!env_enabled("NESRECOMP_FALCON_BIND_POSE"))
         apply_animation(&s_model, animation,
                         death_mode
                             ? animation_frame
-                            : presentation_animation_frame(state),
+                            : (still_mode
+                                   ? FALCON_WAIT_GROUNDED_FIRST +
+                                         FALCON_WAIT_GROUNDED_SPAN * 0.5f
+                                   : presentation_animation_frame(state)),
                         t, r, s);
     build_matrices(&s_model, t, r, s, world);
     /* Figatree root translations are absolute fighter-pose coordinates, not
@@ -825,13 +830,19 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
 int game_smash64_assets_draw(float center_x, float foot_y,
                              float output_scale)
 {
-    return draw_model(center_x, foot_y, output_scale, 0, 0.0f, 0.0f);
+    return draw_model(center_x, foot_y, output_scale, 0, 0, 0.0f, 0.0f);
+}
+
+int game_smash64_assets_draw_idle(float center_x, float foot_y,
+                                  float output_scale)
+{
+    return draw_model(center_x, foot_y, output_scale, 0, 1, 0.0f, 0.0f);
 }
 
 int game_smash64_assets_draw_death(float center_x, float center_y,
                                    float output_scale, float spin_radians,
                                    float animation_frame)
 {
-    return draw_model(center_x, center_y, output_scale, 1, spin_radians,
+    return draw_model(center_x, center_y, output_scale, 1, 0, spin_radians,
                       animation_frame);
 }

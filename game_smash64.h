@@ -45,6 +45,11 @@ int game_smash64_active(void);
  * Mario death metasprite with a falling Smash-style tumble while this is 1. */
 int game_smash64_death_presentation_active(void);
 
+/* 1 during SMB1's grow/shrink, injury-blink, and fire-flower scripts. These
+ * mechanics remain native, but presentation holds Falcon in a planted pose
+ * instead of exposing Mario's transformation frames. */
+int game_smash64_still_presentation_active(void);
+
 /* Frames on which Falcon supplied the horizontal velocity. Lets a scripted
  * run assert the takeover happened rather than inferring it from pixels. */
 unsigned long game_smash64_owned_frames(void);

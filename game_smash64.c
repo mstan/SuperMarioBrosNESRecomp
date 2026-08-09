@@ -86,6 +86,10 @@
 /* value is a scripted sequence that must stay native.                  */
 /* ------------------------------------------------------------------ */
 #define SMB1_GAMEMODE_PLAYER_CTRL 8
+#define SMB1_GAMEMODE_CHANGE_SIZE 9
+#define SMB1_GAMEMODE_INJURY_BLINK 10
+#define SMB1_GAMEMODE_PLAYER_DEATH 11
+#define SMB1_GAMEMODE_FIRE_FLOWER 12
 /* OperModeExecutionTree $8212 reads OperMode $0770 and dispatches value 0 to
  * TitleScreenMode, 1 to GameMode, 2 to VictoryMode, and 3 to GameOverMode.
  * Ghidra confirms the $8212 read of $0770.  GameEngineSubroutine can retain 8
@@ -1708,7 +1712,19 @@ int game_smash64_death_presentation_active(void)
 {
     return s_enabled && s_selected &&
            g_ram[OperMode] == SMB1_OPER_MODE_GAME &&
-           g_ram[GameEngineSubroutine] == 11;
+           g_ram[GameEngineSubroutine] == SMB1_GAMEMODE_PLAYER_DEATH;
+}
+
+int game_smash64_still_presentation_active(void)
+{
+    uint8_t subroutine;
+    if (!s_enabled || !s_selected ||
+        g_ram[OperMode] != SMB1_OPER_MODE_GAME)
+        return 0;
+    subroutine = g_ram[GameEngineSubroutine];
+    return subroutine == SMB1_GAMEMODE_CHANGE_SIZE ||
+           subroutine == SMB1_GAMEMODE_INJURY_BLINK ||
+           subroutine == SMB1_GAMEMODE_FIRE_FLOWER;
 }
 
 void game_smash64_init(void)
