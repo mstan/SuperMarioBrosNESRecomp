@@ -5,6 +5,7 @@ WAIT 6
 RELEASE START
 WAIT_RAM8 000E 08
 ASSERT_RAM8 000E 08
+SAVE_STATE C:/temp/falcon_death_route_base.sav
 
 # Drive real player-controlled Falcon through World 1-1. Periodic jumps clear
 # the early pipes; continuous rightward movement then reaches a native pit.
@@ -72,5 +73,49 @@ WAIT_RAM8 000E 08
 WAIT 30
 ASSERT_RAM8 000E 08
 SCREENSHOT C:/temp/falcon_qa_respawn.png
+WAIT 2
+
+# A genuine return to ordinary control above must reset the presentation latch.
+# Restore the same deterministic pre-pit world state, then prove a separate
+# death receives one fresh tumble and remains hidden after leaving the view.
+LOAD_STATE C:/temp/falcon_death_route_base.sav
+WAIT 2
+HOLD RIGHT
+WAIT 25
+HOLD A
+WAIT 12
+RELEASE A
+WAIT 35
+HOLD A
+WAIT 12
+RELEASE A
+WAIT 35
+HOLD A
+WAIT 12
+RELEASE A
+WAIT 35
+HOLD A
+WAIT 12
+RELEASE A
+WAIT 35
+HOLD A
+WAIT 12
+RELEASE A
+WAIT 90
+WAIT_RAM8 000E 0B
+RELEASE RIGHT
+SCREENSHOT C:/temp/falcon_qa_second_death_00.png
+WAIT 12
+SCREENSHOT C:/temp/falcon_qa_second_death_12.png
+WAIT 12
+SCREENSHOT C:/temp/falcon_qa_second_death_24.png
+WAIT 40
+SCREENSHOT C:/temp/falcon_qa_second_death_64.png
+WAIT 80
+SCREENSHOT C:/temp/falcon_qa_second_death_144.png
+WAIT_RAM8 000E 08
+WAIT 30
+ASSERT_RAM8 000E 08
+SCREENSHOT C:/temp/falcon_qa_second_respawn.png
 WAIT 2
 EXIT 0

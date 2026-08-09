@@ -24,6 +24,11 @@ build and visually inspected, not accepted from script exit codes alone:
   rest of the native death delay: after the first fall leaves the screen,
   Falcon stays hidden through every late frame and reappears only in the final
   respawn panel.
+- `C:\temp\falcon_second_death_validation_contact.png`: a deterministic
+  two-life sequence. The first respawn returns normal Falcon control; the
+  second independent pit death starts a fresh tumble, remains empty at late
+  frames 64 and 144 after Falcon leaves the view, and ends on a second normal
+  Falcon respawn. This closes the reported repeat-from-the-sky regression.
 - `C:\temp\falcon_transform_contact.png`: three separated frames each for
   mushroom/grow, damage/injury, and fire-flower scripts; all nine hold the same
   planted Falcon pose with no Mario transformation frame visible.
