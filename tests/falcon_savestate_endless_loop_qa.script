@@ -1,0 +1,25 @@
+LOG falcon-savestate-endless-loop-qa-world-1-2
+WAIT 60
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 01
+WRITE_RAM8 760 01
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 120
+ASSERT_RAM8 000E 08
+SAVE_STATE C:/temp/falcon_savestate_endless_loop_qa.sav
+WAIT 2
+LOAD_STATE C:/temp/falcon_savestate_endless_loop_qa.sav
+
+# SMB1 saves while its native main loop is parked at the generated $8057
+# `JMP $8057` frame driver. The explicit-resume interpreter previously kept
+# that self-loop for itself and terminated at its two-million-instruction cap.
+# Nine hundred post-load frames comfortably cross that old boundary; the game
+# must still be in ordinary control and exit only at this script's request.
+WAIT 900
+ASSERT_RAM8 000E 08
+SCREENSHOT C:/temp/falcon_savestate_endless_loop_survived.png
+WAIT 2
+EXIT 0

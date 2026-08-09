@@ -43,6 +43,13 @@ build and visually inspected, not accepted from script exit codes alone:
   short-hop frames. The fighter uses one bind-reference scale throughout, so
   crouched and extended source poses no longer make the whole model pump or
   stretch.
+- `C:\temp\falcon_watchdog_fix_contact.png` and
+  `falcon_savestate_endless_loop_survived.png`: the owner's exact slot and a
+  durable World 1-2 state both resume at SMB1's `$8057` frame-driver loop and
+  continue far beyond the former two-million-instruction watchdog boundary.
+  The apparent Falcon-Punch crash was a save-resume interpreter bug, not enemy
+  combat; engine commit `52af090` hands a generated direct self-loop back to
+  native execution without weakening the watchdog.
 
 The fixes came from BattleShip's Smash 64 implementation rather than visual
 guesswork. Costume frame zero now evaluates Captain's material-animation
@@ -250,6 +257,7 @@ Key committed evidence/docs:
 - `tests/falcon_visual_aerial_sequence_qa.script`
 - `tests/falcon_tier4_death_respawn_qa.script`
 - `tests/falcon_tier4_mod_off.script`
+- `tests/falcon_savestate_endless_loop_qa.script`
 
 The M8 live trace loads 7/7 clips and queues every mapping. During a Punch
 windup save/load, the already-consumed "Falcon" entry call does not replay;
@@ -312,6 +320,11 @@ message and a smoke run exits cleanly.
   then restore the feature to `true`.
 - `nes_foreign_sweep` is not used by SMB1 because the host needs its own
   inclusive per-pixel collision semantics.
+- Save states commonly capture SMB1 at permanent loop `$8057`. Do not keep a
+  generated direct self-loop in the explicit-resume interpreter: unlike a
+  returning tail, it has no interpreted ancestor to preserve. Engine commit
+  `52af090` probes that exact resume case and re-enters the generated loop;
+  `tests/falcon_savestate_endless_loop_qa.script` guards the integration.
 
 ## Verification bar
 
