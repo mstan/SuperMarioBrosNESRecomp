@@ -1,0 +1,377 @@
+LOG falcon-visual-upb-qa-world-1-1
+WAIT 60
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 00
+WRITE_RAM8 760 01
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+ASSERT_RAM8 000E 08
+WAIT 120
+SAVE_STATE C:/temp/falcon_upb_contact_base.sav
+# Keep clean launch captures at the initial spawn. Moving right puts Falcon's
+# frame-13 catch union into the naturally spawned Goombas and turns a launch
+# comparison into Catch/Throw instead.
+SAVE_STATE C:/temp/falcon_upb_right_base.sav
+
+# Ground FalconDive/1658, right-facing, through the exact source event frames.
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+SCREENSHOT C:/temp/falcon_upb_ground_right_00.png
+# The controller emits force_airborne once. Falcon must remain planted while
+# the source root accumulates less than one NES pixel, without cancelling the
+# future lift.
+WAIT 10
+ASSERT_RAM8 00CE B0
+SAVE_STATE C:/temp/falcon_upb_departure_latch.sav
+WAIT 2
+SCREENSHOT C:/temp/falcon_upb_ground_right_12.png
+WAIT 1
+SCREENSHOT C:/temp/falcon_upb_ground_right_13.png
+WAIT 1
+SCREENSHOT C:/temp/falcon_upb_ground_right_14.png
+WAIT 6
+SCREENSHOT C:/temp/falcon_upb_ground_right_20.png
+WAIT 14
+SCREENSHOT C:/temp/falcon_upb_ground_right_34.png
+WAIT 30
+SCREENSHOT C:/temp/falcon_upb_ground_right_64.png
+WAIT 2
+
+# The renderer presents asynchronously, so adjacent SCREENSHOT commands can
+# coalesce. Reload for isolated source-frame 12 and 13 evidence.
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 12
+SCREENSHOT C:/temp/falcon_upb_ground_right_12.png
+WAIT 2
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 13
+SCREENSHOT C:/temp/falcon_upb_ground_right_13.png
+WAIT 2
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 14
+SCREENSHOT C:/temp/falcon_upb_ground_right_14.png
+WAIT 2
+
+# Mirrored ground launch.
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD LEFT
+WAIT 8
+RELEASE LEFT
+WAIT 4
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+SCREENSHOT C:/temp/falcon_upb_ground_left_00.png
+WAIT 12
+SCREENSHOT C:/temp/falcon_upb_ground_left_12.png
+WAIT 1
+SCREENSHOT C:/temp/falcon_upb_ground_left_13.png
+WAIT 1
+SCREENSHOT C:/temp/falcon_upb_ground_left_14.png
+WAIT 6
+SCREENSHOT C:/temp/falcon_upb_ground_left_20.png
+WAIT 14
+SCREENSHOT C:/temp/falcon_upb_ground_left_34.png
+WAIT 30
+SCREENSHOT C:/temp/falcon_upb_ground_left_64.png
+WAIT 2
+
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD LEFT
+WAIT 8
+RELEASE LEFT
+WAIT 4
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 12
+SCREENSHOT C:/temp/falcon_upb_ground_left_12.png
+WAIT 2
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD LEFT
+WAIT 8
+RELEASE LEFT
+WAIT 4
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 13
+SCREENSHOT C:/temp/falcon_upb_ground_left_13.png
+WAIT 2
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD LEFT
+WAIT 8
+RELEASE LEFT
+WAIT 4
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 14
+SCREENSHOT C:/temp/falcon_upb_ground_left_14.png
+WAIT 2
+
+# Air FalconDiveEnd2/1661 uses a distinct authored launch.
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD A
+WAIT 5
+RELEASE A
+WAIT 8
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+SCREENSHOT C:/temp/falcon_upb_air_right_00.png
+WAIT 12
+SCREENSHOT C:/temp/falcon_upb_air_right_12.png
+WAIT 1
+SCREENSHOT C:/temp/falcon_upb_air_right_13.png
+WAIT 1
+SCREENSHOT C:/temp/falcon_upb_air_right_14.png
+WAIT 6
+SCREENSHOT C:/temp/falcon_upb_air_right_20.png
+WAIT 14
+SCREENSHOT C:/temp/falcon_upb_air_right_34.png
+WAIT 30
+SCREENSHOT C:/temp/falcon_upb_air_right_64.png
+WAIT 2
+
+# Mirrored aerial launch proves the distinct 1661 pose is side-correct too.
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD LEFT
+WAIT 8
+RELEASE LEFT
+WAIT 4
+HOLD A
+WAIT 5
+RELEASE A
+WAIT 8
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+SCREENSHOT C:/temp/falcon_upb_air_left_00.png
+WAIT 14
+SCREENSHOT C:/temp/falcon_upb_air_left_14.png
+WAIT 6
+SCREENSHOT C:/temp/falcon_upb_air_left_20.png
+WAIT 14
+SCREENSHOT C:/temp/falcon_upb_air_left_34.png
+WAIT 30
+SCREENSHOT C:/temp/falcon_upb_air_left_64.png
+WAIT 2
+
+# Hold opposite through source frame 13 to exercise the one-time reversal.
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+HOLD LEFT
+WAIT 11
+SCREENSHOT C:/temp/falcon_upb_turn_12.png
+WAIT 1
+SCREENSHOT C:/temp/falcon_upb_turn_13.png
+WAIT 1
+SCREENSHOT C:/temp/falcon_upb_turn_14.png
+RELEASE LEFT
+WAIT 2
+
+# Isolate the two source frames preceding the already captured post-turn pose.
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+HOLD LEFT
+WAIT 11
+SCREENSHOT C:/temp/falcon_upb_turn_12.png
+WAIT 2
+RELEASE LEFT
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+HOLD LEFT
+WAIT 12
+SCREENSHOT C:/temp/falcon_upb_turn_13.png
+WAIT 2
+RELEASE LEFT
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+HOLD LEFT
+WAIT 13
+SCREENSHOT C:/temp/falcon_upb_turn_14.png
+WAIT 2
+RELEASE LEFT
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+HOLD LEFT
+WAIT 20
+SCREENSHOT C:/temp/falcon_upb_turn_20.png
+WAIT 2
+RELEASE LEFT
+
+# Adapter v5 preserves the subpixel departure bridge. From this saved startup
+# point, seven resumed script frames reach FalconDive's frame-13 root burst.
+LOAD_STATE C:/temp/falcon_upb_departure_latch.sav
+ASSERT_RAM8 00CE B0
+WAIT 7
+ASSERT_RAM8 00CE A6
+
+# A clean miss must visibly use FallSpecial, then the source's forced
+# LandingFallSpecial route at 0.65x rather than ordinary landing recovery.
+LOAD_STATE C:/temp/falcon_upb_right_base.sav
+WAIT 2
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 65
+SCREENSHOT C:/temp/falcon_upb_fallspecial.png
+WAIT_RAM8 001D 00
+SCREENSHOT C:/temp/falcon_upb_special_landing_00.png
+WAIT 8
+SCREENSHOT C:/temp/falcon_upb_special_landing_08.png
+WAIT 10
+SCREENSHOT C:/temp/falcon_upb_special_landing_done.png
+WAIT 2
+
+# One supported Goomba in the launch catch union. The adapter must defeat only
+# slot 0 once, leave the overlapping slot 1 target alone, then Falcon must
+# visibly play Catch and Throw. Spawn both at source frame 12 so ordinary SMB
+# movement cannot carry them out of the one-frame forward tip before it opens.
+LOAD_STATE C:/temp/falcon_upb_contact_base.sav
+WAIT 2
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 11
+WRITE_RAM8 000F 01
+WRITE_RAM8 0010 01
+WRITE_RAM8 0016 06
+WRITE_RAM8 0017 06
+WRITE_RAM8 001E 00
+WRITE_RAM8 001F 00
+WRITE_RAM8 006E 00
+WRITE_RAM8 006F 00
+WRITE_RAM8 0087 3C
+WRITE_RAM8 0088 3C
+WRITE_RAM8 00B6 01
+WRITE_RAM8 00B7 01
+WRITE_RAM8 00CF 80
+WRITE_RAM8 00D0 80
+WAIT 2
+SCREENSHOT C:/temp/falcon_upb_contact_13.png
+WAIT 2
+WAIT 2
+DUMP_RAM 001E 02
+# SMB's ordinary enemy update advances both fresh Goombas to state 1 before
+# the catch check. Slot 1 must remain there; the stale-volume regression set
+# its defeated bit and produced a second FALCON_DIVE_CATCH combat event.
+ASSERT_RAM8 001F 01
+WAIT 1
+DUMP_RAM 001E 02
+ASSERT_RAM8 001F 01
+WAIT 2
+DUMP_RAM 001E 02
+ASSERT_RAM8 001F 01
+WAIT 3
+DUMP_RAM 001E 02
+ASSERT_RAM8 001F 01
+WAIT 2
+DUMP_RAM 001E 02
+# Slot 1 is the first still-overlapping target after SMB's movement step in
+# this deterministic setup. Exactly it is defeated; slot 0 remains ordinary.
+ASSERT_RAM8 001E 01
+ASSERT_RAM8 001F 22
+# This snapshot is deliberately between the native one-target defeat and the
+# next controller resolve. It covers AdapterSaveFields.contact_pending.
+SAVE_STATE C:/temp/falcon_upb_contact_pending.sav
+# Drain the adapter's one-shot confirmation into Falcon before snapshotting,
+# so this is a real Catch-state save rather than a pending native contact.
+WAIT 2
+SAVE_STATE C:/temp/falcon_upb_catch_active.sav
+SCREENSHOT C:/temp/falcon_upb_catch_01.png
+WAIT 7
+SCREENSHOT C:/temp/falcon_upb_catch_08.png
+WAIT 7
+SCREENSHOT C:/temp/falcon_upb_catch_15.png
+WAIT 1
+SCREENSHOT C:/temp/falcon_upb_throw_00.png
+WAIT 15
+SCREENSHOT C:/temp/falcon_upb_throw_15.png
+WAIT 25
+SCREENSHOT C:/temp/falcon_upb_throw_40.png
+WAIT 19
+SCREENSHOT C:/temp/falcon_upb_throw_59.png
+DUMP_RAM 000F 20
+ASSERT_RAM8 000E 08
+LOAD_STATE C:/temp/falcon_upb_catch_active.sav
+SCREENSHOT C:/temp/falcon_upb_catch_reloaded.png
+WAIT 2
+LOAD_STATE C:/temp/falcon_upb_contact_pending.sav
+WAIT 3
+ASSERT_RAM8 001E 01
+ASSERT_RAM8 001F 22
+SCREENSHOT C:/temp/falcon_upb_pending_reloaded.png
+WAIT 2
+EXIT 0

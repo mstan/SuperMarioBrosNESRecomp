@@ -38,7 +38,7 @@ endif()
 enable_testing()
 foreach(trace run_right dash_turn jump fast_fall short_hop
               host_launch host_ledge_fall jump_height_split
-              host_impulse combat downb_transitions audio)
+              host_impulse combat downb_transitions upb audio)
     add_test(NAME falcon_${trace}
              COMMAND falcon_harness
                      ${CMAKE_CURRENT_SOURCE_DIR}/${trace}.script

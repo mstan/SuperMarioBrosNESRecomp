@@ -48,6 +48,16 @@
 #define A_JUMPS_MAX           2
 #define A_DASH_TO_RUN        16.0
 
+/* Captain Falcon US Falcon Dive attributes. The launch itself is TransN root
+ * motion; these values govern only the small steerable velocity added to it.
+ * ftcaptain.h / ftcaptainspecialhi.c. */
+#define DIVE_TURN_STICK_MIN          18
+#define DIVE_AIR_ACCEL_MUL         1.1
+#define DIVE_AIR_SPEED_MAX_MUL     0.8
+#define DIVE_FALL_DRIFT            0.72
+#define DIVE_LANDING_ANIM_RATE     0.65
+#define DIVE_LANDING_SOURCE_LENGTH 11.0
+
 /* ------------------------------------------------------------------ */
 /* Shared constants — src/ft/ftcommon.h, ftphysics.h, include/macros.h */
 /* ------------------------------------------------------------------ */
@@ -139,6 +149,13 @@ static const double s_state_length[FL_STATE_COUNT] = {
     [FL_FALCON_KICK_LANDING]     = 45.0,
     [FL_FALCON_KICK_AIR]         = 50.0,
     [FL_FALCON_KICK_BOUND]       = 60.0,
+    [FL_FALCON_DIVE_GROUND]      = 65.0,
+    [FL_FALCON_DIVE_AIR]         = 65.0,
+    [FL_FALCON_DIVE_CATCH]       = 16.0,
+    [FL_FALCON_DIVE_THROW]       = 60.0,
+    [FL_FALCON_DIVE_FALL]        = 0.0,
+    [FL_FALCON_DIVE_LANDING]     =
+        DIVE_LANDING_SOURCE_LENGTH / DIVE_LANDING_ANIM_RATE,
 };
 
 /* Turn / TurnRun set motion flag1 from the script at these frames —
@@ -180,6 +197,12 @@ const char *falcon_state_name(int state)
         case FL_FALCON_KICK_LANDING: return "FALCON_KICK_LANDING";
         case FL_FALCON_KICK_AIR: return "FALCON_KICK_AIR";
         case FL_FALCON_KICK_BOUND: return "FALCON_KICK_BOUND";
+        case FL_FALCON_DIVE_GROUND: return "FALCON_DIVE_GROUND";
+        case FL_FALCON_DIVE_AIR: return "FALCON_DIVE_AIR";
+        case FL_FALCON_DIVE_CATCH: return "FALCON_DIVE_CATCH";
+        case FL_FALCON_DIVE_THROW: return "FALCON_DIVE_THROW";
+        case FL_FALCON_DIVE_FALL: return "FALCON_DIVE_FALL";
+        case FL_FALCON_DIVE_LANDING: return "FALCON_DIVE_LANDING";
     }
     return "?";
 }
@@ -204,7 +227,10 @@ static int is_air_state(int s)
            s == FL_ATTACK_AIR_N || s == FL_ATTACK_AIR_F ||
            s == FL_ATTACK_AIR_B || s == FL_FALCON_PUNCH_AIR ||
            s == FL_FALCON_KICK_GROUND_AIR ||
-           s == FL_FALCON_KICK_AIR || s == FL_FALCON_KICK_BOUND;
+           s == FL_FALCON_KICK_AIR || s == FL_FALCON_KICK_BOUND ||
+           s == FL_FALCON_DIVE_GROUND || s == FL_FALCON_DIVE_AIR ||
+           s == FL_FALCON_DIVE_CATCH || s == FL_FALCON_DIVE_THROW ||
+           s == FL_FALCON_DIVE_FALL;
 }
 
 /* True once the state's animation has run out. Length 0 means looping. */
@@ -333,6 +359,61 @@ static void phys_air_tick(FalconFighter *f, const FalconInputRaw *in)
 
     if (!phys_check_clamp_air_x_dec(f, A_AIR_SPEED_MAX_X)) {
         phys_air_drift_stick(f, in->stick_x);
+        phys_air_friction(f);
+    }
+}
+
+/* ftCaptainSpecialHiProcPhysics stores this drift separately, applies the
+ * animation's TransN delta, then adds the stored velocity back. Keeping the
+ * components separate prevents root motion from accumulating as drift on the
+ * next frame. */
+static void phys_falcon_dive_launch(FalconFighter *f,
+                                    const FalconInputRaw *in)
+{
+    const double cap = A_AIR_SPEED_MAX_X * DIVE_AIR_SPEED_MAX_MUL;
+
+    if (fabs(f->specialhi_vel_x) > cap) {
+        f->specialhi_vel_x += f->specialhi_vel_x >= 0.0 ? -1.0 : 1.0;
+        if (fabs(f->specialhi_vel_x) < cap)
+            f->specialhi_vel_x = f->specialhi_vel_x >= 0.0 ? cap : -cap;
+    } else {
+        if (iabs(in->stick_x) >= C_AIRDRIFT_CLAMP_RANGE_MIN) {
+            f->specialhi_vel_x += (double)in->stick_x * A_AIR_ACCEL *
+                                  DIVE_AIR_ACCEL_MUL;
+            if (f->specialhi_vel_x < -cap) f->specialhi_vel_x = -cap;
+            else if (f->specialhi_vel_x > cap) f->specialhi_vel_x = cap;
+        }
+        if (f->specialhi_vel_x < 0.0) {
+            f->specialhi_vel_x += A_AIR_FRICTION;
+            if (f->specialhi_vel_x > 0.0) f->specialhi_vel_x = 0.0;
+        } else {
+            f->specialhi_vel_x -= A_AIR_FRICTION;
+            if (f->specialhi_vel_x < 0.0) f->specialhi_vel_x = 0.0;
+        }
+    }
+    f->specialhi_vel_y = 0.0;
+    f->vel_air_x = f->specialhi_vel_x;
+    f->vel_air_y = f->specialhi_vel_y;
+}
+
+/* ftCommonFallSpecial stores attr->air_speed_max_x * 0.72 as its horizontal
+ * CLAMP. It retains the ordinary air acceleration and friction; scaling the
+ * acceleration instead is a different trajectory. */
+static void phys_falcon_dive_fall(FalconFighter *f,
+                                  const FalconInputRaw *in)
+{
+    const double cap = A_AIR_SPEED_MAX_X * DIVE_FALL_DRIFT;
+
+    phys_check_set_fastfall(f, in->stick_y);
+    if (f->is_fastfall) phys_fastfall(f);
+    else                phys_gravity(f);
+
+    if (!phys_check_clamp_air_x_dec(f, cap)) {
+        if (iabs(in->stick_x) >= C_AIRDRIFT_CLAMP_RANGE_MIN) {
+            f->vel_air_x += (double)in->stick_x * A_AIR_ACCEL;
+            if (f->vel_air_x < -cap) f->vel_air_x = -cap;
+            else if (f->vel_air_x > cap) f->vel_air_x = cap;
+        }
         phys_air_friction(f);
     }
 }
@@ -498,6 +579,56 @@ static void enter_falcon_kick_landing(FalconFighter *f)
     set_status(f, FL_FALCON_KICK_LANDING);
 }
 
+static void enter_falcon_dive(FalconFighter *f, int from_ground)
+{
+    f->grounded = 0;
+    f->jumps_used = A_JUMPS_MAX;
+    f->is_fastfall = 0;
+    f->vel_ground_x = 0.0;
+    f->vel_air_x = f->vel_air_y = 0.0;
+    f->specialhi_vel_x = f->specialhi_vel_y = 0.0;
+    set_status(f, from_ground ? FL_FALCON_DIVE_GROUND
+                              : FL_FALCON_DIVE_AIR);
+}
+
+static void enter_falcon_dive_catch(FalconFighter *f)
+{
+    f->grounded = 0;
+    f->vel_air_x = f->vel_air_y = 0.0;
+    f->specialhi_vel_x = f->specialhi_vel_y = 0.0;
+    set_status(f, FL_FALCON_DIVE_CATCH);
+}
+
+static void enter_falcon_dive_throw(FalconFighter *f)
+{
+    f->grounded = 0;
+    f->vel_air_x = f->vel_air_y = 0.0;
+    set_status(f, FL_FALCON_DIVE_THROW);
+}
+
+static void enter_falcon_dive_fall(FalconFighter *f)
+{
+    const double cap = A_AIR_SPEED_MAX_X * DIVE_FALL_DRIFT;
+
+    f->grounded = 0;
+    f->jumps_used = A_JUMPS_MAX;
+    if (f->vel_air_x < -cap) f->vel_air_x = -cap;
+    else if (f->vel_air_x > cap) f->vel_air_x = cap;
+    set_status(f, FL_FALCON_DIVE_FALL);
+}
+
+/* ftCommonLandingFallSpecialSetStatus(..., 0.65): Captain reuses the common
+ * LandingAirX pose at 0.65x and explicitly disallows interrupts until it ends. */
+static void enter_falcon_dive_landing(FalconFighter *f)
+{
+    f->grounded = 1;
+    f->jumps_used = 0;
+    f->is_fastfall = 0;
+    f->vel_ground_x = f->vel_air_x * (double)f->lr;
+    f->vel_air_x = f->vel_air_y = 0.0;
+    set_status(f, FL_FALCON_DIVE_LANDING);
+}
+
 /* M7 combat selection is an NES-pad adaptation around authentic SSB64 move
  * scripts: B is the attack button, with the d-pad choosing the move. The
  * attack timing and damage emitted below come from
@@ -506,8 +637,8 @@ static void enter_ground_attack(FalconFighter *f, const FalconInputRaw *in)
 {
     if (in->stick_y <= -20) {
         set_status(f, FL_FALCON_KICK_GROUND);
-    } else if (in->stick_y >= 20) {
-        set_status(f, FL_JAB);
+    } else if (in->stick_y >= 40) {
+        enter_falcon_dive(f, 1);
     } else if (iabs(in->stick_x) >= 20) {
         f->lr = in->stick_x < 0 ? -1 : 1;
         set_status(f, FL_FTILT);
@@ -520,8 +651,8 @@ static void enter_air_attack(FalconFighter *f, const FalconInputRaw *in)
 {
     if (in->stick_y <= -20) {
         set_status(f, FL_FALCON_KICK_AIR);
-    } else if (in->stick_y >= 20) {
-        set_status(f, FL_ATTACK_AIR_N);
+    } else if (in->stick_y >= 40) {
+        enter_falcon_dive(f, 0);
     } else if (iabs(in->stick_x) >= 20) {
         set_status(f, (in->stick_x * f->lr) >= 0
                           ? FL_ATTACK_AIR_F : FL_ATTACK_AIR_B);
@@ -703,6 +834,7 @@ static void proc_update(FalconFighter *f, const FalconInputRaw *in)
     case FL_RUN_BRAKE:      /* ftAnimEndSetWait */
     case FL_LANDING_LIGHT:
     case FL_LANDING_HEAVY:
+    case FL_FALCON_DIVE_LANDING:
         if (anim_ended(f)) enter_wait(f);
         break;
 
@@ -740,6 +872,27 @@ static void proc_update(FalconFighter *f, const FalconInputRaw *in)
             if (f->grounded) enter_wait(f);
             else enter_fall(f);
         }
+        break;
+
+    case FL_FALCON_DIVE_GROUND:
+    case FL_FALCON_DIVE_AIR:
+        /* Motion flag1 opens exactly once at source frame 13. A horizontal
+         * stick outside +/-18 may reverse Falcon before the catch window. */
+        if (f->state_frame == 13.0 &&
+            iabs(in->stick_x) > DIVE_TURN_STICK_MIN)
+            f->lr = in->stick_x < 0 ? -1 : 1;
+        if (anim_ended(f)) enter_falcon_dive_fall(f);
+        break;
+
+    case FL_FALCON_DIVE_CATCH:
+        /* CaptainMainMotion also raises flag0 at frame 20, but source
+         * ProcUpdate transitions on (animation end || flag0). The extracted
+         * 1659 Figatree ends at frame 16, so animation completion wins. */
+        if (anim_ended(f)) enter_falcon_dive_throw(f);
+        break;
+
+    case FL_FALCON_DIVE_THROW:
+        if (anim_ended(f)) enter_fall(f);
         break;
 
     default:
@@ -843,6 +996,10 @@ static void proc_interrupt(FalconFighter *f, const FalconInputRaw *in)
         if (check_walk(f, in))        return;
         break;
 
+    case FL_FALCON_DIVE_LANDING:
+        /* FallSpecial passes FALSE for is_allow_interrupt. */
+        break;
+
     /* Air states: ftCommonJumpProcInterrupt / ftCommonFallProcInterrupt only
      * reach ftCommonJumpAerialCheckInterruptCommon, the double jump. Left out
      * of M1 deliberately — SMB1 has no double jump and enabling it is a scope
@@ -870,6 +1027,7 @@ static void proc_physics(FalconFighter *f, const FalconInputRaw *in)
     case FL_KNEEBEND:
     case FL_LANDING_LIGHT:
     case FL_LANDING_HEAVY:
+    case FL_FALCON_DIVE_LANDING:
     case FL_JAB:
     case FL_FTILT:
     case FL_FALCON_PUNCH_GROUND:
@@ -938,6 +1096,23 @@ static void proc_physics(FalconFighter *f, const FalconInputRaw *in)
     case FL_FALCON_KICK_AIR:
     case FL_FALCON_KICK_BOUND:
         /* Direct-air Kick and wall-bound use authored TransN on every frame. */
+        break;
+
+    case FL_FALCON_DIVE_GROUND:
+    case FL_FALCON_DIVE_AIR:
+        phys_falcon_dive_launch(f, in);
+        break;
+
+    case FL_FALCON_DIVE_CATCH:
+        f->vel_air_x = f->vel_air_y = 0.0;
+        break;
+
+    case FL_FALCON_DIVE_THROW:
+        /* FalconDiveEnd1 owns the release trajectory through TransN. */
+        break;
+
+    case FL_FALCON_DIVE_FALL:
+        phys_falcon_dive_fall(f, in);
         break;
 
     default:
@@ -1051,6 +1226,17 @@ static void emit_attack(const FalconFighter *f, FalconMotion *out)
         if (t <= 1.0)
             set_attack(out, 0.0, 140.0, 400.0, 280.0, 12, 20.0, 20.0, 1);
         break;
+    case FL_FALCON_DIVE_GROUND:
+    case FL_FALCON_DIVE_AIR:
+        /* Source spheres: r100 at z180 and a one-frame r150 tip at z400.
+         * The conservative host rectangle covers their catchable union.
+         * SMB maps the eventual 20-damage throw to one native enemy defeat. */
+        if (t >= 13.0 && t < 45.0) {
+            set_attack(out, 315.0, 260.0, 470.0, 300.0,
+                       20, 0.0, 82.0, 0);
+            out->attack.contact_only = 1;
+        }
+        break;
     default:
         break;
     }
@@ -1081,6 +1267,10 @@ static void emit_audio(const FalconFighter *f, FalconMotion *out)
             out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_KICK);
             out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_KICK_SWING);
             break;
+        case FL_FALCON_DIVE_THROW:
+            out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_DIVE_EXPLODE);
+            out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_DIVE_VOICE);
+            break;
         default:
             break;
         }
@@ -1094,6 +1284,13 @@ static void emit_audio(const FalconFighter *f, FalconMotion *out)
     if ((f->state == FL_FALCON_KICK_GROUND ||
          f->state == FL_FALCON_KICK_AIR) && t == 12.0)
         out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_KICK_START);
+    if ((f->state == FL_FALCON_DIVE_GROUND ||
+         f->state == FL_FALCON_DIVE_AIR) && t == 13.0)
+        out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_DIVE_LAUNCH);
+    /* Catch is entered by the host collision resolve after this tick's event
+     * emission. Its first observable controller tick is therefore frame 1. */
+    if (f->state == FL_FALCON_DIVE_CATCH && t == 1.0)
+        out->audio_cues |= FALCON_AUDIO_CUE_BIT(FALCON_AUDIO_DIVE_CATCH);
 }
 
 void falcon_tick(FalconFighter *f, const FalconInputRaw *in, FalconMotion *out)
@@ -1107,7 +1304,8 @@ void falcon_tick(FalconFighter *f, const FalconInputRaw *in, FalconMotion *out)
      * mpCommonSetFighterAir takes effect immediately. The host may still
      * report its prior grounded byte on this first tick; preserve the forced
      * air kinetics long enough for the bridge's one-tick airborne request. */
-    if (f->state == FL_FALCON_KICK_BOUND && f->state_frame == 0.0)
+    if ((f->state == FL_FALCON_KICK_BOUND && f->state_frame == 0.0) ||
+        (f->state == FL_FALCON_DIVE_GROUND && f->state_frame <= 15.0))
         f->grounded = 0;
 
     /*
@@ -1152,6 +1350,8 @@ void falcon_tick(FalconFighter *f, const FalconInputRaw *in, FalconMotion *out)
              * landing motion. */
         } else if (f->state == FL_FALCON_KICK_AIR) {
             enter_falcon_kick_landing(f);
+        } else if (f->state == FL_FALCON_DIVE_FALL) {
+            enter_falcon_dive_landing(f);
         } else {
             enter_landing(f);
         }
@@ -1194,6 +1394,16 @@ void falcon_resolve(FalconFighter *f, const FalconCollision *hit)
     f->pos_x += hit->actual_dx;
     f->pos_y += hit->actual_dy;
 
+    /* Falcon Dive's attack volume is a catch search, not a repeated damage
+     * hitbox. The host confirms exactly one supported target and applies its
+     * native consequence; Falcon immediately stops and plays Catch/Throw. */
+    if (hit->attack_connected &&
+        (f->state == FL_FALCON_DIVE_GROUND ||
+         f->state == FL_FALCON_DIVE_AIR)) {
+        enter_falcon_dive_catch(f);
+        return;
+    }
+
     if (in_air) {
         /* Sign convention: the host reports +y as DOWN, the source works in
          * +y UP. The adapter converts; here vel_air_y > 0 is upward. */
@@ -1220,6 +1430,15 @@ void falcon_resolve(FalconFighter *f, const FalconCollision *hit)
 
         /* An upward impulse means we are emphatically not landing, whatever
          * the host's footing check said a frame ago. */
+        if (hit->grounded && f->state == FL_FALCON_DIVE_GROUND &&
+            f->state_frame <= 15.0) {
+            /* Grounded Up-B's TransN root remains essentially planted until
+             * its frame-13 launch event. Smash has already forced air, while
+             * SMB keeps rediscovering the floor beneath the unchanged feet.
+             * Preserve source air kinetics only for that startup window. */
+            f->grounded = 0;
+            return;
+        }
         if (hit->grounded && !(hit->has_imposed_vy && hit->imposed_vy > 0.0)) {
             if (f->state == FL_FALCON_KICK_GROUND ||
                 f->state == FL_FALCON_KICK_GROUND_AIR) {
@@ -1228,6 +1447,8 @@ void falcon_resolve(FalconFighter *f, const FalconCollision *hit)
                 f->vel_air_x = f->vel_air_y = 0.0;
             } else if (f->state == FL_FALCON_KICK_AIR) {
                 enter_falcon_kick_landing(f);
+            } else if (f->state == FL_FALCON_DIVE_FALL) {
+                enter_falcon_dive_landing(f);
             } else {
                 enter_landing(f);
             }
@@ -1282,7 +1503,7 @@ void falcon_resolve(FalconFighter *f, const FalconCollision *hit)
 /* Save states -- see mod_savestate.h in the engine                   */
 /* ------------------------------------------------------------------ */
 
-#define FALCON_SAVESTATE_VERSION 3
+#define FALCON_SAVESTATE_VERSION 4
 
 int falcon_serialize(const FalconFighter *f, uint8_t *buf, int cap)
 {

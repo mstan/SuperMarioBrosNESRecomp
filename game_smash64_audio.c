@@ -36,6 +36,14 @@ static FalconAudioAsset s_assets[] = {
       "falcon_kick_swing_fgm.wav", 55, 0 },
     { FALCON_AUDIO_KICK_START,    "kick-start",
       "falcon_kick_start_fgm.wav", 55, 0 },
+    { FALCON_AUDIO_DIVE_LAUNCH,   "dive-launch",
+      "falcon_dive_launch_fgm.wav", 55, 0 },
+    { FALCON_AUDIO_DIVE_CATCH,    "dive-catch",
+      "falcon_dive_catch_fgm.wav", 55, 0 },
+    { FALCON_AUDIO_DIVE_EXPLODE,  "dive-explosion",
+      "falcon_dive_explosion_fgm.wav", 60, 0 },
+    { FALCON_AUDIO_DIVE_VOICE,    "dive-voice",
+      "falcon_dive_voice.wav", 90, 0 },
 };
 
 static int s_enabled;

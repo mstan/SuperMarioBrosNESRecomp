@@ -24,8 +24,9 @@
 #include <stdint.h>
 
 /* Action states. Combat includes the representative normals and signature
- * specials used by the SMB1 port; shields, grabs, cliffs and items remain
- * deliberately absent. */
+ * specials used by the SMB1 port; shields, ordinary grabs, cliffs and items
+ * remain deliberately absent. Falcon Dive's move-owned catch is represented
+ * explicitly because it is part of Up-B itself. */
 typedef enum {
     FL_WAIT = 0,
     FL_WALK_SLOW,
@@ -57,6 +58,12 @@ typedef enum {
     FL_FALCON_KICK_LANDING,
     FL_FALCON_KICK_AIR,
     FL_FALCON_KICK_BOUND,
+    FL_FALCON_DIVE_GROUND,
+    FL_FALCON_DIVE_AIR,
+    FL_FALCON_DIVE_CATCH,
+    FL_FALCON_DIVE_THROW,
+    FL_FALCON_DIVE_FALL,
+    FL_FALCON_DIVE_LANDING,
     FL_STATE_COUNT
 } FalconState;
 
@@ -79,6 +86,7 @@ typedef struct {
     int    hit_ceiling;
     int    hit_floor;
     int    hit_wall;
+    int    attack_connected;
 
     /*
      * ADAPTATION. The host imposed its own vertical velocity this frame, in
@@ -150,6 +158,12 @@ typedef struct {
 
     /* Motion flag reused by Dash and RunBrake (motion_vars.flags.flag1). */
     int    motion_flag1;
+
+    /* Falcon Dive adds a small steerable X velocity to the animation-owned
+     * TransN launch arc. Keep that drift separate from vel_air_x/y, which the
+     * host bridge publishes after adding the current root delta. */
+    double specialhi_vel_x;
+    double specialhi_vel_y;
 } FalconFighter;
 
 typedef struct {
@@ -161,6 +175,7 @@ typedef struct {
     double knockback_y;
     int damage;
     int break_blocks;
+    int contact_only;
     int active;
 } FalconAttack;
 
@@ -175,6 +190,10 @@ typedef enum {
     FALCON_AUDIO_PUNCH_IMPACT,
     FALCON_AUDIO_KICK_SWING,
     FALCON_AUDIO_KICK_START,
+    FALCON_AUDIO_DIVE_LAUNCH,
+    FALCON_AUDIO_DIVE_CATCH,
+    FALCON_AUDIO_DIVE_EXPLODE,
+    FALCON_AUDIO_DIVE_VOICE,
     FALCON_AUDIO_CUE_COUNT
 } FalconAudioCue;
 

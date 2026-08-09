@@ -1,0 +1,112 @@
+# Ground Falcon Dive: B+Up starts the grounded 1658 launch, forces air, opens
+# the source catch volume at frame 13, then a confirmed target stops the arc.
+neutral
+pos_y 1000
+stick_y 80
+attack down
+frames 1
+expect_state FALCON_DIVE_GROUND
+expect_grounded 0 0
+expect_audio 0
+attack up
+frames 12
+expect_attack 0 0
+frames 1
+expect_attack 1 1
+expect_damage 20 20
+expect_break 0 0
+expect_contact 1 1
+expect_audio 0x80
+host_contact
+frames 1
+expect_state FALCON_DIVE_CATCH
+expect_grounded 0 0
+roundtrip
+frames 1
+expect_state FALCON_DIVE_CATCH
+expect_audio 0x100
+frames 14
+expect_state FALCON_DIVE_CATCH
+frames 1
+expect_state FALCON_DIVE_THROW
+expect_audio 0x600
+roundtrip
+frames 59
+expect_state FALCON_DIVE_THROW
+frames 1
+expect_state FALL_AERIAL
+
+# A miss uses the distinct aerial 1661 state and becomes helpless special fall
+# at the exact 65-frame animation end.
+reset
+pos_y 1000
+host_fall
+neutral
+stick_y 80
+attack down
+frames 1
+expect_state FALCON_DIVE_AIR
+attack up
+frames 13
+expect_state FALCON_DIVE_AIR
+expect_attack 1 1
+frames 52
+expect_state FALCON_DIVE_FALL
+expect_grounded 0 0
+roundtrip
+stick_x 80
+frames 12
+expect_vel_air_x 0 22.32
+stick_x 0
+host_land
+frames 1
+expect_state FALCON_DIVE_LANDING
+expect_grounded 1 1
+roundtrip
+frames 15
+expect_state FALCON_DIVE_LANDING
+frames 1
+expect_state WAIT
+
+# Source frame 13 permits exactly one stick-directed reversal.
+reset
+pos_y 1000
+neutral
+stick_y 80
+attack down
+frames 1
+attack up
+stick_x -80
+frames 13
+expect_state FALCON_DIVE_GROUND
+expect_attack 1 1
+expect_lr -1 -1
+
+# Host collision remains authoritative: a wall clamps drift without inventing
+# a Falcon-specific bounce, while a real floor after startup ends the recovery
+# through the ordinary landing handoff.
+reset
+pos_y 1000
+host_fall
+neutral
+stick_y 80
+attack down
+frames 1
+attack up
+frames 13
+host_wall
+frames 1
+expect_state FALCON_DIVE_AIR
+
+reset
+pos_y 1000
+neutral
+stick_y 80
+attack down
+frames 1
+attack up
+frames 20
+host_land
+frames 1
+expect_state LANDING_LIGHT
+expect_grounded 1 1

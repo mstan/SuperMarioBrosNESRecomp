@@ -29,13 +29,17 @@
  *   host_fall             host says airborne, cause = FELL (walked off a ledge)
  *   host_land             host says grounded again
  *   host_wall             report one wall collision on the next frame
+ *   host_contact          report one contact-only target on the next frame
  *   reset                 reset fighter, input, and pending host events
  *   expect_state <NAME>   assert the current state, non-zero exit on failure
  *   expect_grounded <0|1> assert the fighter's current kinetic mode
+ *   expect_lr <-1|1>      assert the current facing direction
  *   expect_attack <0|1>   assert whether a hitbox is active
  *   expect_damage <n>     assert the active hitbox damage
  *   expect_break <0|1>    assert the block-break property
+ *   expect_contact <0|1>  assert contact-only attack semantics
  *   expect_audio <mask>    assert exact FalconAudioCue bitset (decimal/hex)
+ *   expect_vel_air_x <lo> <hi>  assert horizontal air velocity is in [lo,hi]
  *   expect_vel_air_y <lo> <hi>  assert takeoff/air velocity is in [lo,hi]
  *   expect_peak_y <lo> <hi>     assert the highest pos_y since reset_peak
  *   reset_peak            start a new peak-height measurement here
@@ -96,7 +100,7 @@ static void emit_header(void)
     fprintf(g_csv,
         "frame,state,state_name,anim_frame,stick_x,stick_y,jump,attack,"
         "vel_ground_x,vel_air_x,vel_air_y,"
-        "req_dx,req_dy,px_dx,px_dy,hit_active,damage,break_blocks,"
+        "req_dx,req_dy,px_dx,px_dy,hit_active,damage,break_blocks,contact_only,"
         "audio_cues,pos_x,pos_y,lr,grounded,fastfall,tap_x,tap_y,note\n");
 }
 
@@ -106,7 +110,7 @@ static void emit_row(const FalconFighter *f, const FalconInputRaw *in,
     fprintf(g_csv,
         "%ld,%d,%s,%.1f,%d,%d,%d,%d,"
         "%.6f,%.6f,%.6f,"
-        "%.6f,%.6f,%.6f,%.6f,%d,%d,%d,"
+        "%.6f,%.6f,%.6f,%.6f,%d,%d,%d,%d,"
         "%u,%.6f,%.6f,%d,%d,%d,%u,%u,%s\n",
         g_frame, f->state, falcon_state_name(f->state), f->anim_frame,
         in->stick_x, in->stick_y, in->jump_held, in->attack_pressed,
@@ -114,6 +118,7 @@ static void emit_row(const FalconFighter *f, const FalconInputRaw *in,
         m->requested_dx, m->requested_dy,
         m->requested_dx * g_scale, m->requested_dy * g_scale,
         m->attack.active, m->attack.damage, m->attack.break_blocks,
+        m->attack.contact_only,
         (unsigned)m->audio_cues,
         f->pos_x, f->pos_y, f->lr, f->grounded, f->is_fastfall,
         (unsigned)f->tap_stick_x, (unsigned)f->tap_stick_y,
@@ -130,6 +135,7 @@ static void emit_row(const FalconFighter *f, const FalconInputRaw *in,
 static int    g_impose_pending;
 static double g_impose_vy;
 static int    g_wall_pending;
+static int    g_contact_pending;
 
 static void resolve_flat_floor(FalconFighter *f, const FalconMotion *m,
                                FalconCollision *hit)
@@ -146,6 +152,10 @@ static void resolve_flat_floor(FalconFighter *f, const FalconMotion *m,
     if (g_wall_pending) {
         hit->hit_wall = 1;
         g_wall_pending = 0;
+    }
+    if (g_contact_pending) {
+        hit->attack_connected = 1;
+        g_contact_pending = 0;
     }
 
     if (f->grounded) {
@@ -224,12 +234,14 @@ static int run_script(const char *path)
             f.host_air_cause = 0;   /* FOREIGN_AIR_NONE */
         } else if (!strcmp(cmd, "host_wall")) {
             g_wall_pending = 1;
+        } else if (!strcmp(cmd, "host_contact")) {
+            g_contact_pending = 1;
         } else if (!strcmp(cmd, "reset")) {
             falcon_reset(&f);
             memset(&in, 0, sizeof(in));
             memset(&m, 0, sizeof(m));
             jump_was_down = attack_is_down = attack_was_down = 0;
-            g_impose_pending = g_wall_pending = 0;
+            g_impose_pending = g_wall_pending = g_contact_pending = 0;
             g_peak_y = 0.0;
         } else if (!strcmp(cmd, "note")) {
             snprintf(pending_note, sizeof(pending_note), "%s", arg);
@@ -249,11 +261,16 @@ static int run_script(const char *path)
             check_range("attack_active", (double)m.attack.active, arg);
         } else if (!strcmp(cmd, "expect_grounded")) {
             check_range("grounded", (double)f.grounded, arg);
+        } else if (!strcmp(cmd, "expect_lr")) {
+            check_range("lr", (double)f.lr, arg);
         } else if (!strcmp(cmd, "expect_damage")) {
             check_range("attack_damage", (double)m.attack.damage, arg);
         } else if (!strcmp(cmd, "expect_break")) {
             check_range("attack_break_blocks",
                         (double)m.attack.break_blocks, arg);
+        } else if (!strcmp(cmd, "expect_contact")) {
+            check_range("attack_contact_only",
+                        (double)m.attack.contact_only, arg);
         } else if (!strcmp(cmd, "expect_audio")) {
             unsigned long want = strtoul(arg, NULL, 0);
             if ((unsigned long)m.audio_cues != want) {
@@ -275,6 +292,8 @@ static int run_script(const char *path)
              */
             g_impose_pending = 1;
             g_impose_vy = atof(arg);
+        } else if (!strcmp(cmd, "expect_vel_air_x")) {
+            check_range("vel_air_x", f.vel_air_x, arg);
         } else if (!strcmp(cmd, "expect_vel_air_y")) {
             check_range("vel_air_y", f.vel_air_y, arg);
         } else if (!strcmp(cmd, "expect_peak_y")) {

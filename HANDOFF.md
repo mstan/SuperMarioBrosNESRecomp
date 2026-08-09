@@ -1,8 +1,42 @@
 # Session Handoff - Smash 64 Captain Falcon in SMB1
 
-Date: 2026-08-08
+Date: 2026-08-09
 
-## Current QA status: corrected and freshly inspected
+## Current QA status: Falcon Dive integrated; final owner listening remains
+
+The current worktree adds BattleShip-derived Falcon Dive/Up-B on top of the
+previously accepted movement, presentation, Falcon Punch, and Falcon Kick
+work. Ground and air use their distinct 1658/1661 launch motions and authored
+TransN paths; a supported enemy contact enters the 1659 Catch and 1660 Throw
+motions, applies one native SMB enemy defeat, and cannot consume a second
+overlapping target. Misses use the dedicated 1554 `FallSpecial` motion, its
+72%-maximum horizontal drift, and the forced 0.65x `LandingAirX` recovery.
+
+Fresh scripted captures under `C:\temp\falcon_upb_*` cover clean ground and
+air launches in both directions, isolated event frames, the frame-13 reversal,
+midair contact, Catch, Throw, particle proxies, and save/load. The Catch save
+and reload PNGs have the same SHA-256
+`D5F0CD04ECFC69E7867518B21F52CCFD28074EC8F4C7132A1187CC6A3E4778C0`.
+The trace shows one `attack_connected` edge, one native target consequence,
+and no stale second hit. Eleven owner-side audio clips load; Falcon Dive launch,
+Catch, explosion, and voice queue at the source-derived frames. Automated QA
+cannot judge the final mix by ear, so an owner play/listen pass remains required
+before closing the Up-B Bead or running the final integrated QA Bead.
+
+Exact turn/event captures are isolated behind save-state reloads and render
+settling; frames 12, 13, and 14 now have distinct hashes. Additional captures
+show FallSpecial plus special-landing entry, midpoint, and completion.
+
+The latest Falcon Kick direction concern was rechecked against the actual
+mirrored captures. The corrected Kick-only `-90` degree yaw is right: its yellow
+boot leads screen travel and CaptainSpecial2 trails behind for both facings.
+The large asymmetric flame can obscure the body and make the motion feel
+backward, but flipping the yaw again would put the boot into the trail.
+
+Ground Falcon Dive emits `force_airborne` once. Adapter save record v5 bridges
+the source animation's subpixel startup across SMB1's integer floor state only
+until the first successful upward whole-pixel sweep; the latest save/replay QA
+proves the planted startup resumes into the same frame-13 lift (`Y $B0->$A6`).
 
 The defects shown in the owner's August 8 screenshots have been corrected in
 the current worktree. Fresh Release captures were generated after the final
@@ -120,8 +154,8 @@ Both repositories use local branch `feat/smash64-player-replacement`.
 
 | Repo | Path | Relevant HEAD |
 |---|---|---|
-| Engine | `F:\Projects\nesrecomp\_wt-falcon-smb\nesrecomp` | `c724785` (bounded 2x mesh targets; includes mod PCM overlay mixer) |
-| Game | `F:\Projects\nesrecomp\_wt-falcon-smb` | current local HEAD; gitlink must point to `c724785` |
+| Engine | `F:\Projects\nesrecomp\_wt-falcon-smb\nesrecomp` | `5ef6145` (contact-only connection ABI/trace; includes forced-air, 2x mesh, and PCM work) |
+| Game | `F:\Projects\nesrecomp\_wt-falcon-smb` | current local HEAD; gitlink must point to `5ef6145` |
 
 Never push either repository. The branch contains a direct port of an
 unlicensed decomp and depends on owner-only ROM-derived runtime assets.
@@ -164,7 +198,7 @@ $GAME = 'F:\Projects\nesrecomp\_wt-falcon-smb'
 & $CM -S "$GAME\tests\falcon_harness" -B "$GAME\build_harness" -A x64
 & $CM --build "$GAME\build_harness" --config Release
 & $CT --test-dir "$GAME\build_harness" -C Release --output-on-failure
-# Expected: 12/12.
+# Expected: 14/14.
 
 & $CM -S $GAME -B "$GAME\build_falcon" -A x64
 & $CM --build "$GAME\build_falcon" --config Release
@@ -206,11 +240,11 @@ Captain Falcon's state machine remains in the quarantined
 only translates to/from the generic ABI.
 
 Presentation uses `game_smash64_assets.c`: 26 joints, 319 triangles,
-26 textures, and 30 animations. Figatree's one-based joint names are converted
+28 textures, and 36 animations. Figatree's one-based joint names are converted
 to zero-based model slots by the baker. Motions carrying BattleShip's auxiliary
 fighter-root flags omit their first host-owned root stream before joint
-binding; this corrects Falcon Punch, TurnRun, JumpB/JumpAerialB, and Falcon
-Kick's ground/air/landing poses. Blob version 3 stores BattleShip's
+binding; this corrects Falcon Punch, TurnRun, JumpB/JumpAerialB, Falcon Kick,
+and Falcon Dive's ground/air/throw poses. Blob version 4 stores BattleShip's
 source interpolation segments and tangent rates instead of flattening them
 into linear keys, plus reloc 333's three CaptainSpecial3 CI4 fire frames and
 their embedded RGBA16 palette. Costume-zero primary colors come from reloc 332's
@@ -223,13 +257,16 @@ near-exact side profile.
 over the native frame; the NES background remains pixel-perfect. Missing model
 data uses the cube fallback.
 
-Audio uses `game_smash64_audio.c`: seven local cues for jump effort, "Falcon",
-"Punch", Falcon Kick, Punch impact, Kick swing, and Kick energy start. Missing
-clips are a silent fallback. The FGM cues now resolve trigger indices through
-BattleShip's `B1_sounds2` sound array and render their authored pitch/envelope,
-fork, and stop timing; this removes the old `B1_sounds1/wave_019` guitar-like
-tail. Exact table provenance, renderer timing, spectral A/B evidence, and the
-sample-exact runtime capture are in `docs/falcon_audio.md`.
+Audio uses `game_smash64_audio.c`: eleven local cues for jump effort, "Falcon",
+"Punch", Falcon Kick, Punch impact, Kick swing, Kick energy start, Falcon Dive
+launch, Catch, throw explosion, and throw voice. Missing
+clips are a silent fallback. The focused offline FGM renderer resolves trigger
+indices through BattleShip's `B1_sounds2` sound array and implements the
+decoded pitch/envelope/fork/stop commands used by these move programs; this
+removes the old `B1_sounds1/wave_019` guitar-like tail without claiming a full
+N64 audio-engine emulation. Exact table provenance, renderer timing, spectral
+A/B evidence, and sample-exact host-mixer reconstruction are in
+`docs/falcon_audio.md`.
 
 ## Completed milestones and evidence
 
@@ -248,7 +285,7 @@ sample-exact runtime capture are in `docs/falcon_audio.md`.
 - M7 combat: Jab, forward tilt, neutral/forward/back air, Falcon Punch, Falcon
   Kick; source hit windows/damage; native SMB1 enemy defeat and `$51/$52` brick
   shatter; nonbreakable/special/boss filtering; save/load and mod-off coverage.
-- M8 audio: exact source-frame cue events, seven ignored local clips, shared
+- M8 audio: exact source-frame cue events, eleven ignored local clips, shared
   NES mix, BattleShip-accurate pitch, stop-on-load, mod unload, silent fallback,
   and no per-frame spam.
 
@@ -258,6 +295,7 @@ Key committed evidence/docs:
 - `docs/falcon_audio.md`
 - `tests/falcon_harness/combat.script`
 - `tests/falcon_harness/audio.script`
+- `tests/falcon_harness/upb.script`
 - `tests/falcon_m7_combat.script`
 - `tests/falcon_m7_savestate.script`
 - `tests/falcon_m8_audio.script`
@@ -269,11 +307,14 @@ Key committed evidence/docs:
 - `tests/falcon_visual_title_qa.script`
 - `tests/falcon_visual_combat_qa.script`
 - `tests/falcon_visual_aerial_sequence_qa.script`
+- `tests/falcon_visual_upb_qa.script`
 - `tests/falcon_tier4_death_respawn_qa.script`
 - `tests/falcon_tier4_mod_off.script`
 - `tests/falcon_savestate_endless_loop_qa.script`
 
-The M8 live trace loads 7/7 clips and queues every mapping. During a Punch
+The original M8 live trace loads 7/7 Punch/Kick clips and queues every mapping.
+The Falcon Dive QA trace now loads 11/11 and additionally queues launch, Catch,
+throw explosion, and throw voice. During a Punch
 windup save/load, the already-consumed "Falcon" entry call does not replay;
 the future frame-42 "Punch" and impact cues each occur once on both genuine
 continuations. The August 8 final 12-second capture queues all seven cues; its

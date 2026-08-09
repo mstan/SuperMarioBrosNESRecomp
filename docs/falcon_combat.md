@@ -12,7 +12,7 @@ movement and maps overlaps to native SMB1 consequences.
 | B | Falcon Punch | Falcon Punch |
 | Down+B | Falcon Kick | Falcon Kick |
 | Left/Right+B | Forward tilt | Forward/back air relative to facing |
-| Up+B | Jab 1 | Neutral air |
+| Up+B | Falcon Dive | Falcon Dive |
 
 A remains jump. While Falcon owns the player, B is masked at
 `PlayerPhysicsSub` so SMB1 cannot also run or throw a fireball. With the mod
@@ -37,11 +37,38 @@ frames 42 through 54. The quad is mirrored with facing and enlarged around its
 hand-side corner for readability after Falcon is normalized to a 32-pixel NES
 fighter. The ROM-derived reloc and baked pixels remain ignored local assets.
 
-The generic rectangular hitbox is a portable
-union around the source collision spheres because SMB1 has no joint-aware
-combat system. Falcon Kick's translation is an explicit adaptation: Smash 64
-derives it from the animated TransN joint, while the quarantined state machine
-does not run the model evaluator.
+The generic rectangular hitbox is a portable union around the source collision
+spheres because SMB1 has no joint-aware combat system. Falcon Kick and Falcon
+Dive retain their BattleShip TransN tracks in the quarantined runtime blob.
+The character bridge samples the exact current/next-frame root delta, removes
+it from the mesh pose, and projects it through the same host scale as every
+other source-space motion. This keeps model travel and collision travel on one
+authored trajectory.
+
+Falcon Dive is split exactly by source action: grounded launch uses
+`FalconDive`/1658, aerial launch uses `FalconDiveEnd2`/1661, Catch uses
+`CatchingEnemyWhileDiving`/1659, and Throw uses `FalconDiveEnd1`/1660. Both
+launches force air, consume Falcon's jump, open the catch union at source frame
+13, permit the source's one frame-13 stick-directed turn, and miss into a
+special fall at frame 65. That helpless state keeps ordinary air acceleration
+but clamps horizontal drift to 72% of Falcon's normal maximum, then forces the
+common `LandingAirX` recovery at the source's 0.65 animation rate. A valid
+connection stops the launch, plays 16 frames of Catch and 60 frames of Throw,
+then returns to normal fall.
+Because FalconDive's pre-launch TransN rise is smaller than one NES pixel,
+the SMB adapter preserves the controller's single departure edge until its
+first successful upward whole-pixel sweep. This host-side quantization bridge
+is saved in adapter record v5, releases as soon as Falcon visibly separates
+from the floor, and is cleared on any scripted/native ownership handoff.
+
+SMB1 has no persistent fighter-capture object. Its safe adaptation applies the
+source throw's eventual 20-damage consequence immediately through one native
+`ShellOrBlockDefeat`, then reserves the remaining Catch/Throw time for Falcon's
+visual and audio presentation. `FOREIGN_ATTACK_CONTACT_ONLY` lets the host
+confirm one supported target back to the portable controller. The adapter
+retires that volume immediately and again after resolve, preventing a stale
+pre-Catch frame from defeating a second overlapping enemy. Blocks, hazards,
+special objects, and bosses never enter the contact path.
 
 ## Native SMB1 consequences
 
@@ -66,6 +93,10 @@ tiles, and other nonbreakable metatiles are never passed to that routine.
 
 - `tests/falcon_harness/combat.script` checks all move selections, exact active
   windows/damage, Punch/Kick break flags, and an active-window save roundtrip.
+- `tests/falcon_harness/upb.script` checks the two launch states, frame-13
+  20-damage contact-only window, confirmed Catch, Catch/Throw audio masks,
+  Catch and Throw save roundtrips, special-fall drift/landing recovery, and
+  source-frame reversal.
 - `tests/falcon_m7_combat.script` seeds a Goomba, one brick, and adjacent
   nonbreakable scenery, then validates native Punch and Kick consequences.
 - `tests/falcon_m7_savestate.script` saves during Punch windup and demonstrates
@@ -73,5 +104,14 @@ tiles, and other nonbreakable metatiles are never passed to that routine.
 - `tests/falcon_visual_punch_effect_qa.script` captures the complete active
   fire sequence facing both right and left; acceptance requires a side-on pose
   and a hand-attached plume on the attack side in both directions.
+- `tests/falcon_visual_upb_qa.script` captures clean grounded and aerial launch
+  arcs in both directions, isolated frames 12/13/14, Catch/Throw, compact
+  source-timed particle proxies, a two-target one-shot contact, and an
+  image-identical Catch save/load replay. The exact turn captures are isolated
+  behind reload/render fences; their three hashes differ, avoiding the former
+  asynchronous duplicate-frame false evidence. It also captures FallSpecial
+  and the 0.65x forced landing at entry/midpoint/completion.
 - Trace flags: `0x100` attack active, `0x200` enemy defeated, `0x400` brick
-  broken.
+  broken, `0x800` Falcon Dive contact confirmed, and `0x1000` the one-tick
+  controller-to-host airborne edge. CSV and live `ftring` output also expose
+  the contact verdict as the named `attack_connected`/`contact` field.

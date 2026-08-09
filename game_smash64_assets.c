@@ -34,6 +34,14 @@
 #define FALCON_KICK_EFFECT_FIRST_FRAME    12u
 #define FALCON_KICK_EFFECT_END_FRAME      32u
 #define FALCON_KICK_EFFECT_TEXTURES        2u
+/* BattleShip's CaptainMainMotion schedules Falcon Dive's generic effect
+ * events at frames 0 and 13.  Those effects are shared Smash particles, not
+ * Captain-owned texture cards, so the host represents them with the existing
+ * one-texel fallback texture rather than baking unrelated assets into the
+ * owner blob. */
+#define FALCON_DIVE_LAUNCH_FRAME             0u
+#define FALCON_DIVE_DASH_FRAME              13u
+#define FALCON_DIVE_ATTACK_END_FRAME        45u
 #define FALCON_ROOT_TRACK_JOINT        0xFFFFu
 
 typedef struct FalconAssetJoint {
@@ -120,6 +128,9 @@ typedef struct Mat4 {
 static FalconAssetModel s_model;
 static int s_load_attempted;
 static const uint32_t s_fallback_color[1] = { 0xFF3060C8u };
+static const uint32_t s_dive_dust_color[1] = { 0xFFC07838u };
+static const uint32_t s_dive_spark_color[1] = { 0xFFFFD848u };
+static const uint32_t s_dive_white_color[1] = { 0xFFFFFFFFu };
 
 static int env_enabled(const char *name)
 {
@@ -591,6 +602,12 @@ static const char *animation_for_state(int state)
     case FL_FALCON_KICK_LANDING: return "LandingDownSpecial";
     case FL_FALCON_KICK_AIR: return "DownSpecialAir";
     case FL_FALCON_KICK_BOUND: return "FalconDiveEnd1";
+    case FL_FALCON_DIVE_GROUND: return "FalconDive";
+    case FL_FALCON_DIVE_AIR: return "FalconDiveEnd2";
+    case FL_FALCON_DIVE_CATCH: return "CatchingEnemyWhileDiving";
+    case FL_FALCON_DIVE_THROW: return "FalconDiveEnd1";
+    case FL_FALCON_DIVE_FALL: return "FallSpecial";
+    case FL_FALCON_DIVE_LANDING: return "LandingAirX";
     default: return "Wait";
     }
 }
@@ -727,6 +744,8 @@ static float presentation_animation_frame(const ForeignState *state)
             phase = extent - phase;
         return FALCON_WAIT_GROUNDED_FIRST + phase;
     }
+    if (state->state == FL_FALCON_DIVE_LANDING)
+        return (float)state->state_frame * 0.65f;
     return (float)state->state_frame;
 }
 
@@ -977,6 +996,154 @@ static void draw_falcon_kick_effect(
     nes_voxel_mesh_triangle(vertices[1], vertices[3], vertices[0]);
 }
 
+/* The original effects below are generic Smash 64 particles (Ripple,
+ * ImpactWave, DustDashSmall, and SparkleWhite), so no owner-authored card is
+ * available to bind here.  Keep their host approximation deliberately tiny:
+ * a few 1x1 fallback-colour quads in the same screen plane as Falcon. */
+static NesVoxelMeshVertex dive_effect_vertex(float x, float y, float z)
+{
+    NesVoxelMeshVertex out;
+    out.x = x;
+    out.y = y;
+    out.z = z;
+    out.u = 0.0f;
+    out.v = 0.0f;
+    return out;
+}
+
+static void draw_dive_effect_quad(float center_x, float center_y, float z,
+                                  float half_width, float half_height)
+{
+    NesVoxelMeshVertex top_left = dive_effect_vertex(
+        center_x - half_width, center_y - half_height, z);
+    NesVoxelMeshVertex top_right = dive_effect_vertex(
+        center_x + half_width, center_y - half_height, z);
+    NesVoxelMeshVertex bottom_right = dive_effect_vertex(
+        center_x + half_width, center_y + half_height, z);
+    NesVoxelMeshVertex bottom_left = dive_effect_vertex(
+        center_x - half_width, center_y + half_height, z);
+
+    nes_voxel_mesh_triangle(top_left, top_right, bottom_right);
+    nes_voxel_mesh_triangle(top_left, bottom_right, bottom_left);
+    nes_voxel_mesh_triangle(bottom_right, top_right, top_left);
+    nes_voxel_mesh_triangle(bottom_left, bottom_right, top_left);
+}
+
+static void draw_dive_effect_spark(float center_x, float center_y, float z,
+                                   float radius)
+{
+    NesVoxelMeshVertex top = dive_effect_vertex(center_x, center_y - radius,
+                                                 z);
+    NesVoxelMeshVertex right = dive_effect_vertex(center_x + radius, center_y,
+                                                   z);
+    NesVoxelMeshVertex bottom = dive_effect_vertex(center_x, center_y + radius,
+                                                    z);
+    NesVoxelMeshVertex left = dive_effect_vertex(center_x - radius, center_y,
+                                                  z);
+
+    nes_voxel_mesh_triangle(top, right, bottom);
+    nes_voxel_mesh_triangle(top, bottom, left);
+    nes_voxel_mesh_triangle(bottom, right, top);
+    nes_voxel_mesh_triangle(left, bottom, top);
+}
+
+static void draw_falcon_dive_effect(const ForeignState *state,
+                                    float center_x, float anchor_y,
+                                    float output_scale)
+{
+    const uint32_t frame = (uint32_t)state->state_frame;
+    const float unit = output_scale > 0.0f ? output_scale : 1.0f;
+    /* draw_model receives Falcon's authoritative foot row in +Y-up render
+     * space. Effects described as ground/launch-point particles belong on
+     * that row; the body extends upward from it. */
+    const float ground_y = anchor_y;
+    const float middle_y = anchor_y + FALCON_RENDER_HEIGHT * unit * 0.5f;
+    const float z = unit * 2.0f;
+    const float source_lr = state->facing < 0.0f ? -1.0f : 1.0f;
+
+    if (state->state == FL_FALCON_DIVE_GROUND ||
+        state->state == FL_FALCON_DIVE_AIR) {
+        if (frame < FALCON_DIVE_LAUNCH_FRAME + 6u) {
+            const float phase = (float)frame;
+            /* Source f0 spawns Ripple + ImpactWave. The host has no particle
+             * manager, so let the spawned ring persist and expand briefly
+             * instead of rendering an effectively invisible one-frame line. */
+            nes_voxel_mesh_bind_texture(s_dive_white_color, 1, 1, 1,
+                                        0.65f - phase * 0.08f, 0);
+            draw_dive_effect_quad(center_x, ground_y + 0.4f * unit, z,
+                                  (3.0f + phase * 1.2f) * unit,
+                                  0.45f * unit);
+        }
+        if (frame >= FALCON_DIVE_DASH_FRAME &&
+            frame < FALCON_DIVE_ATTACK_END_FRAME) {
+            const uint32_t phase = frame - FALCON_DIVE_DASH_FRAME;
+            /* Source f13 spawns DustDashSmall, then ten Star Rod sparks at
+             * two-frame intervals during the active launch. Preserve that
+             * cadence with compact host diamonds that remain readable after
+             * Falcon-only 2x downsampling. */
+            if (phase < 6u) {
+                nes_voxel_mesh_bind_texture(s_dive_dust_color, 1, 1, 1,
+                                            0.72f - (float)phase * 0.08f, 0);
+                draw_dive_effect_quad(
+                    center_x - source_lr * (3.0f + (float)phase) * unit,
+                    ground_y + 0.8f * unit, z,
+                    (1.8f + (float)phase * 0.35f) * unit, 0.7f * unit);
+            }
+            if (phase < 20u) {
+                const float step = (float)(phase / 2u);
+                const float side = (phase & 2u) ? -1.0f : 1.0f;
+                nes_voxel_mesh_bind_texture(s_dive_spark_color, 1, 1, 1,
+                                            0.85f, 0);
+                draw_dive_effect_spark(
+                    center_x + source_lr * (4.0f + fmodf(step, 3.0f)) * unit,
+                    middle_y + side * (3.0f + fmodf(step, 4.0f)) * unit,
+                    z, (0.8f + 0.12f * fmodf(step, 3.0f)) * unit);
+                draw_dive_effect_spark(
+                    center_x - source_lr * (2.0f + fmodf(step, 2.0f)) * unit,
+                    middle_y - side * 5.0f * unit, z, 0.55f * unit);
+            }
+        }
+        if (frame >= FALCON_DIVE_ATTACK_END_FRAME &&
+            frame < FALCON_DIVE_ATTACK_END_FRAME + 4u) {
+            /* Source f45 clears the catch boxes and spawns a white sparkle. */
+            const float phase = (float)(frame - FALCON_DIVE_ATTACK_END_FRAME);
+            nes_voxel_mesh_bind_texture(s_dive_white_color, 1, 1, 1,
+                                        0.8f - phase * 0.15f, 0);
+            draw_dive_effect_spark(center_x + source_lr * 5.0f * unit,
+                                   middle_y + 2.0f * unit, z,
+                                   (1.6f - phase * 0.2f) * unit);
+        }
+        return;
+    }
+
+    if (state->state == FL_FALCON_DIVE_CATCH) {
+        if (frame >= 6u) return;
+        /* Source Catch f0: shared Effect(17,38) and catch impact. */
+        nes_voxel_mesh_bind_texture(s_dive_spark_color, 1, 1, 1,
+                                    0.85f - (float)frame * 0.08f, 0);
+        draw_dive_effect_spark(center_x + source_lr * 5.0f * unit,
+                               middle_y + 2.0f * unit, z,
+                               (1.5f + (float)frame * 0.12f) * unit);
+        draw_dive_effect_spark(center_x + source_lr * 8.0f * unit,
+                               middle_y + 1.5f * unit, z, 0.75f * unit);
+    } else if (state->state == FL_FALCON_DIVE_THROW) {
+        if (frame >= 10u) return;
+        /* Source Throw f0: SparkleWhiteMultiExplode + ImpactWave. */
+        nes_voxel_mesh_bind_texture(s_dive_white_color, 1, 1, 1,
+                                    0.9f - (float)frame * 0.07f, 0);
+        draw_dive_effect_spark(center_x + source_lr * 6.0f * unit,
+                               middle_y, z,
+                               (1.8f + (float)frame * 0.16f) * unit);
+        draw_dive_effect_spark(center_x - source_lr * 2.5f * unit,
+                               middle_y + 4.0f * unit, z, 0.9f * unit);
+        draw_dive_effect_spark(center_x + source_lr * 1.0f * unit,
+                               middle_y - 4.0f * unit, z, 0.7f * unit);
+        draw_dive_effect_quad(center_x, ground_y + 0.4f * unit, z,
+                              (4.5f + (float)frame * 0.6f) * unit,
+                              0.45f * unit);
+    }
+}
+
 static NesVoxelMeshVertex render_death_vertex(
     Mat4 matrix, const FalconAssetVertex *vertex,
     const float pose_min[3], const float pose_max[3],
@@ -1150,6 +1317,7 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
         draw_falcon_kick_effect(&s_model, state, world, pose_min, pose_max,
                                 center_x, anchor_y, facing, model_scale,
                                 yaw_rad, output_scale);
+        draw_falcon_dive_effect(state, center_x, anchor_y, output_scale);
     }
     return 1;
 }

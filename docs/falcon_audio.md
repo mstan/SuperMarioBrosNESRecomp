@@ -22,6 +22,10 @@ checkout `4fc1128`). Its US data exposes the original route as
 | Punch impact | FGM 184 -> 187 + fork 0; articulations 146/7; triggers 11/4 | `B1_sounds2/wave_011.aiff` + `wave_004.aiff` |
 | Kick opening swing | FGM 41, articulation 173, trigger 18 | `B1_sounds2/wave_018.aiff` |
 | Kick energy start | FGM 183 -> 186, articulation 147, trigger 11 | `B1_sounds2/wave_011.aiff` |
+| Falcon Dive launch | FGM 182, articulation 41, trigger 18 | `B1_sounds2/wave_018.aiff` |
+| Falcon Dive catch | FGM 19, articulation 463, trigger 11 | `B1_sounds2/wave_011.aiff` |
+| Falcon Dive throw explosion | FGM 1 + fork 641, articulation 6, trigger 4 | `B1_sounds2/wave_004.aiff` |
+| Falcon Dive throw voice | voice 338, articulation 213, trigger 95 | `B1_sounds2/wave_095.aiff` |
 
 The four voice articulations and the Falcon energy articulations specify
 approximately -1200 cents. BattleShip's `audio.c` configures a 32000 Hz
@@ -41,13 +45,15 @@ The previous extractor confused those namespaces and played
 `B1_sounds1/wave_019` for both Falcon energy cues; that looped tonal sample was
 the reported guitar-like tail.
 
-The local extractor now renders the authored subset of the FGM interpreter:
+The local extractor renders the move-specific subset of the FGM interpreter:
 the 184 -> 187 Punch pitch sequence and its forked voice 0, the 183 -> 186 Kick
-pitch/envelope sequence, and the FGM 41 LightSwingL pitch. It advances at
-BattleShip's `184 / 32000`-second FGM tick and applies the source stop/release
-ramp. The runtime still receives ordinary bounded PCM one-shots; no FGM engine
-or ROM data is linked into the executable. Voice samples and their pitch remain
-direct.
+pitch/envelope sequence, FGM 41 LightSwingL, and Falcon Dive FGM 182, 19, and
+1 including the explosion fork used by that route. It advances at BattleShip's
+`184 / 32000`-second FGM tick and applies the decoded pitch/envelope/stop
+commands needed by these programs. It is a focused offline renderer, not a
+claim to implement every N64 audio opcode or the RSP mixer. The runtime still
+receives ordinary bounded PCM one-shots; no FGM engine or ROM data is linked
+into the executable. Voice samples and their pitch remain direct.
 
 The ignored reproducibility helper is:
 
@@ -55,7 +61,7 @@ The ignored reproducibility helper is:
 py -3.12 assets_ssb64/tools_local/extract_falcon_audio.py
 ```
 
-It calls FFmpeg, writes seven mono signed-16 44100 Hz WAVs plus a local
+It calls FFmpeg, writes eleven mono signed-16 44100 Hz WAVs plus a local
 manifest, and never writes outside `assets_ssb64/audio/`.
 
 ## Runtime cues
@@ -69,6 +75,9 @@ The quarantined state machine emits allocation-free, one-tick cue ids through
 - "Punch" plus impact FGM on Punch frame 42;
 - Kick voice plus LightSwingL on Falcon Kick entry;
 - Kick energy-start FGM on Kick frame 12.
+- Falcon Dive launch FGM on frame 13;
+- Catch FGM on the first observable Catch tick;
+- explosion FGM plus Captain's SpecialHi voice on Throw entry.
 
 The SMB1 adapter resolves cue ids to optional clips. `mod_audio` copies each
 registered clip, permits overlapping voice and FGM one-shots, saturating-adds
@@ -87,9 +96,10 @@ the restored timeline fires normally.
 
 ## Evidence
 
-- `tests/falcon_harness/audio.script`: exact cue masks and one-frame timing;
+- `tests/falcon_harness/audio.script` and `upb.script`: exact cue masks and
+  one-frame timing;
   `mod_audio_test.c` covers registration, overlap saturation, stop, and
-  unregister; the combined deterministic suite passes 12/12.
+  unregister; the combined deterministic suite passes 14/14.
 - `tests/falcon_m8_audio.script`: live jump, Punch, Kick, and Punch-windup
   save/load. With trace enabled, all seven mappings queue. The pre-save
   "Falcon" call occurs once; frame-42 "Punch" and impact each occur once on
@@ -111,6 +121,11 @@ the restored timeline fires normally.
   (LightSwingL). `C:\temp\falcon_{punch,kick}_audio_spectrum_compare.png`
   contrasts the removed narrow tonal `B1_sounds1/wave_019` tail with the
   broadband authored `B1_sounds2` FGM routes.
+- `tests/falcon_visual_upb_qa.script`: all four Falcon Dive clips load, launch,
+  Catch, explosion, and voice queue at their BattleShip-derived frames, and a
+  Catch-state save/load reproduces its image exactly. The source-routed local
+  clip durations are 0.202834 s (launch), 0.149501 s (catch), 0.689252 s
+  (explosion), and 0.695760 s (voice).
 - `tests/falcon_tier4_mod_off.script`: holding B with the package disabled
   produces no Smash64 controller, asset, audio-load, or cue log.
 - Temporarily withholding the ignored audio directory produces exactly one

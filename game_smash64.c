@@ -218,6 +218,12 @@ static int8_t   s_xspeed = 0;            /* this frame's velocity, computed in
                                           * update_input, written by the hook */
 static ForeignAttackHitbox s_attack;     /* emitted before NMI, consumed once
                                           * inside PlayerPhysicsSub */
+static int s_contact_pending;            /* one target connected; drained into
+                                          * the next collision resolve */
+static int s_forced_airborne_pending;    /* bridges a controller's one-tick
+                                          * departure edge across SMB1's
+                                          * integer floor quantization */
+static unsigned s_forced_airborne_frames;
 static unsigned long s_owned_frames = 0;
 static unsigned long s_wall_frames = 0;
 static unsigned long s_air_frames = 0;
@@ -296,6 +302,8 @@ static int32_t player_native_x(void)
 #define SMASH64_CF_ATTACK_ACTIVE  0x0100u
 #define SMASH64_CF_ENEMY_DEFEATED 0x0200u
 #define SMASH64_CF_BLOCK_BROKEN   0x0400u
+#define SMASH64_CF_CONTACT_CAUGHT 0x0800u
+#define SMASH64_CF_FORCE_AIRBORNE 0x1000u
 
 /* What the per-pixel sweep stopped on last frame, if anything. Consumed by the
  * next update_input, which is the next time a ForeignCollisionResult is built. */
@@ -646,10 +654,19 @@ void game_smash64_update_input(uint64_t frame_count)
             s_wrote_x_valid = 0;
             s_wrote_y_valid = 0;
             s_wrote_yspeed_valid = 0;
+            s_contact_pending = 0;
+            s_forced_airborne_pending = 0;
+            s_forced_airborne_frames = 0;
             reseed = 1;
         }
         s_prev_ownership = now;
         nes_foreign_set_ownership(now);
+        if (now != FOREIGN_OWNERSHIP_FOREIGN) {
+            /* Never let a pending foreign departure mutate a pipe, flagpole,
+             * death, or other native/scripted handoff even for one frame. */
+            s_forced_airborne_pending = 0;
+            s_forced_airborne_frames = 0;
+        }
         s_reseed_this_frame = reseed;
     }
 
@@ -664,6 +681,21 @@ void game_smash64_update_input(uint64_t frame_count)
          * either -- we sample input at VBlank, one frame before SMB1 acts on it.
          */
         uint8_t pstate = g_ram[Player_State];
+
+        /*
+         * A foreign move's departure request is an EDGE, but SMB1 cannot
+         * represent the source animation's subpixel lift-off: until at least
+         * one whole NES pixel has accumulated, PlayerBGCollision sees the
+         * fighter's feet on the floor and writes Player_State=0 again. Keep
+         * presenting the already-authorized falling state to the host until
+         * move_player_vertically_hook actually integrates that first pixel.
+         * This is adapter-side quantization bridging, not a repeated
+         * controller request; the trace therefore still exposes one edge.
+         */
+        if (s_forced_airborne_pending && pstate == 0) {
+            pstate = 2;
+            g_ram[Player_State] = 2;
+        }
 
         fs->grounded = (pstate == 0);
         fs->air_cause = (pstate == 1) ? FOREIGN_AIR_LAUNCHED
@@ -683,7 +715,7 @@ void game_smash64_update_input(uint64_t frame_count)
     if (nes_foreign_tick(frame_count, &fin, &move)) {
         game_smash64_audio_play_events(&move.audio, frame_count);
         s_attack = move.attack;
-        if (move.force_airborne) {
+        if (move.force_airborne && !s_forced_airborne_pending) {
             /* Generic controller-to-host departure handshake. SetFallS
              * ($DC82) writes Player_State=2 for SMB1's native falling state;
              * Ghidra confirms `LDA #$02; STA $001D` at $DC82-$DC84. A move
@@ -694,6 +726,15 @@ void game_smash64_update_input(uint64_t frame_count)
                 fs->grounded = 0;
                 fs->air_cause = FOREIGN_AIR_NONE;
             }
+            s_forced_airborne_pending = 1;
+            s_forced_airborne_frames = 0;
+            s_pending_flags |= SMASH64_CF_FORCE_AIRBORNE;
+        }
+        if (s_forced_airborne_pending &&
+            ++s_forced_airborne_frames > 16) {
+            /* Malformed controllers must not pin SMB1 airborne forever. */
+            s_forced_airborne_pending = 0;
+            s_forced_airborne_frames = 0;
         }
         if (wall) {
             move.requested_dx = 0.0;
@@ -703,6 +744,9 @@ void game_smash64_update_input(uint64_t frame_count)
         s_owned_frames++;
     } else {
         memset(&s_attack, 0, sizeof(s_attack));
+        s_contact_pending = 0;
+        s_forced_airborne_pending = 0;
+        s_forced_airborne_frames = 0;
         /* SMB1 owns the player; keep our idea of velocity in step with it so
          * resuming control does not inject a stale speed. */
         s_xspeed = (int8_t)g_ram[Player_X_Speed];
@@ -889,6 +933,8 @@ void game_smash64_update_input(uint64_t frame_count)
      */
     hit.flags |= s_pending_flags;
     s_pending_flags = 0;
+    hit.attack_connected = s_contact_pending;
+    s_contact_pending = 0;
 
     /*
      * The sweep's own verdict, independent of whether SMB1 chose to react.
@@ -921,6 +967,12 @@ void game_smash64_update_input(uint64_t frame_count)
     s_x_swept_ran = 0;
 
     nes_foreign_resolve(&hit);
+    if (hit.attack_connected) {
+        /* Tick runs before resolve, so its move result still describes the
+         * launch state on the frame resolve enters Catch. Do not let that
+         * pre-resolve catch volume survive into the following guest hook. */
+        memset(&s_attack, 0, sizeof(s_attack));
+    }
 }
 
 /*
@@ -1087,6 +1139,18 @@ static int move_player_vertically_hook(uint16_t addr)
     g_ram[Player_Y_Position] = (uint8_t)pos;
     g_ram[Player_Y_HighPos]  = (uint8_t)(int8_t)high;
 
+    /* The first successful representable UPWARD step completes the adapter
+     * bridge. Do this after the sweep: a downward pixel or an upward request
+     * parked against a ceiling is not a departure. The state already written
+     * for this guest frame remains airborne; next VBlank samples the genuinely
+     * separated position, allowing a later real landing to win normally. */
+    if (s_forced_airborne_pending && whole < 0 &&
+        ((high * 256) + pos) < s_y_before &&
+        s_swept_block != SMASH64_SWEEP_CEILING) {
+        s_forced_airborne_pending = 0;
+        s_forced_airborne_frames = 0;
+    }
+
     /* Did we end the frame inside geometry? Measured here, at the same instant
      * as the sweep above, so the two can never contradict each other. */
     if (high == 1) {
@@ -1241,7 +1305,7 @@ static int enemy_accepts_attack(uint8_t id, uint8_t state)
 }
 
 static int defeat_enemies_in_attack(double left, double right,
-                                    double top, double bottom)
+                                    double top, double bottom, int max_hits)
 {
     CPU6502State save_cpu = g_cpu;
     int hits = 0;
@@ -1271,6 +1335,7 @@ static int defeat_enemies_in_attack(double left, double right,
         g_cpu.X = (uint8_t)slot;
         ShellOrBlockDefeat();
         hits++;
+        if (max_hits > 0 && hits >= max_hits) break;
     }
     g_cpu = save_cpu;
     return hits;
@@ -1374,8 +1439,11 @@ static void apply_pending_attack(void)
     bottom = center_y + half_h;
 
     nes_foreign_trace_note_flags(SMASH64_CF_ATTACK_ACTIVE);
-    enemies = defeat_enemies_in_attack(left, right, top, bottom);
-    if (s_attack.flags & FOREIGN_ATTACK_BREAK_BLOCKS)
+    enemies = defeat_enemies_in_attack(
+        left, right, top, bottom,
+        (s_attack.flags & FOREIGN_ATTACK_CONTACT_ONLY) ? 1 : 0);
+    if (!(s_attack.flags & FOREIGN_ATTACK_CONTACT_ONLY) &&
+        (s_attack.flags & FOREIGN_ATTACK_BREAK_BLOCKS))
         blocks = break_bricks_in_attack(left, right, top, bottom);
     if (enemies) nes_foreign_trace_note_flags(SMASH64_CF_ENEMY_DEFEATED);
     if (blocks) nes_foreign_trace_note_flags(SMASH64_CF_BLOCK_BROKEN);
@@ -1384,6 +1452,20 @@ static void apply_pending_attack(void)
                                ? ctl->state_name(fs->state) : "?";
         printf("[Smash64Combat] %s: %d enemy hit(s), %d brick(s) broken\n",
                name ? name : "?", enemies, blocks);
+    }
+    if (enemies && (s_attack.flags & FOREIGN_ATTACK_CONTACT_ONLY)) {
+        /* SMB has no fighter capture graph. Apply the eventual 20-damage
+         * throw through its native enemy-defeat path immediately, then report
+         * one connection so Falcon owns the 16f Catch + 60f Throw sequence.
+         * Limiting the search above to one slot prevents a grab volume from
+         * sweeping up a crowd before that state transition reaches us. */
+        s_contact_pending = 1;
+        s_pending_flags |= SMASH64_CF_CONTACT_CAUGHT;
+        /* apply_pending_attack runs in guest context before the next host
+         * controller tick can replace this move result. Retire the one-shot
+         * catch volume here or that stale frame can defeat a second target
+         * after Falcon has already entered Catch. */
+        s_attack.active = 0;
     }
 }
 
@@ -1530,10 +1612,13 @@ typedef struct {
     int32_t  x_swept_wall;
     int32_t  x_swept_ran;
     uint32_t pending_flags;
+    int32_t  contact_pending;
+    int32_t  forced_airborne_pending;
+    uint32_t forced_airborne_frames;
     ForeignAttackHitbox attack;
 } AdapterSaveFields;
 
-#define SMASH64_ADAPTER_SAVESTATE_VERSION 3
+#define SMASH64_ADAPTER_SAVESTATE_VERSION 5
 
 /*
  * Returns 0 bytes while the mod is off. There is no adapter trajectory to
@@ -1567,6 +1652,9 @@ static int game_smash64_savestate_get(uint8_t *buf, int cap)
     f.x_swept_wall        = s_x_swept_wall;
     f.x_swept_ran         = s_x_swept_ran;
     f.pending_flags       = s_pending_flags;
+    f.contact_pending     = s_contact_pending;
+    f.forced_airborne_pending = s_forced_airborne_pending;
+    f.forced_airborne_frames = s_forced_airborne_frames;
     f.attack              = s_attack;
 
     buf[0] = SMASH64_ADAPTER_SAVESTATE_VERSION;
@@ -1608,6 +1696,9 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
     s_x_swept_wall        = f.x_swept_wall;
     s_x_swept_ran         = f.x_swept_ran;
     s_pending_flags       = f.pending_flags;
+    s_contact_pending     = f.contact_pending;
+    s_forced_airborne_pending = f.forced_airborne_pending;
+    s_forced_airborne_frames = f.forced_airborne_frames;
     s_attack              = f.attack;
     return 1;
 }
@@ -1623,6 +1714,9 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_selected = 0;
     s_announced = 0;
     memset(&s_attack, 0, sizeof(s_attack));
+    s_contact_pending = 0;
+    s_forced_airborne_pending = 0;
+    s_forced_airborne_frames = 0;
     s_controller_id[0] = '\0';
     nes_foreign_set_ownership(FOREIGN_OWNERSHIP_NATIVE);
     nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 0);
@@ -1648,6 +1742,9 @@ void game_smash64_set_mod_enabled(int enabled, const char *controller_id)
 
     s_xspeed = 0;
     memset(&s_attack, 0, sizeof(s_attack));
+    s_contact_pending = 0;
+    s_forced_airborne_pending = 0;
+    s_forced_airborne_frames = 0;
     s_owned_frames = 0;
     s_wall_frames = 0;
     s_air_frames = 0;

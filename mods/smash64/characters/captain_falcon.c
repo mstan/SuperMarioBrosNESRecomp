@@ -40,6 +40,12 @@ static const char *root_motion_animation(void)
         return "DownSpecialAir";
     case FL_FALCON_KICK_BOUND:
         return "FalconDiveEnd1";
+    case FL_FALCON_DIVE_GROUND:
+        return "FalconDive";
+    case FL_FALCON_DIVE_AIR:
+        return "FalconDiveEnd2";
+    case FL_FALCON_DIVE_THROW:
+        return "FalconDiveEnd1";
     default:
         return NULL;
     }
@@ -92,9 +98,14 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
                              animation, (float)s_fighter.state_frame,
                              &delta_y, &delta_z)) {
             if (!s_fighter.grounded) {
+                const int dive_launch =
+                    s_fighter.state == FL_FALCON_DIVE_GROUND ||
+                    s_fighter.state == FL_FALCON_DIVE_AIR;
                 s_fighter.vel_air_x =
-                    (double)delta_z * (double)s_fighter.lr;
-                s_fighter.vel_air_y = (double)delta_y;
+                    (double)delta_z * (double)s_fighter.lr +
+                    (dive_launch ? s_fighter.specialhi_vel_x : 0.0);
+                s_fighter.vel_air_y = (double)delta_y +
+                    (dive_launch ? s_fighter.specialhi_vel_y : 0.0);
                 motion.requested_dx = s_fighter.vel_air_x;
                 motion.requested_dy = s_fighter.vel_air_y;
             } else {
@@ -133,9 +144,15 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
                   : s_fighter.vel_air_x;
     out->vy = s_fighter.vel_air_y;
     out->state = s_fighter.state;
+    /* This ABI is an edge, never a held state. Ground Dive is entered during
+     * tick and can publish its frame-0 departure immediately. Kick Bound is
+     * entered later in resolve, so its first observable tick is frame 1.
+     * Catch and Throw are continuations of an already-airborne action. */
     out->force_airborne =
-        s_fighter.state == FL_FALCON_KICK_BOUND &&
-        s_fighter.state_frame <= 1.0;
+        (s_fighter.state == FL_FALCON_DIVE_GROUND &&
+         s_fighter.state_frame == 0.0) ||
+        (s_fighter.state == FL_FALCON_KICK_BOUND &&
+         s_fighter.state_frame == 1.0);
     out->attack.offset_x = motion.attack.offset_x;
     out->attack.offset_y = motion.attack.offset_y;
     out->attack.width = motion.attack.width;
@@ -143,8 +160,11 @@ static void cf_tick(ForeignState *state, const ForeignInput *input,
     out->attack.knockback_x = motion.attack.knockback_x;
     out->attack.knockback_y = motion.attack.knockback_y;
     out->attack.damage = motion.attack.damage;
-    out->attack.flags = motion.attack.break_blocks
-                            ? FOREIGN_ATTACK_BREAK_BLOCKS : 0;
+    out->attack.flags = 0;
+    if (motion.attack.break_blocks)
+        out->attack.flags |= FOREIGN_ATTACK_BREAK_BLOCKS;
+    if (motion.attack.contact_only)
+        out->attack.flags |= FOREIGN_ATTACK_CONTACT_ONLY;
     out->attack.active = motion.attack.active;
 
     for (cue = 1; cue < (unsigned)FALCON_AUDIO_CUE_COUNT; ++cue) {
@@ -176,6 +196,7 @@ static void cf_resolve(ForeignState *state, const ForeignCollisionResult *hit)
     c.hit_ceiling = hit->hit_ceiling;
     c.hit_floor = hit->hit_floor;
     c.hit_wall = hit->hit_wall;
+    c.attack_connected = hit->attack_connected;
     c.has_imposed_vy = hit->has_imposed_vy;
     c.imposed_vy = hit->imposed_vy;
 
