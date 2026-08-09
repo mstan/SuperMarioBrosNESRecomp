@@ -96,7 +96,11 @@ tiles, and other nonbreakable metatiles are never passed to that routine.
 - `tests/falcon_harness/upb.script` checks the two launch states, frame-13
   20-damage contact-only window, confirmed Catch, Catch/Throw audio masks,
   Catch and Throw save roundtrips, special-fall drift/landing recovery, and
-  source-frame reversal.
+  source-frame reversal. It additionally proves a host ceiling clamps both
+  displacement and upward velocity without cancelling Falcon Dive, and
+  enumerates every accepted ordinary ID plus the Bullet-Bill-frenzy, Podoboo,
+  special/Bowser, and already-defeated rejection branches through the same
+  pure target-policy helper used by the runtime.
 - `tests/falcon_m7_combat.script` seeds a Goomba, one brick, and adjacent
   nonbreakable scenery, then validates native Punch and Kick consequences.
 - `tests/falcon_m7_savestate.script` saves during Punch windup and demonstrates
@@ -111,6 +115,10 @@ tiles, and other nonbreakable metatiles are never passed to that routine.
   behind reload/render fences; their three hashes differ, avoiding the former
   asynchronous duplicate-frame false evidence. It also captures FallSpecial
   and the 0.65x forced landing at entry/midpoint/completion.
+- `tests/falcon_visual_scripted_presentation_qa.script` waits two rendered
+  frames after direct state injection, so its first flagpole, end-walk, and
+  entrance images prove Falcon presentation instead of recording the preceding
+  asynchronous framebuffer.
 - Trace flags: `0x100` attack active, `0x200` enemy defeated, `0x400` brick
   broken, `0x800` Falcon Dive contact confirmed, and `0x1000` the one-tick
   controller-to-host airborne edge. CSV and live `ftring` output also expose

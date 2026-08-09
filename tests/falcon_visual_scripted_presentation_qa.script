@@ -14,6 +14,9 @@ SAVE_STATE C:/temp/falcon_visual_scripted_presentation_base.sav
 # Mario and follow the native position with an appropriate Falcon pose/cycle.
 WRITE_RAM8 000E 04
 ASSERT_RAM8 000E 04
+# SCREENSHOT is presented asynchronously; allow the injected state to reach
+# the renderer so the first capture cannot reuse the prior gameplay frame.
+WAIT 2
 SCREENSHOT C:/temp/falcon_scripted_flagpole_00.png
 WAIT 4
 SCREENSHOT C:/temp/falcon_scripted_flagpole_04.png
@@ -25,6 +28,7 @@ LOAD_STATE C:/temp/falcon_visual_scripted_presentation_base.sav
 WAIT 2
 WRITE_RAM8 000E 05
 ASSERT_RAM8 000E 05
+WAIT 2
 SCREENSHOT C:/temp/falcon_scripted_end_walk_00.png
 WAIT 4
 SCREENSHOT C:/temp/falcon_scripted_end_walk_04.png
@@ -36,6 +40,7 @@ LOAD_STATE C:/temp/falcon_visual_scripted_presentation_base.sav
 WAIT 2
 WRITE_RAM8 000E 07
 ASSERT_RAM8 000E 07
+WAIT 2
 SCREENSHOT C:/temp/falcon_scripted_entrance_00.png
 WAIT 4
 SCREENSHOT C:/temp/falcon_scripted_entrance_04.png

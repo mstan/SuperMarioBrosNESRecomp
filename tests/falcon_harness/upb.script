@@ -98,6 +98,52 @@ host_wall
 frames 1
 expect_state FALCON_DIVE_AIR
 
+# A ceiling cancels upward velocity without cancelling Falcon Dive or
+# inventing a Mario-specific bounce/state transition.
+reset
+pos_y 1000
+host_fall
+neutral
+stick_y 80
+attack down
+frames 1
+attack up
+frames 13
+pos_y 1000
+host_ceiling
+frames 1
+expect_state FALCON_DIVE_AIR
+expect_vel_air_y 0 0
+expect_pos_y 1000 1000
+
+# The live Goomba case proves the complete native defeat -> Catch -> Throw
+# route. Enumerate the adapter's pure target policy here so every ordinary ID
+# reaches that same path, while native special/hazard objects remain excluded.
+expect_enemy_policy 0x00 0x00 1
+expect_enemy_policy 0x01 0x00 1
+expect_enemy_policy 0x02 0x00 1
+expect_enemy_policy 0x03 0x00 1
+expect_enemy_policy 0x04 0x00 1
+expect_enemy_policy 0x05 0x00 1
+expect_enemy_policy 0x06 0x00 1
+expect_enemy_policy 0x07 0x00 1
+expect_enemy_policy 0x08 0x00 0
+expect_enemy_policy 0x09 0x00 1
+expect_enemy_policy 0x0A 0x00 1
+expect_enemy_policy 0x0B 0x00 1
+expect_enemy_policy 0x0C 0x00 0
+expect_enemy_policy 0x0D 0x00 1
+expect_enemy_policy 0x0E 0x00 1
+expect_enemy_policy 0x0F 0x00 1
+expect_enemy_policy 0x10 0x00 1
+expect_enemy_policy 0x11 0x00 1
+expect_enemy_policy 0x12 0x00 1
+expect_enemy_policy 0x13 0x00 1
+expect_enemy_policy 0x14 0x00 1
+expect_enemy_policy 0x15 0x00 0
+expect_enemy_policy 0x2D 0x00 0
+expect_enemy_policy 0x06 0x20 0
+
 reset
 pos_y 1000
 neutral

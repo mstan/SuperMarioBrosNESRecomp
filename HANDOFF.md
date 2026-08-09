@@ -2,7 +2,7 @@
 
 Date: 2026-08-09
 
-## Current QA status: Falcon Dive integrated; final owner listening remains
+## Current QA status: Kick readability and final owner listening remain
 
 The current worktree adds BattleShip-derived Falcon Dive/Up-B on top of the
 previously accepted movement, presentation, Falcon Punch, and Falcon Kick
@@ -19,9 +19,11 @@ and reload PNGs have the same SHA-256
 `D5F0CD04ECFC69E7867518B21F52CCFD28074EC8F4C7132A1187CC6A3E4778C0`.
 The trace shows one `attack_connected` edge, one native target consequence,
 and no stale second hit. Eleven owner-side audio clips load; Falcon Dive launch,
-Catch, explosion, and voice queue at the source-derived frames. Automated QA
-cannot judge the final mix by ear, so an owner play/listen pass remains required
-before closing the Up-B Bead or running the final integrated QA Bead.
+Catch, explosion, and voice queue at the source-derived frames. The current
+isolated Release rerun reproduces those results and additionally passes the
+pit/death/reseed and render-fenced scripted-state smokes. Automated QA cannot
+judge the final mix by ear, so an owner play/listen pass remains required before
+closing the Up-B Bead or running the final integrated QA Bead.
 
 Exact turn/event captures are isolated behind save-state reloads and render
 settling; frames 12, 13, and 14 now have distinct hashes. Additional captures
@@ -30,8 +32,14 @@ show FallSpecial plus special-landing entry, midpoint, and completion.
 The latest Falcon Kick direction concern was rechecked against the actual
 mirrored captures. The corrected Kick-only `-90` degree yaw is right: its yellow
 boot leads screen travel and CaptainSpecial2 trails behind for both facings.
-The large asymmetric flame can obscure the body and make the motion feel
-backward, but flipping the yaw again would put the boot into the trail.
+The large asymmetric flame was nevertheless biased in front of the fighter and
+could obscure the body enough to read backward. The pending presentation patch
+moves only that attached card behind Falcon; yaw, roll, texture extent, timing,
+and root trajectory remain source-derived. Fresh Release frame-12/16/20 mirrors
+again show the boot/body on the leading edge and the plume behind for both
+facings. The depth change does not eliminate the plume's visual dominance at
+native scale, so owner playtest remains the acceptance gate before closing the
+reopened Down-B Bead.
 
 Ground Falcon Dive emits `force_airborne` once. Adapter save record v5 bridges
 the source animation's subpixel startup across SMB1's integer floor state only
@@ -322,9 +330,24 @@ first 500 frames match a sample-level reconstruction of native APU plus Falcon
 overlays exactly (367,500/367,500 samples). BattleShip establishes a 32 kHz
 synthesizer and direct -1200-cent FGM voice ratio, so the voice bytes have a
 16 kHz effective playback clock before conversion to the runner's 44.1 kHz.
-With the mod disabled, no Falcon asset or audio load occurs. With the ignored
-asset directory withheld, startup emits one model and one audio fallback
-message and a smoke run exits cleanly.
+Current-build mod-off screenshots show ordinary Mario with no Falcon asset or
+audio initialization. With the ignored asset quarantine temporarily withheld,
+Falcon retains control using the blue cube across idle/run/jump/Punch/Kick,
+startup emits one model and one silent-audio fallback, and the script exits
+cleanly. The quarantine and Falcon-enabled staged configuration were verified
+restored afterward.
+
+The standalone Up-B harness also models a physical ceiling (zero displacement
+and upward velocity without changing Falcon Dive state) and enumerates the
+adapter's full ordinary-enemy ID boundary. It rejects the frenzy Bullet-Bill
+marker, Podoboo, IDs at/above BowserFlame, and the native defeated-state bit.
+Runtime static assertions bind those testable policy constants to the generated
+SMB symbol values.
+
+`tests/falcon_visual_scripted_presentation_qa.script` now waits two render
+frames after directly injecting flagpole, end-walk, or entrance state. This
+prevents its first PNG from reusing the prior framebuffer; fresh first-valid
+captures show Falcon in all three states rather than a false one-frame Mario.
 
 ## Known adaptations and traps
 

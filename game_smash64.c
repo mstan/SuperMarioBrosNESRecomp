@@ -26,6 +26,7 @@
  * instance.
  */
 #include "game_smash64.h"
+#include "game_smash64_attack_policy.h"
 #include "game_smash64_audio.h"
 
 #include "foreign_controller.h"
@@ -36,6 +37,13 @@
 /* Brings in the RAM/const symbol defines (Player_X_Speed, GameEngineSubroutine,
  * ...) so nothing below is a bare literal. */
 #include "generated/super-mario-bros_full_decls.h"
+
+_Static_assert(SMASH64_ENEMY_BULLET_BILL_FRENZY == BulletBill_FrenzyVar,
+               "Falcon target policy Bullet Bill ID drifted from SMB symbols");
+_Static_assert(SMASH64_ENEMY_PODOBOO == Podoboo,
+               "Falcon target policy Podoboo ID drifted from SMB symbols");
+_Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
+               "Falcon target policy special-object boundary drifted");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1295,15 +1303,6 @@ static int ranges_overlap(double a0, double a1, double b0, double b1)
     return a0 < b1 && b0 < a1;
 }
 
-static int enemy_accepts_attack(uint8_t id, uint8_t state)
-{
-    if (state & 0x20) return 0; /* ShellOrBlockDefeat's defeated bit. */
-    if (id == BulletBill_FrenzyVar || id == Podoboo) return 0;
-    /* Mirrors ChkOtherEnemies ($D78B): the special objects and Bowser live
-     * at or above $15 and retain their own native interaction rules. */
-    return id < BowserFlame;
-}
-
 static int defeat_enemies_in_attack(double left, double right,
                                     double top, double bottom, int max_hits)
 {
@@ -1318,7 +1317,7 @@ static int defeat_enemies_in_attack(double left, double right,
         if (g_ram[Enemy_Y_HighPos + slot] != 1) continue;
         id = g_ram[Enemy_ID + slot];
         state = g_ram[Enemy_State + slot];
-        if (!enemy_accepts_attack(id, state)) continue;
+        if (!smash64_enemy_accepts_attack(id, state)) continue;
 
         ex = ((int)g_ram[Enemy_PageLoc + slot] << 8) |
              (int)g_ram[Enemy_X_Position + slot];

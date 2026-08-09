@@ -914,7 +914,10 @@ static NesVoxelMeshVertex render_kick_effect_vertex(
         (screen_x * roll_cos - screen_y * roll_sin) * model_scale;
     out.y = base_y +
         (screen_x * roll_sin + screen_y * roll_cos) * model_scale;
-    out.z = (x * yaw_sin + z * yaw_cos) * model_scale + output_scale;
+    /* Keep CaptainSpecial2's attached fire card behind the kicking leg.
+     * Biasing it cameraward hid Falcon's already-small silhouette and made
+     * the bright trailing bulb read as the move's leading edge. */
+    out.z = (x * yaw_sin + z * yaw_cos) * model_scale - output_scale;
     out.u = u;
     out.v = v;
     return out;
