@@ -1,0 +1,88 @@
+LOG falcon-visual-high-jump-qa-world-1-1
+WAIT 60
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 00
+WRITE_RAM8 760 00
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+ASSERT_RAM8 000E 08
+WAIT 120
+SAVE_STATE C:/temp/falcon_visual_high_jump_base.sav
+
+# Capture the complete full-hop arc, including the HUD-adjacent apex. A
+# replacement failure must not be hidden by accepting one good jump frame.
+HOLD A
+SCREENSHOT C:/temp/falcon_high_jump_00.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_04.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_08.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_12.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_16.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_20.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_24.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_28.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_32.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_36.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_40.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_44.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_48.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_52.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_56.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_60.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_high_jump_64.png
+RELEASE A
+ASSERT_RAM8 000E 08
+
+# Restore the same planted baseline and tap A for a short hop. Stable scale is
+# required here too; otherwise the more compressed source poses can hide the
+# pumping seen in the full-hop sequence.
+LOAD_STATE C:/temp/falcon_visual_high_jump_base.sav
+WAIT 2
+HOLD A
+WAIT 2
+RELEASE A
+SCREENSHOT C:/temp/falcon_short_jump_00.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_short_jump_04.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_short_jump_08.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_short_jump_12.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_short_jump_16.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_short_jump_20.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_short_jump_24.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_short_jump_28.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_short_jump_32.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_short_jump_36.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_short_jump_40.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_short_jump_44.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_short_jump_48.png
+ASSERT_RAM8 000E 08
+WAIT 2
+EXIT 0

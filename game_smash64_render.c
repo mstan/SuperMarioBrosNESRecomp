@@ -15,6 +15,8 @@
 #include "nes_runtime.h"
 #include "voxel_renderer.h"
 
+#include "generated/super-mario-bros_full_decls.h"
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,19 +46,26 @@
 #define FALCON_SSAA_SCALE          2
 #define FALCON_SSAA_MAX_WIDTH   1024
 #define FALCON_SSAA_MAX_HEIGHT   480
+#define SMB1_PLAYFIELD_TOP         32
+#define FALCON_DEATH_HIDE_MARGIN 32.0f
 
 /* Falcon alone is rendered at 2x and box-filtered over the already complete
  * NES frame.  This keeps every background tile and native sprite pixel-crisp
  * while giving the now-32px fighter four coverage samples per output pixel. */
 static uint32_t
     s_falcon_ssaa[FALCON_SSAA_MAX_WIDTH * FALCON_SSAA_MAX_HEIGHT];
+static uint32_t
+    s_native_status_bar[FALCON_SSAA_MAX_WIDTH * SMB1_PLAYFIELD_TOP];
 
 /* Presentation-only death clock. SMB1 still owns the PlayerDeath routine,
  * life decrement, delay, and respawn; these values only drive the replacement
  * mesh's falling Star-KO adaptation. */
-static int s_falcon_death_was_active;
+static int s_falcon_death_sequence_latched;
+static int s_falcon_death_hidden;
 static unsigned s_falcon_death_frame;
 static float s_falcon_death_start_center_y;
+static Smash64ScriptedPresentation s_scripted_presentation;
+static unsigned s_scripted_presentation_frame;
 
 /* Flat placeholder color (a Falcon-blue). One 1x1 texel reused for every
  * face; nes_voxel_mesh_bind_texture's shade parameter fakes basic per-face
@@ -64,25 +73,12 @@ static float s_falcon_death_start_center_y;
  * voxel_renderer.c), so no real texture image is needed for M6.1/M6.2. */
 static const uint32_t k_cube_color[1] = { 0xFF3060C8u };
 
-static int smb1_sprite_height(void) {
-    /* PPUCTRL bit 5: 0 = 8x8 sprites, 1 = 8x16. Mirrors ppu_renderer.c's own
-     * spr_tall/spr_height computation. */
-    return (g_ppuctrl & 0x20) ? 16 : 8;
-}
-
 /*
  * Per-slot suppression predicate for ppu_renderer_set_sprite_suppress().
  *
- * Mirrors game_voxel.c:236-248's smb_first_person_sprite_visible bbox
- * against the same screen-space player mirror bytes (g_ram[0x03AD]/[0x03B8]
- * -- distinct from game_smash64.c's Ghidra-cited Player_X_Position, which is
- * internal fixed-point state, not the OAM draw position). That precedent
- * tests one assembled metasprite's bbox against a generous margin (-4..+20
- * horizontally, -4..+28 vertically) sized to cover Mario's whole 1-4-tile
- * posture. This hook fires per OAM slot rather than per assembled
- * metasprite, so it applies the same generous box to each individual
- * sprite's own [x, x+8) x [y, y+height) extent -- every OAM piece of
- * Mario's metasprite falls inside it, and nothing else does.
+ * Player identity comes from SMB1's own Player_SprDataOffset rather than a
+ * coordinate guess, so clipping and wrapping near the HUD cannot expose one
+ * or more native Mario tiles.
  *
  * Self-gates on the ordinary and narrowly scoped scripted presentation
  * predicates. With the mod off this always returns 0 and ppu_render_frame
@@ -90,20 +86,27 @@ static int smb1_sprite_height(void) {
  */
 static int smash64_suppress_player_sprite(int oam_slot, int x, int y,
                                           void *user) {
-    int player_x, player_y, spr_h;
-    (void)oam_slot;
+    int player_oam_byte, first_player_oam_byte;
+    (void)x;
+    (void)y;
     (void)user;
 
     if (!game_smash64_active() &&
         !game_smash64_death_presentation_active() &&
-        !game_smash64_still_presentation_active()) return 0;
+        !game_smash64_still_presentation_active() &&
+        game_smash64_scripted_presentation() ==
+            SMASH64_SCRIPTED_PRESENTATION_NONE) return 0;
 
-    player_x = g_ram[0x03AD];
-    player_y = g_ram[0x03B8];
-    spr_h = smb1_sprite_height();
-
-    return x + 8     >= player_x - 4 && x <= player_x + 20 &&
-           y + spr_h >= player_y - 4 && y <= player_y + 28;
+    /* Ghidra nes/SuperMarioBrosNES: RenderPlayerSub $EFBE loads
+     * Player_SprDataOffset $06E4 at $EFD9, and PlayerGfxProcessing $EF45
+     * passes four rows to it. Each row is two four-byte OAM entries, so the
+     * player's identity is this exact eight-slot/32-byte block. Unlike the
+     * old coordinate-overlap guess, it remains correct when top-edge clipping
+     * dumps some rows to $F8 or wraps their screen Y near the HUD. */
+    first_player_oam_byte = g_ram[Player_SprDataOffset];
+    player_oam_byte = oam_slot * 4;
+    return player_oam_byte >= first_player_oam_byte &&
+           player_oam_byte < first_player_oam_byte + 32;
 }
 
 void game_smash64_render_init(void) {
@@ -138,7 +141,10 @@ static int falcon_ssaa_enabled(void) {
 static void composite_falcon_ssaa(uint32_t *framebuffer, int width,
                                   int height) {
     const int source_width = width * FALCON_SSAA_SCALE;
-    for (int y = 0; y < height; ++y) {
+    /* The first four tile rows are SMB1's fixed HUD. Native player sprites
+     * are clipped as they leave the playfield; never paint the replacement
+     * mesh over score text. */
+    for (int y = SMB1_PLAYFIELD_TOP; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             const int sx = x * FALCON_SSAA_SCALE;
             const int sy = y * FALCON_SSAA_SCALE;
@@ -188,16 +194,33 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
     float death_anim_frame = 0.0f;
     int death_active;
     int still_active;
+    int preserve_status_bar = 0;
+    Smash64ScriptedPresentation scripted_presentation;
     float x0, x1, y0, y1, z0, z1;
     NesVoxelMeshVertex a, b, c, d, e, f, g, h;
 
     if (!framebuffer) return;
     death_active = game_smash64_death_presentation_active();
     still_active = game_smash64_still_presentation_active();
-    if (!game_smash64_active() && !death_active && !still_active) {
-        s_falcon_death_was_active = 0;
-        s_falcon_death_frame = 0;
+    scripted_presentation = game_smash64_scripted_presentation();
+    if (!game_smash64_active() && !death_active && !still_active &&
+        scripted_presentation == SMASH64_SCRIPTED_PRESENTATION_NONE) {
+        /* OperMode and the game-engine dispatch can briefly leave their death
+         * values during the native restart flow. Do not treat those transient
+         * frames as a new death: the presentation stays latched and, once it
+         * has left the screen, hidden. A genuine return to ordinary control
+         * below is the only reset point. */
+        s_scripted_presentation = SMASH64_SCRIPTED_PRESENTATION_NONE;
+        s_scripted_presentation_frame = 0;
         return;
+    }
+
+    if (scripted_presentation != s_scripted_presentation) {
+        s_scripted_presentation = scripted_presentation;
+        s_scripted_presentation_frame = 0;
+    } else if (scripted_presentation !=
+               SMASH64_SCRIPTED_PRESENTATION_NONE) {
+        ++s_scripted_presentation_frame;
     }
 
     if (falcon_ssaa_enabled() &&
@@ -208,6 +231,11 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
         target_height = 240 * FALCON_SSAA_SCALE;
         target = s_falcon_ssaa;
         memset(target, 0, (size_t)target_width * target_height * sizeof(*target));
+    } else if (g_render_width <= FALCON_SSAA_MAX_WIDTH) {
+        preserve_status_bar = 1;
+        memcpy(s_native_status_bar, framebuffer,
+               (size_t)g_render_width * SMB1_PLAYFIELD_TOP *
+                   sizeof(*framebuffer));
     }
 
     /*
@@ -220,7 +248,7 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
      * regardless of where the player went: a camera that follows its
      * subject cannot show the subject moving.)
      */
-    cx = ((float)(g_ram[0x03AD] + g_widescreen_left) + 8.0f) *
+    cx = ((float)(g_ram[Player_Rel_XPos] + g_widescreen_left) + 8.0f) *
         output_scale;
     cz = 0.0f;
     /* $03B8 is SMB1's 32px player-box top, not necessarily the top of the
@@ -228,14 +256,27 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
      * a +16px offset inside that box, so both sizes share the authoritative
      * foot row $03B8+32. Measured in ordinary 1-1 play: native_y=$B0 and the
      * floor begins at screen row $D0. */
-    foot_y = (240.0f - (float)(g_ram[0x03B8] + 32)) * output_scale;
+    {
+        int player_y = g_ram[Player_Rel_YPos];
+        /* SMB1's screen-relative byte wraps through $FF when the 32px player
+         * box rises above the top edge. Player_Y_HighPos is 0 for that upper
+         * page and 1 in the ordinary playfield (confirmed by the existing
+         * Ghidra-audited vertical adapter). Unwrap only the upper case; pit
+         * travel on page 2 must continue downward rather than reappear above
+         * the HUD. */
+        if (player_y >= 0xF0 && (int8_t)g_ram[Player_Y_HighPos] <= 0)
+            player_y -= 0x100;
+        foot_y = (240.0f - (float)(player_y + 32)) * output_scale;
+    }
 
     if (death_active) {
         const float frame = (float)s_falcon_death_frame;
-        if (!s_falcon_death_was_active) {
+        if (!s_falcon_death_sequence_latched) {
             s_falcon_death_start_center_y =
                 240.0f - (float)(g_ram[0x03B8] + 16);
             s_falcon_death_frame = 0;
+            s_falcon_death_hidden = 0;
+            s_falcon_death_sequence_latched = 1;
         }
         /* DeadUpStar uses DamageFall while translating through depth for 180
          * frames. In a side-view platformer, depth is unreadable, so preserve
@@ -245,10 +286,14 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
                          output_scale;
         death_spin = frame * (18.0f * 3.14159265358979323846f / 180.0f);
         death_anim_frame = frame * 0.5f;
-        s_falcon_death_was_active = 1;
+        if (death_center_y < -FALCON_DEATH_HIDE_MARGIN * output_scale)
+            s_falcon_death_hidden = 1;
         ++s_falcon_death_frame;
-    } else {
-        s_falcon_death_was_active = 0;
+    } else if (game_smash64_active()) {
+        /* Ordinary Falcon control proves SMB1 completed the prior death and
+         * respawn. The next PlayerDeath may now begin one fresh fall. */
+        s_falcon_death_sequence_latched = 0;
+        s_falcon_death_hidden = 0;
         s_falcon_death_frame = 0;
     }
 
@@ -308,13 +353,21 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
     /* The real model is loaded lazily from the ignored local asset blob.
      * Missing or invalid assets deliberately leave the M6.2 cube intact so
      * a publishable checkout remains usable without proprietary data. */
-    if (!(death_active
+    if (!((death_active && s_falcon_death_hidden) ||
+          (death_active
               ? game_smash64_assets_draw_death(
                     cx, death_center_y, output_scale, death_spin,
                     death_anim_frame)
-              : (still_active
-                     ? game_smash64_assets_draw_idle(cx, foot_y, output_scale)
-                     : game_smash64_assets_draw(cx, foot_y, output_scale)))) {
+              : (scripted_presentation !=
+                         SMASH64_SCRIPTED_PRESENTATION_NONE
+                     ? game_smash64_assets_draw_scripted(
+                           cx, foot_y, output_scale, scripted_presentation,
+                           (float)s_scripted_presentation_frame)
+                     : (still_active
+                            ? game_smash64_assets_draw_idle(
+                                  cx, foot_y, output_scale)
+                            : game_smash64_assets_draw(
+                                  cx, foot_y, output_scale)))))) {
         draw_cube_face(e, f, g, h, 1.00f);  /* top */
         draw_cube_face(a, b, f, e, 0.85f);  /* front (z0, camera-facing) */
         draw_cube_face(d, c, g, h, 0.45f);  /* back */
@@ -324,6 +377,11 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
     }
 
     nes_voxel_mesh_end();
-    if (output_scale > 1.0f)
+    if (output_scale > 1.0f) {
         composite_falcon_ssaa(framebuffer, g_render_width, 240);
+    } else if (preserve_status_bar) {
+        memcpy(framebuffer, s_native_status_bar,
+               (size_t)g_render_width * SMB1_PLAYFIELD_TOP *
+                   sizeof(*framebuffer));
+    }
 }

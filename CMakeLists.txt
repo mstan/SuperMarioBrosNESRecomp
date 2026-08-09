@@ -66,7 +66,8 @@ if(EXISTS "${FALCON_ASSET_ROOT}/model/captain_model.json")
             "${FALCON_ASSET_ROOT}/textures/*.json"
             "${FALCON_ASSET_ROOT}/textures/*.bin"
             "${FALCON_ASSET_ROOT}/textures/*.png"
-            "${FALCON_ASSET_ROOT}/anim/*.json")
+            "${FALCON_ASSET_ROOT}/anim/*.json"
+            "${FALCON_ASSET_ROOT}/effects/*.bin")
         add_custom_command(
             OUTPUT "${FALCON_RUNTIME_BLOB}"
             COMMAND "${Python3_EXECUTABLE}"

@@ -19,7 +19,7 @@ from PIL import Image
 
 
 MAGIC = b"FLCN64B\0"
-VERSION = 2
+VERSION = 3
 TRACK_IDS = {
     "RotX": 0,
     "RotY": 1,
@@ -33,10 +33,27 @@ TRACK_IDS = {
 }
 LOOPING_ANIMS = {"Wait", "Walk1", "Walk2", "Walk3", "Run", "CrouchIdle"}
 
+# BattleShip ftdata.c marks these motions with one of the auxiliary fighter
+# root flags (the historically swapped TRANSN/XROTN macro names both create a
+# root before CommonStart). lbCommonAddFighterPartsFigatree walks that root
+# first, so stream 0 is not model joint 0 and every common-part stream follows
+# it by one slot. The host owns root motion; omit the auxiliary stream and bind
+# streams 1..25 to baked model joints 0..24 exactly as Smash does.
+AUXILIARY_ROOT_ANIMS = {
+    "TurnRun", "JumpB", "JumpAerialB", "FalconPunchGround",
+    "DownSpecial", "LandingDownSpecial", "DownSpecialAir",
+}
+
 INTERP_HOLD = 0
 INTERP_LINEAR = 1
 INTERP_CUBIC = 2
 INTERP_STEP = 3
+
+FALCON_PUNCH_RELOC_SIZE = 0x870
+FALCON_PUNCH_PALETTE_OFFSET = 0x58
+FALCON_PUNCH_TEXTURE_OFFSETS = (0x80, 0x288, 0x490)
+FALCON_PUNCH_TEXTURE_WIDTH = 32
+FALCON_PUNCH_TEXTURE_HEIGHT = 32
 
 
 def load_json(path: Path):
@@ -78,6 +95,61 @@ def rgba_to_argb_bytes(image: Image.Image) -> bytes:
         r, g, b, a = rgba[offset:offset + 4]
         out += struct.pack("<I", (a << 24) | (r << 16) | (g << 8) | b)
     return bytes(out)
+
+
+def rgba16_to_argb(value: int) -> int:
+    """Decode one big-endian N64 RGBA16 palette entry."""
+    r5 = (value >> 11) & 0x1F
+    g5 = (value >> 6) & 0x1F
+    b5 = (value >> 1) & 0x1F
+    alpha = 0xFF if value & 1 else 0
+    red = (r5 * 255 + 15) // 31
+    green = (g5 * 255 + 15) // 31
+    blue = (b5 * 255 + 15) // 31
+    return (alpha << 24) | (red << 16) | (green << 8) | blue
+
+
+def collect_falcon_punch_textures(root: Path):
+    """Decode CaptainSpecial3's authored three-frame CI4 fire billboard.
+
+    BattleShip identifies reloc file 333 as CaptainSpecial3. Its decompiled
+    layout places the shared RGBA16 palette at 0x58 and the three 32x32 CI4
+    frames at 0x80, 0x288, and 0x490. The decompressed reloc remains an
+    owner-derived, ignored input; only this extraction recipe is publishable.
+    """
+    source = root / "effects" / "CaptainSpecial3.bin"
+    if not source.is_file():
+        raise FileNotFoundError(
+            f"missing {source}; extract BattleShip reloc file 333 from the "
+            "owner's Smash 64 ROM before baking")
+    data = source.read_bytes()
+    if len(data) != FALCON_PUNCH_RELOC_SIZE:
+        raise ValueError(
+            f"{source} is {len(data)} bytes; expected "
+            f"{FALCON_PUNCH_RELOC_SIZE} bytes")
+
+    palette = []
+    for index in range(16):
+        offset = FALCON_PUNCH_PALETTE_OFFSET + index * 2
+        palette.append(rgba16_to_argb(
+            int.from_bytes(data[offset:offset + 2], "big")))
+
+    records = []
+    pixel_count = FALCON_PUNCH_TEXTURE_WIDTH * FALCON_PUNCH_TEXTURE_HEIGHT
+    byte_count = pixel_count // 2
+    for frame, offset in enumerate(FALCON_PUNCH_TEXTURE_OFFSETS):
+        packed = data[offset:offset + byte_count]
+        if len(packed) != byte_count:
+            raise ValueError(f"truncated Falcon Punch texture frame {frame}")
+        pixels = bytearray()
+        for pixel in range(pixel_count):
+            value = packed[pixel // 2]
+            palette_index = value >> 4 if pixel % 2 == 0 else value & 0x0F
+            pixels += struct.pack("<I", palette[palette_index])
+        records.append((f"FalconPunch{frame}",
+                        FALCON_PUNCH_TEXTURE_WIDTH,
+                        FALCON_PUNCH_TEXTURE_HEIGHT, bytes(pixels)))
+    return records
 
 
 class TextureCatalog:
@@ -380,6 +452,7 @@ def collect_animations(root: Path):
         if entry.get("status") != "ok":
             continue
         data = load_json(root / "anim" / entry["output"])
+        name = str(data["canonical_name"])
         first_track = len(tracks)
         duration = 0.0
         for joint in data.get("joints", []):
@@ -389,6 +462,10 @@ def collect_animations(root: Path):
             # joint 0, not model joint 1.
             joint_index = int(joint.get(
                 "joint_slot", int(joint.get("joint_id", 1)) - 1))
+            if name in AUXILIARY_ROOT_ANIMS:
+                if joint_index == 0:
+                    continue
+                joint_index -= 1
             if not 0 <= joint_index < 26:
                 continue
             joint_segments, joint_duration = _track_segments(joint)
@@ -400,7 +477,6 @@ def collect_animations(root: Path):
                 segments.extend(track_segments)
                 tracks.append((joint_index, TRACK_IDS[track_name],
                                first_segment, len(track_segments)))
-        name = str(data["canonical_name"])
         animations.append((name, duration if duration > 0.0 else 1.0,
                            1 if name in LOOPING_ANIMS else 0,
                            first_track, len(tracks) - first_track))
@@ -411,13 +487,17 @@ def collect_animations(root: Path):
 def write_blob(root: Path, output: Path):
     joints, joint_ranges, triangles, textures = collect_model(root)
     animations, tracks, segments = collect_animations(root)
+    effect_texture_first = len(textures)
+    effect_textures = collect_falcon_punch_textures(root)
+    textures.extend(effect_textures)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("wb") as stream:
         stream.write(MAGIC)
         stream.write(struct.pack(
-            "<7I", VERSION, len(joints), len(triangles), len(textures),
-            len(animations), len(tracks), len(segments)))
+            "<9I", VERSION, len(joints), len(triangles), len(textures),
+            len(animations), len(tracks), len(segments),
+            effect_texture_first, len(effect_textures)))
 
         for joint, (first_tri, tri_count) in zip(joints, joint_ranges):
             parent = joint.get("parent")
@@ -456,7 +536,8 @@ def write_blob(root: Path, output: Path):
     print(f"wrote {output} ({output.stat().st_size} bytes): "
           f"{len(joints)} joints, {len(triangles)} triangles, "
           f"{len(textures)} textures, {len(animations)} animations, "
-          f"{len(tracks)} tracks, {len(segments)} interpolation segments")
+          f"{len(tracks)} tracks, {len(segments)} interpolation segments, "
+          f"{len(effect_textures)} Falcon Punch effect frames")
 
 
 def main() -> None:

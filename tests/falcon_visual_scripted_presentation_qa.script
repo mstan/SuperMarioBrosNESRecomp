@@ -1,0 +1,45 @@
+LOG falcon-visual-scripted-presentation-qa-world-1-1
+WAIT 60
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 00
+WRITE_RAM8 760 00
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 120
+SAVE_STATE C:/temp/falcon_visual_scripted_presentation_base.sav
+
+# SMB1 owns all movement in these dispatch states. The renderer must suppress
+# Mario and follow the native position with an appropriate Falcon pose/cycle.
+WRITE_RAM8 000E 04
+ASSERT_RAM8 000E 04
+SCREENSHOT C:/temp/falcon_scripted_flagpole_00.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_scripted_flagpole_04.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_scripted_flagpole_08.png
+WAIT 2
+
+LOAD_STATE C:/temp/falcon_visual_scripted_presentation_base.sav
+WAIT 2
+WRITE_RAM8 000E 05
+ASSERT_RAM8 000E 05
+SCREENSHOT C:/temp/falcon_scripted_end_walk_00.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_scripted_end_walk_04.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_scripted_end_walk_08.png
+WAIT 2
+
+LOAD_STATE C:/temp/falcon_visual_scripted_presentation_base.sav
+WAIT 2
+WRITE_RAM8 000E 07
+ASSERT_RAM8 000E 07
+SCREENSHOT C:/temp/falcon_scripted_entrance_00.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_scripted_entrance_04.png
+WAIT 4
+SCREENSHOT C:/temp/falcon_scripted_entrance_08.png
+WAIT 2
+EXIT 0

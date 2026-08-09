@@ -86,6 +86,9 @@
 /* value is a scripted sequence that must stay native.                  */
 /* ------------------------------------------------------------------ */
 #define SMB1_GAMEMODE_PLAYER_CTRL 8
+#define SMB1_GAMEMODE_FLAGPOLE_SLIDE 4
+#define SMB1_GAMEMODE_PLAYER_END_LEVEL 5
+#define SMB1_GAMEMODE_PLAYER_ENTRANCE 7
 #define SMB1_GAMEMODE_CHANGE_SIZE 9
 #define SMB1_GAMEMODE_INJURY_BLINK 10
 #define SMB1_GAMEMODE_PLAYER_DEATH 11
@@ -1725,6 +1728,22 @@ int game_smash64_still_presentation_active(void)
     return subroutine == SMB1_GAMEMODE_CHANGE_SIZE ||
            subroutine == SMB1_GAMEMODE_INJURY_BLINK ||
            subroutine == SMB1_GAMEMODE_FIRE_FLOWER;
+}
+
+Smash64ScriptedPresentation game_smash64_scripted_presentation(void)
+{
+    uint8_t subroutine;
+    if (!s_enabled || !s_selected ||
+        g_ram[OperMode] != SMB1_OPER_MODE_GAME)
+        return SMASH64_SCRIPTED_PRESENTATION_NONE;
+
+    subroutine = g_ram[GameEngineSubroutine];
+    if (subroutine == SMB1_GAMEMODE_FLAGPOLE_SLIDE)
+        return SMASH64_SCRIPTED_PRESENTATION_FLAGPOLE;
+    if (subroutine == SMB1_GAMEMODE_PLAYER_END_LEVEL ||
+        subroutine == SMB1_GAMEMODE_PLAYER_ENTRANCE)
+        return SMASH64_SCRIPTED_PRESENTATION_WALK;
+    return SMASH64_SCRIPTED_PRESENTATION_NONE;
 }
 
 void game_smash64_init(void)

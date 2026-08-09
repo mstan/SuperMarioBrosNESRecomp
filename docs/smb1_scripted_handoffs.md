@@ -87,7 +87,12 @@ presentation preserves the tumble and maps that travel downward; native life
 loss, delay, and respawn remain untouched. The consecutive frames in
 `C:\temp\falcon_death_contact.png` verify rotation/downward travel and the
 absence of Mario, while `tests/falcon_tier4_death_respawn_qa.script` still
-waits for native subroutine `$08` to prove the ordinary respawn handoff.
+waits for native subroutine `$08` to prove the ordinary respawn handoff. The
+renderer latches one death presentation across transient native restart
+states. After the falling mesh clears the screen it remains hidden; only a
+genuine return to ordinary `$08` Falcon control resets the latch for the next
+life. The script's late samples at frames 48 through 168 verify that the same
+death cannot restart from the sky before the respawn.
 
 **Power-up and injury scripts have a visually inert exception.** The same
 ownership rule applies to `PlayerChangeSize` (`$09`), `PlayerInjuryBlink`

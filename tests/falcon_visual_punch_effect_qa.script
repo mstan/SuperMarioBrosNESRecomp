@@ -1,0 +1,138 @@
+LOG falcon-visual-punch-effect-qa-world-1-2
+WAIT 60
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 01
+WRITE_RAM8 760 01
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 120
+SAVE_STATE C:/temp/falcon_visual_punch_effect_base.sav
+
+# Right-facing ground Falcon Punch. Existing combat timing establishes that
+# 41 frames after this two-frame B tap presents source active frame 42.
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 39
+SCREENSHOT C:/temp/falcon_punch_right_40.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_right_42.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_right_44.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_right_46.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_right_48.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_right_50.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_right_52.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_right_54.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_right_56.png
+WAIT 2
+
+# Move away from the left screen edge, then establish left facing through
+# ordinary player control. This keeps the mirrored effect fully on-screen.
+LOAD_STATE C:/temp/falcon_visual_punch_effect_base.sav
+WAIT 2
+HOLD RIGHT
+WAIT 8
+RELEASE RIGHT
+WAIT 8
+HOLD LEFT
+WAIT 8
+RELEASE LEFT
+WAIT 10
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 41
+SCREENSHOT C:/temp/falcon_punch_left_42.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_left_44.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_left_46.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_left_48.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_left_50.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_left_52.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_left_54.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_left_56.png
+WAIT 2
+
+# Repeat the active window in the air. Capture a range around the nominal
+# event because the controller transition and renderer occur on opposite sides
+# of a host frame.
+LOAD_STATE C:/temp/falcon_visual_punch_effect_base.sav
+WAIT 2
+HOLD A
+WAIT 5
+RELEASE A
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 39
+SCREENSHOT C:/temp/falcon_punch_air_right_40.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_right_42.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_right_44.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_right_46.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_right_48.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_right_50.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_right_52.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_right_54.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_right_56.png
+WAIT 2
+
+LOAD_STATE C:/temp/falcon_visual_punch_effect_base.sav
+WAIT 2
+HOLD RIGHT
+WAIT 8
+RELEASE RIGHT
+WAIT 8
+HOLD LEFT
+WAIT 8
+RELEASE LEFT
+WAIT 10
+HOLD A
+WAIT 5
+RELEASE A
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 39
+SCREENSHOT C:/temp/falcon_punch_air_left_40.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_left_42.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_left_44.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_left_46.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_left_48.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_left_50.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_left_52.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_left_54.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_punch_air_left_56.png
+WAIT 2
+ASSERT_RAM8 000E 08
+EXIT 0

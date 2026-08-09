@@ -53,6 +53,20 @@ WAIT 4
 SCREENSHOT C:/temp/falcon_qa_death_24.png
 WAIT 4
 SCREENSHOT C:/temp/falcon_qa_death_28.png
+WAIT 20
+SCREENSHOT C:/temp/falcon_qa_death_48.png
+WAIT 20
+SCREENSHOT C:/temp/falcon_qa_death_68.png
+WAIT 20
+SCREENSHOT C:/temp/falcon_qa_death_88.png
+WAIT 20
+SCREENSHOT C:/temp/falcon_qa_death_108.png
+WAIT 20
+SCREENSHOT C:/temp/falcon_qa_death_128.png
+WAIT 20
+SCREENSHOT C:/temp/falcon_qa_death_148.png
+WAIT 20
+SCREENSHOT C:/temp/falcon_qa_death_168.png
 WAIT 2
 WAIT_RAM8 000E 08
 WAIT 30

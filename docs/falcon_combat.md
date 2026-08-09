@@ -23,7 +23,21 @@ off, SMB1 sees B normally.
 The hit windows and damage come from the commands in the pinned decomp's
 `235_CaptainMainMotion.c`. The rendered poses come directly from Figatree
 scripts 1619, 1628, 1638–1640, 1652–1654, and 1657; state lengths use each
-script's final decoded keyframe. The generic rectangular hitbox is a portable
+script's final decoded keyframe. Motions tagged with BattleShip's auxiliary
+fighter-root flags skip their first root-motion stream before binding the
+remaining Figatree streams to Falcon's model joints. This matches
+`lbCommonAddFighterPartsFigatree`; treating that stream as model joint zero was
+the cause of the formerly back-facing Falcon Punch and malformed Kick pose.
+
+Falcon Punch's visible fire is also source-derived. The local baker decodes
+BattleShip reloc 333 (`CaptainSpecial3`) as three 32x32 CI4 frames using its
+embedded RGBA16 palette, while the runtime follows `ftcaptainspecialn.c` by
+attaching the effect to fighter joint 16 (baked model slot 12) for source
+frames 42 through 54. The quad is mirrored with facing and enlarged around its
+hand-side corner for readability after Falcon is normalized to a 32-pixel NES
+fighter. The ROM-derived reloc and baked pixels remain ignored local assets.
+
+The generic rectangular hitbox is a portable
 union around the source collision spheres because SMB1 has no joint-aware
 combat system. Falcon Kick's translation is an explicit adaptation: Smash 64
 derives it from the animated TransN joint, while the quarantined state machine
@@ -56,5 +70,8 @@ tiles, and other nonbreakable metatiles are never passed to that routine.
   nonbreakable scenery, then validates native Punch and Kick consequences.
 - `tests/falcon_m7_savestate.script` saves during Punch windup and demonstrates
   the same enemy+brick consequence before and after load.
+- `tests/falcon_visual_punch_effect_qa.script` captures the complete active
+  fire sequence facing both right and left; acceptance requires a side-on pose
+  and a hand-attached plume on the attack side in both directions.
 - Trace flags: `0x100` attack active, `0x200` enemy defeated, `0x400` brick
   broken.

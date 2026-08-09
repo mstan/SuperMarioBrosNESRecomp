@@ -1,6 +1,7 @@
 /* Runtime loader and skeletal renderer for the ignored Falcon asset blob. */
 #include "game_smash64_assets.h"
 
+#include "game_smash64.h"
 #include "foreign_controller.h"
 #include "mods/smash64/characters/captain_falcon.h"
 #include "voxel_renderer.h"
@@ -14,13 +15,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FALCON_BLOB_VERSION 2u
+#define FALCON_BLOB_VERSION 3u
 #define FALCON_JOINT_COUNT 26u
 #define FALCON_RENDER_HEIGHT 32.0f
 #define FALCON_YAW_DEG 88.0f
 #define FALCON_WAIT_GROUNDED_FIRST 37.0f
 #define FALCON_WAIT_GROUNDED_SPAN   4.0f
 #define FALCON_WAIT_RATE            0.25f
+/* BattleShip's fp->joints[] reserves TopN/TransN/XRotN/YRotN at 0..3.
+ * The baked DObjDesc skeleton begins at nFTPartsJointCommonStart (4), so
+ * source joint 16 is baked model slot 12. */
+#define FALCON_PUNCH_EFFECT_JOINT     12u
+#define FALCON_PUNCH_EFFECT_FIRST_FRAME 42u
+#define FALCON_PUNCH_EFFECT_END_FRAME   55u
+#define FALCON_PUNCH_EFFECT_TEXTURES     3u
 
 typedef struct FalconAssetJoint {
     int parent;
@@ -86,6 +94,8 @@ typedef struct FalconAssetModel {
     uint32_t animation_count;
     uint32_t track_count;
     uint32_t segment_count;
+    uint32_t punch_effect_texture_first;
+    uint32_t punch_effect_texture_count;
     float bounds_min[3];
     float bounds_max[3];
 } FalconAssetModel;
@@ -333,12 +343,19 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
     model->animation_count = read_u32(&reader);
     model->track_count = read_u32(&reader);
     model->segment_count = read_u32(&reader);
+    model->punch_effect_texture_first = read_u32(&reader);
+    model->punch_effect_texture_count = read_u32(&reader);
     if (model->joint_count != FALCON_JOINT_COUNT ||
         !count_is_safe(model->triangle_count, 10000) ||
         !count_is_safe(model->texture_count, 256) ||
         !count_is_safe(model->animation_count, 128) ||
         !count_is_safe(model->track_count, 100000) ||
-        !count_is_safe(model->segment_count, 1000000))
+        !count_is_safe(model->segment_count, 1000000) ||
+        model->punch_effect_texture_count !=
+            FALCON_PUNCH_EFFECT_TEXTURES ||
+        !range_is_safe(model->punch_effect_texture_first,
+                       model->punch_effect_texture_count,
+                       model->texture_count))
         return 0;
 
     model->joints = (FalconAssetJoint *)calloc(model->joint_count,
@@ -684,6 +701,103 @@ static NesVoxelMeshVertex render_vertex(const FalconAssetModel *model,
     return out;
 }
 
+static NesVoxelMeshVertex render_punch_effect_vertex(
+    Mat4 joint_world, float local_y, float local_z, float u, float v,
+    const float pose_min[3], const float pose_max[3],
+    float center_x, float foot_y, float facing, float source_lr,
+    float model_scale, float yaw_rad, float output_scale,
+    float effect_scale)
+{
+    NesVoxelMeshVertex out;
+    static const float origin[3] = { 0.0f, 0.0f, 0.0f };
+    float point[3];
+    float x, y, z;
+    float yaw_cos = cosf(yaw_rad), yaw_sin = sinf(yaw_rad);
+
+    /* BattleShip efManagerCaptainFalconPunchMakeEffect attaches the single
+     * CaptainSpecial3 quad to Captain runtime joint 16 (baked slot 12) and
+     * rotates it by lr * -90
+     * degrees to face Smash's fixed side camera. This renderer has already
+     * yawed Falcon's authored coordinates 88 degrees into an SMB side view;
+     * applying the source billboard turn a second time makes the card edge-on.
+     * Project the authentic attachment point first, then express the same
+     * 44..212-unit card directly in that side-camera plane. */
+    mat_point(joint_world, origin, point);
+
+    x = (point[0] - (pose_min[0] + pose_max[0]) * 0.5f) * facing;
+    y = point[1] - pose_min[1];
+    z = (point[2] - (pose_min[2] + pose_max[2]) * 0.5f) * facing;
+    /* The fighter is normalized to Big Mario's 32-pixel height after its
+     * animation bounds are evaluated. Applying that same normalization to
+     * this independently-authored effect makes its opaque plume only a few
+     * pixels wide. Enlarge around the source quad's hand-side corner (44,
+     * 44), preserving the exact joint attachment while keeping the effect
+     * readable at NES resolution. */
+    local_y = 44.0f + (local_y - 44.0f) * effect_scale;
+    local_z = 44.0f + (local_z - 44.0f) * effect_scale;
+    out.x = center_x + (x * yaw_cos - z * yaw_sin) * model_scale +
+        source_lr * local_z * model_scale;
+    out.y = foot_y + (y + local_y) * model_scale;
+    /* Pull the alpha billboard fractionally camera-ward so the attached
+     * wrist/forearm cannot depth-fight it at the source active pose. */
+    out.z = (x * yaw_sin + z * yaw_cos) * model_scale + output_scale;
+    out.u = u;
+    out.v = v;
+    return out;
+}
+
+static void draw_falcon_punch_effect(
+    const FalconAssetModel *model, const ForeignState *state,
+    Mat4 world[FALCON_JOINT_COUNT], const float pose_min[3],
+    const float pose_max[3], float center_x, float foot_y, float facing,
+    float model_scale, float yaw_rad, float output_scale)
+{
+    const FalconAssetTexture *texture;
+    NesVoxelMeshVertex vertices[4];
+    uint32_t state_frame, texture_index;
+    float source_lr;
+    float effect_scale;
+
+    if (state->state != FL_FALCON_PUNCH_GROUND &&
+        state->state != FL_FALCON_PUNCH_AIR)
+        return;
+    if (state->state_frame < (double)FALCON_PUNCH_EFFECT_FIRST_FRAME ||
+        state->state_frame >= (double)FALCON_PUNCH_EFFECT_END_FRAME)
+        return;
+
+    state_frame = (uint32_t)state->state_frame;
+    texture_index = model->punch_effect_texture_first +
+        (state_frame - FALCON_PUNCH_EFFECT_FIRST_FRAME) %
+            model->punch_effect_texture_count;
+    texture = &model->textures[texture_index];
+    source_lr = state->facing < 0.0f ? -1.0f : 1.0f;
+    effect_scale = env_float("NESRECOMP_FALCON_PUNCH_EFFECT_SCALE", 2.0f);
+    if (effect_scale < 0.25f) effect_scale = 0.25f;
+    if (effect_scale > 4.0f) effect_scale = 4.0f;
+
+    vertices[0] = render_punch_effect_vertex(
+        world[FALCON_PUNCH_EFFECT_JOINT], 44.0f, 212.0f, 32.0f, 32.0f,
+        pose_min, pose_max, center_x, foot_y, facing, source_lr,
+        model_scale, yaw_rad, output_scale, effect_scale);
+    vertices[1] = render_punch_effect_vertex(
+        world[FALCON_PUNCH_EFFECT_JOINT], 212.0f, 212.0f, 32.0f, 0.0f,
+        pose_min, pose_max, center_x, foot_y, facing, source_lr,
+        model_scale, yaw_rad, output_scale, effect_scale);
+    vertices[2] = render_punch_effect_vertex(
+        world[FALCON_PUNCH_EFFECT_JOINT], 212.0f, 44.0f, 0.0f, 0.0f,
+        pose_min, pose_max, center_x, foot_y, facing, source_lr,
+        model_scale, yaw_rad, output_scale, effect_scale);
+    vertices[3] = render_punch_effect_vertex(
+        world[FALCON_PUNCH_EFFECT_JOINT], 44.0f, 44.0f, 0.0f, 32.0f,
+        pose_min, pose_max, center_x, foot_y, facing, source_lr,
+        model_scale, yaw_rad, output_scale, effect_scale);
+
+    nes_voxel_mesh_bind_texture(texture->pixels, texture->width,
+                                texture->height, texture->width, 1.0f, 1);
+    nes_voxel_mesh_triangle(vertices[3], vertices[2], vertices[1]);
+    nes_voxel_mesh_triangle(vertices[0], vertices[3], vertices[1]);
+}
+
 static NesVoxelMeshVertex render_death_vertex(
     Mat4 matrix, const FalconAssetVertex *vertex,
     const float pose_min[3], const float pose_max[3],
@@ -715,8 +829,9 @@ static NesVoxelMeshVertex render_death_vertex(
 }
 
 static int draw_model(float center_x, float anchor_y, float output_scale,
-                      int death_mode, int still_mode, float spin_radians,
-                      float animation_frame)
+                      int death_mode, int still_mode,
+                      const char *animation_override,
+                      float spin_radians, float animation_frame)
 {
     const ForeignState *state;
     const FalconAssetAnimation *animation;
@@ -725,7 +840,7 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
     float s[FALCON_JOINT_COUNT][3];
     Mat4 world[FALCON_JOINT_COUNT];
     float pose_min[3], pose_max[3];
-    float model_scale, pose_height, facing, yaw_rad;
+    float model_scale, reference_height, facing, yaw_rad;
     uint16_t bound_texture = 0xFFFEu;
     uint32_t i;
 
@@ -746,13 +861,15 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
     animation = death_mode
         ? find_animation(&s_model, "DamageFlyTop")
         : find_animation(&s_model,
-                         still_mode ? "Wait"
-                                    : animation_for_state(state->state));
+                         animation_override
+                             ? animation_override
+                             : (still_mode ? "Wait"
+                                           : animation_for_state(state->state)));
     if (death_mode && !animation)
         animation = find_animation(&s_model, "FallAerial");
     if (!env_enabled("NESRECOMP_FALCON_BIND_POSE"))
         apply_animation(&s_model, animation,
-                        death_mode
+                        (death_mode || animation_override)
                             ? animation_frame
                             : (still_mode
                                    ? FALCON_WAIT_GROUNDED_FIRST +
@@ -766,18 +883,31 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
      * lifting the whole fighter dozens of pixels off the floor. */
     compute_world_bounds(&s_model, world, pose_min, pose_max);
 
-    pose_height = pose_max[1] - pose_min[1];
-    if (pose_height < 1.0f)
-        pose_height = s_model.bounds_max[1] - s_model.bounds_min[1];
+    /* Scale must be invariant across animation frames. The previous renderer
+     * divided by each pose's animated height, so tucked and extended jump
+     * silhouettes made the whole body pump larger/smaller and read as a
+     * stretch. Bind bounds are stable owner-derived model data; animated
+     * bounds remain useful only for centering and foot anchoring. */
+    reference_height = s_model.bounds_max[1] - s_model.bounds_min[1];
     if (output_scale <= 0.0f) output_scale = 1.0f;
     model_scale = env_float("NESRECOMP_FALCON_RENDER_HEIGHT",
-                            FALCON_RENDER_HEIGHT) * output_scale / pose_height;
+                            FALCON_RENDER_HEIGHT) * output_scale /
+                  reference_height;
     /* Smash's +LR model orientation is opposite our screen-space projection.
      * Mirror the mesh against that authored convention, not against movement
      * directly; the old sign made rightward Run visibly face left. */
     facing = state->facing < 0.0f ? 1.0f : -1.0f;
-    yaw_rad = env_float("NESRECOMP_FALCON_YAW_DEG", FALCON_YAW_DEG) *
-        (3.14159265358979323846f / 180.0f);
+    {
+        float yaw_degrees =
+            env_float("NESRECOMP_FALCON_YAW_DEG", FALCON_YAW_DEG);
+        if (state->state == FL_FALCON_PUNCH_GROUND ||
+            state->state == FL_FALCON_PUNCH_AIR) {
+            yaw_degrees = env_float("NESRECOMP_FALCON_PUNCH_YAW_DEG",
+                                    yaw_degrees);
+        }
+        yaw_rad = yaw_degrees *
+            (3.14159265358979323846f / 180.0f);
+    }
 
     for (i = 0; i < s_model.triangle_count; ++i) {
         const FalconAssetTriangle *triangle = &s_model.triangles[i];
@@ -824,25 +954,50 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
         }
         nes_voxel_mesh_triangle(a, b, c);
     }
+    if (!death_mode && !still_mode && !animation_override) {
+        draw_falcon_punch_effect(&s_model, state, world, pose_min, pose_max,
+                                 center_x, anchor_y, facing, model_scale,
+                                 yaw_rad, output_scale);
+    }
     return 1;
 }
 
 int game_smash64_assets_draw(float center_x, float foot_y,
                              float output_scale)
 {
-    return draw_model(center_x, foot_y, output_scale, 0, 0, 0.0f, 0.0f);
+    return draw_model(center_x, foot_y, output_scale, 0, 0, NULL,
+                      0.0f, 0.0f);
 }
 
 int game_smash64_assets_draw_idle(float center_x, float foot_y,
                                   float output_scale)
 {
-    return draw_model(center_x, foot_y, output_scale, 0, 1, 0.0f, 0.0f);
+    return draw_model(center_x, foot_y, output_scale, 0, 1, NULL,
+                      0.0f, 0.0f);
+}
+
+int game_smash64_assets_draw_scripted(float center_x, float foot_y,
+                                      float output_scale,
+                                      int scripted_presentation,
+                                      float presentation_frame)
+{
+    const char *animation = scripted_presentation ==
+                                    SMASH64_SCRIPTED_PRESENTATION_WALK
+                                ? "Walk2"
+                                : "Fall";
+    /* The extracted set has no ledge/ladder motion. A calm source Fall pose
+     * is the nearest authentic side-on silhouette for a vertical flagpole;
+     * SMB1 supplies the actual slide. Autowalk advances Walk2 at source rate. */
+    if (scripted_presentation == SMASH64_SCRIPTED_PRESENTATION_FLAGPOLE)
+        presentation_frame = 4.0f;
+    return draw_model(center_x, foot_y, output_scale, 0, 0, animation,
+                      0.0f, presentation_frame);
 }
 
 int game_smash64_assets_draw_death(float center_x, float center_y,
                                    float output_scale, float spin_radians,
                                    float animation_frame)
 {
-    return draw_model(center_x, center_y, output_scale, 1, 0, spin_radians,
-                      animation_frame);
+    return draw_model(center_x, center_y, output_scale, 1, 0, NULL,
+                      spin_radians, animation_frame);
 }

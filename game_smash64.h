@@ -50,6 +50,17 @@ int game_smash64_death_presentation_active(void);
  * instead of exposing Mario's transformation frames. */
 int game_smash64_still_presentation_active(void);
 
+typedef enum Smash64ScriptedPresentation {
+    SMASH64_SCRIPTED_PRESENTATION_NONE = 0,
+    SMASH64_SCRIPTED_PRESENTATION_FLAGPOLE,
+    SMASH64_SCRIPTED_PRESENTATION_WALK
+} Smash64ScriptedPresentation;
+
+/* Presentation-only replacements for native scripted movement that visibly
+ * represents the player: flagpole sliding and entrance/end-level autowalk.
+ * SMB1 retains complete ownership of movement, timing, and progression. */
+Smash64ScriptedPresentation game_smash64_scripted_presentation(void);
+
 /* Frames on which Falcon supplied the horizontal velocity. Lets a scripted
  * run assert the takeover happened rather than inferring it from pixels. */
 unsigned long game_smash64_owned_frames(void);

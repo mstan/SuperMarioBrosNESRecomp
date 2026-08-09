@@ -19,6 +19,14 @@ int game_smash64_assets_draw(float center_x, float foot_y,
 int game_smash64_assets_draw_idle(float center_x, float foot_y,
                                   float output_scale);
 
+/* Draw a presentation-only source pose for SMB1-owned scripted movement.
+ * Flagpole uses Falcon's closest available airborne pose; autowalk uses the
+ * authentic middle walk cycle. */
+int game_smash64_assets_draw_scripted(float center_x, float foot_y,
+                                      float output_scale,
+                                      int scripted_presentation,
+                                      float presentation_frame);
+
 /* Draw Falcon around a center point in the aerial tumble used by the
  * presentation-only SMB1 death replacement. spin_radians rotates the whole
  * fighter in the 2D screen plane; SMB1 remains authoritative for life loss. */

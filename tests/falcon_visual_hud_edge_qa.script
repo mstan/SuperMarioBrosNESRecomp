@@ -1,0 +1,52 @@
+LOG falcon-visual-hud-edge-qa-world-1-1
+WAIT 60
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 00
+WRITE_RAM8 760 00
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 120
+SAVE_STATE C:/temp/falcon_visual_hud_edge_base.sav
+
+# Exercise the wrapped top-edge representation used when the 32px player box
+# rises above screen row zero. Keep SMB1 in ordinary player control while
+# setting both its authoritative and screen-relative vertical coordinates.
+WRITE_RAM8 00B5 00
+WRITE_RAM8 00CE F8
+WRITE_RAM8 03B8 F8
+SCREENSHOT C:/temp/falcon_hud_edge_f8.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_hud_edge_fa.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_hud_edge_fc.png
+WAIT 2
+SCREENSHOT C:/temp/falcon_hud_edge_fe.png
+WAIT 2
+
+LOAD_STATE C:/temp/falcon_visual_hud_edge_base.sav
+WAIT 2
+WRITE_RAM8 00B5 01
+WRITE_RAM8 00CE 08
+WRITE_RAM8 03B8 08
+SCREENSHOT C:/temp/falcon_hud_edge_row08.png
+WAIT 2
+
+LOAD_STATE C:/temp/falcon_visual_hud_edge_base.sav
+WAIT 2
+WRITE_RAM8 00B5 01
+WRITE_RAM8 00CE 18
+WRITE_RAM8 03B8 18
+SCREENSHOT C:/temp/falcon_hud_edge_row24.png
+WAIT 2
+
+LOAD_STATE C:/temp/falcon_visual_hud_edge_base.sav
+WAIT 2
+WRITE_RAM8 00B5 01
+WRITE_RAM8 00CE 20
+WRITE_RAM8 03B8 20
+SCREENSHOT C:/temp/falcon_hud_edge_row32.png
+WAIT 2
+ASSERT_RAM8 000E 08
+EXIT 0

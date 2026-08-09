@@ -1,0 +1,40 @@
+LOG falcon-visual-world-1-2-native-entrance-qa
+WAIT 60
+WRITE_RAM8 75F 00
+WRITE_RAM8 75C 01
+WRITE_RAM8 760 01
+HOLD START
+WAIT 6
+RELEASE START
+
+# Capture the real native entrance/autowalk, including its handoff to ordinary
+# control. No dispatch value is forced here.
+WAIT 350
+SCREENSHOT C:/temp/falcon_entrance_real_350.png
+WAIT 15
+SCREENSHOT C:/temp/falcon_entrance_real_365.png
+WAIT 15
+SCREENSHOT C:/temp/falcon_entrance_real_380.png
+WAIT 15
+SCREENSHOT C:/temp/falcon_entrance_real_395.png
+WAIT 15
+SCREENSHOT C:/temp/falcon_entrance_real_410.png
+WAIT 15
+SCREENSHOT C:/temp/falcon_entrance_real_425.png
+WAIT 15
+SCREENSHOT C:/temp/falcon_entrance_real_440.png
+WAIT 15
+SCREENSHOT C:/temp/falcon_entrance_real_455.png
+WAIT 15
+SCREENSHOT C:/temp/falcon_entrance_real_470.png
+WAIT 15
+SCREENSHOT C:/temp/falcon_entrance_real_485.png
+WAIT 15
+SCREENSHOT C:/temp/falcon_entrance_real_500.png
+WAIT 15
+SCREENSHOT C:/temp/falcon_entrance_real_515.png
+WAIT_RAM8 000E 08
+WAIT 120
+SCREENSHOT C:/temp/falcon_entrance_real_control.png
+WAIT 2
+EXIT 0

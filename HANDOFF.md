@@ -20,10 +20,29 @@ build and visually inspected, not accepted from script exit codes alone:
   and the large forward-foot lift is gone;
 - `C:\temp\falcon_death_contact.png`: eight consecutive death frames showing
   Falcon rotating through distinct Star-KO-style angles while falling, with no
-  native Mario death sprite visible.
+  native Mario death sprite visible. `falcon_death_late_fixed.png` samples the
+  rest of the native death delay: after the first fall leaves the screen,
+  Falcon stays hidden through every late frame and reappears only in the final
+  respawn panel.
 - `C:\temp\falcon_transform_contact.png`: three separated frames each for
   mushroom/grow, damage/injury, and fire-flower scripts; all nine hold the same
   planted Falcon pose with no Mario transformation frame visible.
+- `C:\temp\falcon_punch_{right,left}_contact.png`: complete source-frame
+  Falcon Punch impact sequences in both directions. Falcon stays side-on and
+  the authentic three-frame fire plume stays attached to the forward hand and
+  mirrors with facing.
+- `C:\temp\falcon_scripted_contact.png`: flagpole-slide, end-level walk, and
+  entrance dispatch states all suppress Mario and present Falcon. The separate
+  `falcon_entrance_real_contact.png` follows the genuine World 1-2 native
+  entrance through its settled playable state.
+- `C:\temp\falcon_high_jump_contact.png` and
+  `falcon_hud_edge_contact.png`: a full high-jump arc and explicit top-edge
+  wrap cases show no Mario tile near or behind the HUD.
+- `C:\temp\falcon_high_jump_sequence_fixed_scale.png` and
+  `falcon_short_jump_sequence_fixed_scale.png`: 17 full-hop frames and 13
+  short-hop frames. The fighter uses one bind-reference scale throughout, so
+  crouched and extended source poses no longer make the whole model pump or
+  stretch.
 
 The fixes came from BattleShip's Smash 64 implementation rather than visual
 guesswork. Costume frame zero now evaluates Captain's material-animation
@@ -50,7 +69,10 @@ centered aerial pose, 18 degrees of screen-plane rotation per frame, and an
 accelerating downward screen-space path. BattleShip's `DeadUpStar` status is
 the reference: it uses the common `DamageFall` motion and a 180-frame depth
 translation. Depth is unreadable in SMB1's 2D view, so downward travel is the
-documented host adaptation.
+documented host adaptation. The presentation clock remains latched through
+transient native restart states; once Falcon has left the bottom of the view,
+the renderer keeps him hidden until ordinary `$08` player control proves a
+real respawn.
 
 SMB1's other player transformations are also presentation-only exceptions.
 During `PlayerChangeSize` (`$09`), `PlayerInjuryBlink` (`$0A`), and
@@ -166,13 +188,19 @@ Captain Falcon's state machine remains in the quarantined
 only translates to/from the generic ABI.
 
 Presentation uses `game_smash64_assets.c`: 26 joints, 319 triangles,
-23 textures, and 30 animations. Figatree's one-based joint names are converted
-to zero-based model slots by the baker. Blob version 2 stores BattleShip's
+26 textures, and 30 animations. Figatree's one-based joint names are converted
+to zero-based model slots by the baker. Motions carrying BattleShip's auxiliary
+fighter-root flags omit their first host-owned root stream before joint
+binding; this corrects Falcon Punch, TurnRun, JumpB/JumpAerialB, and Falcon
+Kick's ground/air/landing poses. Blob version 3 stores BattleShip's
 source interpolation segments and tangent rates instead of flattening them
-into linear keys. Costume-zero primary colors come from reloc 332's
+into linear keys, plus reloc 333's three CaptainSpecial3 CI4 fire frames and
+their embedded RGBA16 palette. Costume-zero primary colors come from reloc 332's
 `MatAnimJoint` programs, matching BattleShip's fighter-part material
-initialization. The runtime normalizes each pose to a 32-pixel Big-Mario-scale
-height and rotates the authored model 88 degrees into a near-exact side profile.
+initialization. The runtime derives one invariant 32-pixel Big-Mario-scale
+factor from the model's bind bounds, then uses animated bounds only to center
+and foot-anchor each pose. It rotates the authored model 88 degrees into a
+near-exact side profile.
 `game_smash64_render.c` renders only Falcon at 2x, then box-downsamples coverage
 over the native frame; the NES background remains pixel-perfect. Missing model
 data uses the cube fallback.
@@ -191,9 +219,11 @@ adaptations are in `docs/falcon_audio.md`.
 - M6 rendering: real Falcon model, textures, and authentic animation selection;
   corrected Figatree joint-slot mapping, source interpolation, costume-zero
   material initialization, facing convention, 32px side profile, and 2x edge
-  supersampling; screenshot-verified planted idle, falling death tumble,
-  bidirectional locomotion, jump, Falcon Punch, Falcon Kick, clean title,
-  widescreen, and absent-asset fallback.
+  supersampling; exact OAM-slot suppression at the HUD edge; source-derived
+  Falcon Punch fire; Falcon presentation during flagpole and native autowalk;
+  screenshot-verified planted idle, falling death tumble, bidirectional
+  locomotion, jump, Falcon Punch, Falcon Kick, clean title, widescreen, and
+  absent-asset fallback.
 - M7 combat: Jab, forward tilt, neutral/forward/back air, Falcon Punch, Falcon
   Kick; source hit windows/damage; native SMB1 enemy defeat and `$51/$52` brick
   shatter; nonbreakable/special/boss filtering; save/load and mod-off coverage.
@@ -267,6 +297,11 @@ message and a smoke run exits cleanly.
   settled ground baseline. A `SCREENSHOT` is also queued until the next render;
   wait at least two frames before loading another savestate or changing the
   pose, or the PNG will record the replacement state instead.
+- Scripted presentation is keyed narrowly to SMB1
+  `GameEngineSubroutine` values `$04` (flagpole), `$05` (end-level walk), and
+  `$07` (entrance walk). SMB1 retains all motion and progression. Flagpole uses
+  a fixed calm source Fall pose because the extracted Smash set has no ladder
+  or pole motion; both walks advance source `Walk2`.
 - World 1-2's black backdrop is useful for the purple/yellow ground poses, but
   can hide Falcon's darkest lower-leg polygons during aerial kicks. The aerial
   sequence QA repeats consecutive Fair/Bair frames against World 1-1's light
