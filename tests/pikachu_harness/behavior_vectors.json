@@ -1,0 +1,148 @@
+{
+  "schema": "smash64-pikachu-smb1-v1",
+  "source": {
+    "game": "Super Smash Bros. (US)",
+    "motion_table": "F:/Projects/BattleShip/decomp/src/ft/ftdata.c:11234-11290",
+    "motion_commands": "F:/Projects/BattleShip/decomp/src/relocData/242_PikachuMainMotion.c",
+    "specials": "F:/Projects/BattleShip/decomp/src/ft/ftchar/ftpikachu"
+  },
+  "invariants": {
+    "units_to_smb_px": 0.08,
+    "ordinary_stream_speed_max_px_per_frame": 4,
+    "side_b_exists": false,
+    "normal_or_projectile_breaks_blocks": false,
+    "quick_attack_has_hitbox": false,
+    "quick_attack_zip_count_max": 2,
+    "quick_attack_start_frames": 20,
+    "quick_attack_zip_frames": 5,
+    "quick_attack_second_zip_min_stick": 60,
+    "quick_attack_second_zip_min_angle_deg": 42,
+    "quick_attack_sweep_required": true,
+    "small_collision_fits_two_block_gap": true,
+    "save_replays_future_events_once": true
+  },
+  "selection_vectors": [
+    { "name": "ground_a", "initial": "GROUND_WAIT", "edge": ["A"], "expect_action": "JAB" },
+    { "name": "ground_right_a", "initial": "GROUND_WAIT", "edge": ["RIGHT", "A"], "expect_action": "FTILT" },
+    { "name": "air_a", "initial": "AIR_FALL", "edge": ["A"], "expect_action": "NAIR" },
+    { "name": "air_facing_a", "initial": "AIR_FALL_FACING_RIGHT", "edge": ["RIGHT", "A"], "expect_action": "FAIR" },
+    { "name": "air_opposite_a", "initial": "AIR_FALL_FACING_RIGHT", "edge": ["LEFT", "A"], "expect_action": "BAIR" },
+    { "name": "air_down_a", "initial": "AIR_FALL", "edge": ["DOWN", "A"], "expect_action": "DAIR" },
+    { "name": "ground_horizontal_b", "initial": "GROUND_WAIT", "edge": ["RIGHT", "B"], "expect_action": "THUNDER_JOLT" },
+    { "name": "air_horizontal_b", "initial": "AIR_FALL", "edge": ["LEFT", "B"], "expect_action": "THUNDER_JOLT" },
+    { "name": "up_b", "initial": "AIR_FALL", "edge": ["UP", "B"], "expect_action": "QUICK_ATTACK_START" },
+    { "name": "down_b", "initial": "GROUND_WAIT", "edge": ["DOWN", "B"], "expect_action": "THUNDER_START" },
+    { "name": "special_wins_tie", "initial": "GROUND_WAIT", "edge": ["RIGHT", "A", "B"], "expect_action": "THUNDER_JOLT" }
+  ],
+  "move_vectors": [
+    {
+      "action": "JAB",
+      "motion": "2016_FTPikachuAnimJab1 / 0x0E34",
+      "windows": [{ "from": 2, "to": 6, "damage": 4, "side": "forward" }],
+      "events": [{ "frame": 2, "id": "FGM_LIGHT_S" }]
+    },
+    {
+      "action": "FTILT",
+      "motion": "2019_FTPikachuAnimFTilt / 0x0F50",
+      "windows": [{ "from": 5, "to": 15, "damage": 10, "side": "forward" }],
+      "events": [{ "frame": 5, "id": "FGM_LIGHT_M" }]
+    },
+    {
+      "action": "NAIR",
+      "motion": "2026_FTPikachuAnimAttackAirN / 0x12E8",
+      "windows": [
+        { "from": 3, "to": 11, "damage": 14, "side": "body" },
+        { "from": 11, "to": 29, "damage": 11, "side": "body" }
+      ],
+      "events": [{ "frame": 3, "id": "FGM_LIGHT_M" }]
+    },
+    {
+      "action": "FAIR",
+      "motion": "2027_FTPikachuAnimAttackAirF / 0x1380 / TRANSN_JOINT",
+      "windows": [
+        { "from": 7, "to": 9, "damage": 3, "side": "forward" },
+        { "from": 10, "to": 12, "damage": 3, "side": "forward" },
+        { "from": 13, "to": 15, "damage": 3, "side": "forward" },
+        { "from": 16, "to": 18, "damage": 3, "side": "forward" },
+        { "from": 19, "to": 21, "damage": 3, "side": "forward" },
+        { "from": 22, "to": 24, "damage": 3, "side": "forward" },
+        { "from": 25, "to": 27, "damage": 3, "side": "forward" }
+      ],
+      "events": [
+        { "frame": 7, "id": "FGM_ELECTRIC_2" },
+        { "frame": 7, "id": "FGM_SWING_PULSE", "count": 7, "period": 3 }
+      ]
+    },
+    {
+      "action": "BAIR",
+      "motion": "2028_FTPikachuAnimAttackAirB / 0x1420",
+      "windows": [
+        { "from": 10, "to": 14, "damage": 16, "side": "back" },
+        { "from": 14, "to": 22, "damage": 14, "side": "back" }
+      ],
+      "events": [{ "frame": 10, "id": "FGM_LIGHT_L" }]
+    },
+    {
+      "action": "DAIR",
+      "motion": "2030_FTPikachuAnimAttackAirD / 0x14DC / TRANSN_JOINT",
+      "windows": [{ "from": 8, "to": 26, "damage": 13, "side": "down" }],
+      "events": [{ "frame": 8, "id": "FGM_ELECTRIC_3" }]
+    },
+    {
+      "action": "THUNDER_JOLT_GROUND",
+      "motion": "0x15AC",
+      "windows": [],
+      "events": [
+        { "frame": 0, "id": "VOICE_SPECIAL_N" },
+        { "frame": 21, "id": "PROJECTILE_JOLT_SPAWN", "angle_deg": -45, "speed_source_units": 40, "joint": 11 }
+      ],
+      "projectile": { "can_defeat_enemy_once": true, "can_break_block": false, "follows_surfaces": true }
+    },
+    {
+      "action": "THUNDER_JOLT_AIR",
+      "motion": "0x15F0",
+      "windows": [],
+      "events": [
+        { "frame": 0, "id": "VOICE_SPECIAL_N" },
+        { "frame": 0, "id": "FGM_ELECTRIC_5" },
+        { "frame": 21, "id": "PROJECTILE_JOLT_SPAWN", "angle_deg": -45, "speed_source_units": 40, "joint": 11 }
+      ],
+      "projectile": { "can_defeat_enemy_once": true, "can_break_block": false, "follows_surfaces": true }
+    },
+    {
+      "action": "QUICK_ATTACK",
+      "motion": "start(no motion), zip/end 0x1710/0x1730",
+      "windows": [],
+      "events": [
+        { "frame": 20, "id": "VOICE_SPECIAL_HI" },
+        { "frame": 20, "id": "FGM_ELECTRIC_1" },
+        { "frame": 20, "id": "EFFECT_SPARKLE" },
+        { "frame": 25, "id": "EFFECT_RIPPLE" },
+        { "frame": 34, "id": "SECOND_ZIP_WINDOW_OPEN" }
+      ],
+      "zip": { "first": [20, 25], "second": [34, 39], "requires_changed_direction": true, "model_scale": [0.8, 0.8, 1.2], "hitbox": false }
+    },
+    {
+      "action": "THUNDER",
+      "motion": "start 0x162C, loop 0x1644, self-hit 0x1668",
+      "windows": [{ "from": 0, "to": 10, "damage": 16, "side": "bolt", "only_after_self_contact": true }],
+      "events": [
+        { "frame": 0, "id": "VOICE_SPECIAL_LW" },
+        { "frame": 24, "id": "PROJECTILE_THUNDER_SPAWN", "vertical_speed_source_units": -450 },
+        { "frame": "contact", "id": "PROJECTILE_THUNDER_SELF_HIT" },
+        { "frame": "contact", "id": "EFFECT_THUNDER_AMP" }
+      ],
+      "self_contact": { "air_vertical_velocity_source_units": 20, "damages_pikachu": false, "can_break_block": false }
+    }
+  ],
+  "adversarial_vectors": [
+    { "name": "quick_attack_ceiling", "setup": "solid ceiling one pixel above zip path", "expect": ["stops_at_first_solid_pixel", "no_tile_mutation", "recovery"] },
+    { "name": "quick_attack_wall", "setup": "solid wall in zip path", "expect": ["stops_at_first_solid_pixel", "no_camera_desync", "recovery"] },
+    { "name": "quick_attack_save_before_zip_event", "setup": "save at frame 19; load; advance 2", "expect": ["VOICE_SPECIAL_HI_once", "FGM_ELECTRIC_1_once", "EFFECT_SPARKLE_once"] },
+    { "name": "quick_attack_save_after_zip_event", "setup": "save at frame 21; load; advance 2", "expect": ["no_duplicate_zip_entry_event"] },
+    { "name": "jolt_brick", "setup": "ordinary brick intersects projectile", "expect": ["brick_unchanged", "projectile_resolved"] },
+    { "name": "thunder_brick", "setup": "ordinary brick intersects bolt", "expect": ["brick_unchanged", "bolt_resolved"] },
+    { "name": "two_block_gap", "setup": "walk right through a two-block-high gap", "expect": ["native_x_advances", "no_crouch_or_step_down_required"] },
+    { "name": "scripted_handoff", "setup": "pipe, flagpole, water, transition, death", "expect": ["no_mario_presentation", "active_projectiles_cancel_once", "reseeds_after_handoff"] }
+  ]
+}
