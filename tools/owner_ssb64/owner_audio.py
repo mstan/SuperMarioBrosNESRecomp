@@ -334,6 +334,92 @@ def _tbl_trigger(entry: bytes) -> int:
     raise ValueError("FGM articulation has no trigger")
 
 
+def _ucd_initial_note_cents(entry: bytes) -> int:
+    """Return the first UCD note's pitch relative to the 32 kHz base."""
+    offset = 0
+    octave_offset = 0
+    byte_args = {0xD2, 0xD3, 0xD5, 0xD6, 0xD7, 0xD8, 0xDC, 0xDD, 0xDE}
+    while offset < len(entry):
+        opcode = entry[offset]
+        offset += 1
+        if (opcode & 0xF8) < 0xD0:
+            if (opcode & 7) == 7:
+                _duration, offset = _read_varint(entry, offset)
+            return ((opcode >> 3) * 100) - 1300 + octave_offset
+        if opcode in (0xD1, 0xD9):
+            _unused, offset = _read_varint(entry, offset)
+        elif opcode == 0xD4:
+            for _ in range(6):
+                _unused, offset = _read_varint(entry, offset)
+        elif opcode in byte_args:
+            offset += 1
+        elif opcode == 0xDF:
+            octave_offset = -2400
+        elif opcode == 0xE0:
+            octave_offset = -4800
+        elif opcode in (0xDA, 0xDB):
+            pass
+        elif opcode == 0xD0:
+            break
+        else:
+            raise ValueError(f"unsupported FGM UCD opcode 0x{opcode:02X}")
+        if offset > len(entry):
+            raise ValueError("truncated FGM UCD argument")
+    raise ValueError("FGM UCD route has no note")
+
+
+def _tbl_initial_pitch_cents(entry: bytes) -> int:
+    """Return the articulation pitch in effect at its first trigger."""
+    offset = 0
+    pitch = 0
+    triggered = False
+    while offset < len(entry):
+        instruction = entry[offset]
+        offset += 1
+        opcode, timer = instruction & 0xF0, instruction & 0x0F
+        if timer & 8:
+            if offset >= len(entry):
+                raise ValueError("truncated FGM tbl timer")
+            extension = entry[offset]
+            offset += 1
+            timer = ((timer & 7) << 7) | (extension & 0x7F)
+            if extension & 0x80:
+                if offset >= len(entry):
+                    raise ValueError("truncated long FGM tbl timer")
+                timer = (timer << 8) | entry[offset]
+                offset += 1
+        if opcode == 0x60:
+            _trigger, offset = _read_varint(entry, offset)
+            triggered = True
+        elif opcode == 0x20:
+            if offset + 2 > len(entry):
+                raise ValueError("truncated FGM tbl pitch")
+            pitch = struct.unpack_from(">h", entry, offset)[0]
+            offset += 2
+        elif opcode == 0x40:
+            offset += 1
+            _unused, offset = _read_varint(entry, offset)
+        elif opcode in (0x00, 0x10, 0x30, 0x50):
+            offset += 1
+        elif opcode in (0x70, 0x80, 0x90):
+            if opcode == 0x70:
+                return pitch if triggered else 0
+        else:
+            raise ValueError(f"unsupported FGM tbl opcode 0x{opcode:02X}")
+        if offset > len(entry):
+            raise ValueError("truncated FGM tbl argument")
+        if triggered and timer:
+            return pitch
+    raise ValueError("FGM articulation has no trigger")
+
+
+def pitched_source_rate(cents: int, nominal_rate: int = SYNTH_RATE) -> int:
+    """Quantize the N64 pitch ratio to an integer rate for offline sinc output."""
+    if nominal_rate <= 0:
+        raise ValueError("nominal sample rate must be positive")
+    return round(nominal_rate * math.pow(2.0, cents / 1200.0))
+
+
 def parse_fgm_routes(rom: bytes) -> dict[str, dict[int, bytes]]:
     """Read the documented FGM directories used by the Falcon cue recipe."""
     # The selected ucd entries include Falcon Punch/Kick/Dive programs and

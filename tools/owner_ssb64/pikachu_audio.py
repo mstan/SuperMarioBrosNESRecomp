@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Render the minimal Pikachu runtime cue set from an owner Smash 64 ROM.
 
-Direct character voices use the exact B1_sounds2 VADPCM wave plus the shared
-deterministic windowed-sinc resampler. FGM cues validate their canonical UCD
+Direct character voices use the exact B1_sounds2 VADPCM wave, the selected
+route's initial UCD/TBL pitch, and the shared deterministic windowed-sinc
+resampler. FGM cues validate their canonical UCD
 route, forks, articulation, and triggered source wave, then use a deliberately
 focused offline pitch/gain approximation. This is not a general FGM engine.
 
@@ -28,12 +29,17 @@ import owner_audio
 
 
 FORMAT = "smb1-smash64-pikachu-runtime-audio-cache"
-RECIPE_VERSION = 1
+RECIPE_VERSION = 2
 
 VOICE_CUES = {
     "special_n_voice": ("pikachu_special_n.wav", 540, 393, 268),
     "special_lw_voice": ("pikachu_special_lw.wav", 541, 395, 270),
     "special_hi_voice": ("pikachu_special_hi.wav", 547, 401, 276),
+}
+VOICE_ROUTE_PITCH_CENTS = {
+    "special_n_voice": -440,
+    "special_lw_voice": -560,
+    "special_hi_voice": -1200,
 }
 
 # event: (filename, root route, articulation, source wave, pitch cents,
@@ -103,8 +109,8 @@ UNRESOLVED_CONTROLLER_EVENTS = ({
 
 APPROVED_CUES = {
     "special_hi_voice": (8732, "8f30c6caac48f441f70660aa4572d91153a05f0805df30d4ed56d9863cf5c411"),
-    "special_lw_voice": (40176, "6020b00ed1326e3e1a39dc59d31e54a117b75a997311c46e94fe778d7a82bb11"),
-    "special_n_voice": (58036, "1dab4da48e43f8e4d508defbd41c7719c27b92c3e7c36998abe454a28a9141a2"),
+    "special_lw_voice": (27760, "62ea8969d63c278c3d04edc1e57f53b346f87099020505a8c2b988bce0a75984"),
+    "special_n_voice": (37416, "78ad0127c94b254807ad2c8b1cb73458618f3242e7bed25a598dd40777158278"),
     "electric_1": (17453, "7c64e2ae648edd2d13b75db99be6699f7369abf73984ee93ada6d73a982431cf"),
     "electric_2": (10904, "6894a05f3ddfd4d1ae68c2162e972f84a5a30acc948d4b9cf007db7b696b27f8"),
     "electric_3": (10583, "adc5ed81808b302fea581ca80c2086ccd40d01840a0380b53655b1cf984d6f7a"),
@@ -162,6 +168,7 @@ def _validate_routes(rom: bytes) -> dict:
     route_specs.update({spec[1]: (spec[2], spec[3]) for spec in FGM_CUES.values()})
     route_specs[LOOP_ROUTE] = (LOOP_ARTICULATION, LOOP_WAVE)
     routes = {}
+    voice_by_route = {spec[1]: event for event, spec in VOICE_CUES.items()}
     for route, (articulation, wave_id) in sorted(route_specs.items()):
         commands = owner_audio._ucd_commands(ucd[route])
         if ("articulation", articulation) not in commands:
@@ -171,10 +178,25 @@ def _validate_routes(rom: bytes) -> dict:
             raise ValueError(f"FGM route {route} changed fork closure")
         if owner_audio._tbl_trigger(tbl[articulation]) != wave_id:
             raise ValueError(f"FGM articulation {articulation} changed wave")
-        routes[str(route)] = {"articulation": articulation, "wave_id": wave_id,
-                              "commands": commands,
-                              "ucd_sha256": hashlib.sha256(ucd[route]).hexdigest(),
-                              "tbl_sha256": hashlib.sha256(tbl[articulation]).hexdigest()}
+        route_info = {"articulation": articulation, "wave_id": wave_id,
+                      "commands": commands,
+                      "ucd_sha256": hashlib.sha256(ucd[route]).hexdigest(),
+                      "tbl_sha256": hashlib.sha256(tbl[articulation]).hexdigest()}
+        if route in voice_by_route:
+            event = voice_by_route[route]
+            note_cents = owner_audio._ucd_initial_note_cents(ucd[route])
+            articulation_cents = owner_audio._tbl_initial_pitch_cents(
+                tbl[articulation])
+            total_cents = note_cents + articulation_cents
+            if total_cents != VOICE_ROUTE_PITCH_CENTS[event]:
+                raise ValueError(f"Pikachu voice route {route} changed initial pitch")
+            route_info.update({
+                "initial_note_cents": note_cents,
+                "initial_articulation_cents": articulation_cents,
+                "initial_total_cents": total_cents,
+                "effective_source_rate": owner_audio.pitched_source_rate(total_cents),
+            })
+        routes[str(route)] = route_info
     for fork, articulation in FORK_ARTICULATIONS.items():
         commands = owner_audio._ucd_commands(ucd[fork])
         if ("articulation", articulation) not in commands:
@@ -233,6 +255,13 @@ def verify(output_dir: Path, expected_rom_sha1: str | None = None) -> dict:
             "articulation": articulation, "wave_id": wave_id,
             "rate": owner_audio.OUTPUT_RATE,
         }
+        if event in VOICE_CUES:
+            cents = VOICE_ROUTE_PITCH_CENTS[event]
+            expected_recipe.update({
+                "nominal_source_rate": owner_audio.SYNTH_RATE,
+                "initial_route_pitch_cents": cents,
+                "effective_source_rate": owner_audio.pitched_source_rate(cents),
+            })
         if any(clip.get(key) != value for key, value in expected_recipe.items()):
             raise ValueError(f"Pikachu cue recipe mismatch: {event}")
         filename = clip.get("file")
@@ -292,12 +321,17 @@ def render(rom_path: Path, output_dir: Path) -> Path:
     try:
         clips = []
         for event, (filename, route, articulation, wave_id) in sorted(VOICE_CUES.items()):
+            cents = VOICE_ROUTE_PITCH_CENTS[event]
+            source_rate = owner_audio.pitched_source_rate(cents)
             rendered = owner_audio.resample_windowed_sinc(
-                waves[wave_id], 16000, owner_audio.OUTPUT_RATE)
+                waves[wave_id], source_rate, owner_audio.OUTPUT_RATE)
             _write_wav(staging / filename, rendered)
             clips.append({"event": event, "file": filename, "kind": "direct_voice",
                           "route": route, "articulation": articulation,
                           "wave_id": wave_id, "frames": len(rendered),
+                          "nominal_source_rate": owner_audio.SYNTH_RATE,
+                          "initial_route_pitch_cents": cents,
+                          "effective_source_rate": source_rate,
                           **_binding(event)})
         for event, spec in sorted(FGM_CUES.items()):
             filename, route, articulation, wave_id, pitch, stop, top, volume = spec
@@ -326,7 +360,8 @@ def render(rom_path: Path, output_dir: Path) -> Path:
             "normalized_rom_sha1": rom_sha1, "clips": clips, "routes": routes,
             "unresolved_controller_events": list(UNRESOLVED_CONTROLLER_EVENTS),
             "approximation": (
-                "Direct voices are decoded/resampled source waves. Finite FGM cues "
+                "Direct voices use decoded source waves and their initial route pitch. "
+                "Later UCD note changes are not synthesized. Finite FGM cues "
                 "validate canonical routing but use focused offline pitch/gain curves; "
                 "they are not full UCD/TBL/RSP emulation."),
         }

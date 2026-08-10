@@ -30,7 +30,7 @@ import decode_intermediates as falcon_decode
 import owner_audio
 
 
-RECIPE_VERSION = 1
+RECIPE_VERSION = 2
 CACHE_FORMAT = "smb1-smash64-pikachu-prototype-cache"
 MODEL_ID = 341
 MAIN_ID = 243
@@ -99,16 +99,26 @@ EFFECT_TEXTURE_REGIONS = {
           (0x0440, 512, "thunder_ci4_2"), (0x11A0, 512, "shock_ci4")),
 }
 
-VOICE_WAVES = {
-    "pikachu_appeal.wav": 265, "pikachu_smash1.wav": 266,
-    "pikachu_smash2.wav": 267, "pikachu_smash3.wav": 269,
-    "pikachu_special_n.wav": 268, "pikachu_special_lw.wav": 270,
-    "pikachu_dead_up.wav": 271, "pikachu_fura_fura.wav": 272,
-    "pikachu_damage.wav": 273, "pikachu_final_pika.wav": 274,
-    "pikachu_final_chu.wav": 275, "pikachu_special_hi.wav": 276,
-    "pikachu_heavy_get.wav": 277, "pikachu_ottotto.wav": 278,
-    "pikachu_dead.wav": 279, "pikachu_fura_sleep.wav": 280,
+VOICE_RECIPES = {
+    # filename: (wave, UCD route, TBL articulation)
+    "pikachu_appeal.wav": (265, 536, 390),
+    "pikachu_smash1.wav": (266, 537, 391),
+    "pikachu_smash2.wav": (267, 538, 392),
+    "pikachu_smash3.wav": (269, 539, 394),
+    "pikachu_special_n.wav": (268, 540, 393),
+    "pikachu_special_lw.wav": (270, 541, 395),
+    "pikachu_dead_up.wav": (271, 542, 396),
+    "pikachu_fura_fura.wav": (272, 543, 397),
+    "pikachu_damage.wav": (273, 544, 398),
+    "pikachu_final_pika.wav": (274, 545, 399),
+    "pikachu_final_chu.wav": (275, 546, 400),
+    "pikachu_special_hi.wav": (276, 547, 401),
+    "pikachu_heavy_get.wav": (277, 548, 402),
+    "pikachu_ottotto.wav": (278, 549, 403),
+    "pikachu_dead.wav": (279, 550, 404),
+    "pikachu_fura_sleep.wav": (280, 551, 405),
 }
+VOICE_WAVES = {filename: recipe[0] for filename, recipe in VOICE_RECIPES.items()}
 FGM_ROUTES = {
     "landing": (79, False), "jump_inflate_2": (90, False),
     "jump_inflate_7": (101, False), "foot": (112, False),
@@ -484,40 +494,66 @@ def _write_audio(rom: bytes, output: Path) -> None:
     sources_dir.mkdir()
     required = tuple(sorted(set(VOICE_WAVES.values()) | set(FGM_SOURCE_WAVES)))
     waves = owner_audio.decode_waves(rom, required)
+    route_ids = tuple(route for route, _loop in FGM_ROUTES.values())
+    voice_route_ids = tuple(recipe[1] for recipe in VOICE_RECIPES.values())
+    all_ucd_ids = tuple(sorted(set(route_ids) | set(voice_route_ids) |
+                               set(FGM_FORKS)))
+    voice_articulations = tuple(recipe[2] for recipe in VOICE_RECIPES.values())
+    all_articulations = tuple(sorted(set(FGM_ARTICULATIONS) |
+                                     set(voice_articulations)))
+    ucd = owner_audio._parse_fgm_blob(rom[slice(*owner_audio.FGM_UCD)], 695,
+                                      "fgm.ucd", all_ucd_ids)
+    tbl = owner_audio._parse_fgm_blob(rom[slice(*owner_audio.FGM_TBL)], 464,
+                                      "fgm.tbl", all_articulations)
     voices = []
-    for filename, wave_id in sorted(VOICE_WAVES.items()):
+    for filename, (wave_id, route, articulation) in sorted(VOICE_RECIPES.items()):
+        commands = owner_audio._ucd_commands(ucd[route])
+        if ("articulation", articulation) not in commands:
+            raise ValueError(f"Pikachu voice route {route} changed articulation")
+        if owner_audio._tbl_trigger(tbl[articulation]) != wave_id:
+            raise ValueError(f"Pikachu voice articulation {articulation} changed wave")
+        note_cents = owner_audio._ucd_initial_note_cents(ucd[route])
+        articulation_cents = owner_audio._tbl_initial_pitch_cents(tbl[articulation])
+        pitch_cents = note_cents + articulation_cents
+        source_rate = owner_audio.pitched_source_rate(pitch_cents)
         samples = owner_audio.resample_windowed_sinc(
-            waves[wave_id], 16000, owner_audio.OUTPUT_RATE)
+            waves[wave_id], source_rate, owner_audio.OUTPUT_RATE)
         _write_pcm(audio_dir / filename, samples, owner_audio.OUTPUT_RATE)
-        voices.append({"file": filename, "wave_id": wave_id,
+        voices.append({"file": filename, "wave_id": wave_id, "route": route,
+                       "articulation": articulation,
+                       "nominal_source_rate": owner_audio.SYNTH_RATE,
+                       "initial_note_cents": note_cents,
+                       "initial_articulation_cents": articulation_cents,
+                       "initial_total_cents": pitch_cents,
+                       "effective_source_rate": source_rate,
                        "frames": len(samples), "rate": owner_audio.OUTPUT_RATE})
     for wave_id in FGM_SOURCE_WAVES:
         _write_pcm(sources_dir / f"wave_{wave_id:03d}.wav", waves[wave_id],
                    owner_audio.SYNTH_RATE)
 
-    route_ids = tuple(route for route, _loop in FGM_ROUTES.values())
-    all_ucd_ids = tuple(sorted(set(route_ids) | set(FGM_FORKS)))
-    ucd = owner_audio._parse_fgm_blob(rom[slice(*owner_audio.FGM_UCD)], 695,
-                                      "fgm.ucd", all_ucd_ids)
-    tbl = owner_audio._parse_fgm_blob(rom[slice(*owner_audio.FGM_TBL)], 464,
-                                      "fgm.tbl", FGM_ARTICULATIONS)
-    programs = {str(index): {"bytecode": program.hex(),
-                             "commands": owner_audio._ucd_commands(program)}
-                for index, program in sorted(ucd.items())}
-    articulations = {str(index): {"bytecode": program.hex(),
-                                  "trigger_wave": owner_audio._tbl_trigger(program)}
-                     for index, program in sorted(tbl.items())}
-    observed_waves = {entry["trigger_wave"] for entry in articulations.values()}
+    fgm_program_ids = set(route_ids) | set(FGM_FORKS)
+    programs = {str(index): {"bytecode": ucd[index].hex(),
+                             "commands": owner_audio._ucd_commands(ucd[index])}
+                for index in sorted(fgm_program_ids)}
+    articulations = {
+        str(index): {"bytecode": tbl[index].hex(),
+                     "trigger_wave": owner_audio._tbl_trigger(tbl[index])}
+        for index in FGM_ARTICULATIONS
+    }
+    observed_waves = {owner_audio._tbl_trigger(tbl[index])
+                      for index in FGM_ARTICULATIONS}
     if observed_waves != set(FGM_SOURCE_WAVES):
         raise ValueError(f"Pikachu FGM trigger set changed: {sorted(observed_waves)}")
     routes = [{"name": name, "route": route, "looping": looping}
               for name, (route, looping) in FGM_ROUTES.items()]
     (audio_dir / "manifest.json").write_text(json.dumps({
-        "format": "ssb64-pikachu-audio-intermediate", "version": 1,
+        "format": "ssb64-pikachu-audio-intermediate", "version": 2,
         "voices": voices, "fgm_routes": routes, "fgm_programs": programs,
         "fgm_articulations": articulations,
         "fgm_source_rate": owner_audio.SYNTH_RATE,
-        "note": "FGM WAVs are decoded source waves; route bytecode still requires offline synthesis.",
+        "note": ("Voice WAVs use the initial route note/articulation pitch; later UCD "
+                 "note changes are not synthesized. FGM WAVs are decoded source waves; "
+                 "route bytecode still requires offline synthesis."),
     }, indent=1, sort_keys=True) + "\n", encoding="utf-8")
 
 

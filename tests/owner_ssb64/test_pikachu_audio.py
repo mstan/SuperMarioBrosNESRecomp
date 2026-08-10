@@ -17,12 +17,13 @@ sys.path.insert(0, str(ROOT / "tools" / "owner_ssb64"))
 
 import owner_audio  # noqa: E402
 import pikachu_audio  # noqa: E402
+import pikachu_owner  # noqa: E402
 
 
 EXPECTED = {
     "special_hi_voice": (8732, "8f30c6caac48f441f70660aa4572d91153a05f0805df30d4ed56d9863cf5c411"),
-    "special_lw_voice": (40176, "6020b00ed1326e3e1a39dc59d31e54a117b75a997311c46e94fe778d7a82bb11"),
-    "special_n_voice": (58036, "1dab4da48e43f8e4d508defbd41c7719c27b92c3e7c36998abe454a28a9141a2"),
+    "special_lw_voice": (27760, "62ea8969d63c278c3d04edc1e57f53b346f87099020505a8c2b988bce0a75984"),
+    "special_n_voice": (37416, "78ad0127c94b254807ad2c8b1cb73458618f3242e7bed25a598dd40777158278"),
     "electric_1": (17453, "7c64e2ae648edd2d13b75db99be6699f7369abf73984ee93ada6d73a982431cf"),
     "electric_2": (10904, "6894a05f3ddfd4d1ae68c2162e972f84a5a30acc948d4b9cf007db7b696b27f8"),
     "electric_3": (10583, "adc5ed81808b302fea581ca80c2086ccd40d01840a0380b53655b1cf984d6f7a"),
@@ -33,6 +34,17 @@ EXPECTED = {
     "quick_attack_start": (17603, "639dab10e9a22e09a86051e22a295eb2cb4a05cb2b1fb6ee87e6929d460e8d5e"),
     "thunder": (87484, "015518530cebf78fbf508158fb8e581d15fc62c958ce1e61e153242791bd5718"),
     "electric_loop": (10425, "aedef3eda98f88e756a08848b37953d9b94e5fe94cfc78b31410dcf28df267a3"),
+}
+
+OWNER_VOICE_RATES = {
+    "pikachu_appeal.wav": 16186, "pikachu_smash1.wav": 22654,
+    "pikachu_smash2.wav": 24675, "pikachu_smash3.wav": 16000,
+    "pikachu_special_n.wav": 24818, "pikachu_special_lw.wav": 23156,
+    "pikachu_dead_up.wav": 16009, "pikachu_fura_fura.wav": 16000,
+    "pikachu_damage.wav": 16000, "pikachu_final_pika.wav": 16951,
+    "pikachu_final_chu.wav": 16000, "pikachu_special_hi.wav": 16000,
+    "pikachu_heavy_get.wav": 16186, "pikachu_ottotto.wav": 17050,
+    "pikachu_dead.wav": 16000, "pikachu_fura_sleep.wav": 7551,
 }
 
 
@@ -136,6 +148,15 @@ class PikachuAudioIntegrationTests(unittest.TestCase):
             self.assertEqual(clips["quick_attack_start"]["controller_event_ids"], [10])
             self.assertEqual(clips["thunder"]["controller_event_ids"], [16])
             self.assertEqual(manifest["unresolved_controller_events"][0]["id"], 11)
+            expected_voice_playback = {
+                "special_n_voice": (-440, 24818),
+                "special_lw_voice": (-560, 23156),
+                "special_hi_voice": (-1200, 16000),
+            }
+            for event, (cents, rate) in expected_voice_playback.items():
+                self.assertEqual(clips[event]["nominal_source_rate"], 32000)
+                self.assertEqual(clips[event]["initial_route_pitch_cents"], cents)
+                self.assertEqual(clips[event]["effective_source_rate"], rate)
             pikachu_audio.verify(output, owner_audio.CANONICAL_SHA1)
             self.assertEqual({path.name for path in output.glob("*.wav")},
                              {clip["file"] for clip in clips.values()})
@@ -156,6 +177,31 @@ class PikachuAudioIntegrationTests(unittest.TestCase):
                 json.dumps(manifest, indent=1, sort_keys=True) + "\n")
             with self.assertRaisesRegex(ValueError, "recipe mismatch"):
                 pikachu_audio.verify(output, owner_audio.CANONICAL_SHA1)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_prototype_voice_intermediates_use_route_pitch(self):
+        root = Path(tempfile.mkdtemp(prefix="pikachu-owner-voice-test-"))
+        try:
+            rom = owner_audio.normalize_rom(Path(OWNER_ROM).read_bytes())
+            pikachu_owner._write_audio(rom, root)
+            manifest = json.loads((root / "audio" / "manifest.json").read_text())
+            self.assertEqual(manifest["version"], 2)
+            voices = {entry["file"]: entry for entry in manifest["voices"]}
+            self.assertEqual(set(voices), set(OWNER_VOICE_RATES))
+            self.assertEqual({name: entry["effective_source_rate"]
+                              for name, entry in voices.items()}, OWNER_VOICE_RATES)
+            for entry in voices.values():
+                self.assertEqual(entry["nominal_source_rate"], 32000)
+                self.assertEqual(
+                    entry["effective_source_rate"],
+                    owner_audio.pitched_source_rate(entry["initial_total_cents"]))
+                self.assertEqual(
+                    owner_audio._tbl_trigger(
+                        owner_audio._parse_fgm_blob(
+                            rom[slice(*owner_audio.FGM_TBL)], 464, "fgm.tbl",
+                            (entry["articulation"],))[entry["articulation"]]),
+                    entry["wave_id"])
         finally:
             shutil.rmtree(root, ignore_errors=True)
 

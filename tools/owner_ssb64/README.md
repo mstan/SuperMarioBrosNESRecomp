@@ -83,7 +83,7 @@ when the final baked cache manifest verifies.
 `pikachu_owner.py` is an isolated, dependency-free prototype for the next
 character. It deliberately does **not** alter or replace any Falcon cache or
 runtime output. Given the same verified owner ROM, it creates an external
-`pikachu-prototype-r1-<sha1>` cache containing:
+`pikachu-prototype-r2-<sha1>` cache containing:
 
 - reloc 341's 27-joint high-detail model and structured material pointers;
 - costume selections 0-3, including the costume-frame material animation
@@ -93,7 +93,9 @@ runtime output. Given the same verified owner ROM, it creates an external
   26/27-entry pointer-table geometry;
 - Thunder Jolt (342), Thunder/Thunder Shock (347), and model-resident Thunder
   Trail effect inputs and exact texture-storage spans;
-- all 16 direct Pikachu voice waves as deterministic 44.1 kHz WAVs; and
+- all 16 direct Pikachu voice waves as deterministic 44.1 kHz WAVs, using
+  each route's initial UCD note plus TBL articulation pitch from the nominal
+  32 kHz N64 mixer rate; and
 - the 15 required Pikachu FGM programs, their fork/articulation bytecode,
   decoded source waves, and explicit looping metadata for ElectricLoop.
 
@@ -128,7 +130,12 @@ py -3 tools/owner_ssb64/pikachu_audio.py `
 ```
 
 Direct voices are exact VADPCM decodes followed by the same deterministic
-windowed-sinc resampling used by Falcon. Each finite FGM cue validates its US
+windowed-sinc resampling used by Falcon. Their effective rates come from the
+nominal 32 kHz N64 mixer plus each route's initial UCD note and TBL
+articulation pitch: Special-N is -440 cents (24,818 Hz), Special-Lw is -560
+cents (23,156 Hz), and Special-Hi is -1200 cents (16,000 Hz). This focused
+offline renderer bakes the on-trigger pitch and does not claim to emulate later
+UCD note changes. Each finite FGM cue validates its US
 1.0 UCD route, fork closure, articulation, and triggered wave, then applies a
 small recipe-specific pitch/gain approximation. It is explicitly not a full
 FGM or RSP synthesizer. `pikachu_electric_loop.wav` contains one bounded period
@@ -146,4 +153,4 @@ Thunder route 232 maps to projectile-spawn event 16. Conversely, event 11
 (`PIKACHU_EVENT_FGM_SWING_PULSE`) represents Smash route 219
 (`nSYAudioFGMMarioUnkSwing2`), not ElectricLoop, and is listed as unresolved in
 the manifest until that distinct cue is added. Runtime integration must not
-substitute the ElectricLoop WAV for event 10.
+substitute the ElectricLoop WAV for event 11.
