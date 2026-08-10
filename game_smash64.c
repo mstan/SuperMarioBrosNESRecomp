@@ -32,6 +32,8 @@
 #include "game_smash64_audio.h"
 #include "game_smash64_fighter_profile.h"
 
+#include "mods/smash64/characters/pikachu.h"
+
 #include "foreign_controller.h"
 #include "mod_function_hooks.h"
 #include "mod_savestate.h"
@@ -201,6 +203,7 @@ _Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
 static int s_savestate_controller_compatible = 1;
 static const Smash64FighterProfile *s_profile = NULL;
 static void game_smash64_request_savestate_reseed(void);
+static void game_smash64_sync_persistent_audio(void);
 
 static void save_write_u32le(uint8_t *dst, uint32_t value)
 {
@@ -256,16 +259,19 @@ static int game_smash64_actions_savestate_set(const uint8_t *buf, int len)
 {
     if (len == 0) {
         smash64_actions_clear();
+        game_smash64_sync_persistent_audio();
         return 1;
     }
     if (!s_savestate_controller_compatible || !s_profile) {
         smash64_actions_clear();
+        game_smash64_sync_persistent_audio();
         return 1;
     }
     if (len >= SMASH64_ACTIONS_RECORD_HEADER &&
         memcmp(buf, "S64A", 4) == 0) {
         if (save_read_u32le(buf + 4) != s_profile->savestate_tag) {
             smash64_actions_clear();
+            game_smash64_sync_persistent_audio();
             return 1;
         }
         buf += SMASH64_ACTIONS_RECORD_HEADER;
@@ -274,9 +280,11 @@ static int game_smash64_actions_savestate_set(const uint8_t *buf, int len)
         /* Headerless action records only existed on the pre-release Pikachu
          * branch. Never interpret one while another fighter is active. */
         smash64_actions_clear();
+        game_smash64_sync_persistent_audio();
         return 1;
     }
     if (!smash64_actions_deserialize(buf, len)) smash64_actions_clear();
+    game_smash64_sync_persistent_audio();
     return 1;
 }
 
@@ -327,6 +335,20 @@ static int  s_enabled = 0;
 static char s_controller_id[96] = {0};
 static int  s_selected = 0;
 static int  s_announced = 0;
+
+/* A projectile's lifetime is host-owned and serializable, whereas the
+ * controller's audio event is one tick at source spawn. Reconcile the loop to
+ * the actual action slot so a terrain hit, a profile switch, or a save-state
+ * restore cannot leave audio running after the Jolt has gone. */
+static void game_smash64_sync_persistent_audio(void)
+{
+    const int pikachu_selected =
+        s_profile && strcmp(s_controller_id, SMASH64_PIKACHU_ID) == 0;
+    game_smash64_audio_set_persistent_cue_active(
+        PIKACHU_AUDIO_ELECTRIC_LOOP,
+        pikachu_selected &&
+        smash64_actions_has_active_kind(PIKACHU_PROJECTILE_JOLT));
+}
 
 static uint8_t  s_prev_buttons = 0;
 /* NES keyboard/controller events can place B one VBlank ahead of the d-pad
@@ -494,6 +516,7 @@ static void game_smash64_request_savestate_reseed(void)
     s_forced_airborne_frames = 0;
     memset(&s_attack, 0, sizeof(s_attack));
     smash64_actions_clear();
+    game_smash64_sync_persistent_audio();
     /* The next ordinary-control update takes the existing, well-tested
      * SCRIPTED->FOREIGN reseed path and reanchors the selected fighter to the
      * guest RAM that the save loader just restored. */
@@ -946,6 +969,7 @@ void game_smash64_update_input(uint64_t frame_count)
             s_special_grace_pending = 0;
             s_pending_external_dy = 0.0;
             smash64_actions_clear();
+            game_smash64_sync_persistent_audio();
         }
         s_reseed_this_frame = reseed;
     }
@@ -1014,6 +1038,7 @@ void game_smash64_update_input(uint64_t frame_count)
             (double)g_ram[Player_Y_Position] + 32.0,
             (fs && fs->facing < 0.0f) ? -1.0 : 1.0,
             s_profile ? s_profile->units_to_smb_px : 0.08);
+        game_smash64_sync_persistent_audio();
         if (move.force_airborne && !s_forced_airborne_pending) {
             /* Generic controller-to-host departure handshake. SetFallS
              * ($DC82) writes Player_State=2 for SMB1's native falling state;
@@ -1049,6 +1074,7 @@ void game_smash64_update_input(uint64_t frame_count)
         s_forced_airborne_pending = 0;
         s_forced_airborne_frames = 0;
         smash64_actions_clear();
+        game_smash64_sync_persistent_audio();
         /* SMB1 owns the player; keep our idea of velocity in step with it so
          * resuming control does not inject a stale speed. */
         s_xspeed = (int8_t)g_ram[Player_X_Speed];
@@ -1918,6 +1944,7 @@ static void apply_pending_actions(void)
     host.fighter_top = foot - body_height;
     host.fighter_bottom = foot;
     smash64_actions_step(&host);
+    game_smash64_sync_persistent_audio();
 }
 
 static int break_smb1_brick(int world_col, int tile_top)
@@ -2489,6 +2516,8 @@ int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_controller_id[0] = '\0';
     s_profile = NULL;
     smash64_actions_clear();
+    game_smash64_audio_set_persistent_cue_active(
+        PIKACHU_AUDIO_ELECTRIC_LOOP, 0);
     nes_foreign_set_ownership(FOREIGN_OWNERSHIP_NATIVE);
     nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 0);
     nes_mod_set_function_hook_enabled(SMASH64_VERTICAL_HOOK_ID, 0);

@@ -90,11 +90,9 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
             push_audio(out, PIKACHU_AUDIO_QUICK_ATTACK_START);
         /* FGM_SWING_PULSE is route 219, a distinct unresolved program. Do
          * not disguise it as one of the three finite light-swing clips. */
-        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_JOLT_SPAWN)) {
-            /* BattleShip starts ElectricLoop with the Jolt weapon. The mixer
-             * has no loop handle yet, so this is one bounded source period. */
-            push_audio(out, PIKACHU_AUDIO_ELECTRIC_LOOP);
-        }
+        /* ElectricLoop is not a finite source command. The host starts its
+         * one persistent voice from the spawned Jolt action and reconciles it
+         * against that action's lifetime, including savestate reloads. */
         if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_THUNDER_SPAWN)) {
             push_audio(out, PIKACHU_AUDIO_THUNDER);
         }

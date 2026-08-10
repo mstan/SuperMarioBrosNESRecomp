@@ -627,3 +627,14 @@ int smash64_actions_snapshot(Smash64ActionSlot *out, int capacity)
         if (s_slots[i].active) out[count++] = s_slots[i];
     return count;
 }
+
+int smash64_actions_has_active_kind(uint32_t kind)
+{
+    int i;
+    if (kind == 0) return 0;
+    for (i = 0; i < SMASH64_ACTION_SLOT_CAPACITY; ++i) {
+        if (s_slots[i].active && s_slots[i].kind == kind)
+            return 1;
+    }
+    return 0;
+}

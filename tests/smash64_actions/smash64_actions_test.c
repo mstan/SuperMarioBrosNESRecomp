@@ -89,11 +89,14 @@ int main(void)
                                   FOREIGN_ACTION_FOLLOW_SURFACES);
     smash64_actions_apply_commands(&commands, 50.0, 120.0, 1.0, 0.08);
     CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(smash64_actions_has_active_kind(7));
+    CHECK(!smash64_actions_has_active_kind(8));
     CHECK(slots[0].x == 50.0);
     CHECK(slots[0].y == 112.0);
     target_hits = 1;
     smash64_actions_step(&host);
     CHECK(smash64_actions_snapshot(slots, 8) == 0);
+    CHECK(!smash64_actions_has_active_kind(7));
     smash64_actions_drain_feedback(&feedback);
     CHECK(feedback.count == 1);
     CHECK(feedback.events[0].instance_id == 1);

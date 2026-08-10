@@ -249,3 +249,19 @@ void game_smash64_audio_play_events(const ForeignAudioEvents *events,
         }
     }
 }
+
+void game_smash64_audio_set_persistent_cue_active(uint32_t cue, int active)
+{
+    size_t a;
+    for (a = 0; a < s_asset_count; ++a) {
+        Smash64AudioAsset *asset = &s_assets[a];
+        if (asset->cue != cue) continue;
+        /* Teardown is useful even after a failed activation; playback only
+         * begins when every selected-character asset has been verified. */
+        if (!active || !s_enabled)
+            nes_mod_audio_stop_loop(asset->clip);
+        else
+            (void)nes_mod_audio_play_loop(asset->clip, asset->gain_percent);
+        return;
+    }
+}

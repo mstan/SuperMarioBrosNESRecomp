@@ -66,3 +66,9 @@ int smash64_actions_serialize(uint8_t *buf, int capacity);
 int smash64_actions_deserialize(const uint8_t *buf, int length);
 
 int smash64_actions_snapshot(Smash64ActionSlot *out, int capacity);
+
+/* True when an action of this opaque controller-defined kind is alive. Hosts
+ * use this for presentation that must follow a serialized action's actual
+ * lifetime (for example, a looping projectile sound), rather than the
+ * one-tick spawn notification. */
+int smash64_actions_has_active_kind(uint32_t kind);
