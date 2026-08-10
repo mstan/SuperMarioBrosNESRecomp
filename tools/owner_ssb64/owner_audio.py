@@ -201,14 +201,17 @@ def vadpcm_decode(data: bytes, codebook: tuple[int, ...], order: int,
     return output
 
 
-def decode_required_waves(rom: bytes) -> dict[int, list[int]]:
+def decode_waves(rom: bytes, wave_ids: tuple[int, ...]) -> dict[int, list[int]]:
+    """Decode an explicit, allowlisted set of B1_sounds2 wave indices."""
     ctl = rom[slice(*B1_SOUNDS2_CTL)]
     tbl = rom[slice(*B1_SOUNDS2_TBL)]
     records = _bank_wave_records(ctl)
     if len(records) != 322:
         raise ValueError(f"expected 322 B1_sounds2 waves, found {len(records)}")
     result: dict[int, list[int]] = {}
-    for wave_id in REQUIRED_WAVES:
+    for wave_id in wave_ids:
+        if not 0 <= wave_id < len(records):
+            raise ValueError(f"invalid B1_sounds2 wave index {wave_id}")
         record = records[wave_id]
         base, length = int(record["base"]), int(record["length"])
         if base + length > len(tbl):
@@ -218,6 +221,11 @@ def decode_required_waves(rom: bytes) -> dict[int, list[int]]:
             int(record["predictors"]),
         )
     return result
+
+
+def decode_required_waves(rom: bytes) -> dict[int, list[int]]:
+    """Preserve the original Falcon-only decoder entry point exactly."""
+    return decode_waves(rom, REQUIRED_WAVES)
 
 
 def _parse_fgm_blob(data: bytes, expected_count: int, label: str,

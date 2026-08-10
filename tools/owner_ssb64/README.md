@@ -77,3 +77,38 @@ crash or concurrent first run cannot make an already working cache disappear.
 The launcher should call this only after its own owner-ROM validation, pass a
 user cache root (not the installation directory), and enable the mod only
 when the final baked cache manifest verifies.
+
+## Pikachu prototype intermediates
+
+`pikachu_owner.py` is an isolated, dependency-free prototype for the next
+character. It deliberately does **not** alter or replace any Falcon cache or
+runtime output. Given the same verified owner ROM, it creates an external
+`pikachu-prototype-r1-<sha1>` cache containing:
+
+- reloc 341's 27-joint high-detail model and structured material pointers;
+- costume selections 0-3, including the costume-frame material animation
+  inputs, joint-11 accessory used by costumes 1-3, and both facial texture-part
+  selections;
+- 37 locomotion, normal, aerial, and special animations, with their explicit
+  26/27-entry pointer-table geometry;
+- Thunder Jolt (342), Thunder/Thunder Shock (347), and model-resident Thunder
+  Trail effect inputs and exact texture-storage spans;
+- all 16 direct Pikachu voice waves as deterministic 44.1 kHz WAVs; and
+- the 15 required Pikachu FGM programs, their fork/articulation bytecode,
+  decoded source waves, and explicit looping metadata for ElectricLoop.
+
+```powershell
+py -3 tools/owner_ssb64/pikachu_owner.py `
+  --rom 'D:\Roms\Super Smash Bros. (U) (V1.0).z64' `
+  --cache-root "$env:LOCALAPPDATA\SuperMarioBrosRecomp\smash64"
+```
+
+The character model's generated upstream comments do not reliably describe
+the dimensions of its packed CI4 atlases. This stage therefore preserves the
+exact owner-ROM storage spans and structured MObj/material-animation offsets;
+the later runtime baker remains responsible for mapping individual tile views.
+Likewise, FGM outputs here are route programs plus decoded source samples, not
+claims of fully synthesized final effects. The manifest recursively hashes
+every nested manifest and payload, rejects ROM-like filenames and ROM-sized
+files, contains no input path, and is byte-identical for canonical z64, v64,
+and n64 inputs.
