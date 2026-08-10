@@ -86,11 +86,11 @@ static uint32_t pikachu_state_traits(unsigned state)
         traits |= SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER |
                   SMASH64_STATE_TRAIT_SUPPRESS_UPWARD_SPEED_ON_CEILING |
                   SMASH64_STATE_TRAIT_ROOT_BURST |
-                  /* End/FallSpecial still carries one residual 2D vector;
-                   * retain the same DDA collision path rather than turning
-                   * a diagonal into a horizontal-then-vertical corner cut. */
                   SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP;
         break;
+    /* PK_FALL_SPECIAL intentionally takes the default STREAM_LIMIT only.
+     * It has left the 46-frame Quick Attack end status and must not inherit a
+     * root burst, coupled-DDA plan, or ceiling barrier. */
     default:
         break;
     }

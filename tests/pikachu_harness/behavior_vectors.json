@@ -39,6 +39,8 @@
     "quick_attack_second_zip_angle_comparison": "strictly_greater_than_42_degrees",
     "quick_attack_zip_end_velocity_backup_multiplier": 0.2,
     "quick_attack_fall_special_drift": 0.4,
+    "quick_attack_recovery_to_fall_special_frames": 46,
+    "quick_attack_fall_special_host_traits": ["STREAM_LIMIT"],
     "quick_attack_fall_special_landing_frames": 20,
     "quick_attack_host_zip1_component_px_admitted": 16,
     "quick_attack_host_zip1_parser_debt_reject_at": "0x20",

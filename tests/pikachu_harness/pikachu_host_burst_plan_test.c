@@ -28,6 +28,14 @@ int main(void)
     CHECK_NEAR(smash64_fighter_profile_coupled_burst_component_px_limit(
                    pikachu, PK_QUICK_ATTACK_WINDOW, 0), 4.0);
 
+    /* At frame 46 controller status changes to ordinary FallSpecial. It must
+     * retain only normal streamer traits, never a Quick Attack burst plan. */
+    {
+        uint32_t fall_special = smash64_fighter_profile_state_traits(
+            pikachu, PK_FALL_SPECIAL);
+        CHECK(fall_special == SMASH64_STATE_TRAIT_STREAM_LIMIT);
+    }
+
     if (failures) return 1;
     puts("pikachu_host_burst_plan_test: PASS");
     return 0;

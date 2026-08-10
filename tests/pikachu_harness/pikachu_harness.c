@@ -256,6 +256,11 @@ static void quick_attack_and_save_vectors(void)
 static void quick_attack_source_recovery_vector(void)
 {
     PikachuFighter f; PikachuCollision hit; PikachuInputRaw in; int i;
+    int fall_special_state = PK_FALL_SPECIAL;
+    int special_landing_state = PK_FALL_SPECIAL_LANDING;
+    /* Append-only controller enum: existing v2 FALL_SPECIAL_LANDING saves
+     * retain their numeric value when aerial FALL_SPECIAL is introduced. */
+    CHECK(fall_special_state == special_landing_state + 1);
     pikachu_reset(&f);
     f.grounded = 0;
     f.state = PK_QUICK_ATTACK_ZIP1;
@@ -275,6 +280,14 @@ static void quick_attack_source_recovery_vector(void)
         step(&f, in);
     CHECK(f.quick_fall_special);
     CHECK(f.quick_end_frame == PIKACHU_SOURCE_QUICK_ATTACK_END_ANIMATION_FRAMES);
+    CHECK(f.state == PK_FALL_SPECIAL);
+    {
+        uint8_t blob[1 + sizeof(f)]; int len;
+        len = pikachu_serialize(&f, blob, sizeof(blob));
+        pikachu_reset(&f);
+        CHECK(len > 0 && pikachu_deserialize(&f, blob, len));
+        CHECK(f.state == PK_FALL_SPECIAL && f.quick_fall_special);
+    }
     in.stick_x = 80;
     for (i = 0; i < 400; ++i) step(&f, in);
     CHECK(f.vel_x <= PIKACHU_SOURCE_AIR_SPEED_MAX *

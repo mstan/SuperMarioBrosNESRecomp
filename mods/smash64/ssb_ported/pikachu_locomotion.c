@@ -41,6 +41,7 @@ const char *pikachu_state_name(int state)
     case PK_DASH_ATTACK: return "DASH_ATTACK"; case PK_UTILT: return "UTILT";
     case PK_DTILT: return "DTILT"; case PK_UAIR: return "UAIR";
     case PK_FALL_SPECIAL_LANDING: return "FALL_SPECIAL_LANDING";
+    case PK_FALL_SPECIAL: return "FALL_SPECIAL";
     default: return "INVALID";
     }
 }
@@ -62,7 +63,7 @@ static int is_action(int state)
     case PK_QUICK_ATTACK_START: case PK_QUICK_ATTACK_ZIP1:
     case PK_QUICK_ATTACK_WINDOW: case PK_QUICK_ATTACK_ZIP2:
     case PK_QUICK_ATTACK_RECOVERY: case PK_THUNDER_START: case PK_THUNDER_LOOP:
-    case PK_THUNDER_SELF_HIT:
+    case PK_THUNDER_SELF_HIT: case PK_FALL_SPECIAL:
         return 1;
     default:
         return 0;
@@ -624,15 +625,28 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
         if (f->vel_y < -PIKACHU_SOURCE_TERMINAL_VELOCITY)
             f->vel_y = -PIKACHU_SOURCE_TERMINAL_VELOCITY;
         if (!f->quick_fall_special &&
-            ++f->quick_end_frame >= PIKACHU_SOURCE_QUICK_ATTACK_END_ANIMATION_FRAMES)
+            ++f->quick_end_frame >= PIKACHU_SOURCE_QUICK_ATTACK_END_ANIMATION_FRAMES) {
             f->quick_fall_special = 1;
-        if (f->quick_fall_special)
-            quick_air_control(f, in, PIKACHU_SOURCE_AIR_ACCEL,
-                              PIKACHU_SOURCE_AIR_SPEED_MAX *
-                              PIKACHU_SOURCE_QUICK_ATTACK_FALL_SPECIAL_DRIFT);
-        else
+            /* The end clip is complete.  Do not keep borrowing Quick
+             * Attack's coupled/root-burst host traits for ordinary common
+             * FallSpecial movement; entering a distinct appended state makes
+             * the host projection and this source control phase explicit. */
+            enter(f, PK_FALL_SPECIAL);
+        } else {
             quick_air_control(f, in, PIKACHU_SOURCE_AIR_ACCEL * 0.5,
                               PIKACHU_SOURCE_AIR_SPEED_MAX * 0.5);
+        }
+        out->requested_dx = f->vel_x;
+        out->requested_dy = f->vel_y;
+    } else if (f->state == PK_FALL_SPECIAL) {
+        /* Common FallSpecial: it is ordinary airborne drift at the source
+         * 0.4 multiplier, not a residual Quick Attack root burst. */
+        f->vel_y -= PIKACHU_SOURCE_GRAVITY;
+        if (f->vel_y < -PIKACHU_SOURCE_TERMINAL_VELOCITY)
+            f->vel_y = -PIKACHU_SOURCE_TERMINAL_VELOCITY;
+        quick_air_control(f, in, PIKACHU_SOURCE_AIR_ACCEL,
+                          PIKACHU_SOURCE_AIR_SPEED_MAX *
+                          PIKACHU_SOURCE_QUICK_ATTACK_FALL_SPECIAL_DRIFT);
         out->requested_dx = f->vel_x;
         out->requested_dy = f->vel_y;
     } else if (f->state == PK_THUNDER_START || f->state == PK_THUNDER_LOOP || f->state == PK_THUNDER_SELF_HIT) {
@@ -667,7 +681,8 @@ void pikachu_resolve(PikachuFighter *f, const PikachuCollision *hit)
             f->action_frame = 0;
             f->vel_x = 0.0;
             f->vel_y = 0.0;
-        } else if (f->state == PK_QUICK_ATTACK_RECOVERY) {
+        } else if (f->state == PK_QUICK_ATTACK_RECOVERY ||
+                   f->state == PK_FALL_SPECIAL) {
             /* Common FallSpecial enters its .4-rate landing animation; it
              * must not turn a Quick Attack floor contact into plain Wait. */
             f->state = PK_FALL_SPECIAL_LANDING;

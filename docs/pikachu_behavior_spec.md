@@ -141,9 +141,10 @@ rather than Mario's fireball slot.
   at that pixel and enters recovery; it cannot phase through a ceiling, wall,
   floor, HUD-route tile, pipe, or block.  The source's platform pass buffer is
   not an authorization to pass SMB solid tiles.
-- After no second zip, recovery backs the zip vector up by 0.2, then has 0.4
-  normal-air drift and source FallSpecial landing playback at 0.4, per
-  `ftpikachuspecialhi.c:404-553`.  A floor contact enters the explicit
+- After no second zip, the 46-frame recovery backs the zip vector up by 0.2.
+  On exactly that end-frame it enters the append-only aerial `FALL_SPECIAL`
+  state, which has ordinary source 0.4 drift and no Quick Attack root-burst,
+  coupled-DDA, or ceiling-barrier host traits. A floor contact enters the explicit
   append-only `FALL_SPECIAL_LANDING` state (20 host ticks for the 8-frame
   source motion at 0.4), not ordinary `GROUND_WAIT`.  The host must preserve
   this state and its zip/direction counters in savestates; a v1 controller

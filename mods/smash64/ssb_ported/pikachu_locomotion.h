@@ -60,7 +60,10 @@ typedef enum {
     /* Append only: save-state records serialize these numeric values. */
     PK_RUN_BRAKE, PK_TURN_RUN, PK_CROUCH, PK_CROUCH_WAIT,
     PK_CROUCH_END, PK_LANDING, PK_DASH_ATTACK, PK_UTILT, PK_DTILT,
-    PK_UAIR, PK_FALL_SPECIAL_LANDING, PK_STATE_COUNT
+    PK_UAIR, PK_FALL_SPECIAL_LANDING,
+    /* Append only: source Quick Attack's 46f EndProc hands off to this
+     * ordinary aerial FallSpecial before any special landing animation. */
+    PK_FALL_SPECIAL, PK_STATE_COUNT
 } PikachuState;
 
 typedef enum {
