@@ -86,6 +86,17 @@ static void spawn_thunder(PikachuFighter *f, PikachuMotion *out)
     out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_THUNDER_SPAWN);
 }
 
+/* Aerial attacks keep the fighter's air kinetic state authoritative. They
+ * deliberately do not derive travel from animation/root motion. */
+static void air_motion(PikachuFighter *f, PikachuMotion *out)
+{
+    f->vel_y -= PIKACHU_SOURCE_GRAVITY;
+    if (f->vel_y < -PIKACHU_SOURCE_TERMINAL_VELOCITY)
+        f->vel_y = -PIKACHU_SOURCE_TERMINAL_VELOCITY;
+    out->requested_dx = f->vel_x;
+    out->requested_dy = f->vel_y;
+}
+
 static void normal_schedule(PikachuFighter *f, PikachuMotion *out)
 {
     unsigned n = f->action_frame;
@@ -101,12 +112,14 @@ static void normal_schedule(PikachuFighter *f, PikachuMotion *out)
         if (n >= 24) enter(f, f->grounded ? PK_GROUND_WAIT : PK_AIR_FALL);
         break;
     case PK_NAIR:
+        air_motion(f, out);
         if (n == 3) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_M);
         if (n >= 3 && n < 11) set_attack(out, 0, 48, 100, 100, 14, 1);
         if (n >= 11 && n < 29) set_attack(out, 0, 48, 100, 100, 11, 1);
         if (n >= 35) enter(f, PK_AIR_FALL);
         break;
     case PK_FAIR:
+        air_motion(f, out);
         if (n == 7) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_2);
         if (n >= 7 && n < 27 && ((n - 7) % 3) < 2) {
             if ((n - 7) % 3 == 0) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_SWING_PULSE);
@@ -115,12 +128,14 @@ static void normal_schedule(PikachuFighter *f, PikachuMotion *out)
         if (n >= 34) enter(f, PK_AIR_FALL);
         break;
     case PK_BAIR:
+        air_motion(f, out);
         if (n == 10) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_L);
         if (n >= 10 && n < 14) set_attack(out, -50, 50, 70, 60, 16, 1);
         if (n >= 14 && n < 22) set_attack(out, -50, 50, 70, 60, 14, 1);
         if (n >= 30) enter(f, PK_AIR_FALL);
         break;
     case PK_DAIR:
+        air_motion(f, out);
         if (n == 8) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_3);
         if (n >= 8 && n < 26) set_attack(out, 0, -15, 72, 78, 13, 1);
         if (n >= 34) enter(f, PK_AIR_FALL);
@@ -202,29 +217,37 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
             f->quick_first_x = in->stick_x; f->quick_first_y = in->stick_y;
             if (!f->quick_first_x && !f->quick_first_y) f->quick_first_x = f->lr * 80;
             phase(f, PK_QUICK_ATTACK_ZIP1);
+            /* Quick Attack owns an airborne velocity from the first zip, so
+             * the host's vertical mover sees the same kinetic state as the
+             * swept horizontal/vertical request. */
+            f->grounded = 0;
+            f->vel_x = f->quick_first_x * 0.75;
+            f->vel_y = f->quick_first_y * 0.75;
             out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_HI) |
                 PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_1) |
                 PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_SPARKLE);
-            out->requested_dx = f->quick_first_x * 0.75;
-            out->requested_dy = f->quick_first_y * 0.75;
+            out->requested_dx = f->vel_x;
+            out->requested_dy = f->vel_y;
         }
     } else if (f->state == PK_QUICK_ATTACK_ZIP1 || f->state == PK_QUICK_ATTACK_ZIP2) {
-        int x = f->state == PK_QUICK_ATTACK_ZIP1 ? f->quick_first_x : in->stick_x;
-        int y = f->state == PK_QUICK_ATTACK_ZIP1 ? f->quick_first_y : in->stick_y;
         if ((f->state == PK_QUICK_ATTACK_ZIP1 && n < 25) ||
             (f->state == PK_QUICK_ATTACK_ZIP2 && n < 39)) {
-            out->requested_dx = x * 0.75; out->requested_dy = y * 0.75; /* swept by host */
+            out->requested_dx = f->vel_x;
+            out->requested_dy = f->vel_y; /* swept by host */
         }
         if ((f->state == PK_QUICK_ATTACK_ZIP1 && n == 25) || (f->state == PK_QUICK_ATTACK_ZIP2 && n == 39)) { out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_RIPPLE); phase(f, f->state == PK_QUICK_ATTACK_ZIP1 ? PK_QUICK_ATTACK_WINDOW : PK_QUICK_ATTACK_RECOVERY); }
     } else if (f->state == PK_QUICK_ATTACK_WINDOW) {
         if (n >= 34) {
             if (vector_changed_enough(f, in)) {
                 phase(f, PK_QUICK_ATTACK_ZIP2);
+                f->grounded = 0;
+                f->vel_x = in->stick_x * 0.75;
+                f->vel_y = in->stick_y * 0.75;
                 out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_HI) |
                     PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_1) |
                     PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_SPARKLE);
-                out->requested_dx = in->stick_x * 0.75;
-                out->requested_dy = in->stick_y * 0.75;
+                out->requested_dx = f->vel_x;
+                out->requested_dy = f->vel_y;
             } else phase(f, PK_QUICK_ATTACK_RECOVERY);
         }
     } else if (f->state == PK_QUICK_ATTACK_RECOVERY) {
