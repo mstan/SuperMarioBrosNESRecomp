@@ -20,10 +20,12 @@
 #define SMASH64_BLOB_VERSION_SKINNED 5u
 #define SMASH64_BLOB_VERSION_PIKACHU_EFFECTS 6u
 #define SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V2 7u
+#define SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V3 8u
 #define SMASH64_MAX_JOINTS 32u
 #define FALCON_JOINT_COUNT 26u
 #define FALCON_RENDER_HEIGHT 32.0f
 #define PIKACHU_RENDER_HEIGHT 16.0f
+#define PIKACHU_BIND_HEIGHT 383.0f
 #define FALCON_YAW_DEG 88.0f
 #define PIKACHU_YAW_DEG 90.0f
 #define FALCON_WAIT_GROUNDED_FIRST 37.0f
@@ -51,10 +53,12 @@
 #define FALCON_DIVE_ATTACK_END_FRAME        45u
 #define FALCON_ROOT_TRACK_JOINT        0xFFFFu
 #define PIKACHU_EFFECT_TEXTURES_V1      5u
-#define PIKACHU_EFFECT_TEXTURES         7u
+#define PIKACHU_EFFECT_TEXTURES_V2      7u
+#define PIKACHU_EFFECT_TEXTURES         10u
 #define PIKACHU_JOLT_EFFECT_TEXTURES    2u
 #define PIKACHU_THUNDER_EFFECT_TEXTURES 3u
 #define PIKACHU_THUNDER_SHOCK_TEXTURES  2u
+#define PIKACHU_THUNDER_AMP_TEXTURES    3u
 
 typedef struct FalconAssetJoint {
     int parent;
@@ -384,7 +388,8 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
     if (version != SMASH64_BLOB_VERSION_LEGACY &&
         version != SMASH64_BLOB_VERSION_SKINNED &&
         version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS &&
-        version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V2)
+        version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V2 &&
+        version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V3)
         return 0;
 
     model->joint_count = read_u32(&reader);
@@ -423,6 +428,13 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
           model->punch_effect_texture_first +
                   model->punch_effect_texture_count != model->texture_count)) ||
         (version == SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V2 &&
+         (model->punch_effect_texture_count != PIKACHU_EFFECT_TEXTURES_V2 ||
+          !range_is_safe(model->punch_effect_texture_first,
+                         model->punch_effect_texture_count,
+                         model->texture_count) ||
+          model->punch_effect_texture_first +
+                  model->punch_effect_texture_count != model->texture_count)) ||
+        (version == SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V3 &&
          (model->punch_effect_texture_count != PIKACHU_EFFECT_TEXTURES ||
           !range_is_safe(model->punch_effect_texture_first,
                          model->punch_effect_texture_count,
@@ -569,11 +581,18 @@ int game_smash64_assets_pikachu_effect_texture(
         first += PIKACHU_JOLT_EFFECT_TEXTURES;
         count = PIKACHU_THUNDER_EFFECT_TEXTURES;
     } else if (effect == SMASH64_PIKACHU_EFFECT_THUNDER_SHOCK) {
-        if (s_model.punch_effect_texture_count < PIKACHU_EFFECT_TEXTURES)
+        if (s_model.punch_effect_texture_count < PIKACHU_EFFECT_TEXTURES_V2)
             return 0;
         first += PIKACHU_JOLT_EFFECT_TEXTURES +
                  PIKACHU_THUNDER_EFFECT_TEXTURES;
         count = PIKACHU_THUNDER_SHOCK_TEXTURES;
+    } else if (effect == SMASH64_PIKACHU_EFFECT_THUNDER_AMP) {
+        if (s_model.punch_effect_texture_count < PIKACHU_EFFECT_TEXTURES)
+            return 0;
+        first += PIKACHU_JOLT_EFFECT_TEXTURES +
+                 PIKACHU_THUNDER_EFFECT_TEXTURES +
+                 PIKACHU_THUNDER_SHOCK_TEXTURES;
+        count = PIKACHU_THUNDER_AMP_TEXTURES;
     } else {
         return 0;
     }
@@ -1366,9 +1385,11 @@ static void draw_falcon_dive_effect(const ForeignState *state,
     }
 }
 
-/* Source Pikachu effects are alpha cards, and their DObjs are deliberately
- * two-sided.  Keep the source card pixels and cycle intact while translating
- * only their 3D placement to the NES screen plane. */
+/* Source Pikachu effects are alpha cards. Their source DObjs are two-sided,
+ * but the host immediate mesh rasterizer deliberately has no back-face cull:
+ * submitting reverse triangles here would alpha-blend every source card a
+ * second time. Keep one front-facing rectangle so the common particle path's
+ * XLU blending remains a single source sample per pixel. */
 static void draw_pikachu_effect_card(unsigned effect, unsigned frame,
                                      float center_x, float center_y,
                                      float half_width, float half_height,
@@ -1398,8 +1419,6 @@ static void draw_pikachu_effect_card(unsigned effect, unsigned frame,
                                 texture_width, 1.0f, 1);
     nes_voxel_mesh_triangle(v[0], v[1], v[2]);
     nes_voxel_mesh_triangle(v[0], v[2], v[3]);
-    nes_voxel_mesh_triangle(v[2], v[1], v[0]);
-    nes_voxel_mesh_triangle(v[3], v[2], v[0]);
 }
 
 static void draw_pikachu_spark(float center_x, float center_y, float z,
@@ -1505,7 +1524,9 @@ static void draw_pikachu_thunder_amp(const ForeignState *state,
     const float unit = output_scale > 0.0f ? output_scale : 1.0f;
     const float middle_y = foot_y + PIKACHU_RENDER_HEIGHT * 0.50f * unit;
     const float z = 3.5f * unit;
-    unsigned i;
+    unsigned card;
+    float source_y;
+    float source_size;
 
     if (state->state != PK_THUNDER_SELF_HIT) {
         s_pikachu_thunder_self_hit_active = 0;
@@ -1522,22 +1543,44 @@ static void draw_pikachu_thunder_amp(const ForeignState *state,
         s_pikachu_thunder_self_hit_start_frame = state->state_frame;
     }
     frame = state->state_frame - s_pikachu_thunder_self_hit_start_frame;
-    if (frame >= 18u) return;
-    /* ThunderAmp itself is a common particle-bank script (0x74), whereas
-     * PikachuSpecial2 owns the adjacent ThunderShock cards. Use those actual
-     * owner cards as a short, rotating contact aura; the dust/ring supplies
-     * the common particle's ground-response silhouette without fabricating
-     * unowned texture data. */
-    for (i = 0; i < 6; ++i) {
-        const float phase = (float)frame * 0.32f + (float)i * 1.04719755f;
-        const float orbit = (2.5f + 0.30f * (float)frame) * unit;
-        const float scale = (3.5f + 0.10f * (float)(frame & 3u)) * unit;
-        draw_pikachu_effect_card(SMASH64_PIKACHU_EFFECT_THUNDER_SHOCK,
-                                 frame + i,
-                                 center_x + cosf(phase) * orbit,
-                                 middle_y + sinf(phase) * orbit,
-                                 scale, scale, phase, z);
+    /* Exact nEFKindThunderAmp common particle script 0x74: texture 46,
+     * base size 100, then its source bytecode emits 200/210 at f0 and runs
+     * the [400/420 (two frames), 300/315 (one frame)] card cycle twice.
+     * The N64 particle rasterizer treats ``size`` as a half extent, so the
+     * host's verified source-unit conversion is applied to it directly.
+     * This is intentionally one source card, rather than a fabricated ring
+     * of PikachuSpecial2 ThunderShock cards. */
+    if (frame == 0u) {
+        card = 0u;
+        source_y = 200.0f;
+        source_size = 210.0f;
+    } else if (frame <= 18u) {
+        const unsigned phase = (frame - 1u) % 9u;
+        card = phase < 3u ? 0u : (phase < 6u ? 1u : 2u);
+        source_y = phase == 0u || phase == 1u ||
+                   phase == 3u || phase == 4u ||
+                   phase == 6u || phase == 7u ? 400.0f : 300.0f;
+        source_size = source_y == 400.0f ? 420.0f : 315.0f;
+    } else if (frame == 19u) {
+        card = 2u;
+        source_y = 200.0f;
+        source_size = 210.0f;
+    } else {
+        return;
     }
+    draw_pikachu_effect_card(SMASH64_PIKACHU_EFFECT_THUNDER_AMP, card,
+                             center_x, middle_y + source_y *
+                                           (PIKACHU_RENDER_HEIGHT /
+                                            PIKACHU_BIND_HEIGHT) * unit,
+                             source_size * (PIKACHU_RENDER_HEIGHT /
+                                            PIKACHU_BIND_HEIGHT) * unit,
+                             source_size * (PIKACHU_RENDER_HEIGHT /
+                                            PIKACHU_BIND_HEIGHT) * unit,
+                             0.0f, z);
+    /* Source self-hit f0 also emits DustHeavyDouble and QuakeMag1. The host
+     * has no camera-quake channel in the presentation API; retain a bounded
+     * local dust silhouette but do not falsely represent it as a screen
+     * shake. */
     if (frame < 9u) {
         const float phase = (float)frame;
         nes_voxel_mesh_bind_texture(s_pikachu_dust_color, 1, 1, 1,

@@ -102,7 +102,7 @@ class PikachuFinalCacheTests(unittest.TestCase):
 
     def test_result_name_is_character_and_costume_namespaced(self):
         self.assertTrue(final_cache.cache_name(0).startswith(
-            "pikachu-final-r6-c0-e2929e10"))
+            "pikachu-final-r8-c0-e2929e10"))
         self.assertNotEqual(final_cache.cache_name(0), final_cache.cache_name(1))
         with self.assertRaises(ValueError):
             final_cache.cache_name(4)

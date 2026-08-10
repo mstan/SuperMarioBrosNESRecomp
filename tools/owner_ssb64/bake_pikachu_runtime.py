@@ -23,7 +23,7 @@ import bake_falcon_runtime as common
 
 MAGIC = common.MAGIC
 VERSION = common.VERSION
-PIKACHU_RUNTIME_VERSION = 7
+PIKACHU_RUNTIME_VERSION = 8
 LOOPS = {"Idle", "Walk1", "Walk2", "Walk3", "Run", "CrouchIdle"}
 BODY_COLORS = (0xFFFFD933, 0xFFE8A828, 0xFFFFD933, 0xFFC8C828)
 ACCESSORY_COLORS = (0x00000000, 0xFFFF5B79, 0xFFFFFFFF, 0xFFB1FF24)
@@ -330,8 +330,44 @@ def effect_ia8(raw: bytes, image_offset: int, name: str) -> tuple[str, int, int,
     return name, 32, 32, bytes(pixels)
 
 
+def effect_ia8_particle_env(raw: bytes, name: str) -> tuple[str, int, int, bytes]:
+    """Bake script 0x74 texture 46 through its exact PRIM/ENV combiner.
+
+    lbParticleDrawTextures uses ``(PRIM - ENV) * TEXEL0 + ENV`` for both
+    cycles when ``lbpEnvColor`` is set.  ThunderAmp sets PRIM to white/a200
+    and ENV to blue (0,100,255,a0), then alpha-compares against 8.  A naive
+    IA8 grayscale bake makes its soft blue field black, which is visibly
+    wrong even though the ROM frame bytes are correct.
+    """
+    needed = 64 * 64
+    if len(raw) != needed:
+        raise ValueError(f"invalid owner ThunderAmp texture length for {name}")
+    pixels = bytearray()
+    for value in raw:
+        intensity = (value >> 4) * 17
+        tex_alpha = (value & 0x0F) * 17
+        red = intensity
+        green = 100 + (155 * intensity + 127) // 255
+        blue = 255
+        # The N64 XLU particle path visually gates the blue ENV field by the
+        # IA intensity lobe as well as its texel alpha.  The host's ordinary
+        # straight-alpha compositor otherwise preserves low-intensity but
+        # nonzero-alpha background texels as a hard dark 64px rectangle.
+        # Min(I, A) is the bounded host equivalent: it retains every bright
+        # owner-authored lightning edge while clipping the card's invisible
+        # field before the host blend pass.
+        alpha = (200 * min(intensity, tex_alpha) + 127) // 255
+        # script_116 leaves ALPHABLEND disabled, so N64 threshold comparison
+        # discards alpha at or below the source blend color (8).
+        if alpha <= 8:
+            alpha = 0
+        pixels += struct.pack("<I", (alpha << 24) | (red << 16) |
+                      (green << 8) | blue)
+    return name, 64, 64, bytes(pixels)
+
+
 def collect_effect_textures(root: Path) -> list[tuple[str, int, int, bytes]]:
-    """Return source-owned Jolt, Thunder and Thunder Shock cards in order.
+    """Return source-owned Jolt, Thunder, Thunder Shock and ThunderAmp cards.
 
     Reloc 342's ThunderJolt MObj uses its 0x1C70 palette with the two 32x32
     cards at 0x1C98/0x1EA0.  Reloc 347's first MObj is the three-frame 32x32
@@ -353,6 +389,20 @@ def collect_effect_textures(root: Path) -> list[tuple[str, int, int, bytes]]:
         # timeline.  They are the owner-authored cards for the contact aura.
         effect_ia8(thunder, 0x0D98, "pikachu_thunder_shock_0"),
         effect_ia8(thunder, 0x0990, "pikachu_thunder_shock_1"),
+        # nEFKindThunderAmp is generic particle script 0x74, texture 46.
+        # These direct common-bank IA8 extracts are kept separate from the
+        # Pikachu-owned ThunderShock MObj above: their size/timeline are
+        # evaluated by the renderer from script_116 rather than treated as a
+        # rotating contact-card surrogate.
+        effect_ia8_particle_env((effect_root / "texture_storage" /
+                                 "efcommon_46_thunder_amp_0.ia8").read_bytes(),
+                                "pikachu_thunder_amp_0"),
+        effect_ia8_particle_env((effect_root / "texture_storage" /
+                                 "efcommon_46_thunder_amp_1.ia8").read_bytes(),
+                                "pikachu_thunder_amp_1"),
+        effect_ia8_particle_env((effect_root / "texture_storage" /
+                                 "efcommon_46_thunder_amp_2.ia8").read_bytes(),
+                                "pikachu_thunder_amp_2"),
     ]
 
 

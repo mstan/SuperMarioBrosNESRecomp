@@ -26,6 +26,8 @@ enum {
     SMASH64_PIKACHU_EFFECT_THUNDER = 1,
     /* The two IA8 cards owned by PikachuSpecial2's ThunderShock MObj. */
     SMASH64_PIKACHU_EFFECT_THUNDER_SHOCK = 2,
+    /* Generic common-particle script 0x74's texture-46 card sequence. */
+    SMASH64_PIKACHU_EFFECT_THUNDER_AMP = 3,
 };
 int game_smash64_assets_pikachu_effect_texture(
     unsigned effect, unsigned frame, const unsigned int **pixels,

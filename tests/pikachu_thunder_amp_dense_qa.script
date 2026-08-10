@@ -1,0 +1,53 @@
+LOG pikachu-thunder-amp-dense-normal-ground-qa
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+
+# Clear the opening hill, leaving Pikachu on normal 1-1 ground.  This test
+# deliberately has no RAM write: Thunder must pass the HUD boundary and make
+# its real self-contact transition under the ordinary action bridge.
+HOLD RIGHT
+WAIT 28
+RELEASE RIGHT
+WAIT 8
+HOLD DOWN
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE DOWN
+
+# Source Thunder spawns on action frame 24.  Capture every two host frames
+# across its approach and the script-0x74 20-frame contact particle timeline.
+WAIT 30
+SCREENSHOT C:/temp/pikachu_thunder_dense_30.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_32.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_34.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_36.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_38.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_40.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_42.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_44.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_46.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_48.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_50.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_52.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_54.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_56.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_58.png
+EXIT 0

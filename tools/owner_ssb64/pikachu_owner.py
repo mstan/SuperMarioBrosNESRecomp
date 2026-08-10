@@ -30,7 +30,7 @@ import decode_intermediates as falcon_decode
 import owner_audio
 
 
-RECIPE_VERSION = 4
+RECIPE_VERSION = 5
 CACHE_FORMAT = "smb1-smash64-pikachu-prototype-cache"
 MODEL_ID = 341
 MAIN_ID = 243
@@ -43,6 +43,17 @@ ACCESS_DL = 0x63F0
 ACCESS_MOBJ_LIST = 0x6350
 ACCESS_MATANIM_LIST = 0x654C
 TEXTURE_PARTS_OFFSET = 0x140
+# ThunderAmp is a generic common-particle effect, not a Pikachu reloc asset.
+# Its script is common-bank entry 0x74 and selects texture 46, three 64x64 IA8
+# cards.  Keep the extract deliberately narrow: the owner cache receives only
+# those three verified cards, never the unrelated common texture bank.
+EF_COMMON_TEXTURE_BANK_LO = 0x00AC9DE0
+EF_COMMON_TEXTURE_BANK_HI = 0x00B16C80
+EF_COMMON_THUNDER_AMP_SCRIPT_ID = 0x74
+EF_COMMON_THUNDER_AMP_TEXTURE_ID = 46
+EF_COMMON_THUNDER_AMP_FRAME_COUNT = 3
+EF_COMMON_THUNDER_AMP_WIDTH = 64
+EF_COMMON_THUNDER_AMP_HEIGHT = 64
 
 # A Falcon-parity animation set: locomotion, crouch/fall/landing, representative
 # normals/aerials, and every Pikachu special animation present in the fighter
@@ -460,7 +471,48 @@ def _write_animations(reloc_dir: Path, output: Path) -> None:
         json.dumps(manifest, indent=1, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def _write_effects(reloc_dir: Path, output: Path) -> None:
+def _write_common_thunder_amp(rom: bytes, texture_dir: Path) -> dict:
+    """Extract the exact common-bank texture selected by ThunderAmp script 0x74.
+
+    ``LBTextureDesc`` and the individual ``LBTexture`` data words are
+    file-relative to the common texture bank.  Parsing them from the validated
+    owner image avoids guessing layout offsets while also proving that the
+    three stored IA8 cards are the source asset selected by the source script.
+    """
+    bank = rom[EF_COMMON_TEXTURE_BANK_LO:EF_COMMON_TEXTURE_BANK_HI]
+    if len(bank) != EF_COMMON_TEXTURE_BANK_HI - EF_COMMON_TEXTURE_BANK_LO:
+        raise ValueError("truncated common particle texture bank")
+    texture_count = struct.unpack_from(">I", bank, 0)[0]
+    if texture_count != 47 or EF_COMMON_THUNDER_AMP_TEXTURE_ID >= texture_count:
+        raise ValueError("common particle texture table changed")
+    texture_offset = struct.unpack_from(
+        ">I", bank, 4 + EF_COMMON_THUNDER_AMP_TEXTURE_ID * 4)[0]
+    if texture_offset + 0x28 > len(bank):
+        raise ValueError("ThunderAmp common texture header exceeds bank")
+    count, fmt, siz, width, height, flags = struct.unpack_from(
+        ">6I", bank, texture_offset)
+    if (count, fmt, siz, width, height, flags) != (
+            EF_COMMON_THUNDER_AMP_FRAME_COUNT, 3, 1,
+            EF_COMMON_THUNDER_AMP_WIDTH, EF_COMMON_THUNDER_AMP_HEIGHT, 1):
+        raise ValueError("ThunderAmp common texture descriptor changed")
+    frame_size = width * height
+    regions = []
+    for index in range(count):
+        image_offset = struct.unpack_from(">I", bank, texture_offset + 0x18 +
+                                          index * 4)[0]
+        if image_offset + frame_size > len(bank):
+            raise ValueError("ThunderAmp common texture frame exceeds bank")
+        filename = f"efcommon_46_thunder_amp_{index}.ia8"
+        (texture_dir / filename).write_bytes(bank[image_offset:image_offset +
+                                                  frame_size])
+        regions.append({"frame": index, "size": frame_size,
+                        "output": f"texture_storage/{filename}"})
+    return {"bank": "efcommon", "script_id": EF_COMMON_THUNDER_AMP_SCRIPT_ID,
+            "texture_id": EF_COMMON_THUNDER_AMP_TEXTURE_ID,
+            "texture_offset": texture_offset, "texture_storage": regions}
+
+
+def _write_effects(reloc_dir: Path, output: Path, rom: bytes) -> None:
     effect_dir = output / "effects"
     texture_dir = effect_dir / "texture_storage"
     effect_dir.mkdir()
@@ -494,6 +546,7 @@ def _write_effects(reloc_dir: Path, output: Path) -> None:
     inventory.append({"reloc_id": 341, "effect": "thunder_trail",
                       "mobj_offset": 0x9420, "dobjdesc_offset": 0x95B0,
                       "texture_storage": trail_regions})
+    inventory.append(_write_common_thunder_amp(rom, texture_dir))
     (effect_dir / "manifest.json").write_text(
         json.dumps(inventory, indent=1, sort_keys=True) + "\n", encoding="utf-8")
 
@@ -629,7 +682,7 @@ def build(rom_path: Path, cache_root: Path) -> Path:
         model_raw = next(reloc_dir.glob("0341_*.bin")).read_bytes()
         _write_model(main_raw, model_raw, intermediate)
         _write_animations(reloc_dir, intermediate)
-        _write_effects(reloc_dir, intermediate)
+        _write_effects(reloc_dir, intermediate, rom)
         _write_audio(rom, intermediate)
         manifest = {"format": CACHE_FORMAT, "recipe_version": RECIPE_VERSION,
                     "normalized_rom_sha1": rom_sha1, "character": "pikachu",

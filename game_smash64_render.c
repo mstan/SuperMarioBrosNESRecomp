@@ -161,11 +161,12 @@ static void draw_persistent_effect_card(unsigned effect, unsigned frame,
     v[3].u = 0.0f;                 v[3].v = (float)texture_height;
     nes_voxel_mesh_bind_texture(pixels, texture_width, texture_height,
                                 texture_width, 1.0f, 1);
-    /* PikachuSpecial3's alpha cards are two-sided. */
+    /* The source cards are submitted once to an XLU display list.  The host
+     * mesh path has no back-face culling, so submitting a reverse winding
+     * would alpha-blend every lightning texel twice (and makes the faint
+     * texture border read as a dark rectangle). */
     nes_voxel_mesh_triangle(v[0], v[1], v[2]);
     nes_voxel_mesh_triangle(v[0], v[2], v[3]);
-    nes_voxel_mesh_triangle(v[2], v[1], v[0]);
-    nes_voxel_mesh_triangle(v[3], v[2], v[0]);
 }
 
 static unsigned pikachu_jolt_material_frame(unsigned joint, unsigned phase)
@@ -224,11 +225,18 @@ static void draw_pikachu_jolt_rig(const Smash64ActionSlot *action,
     const float tangent_y = -(float)action->vy;
     const float length = sqrtf(tangent_x * tangent_x + tangent_y * tangent_y);
     const float heading = length > 0.0001f ? atan2f(tangent_y, tangent_x) : 0.0f;
-    /* The source's -390..600 local translation is in its effect coordinate
-     * system. Map that 990-unit cycle to a compact 10px host-space sweep,
-     * preserving direction and phase without turning a 16px SMB projectile
-     * into an 80px collision-looking billboard. */
-    const float root_shift = (-5.0f + 10.0f * (float)(phase % 9u) / 8.0f) * unit;
+    /* DObj 1 begins at -390 source units and its AnimJoint interpolates to
+     * +600 over nine frames. Each of the six owner cards is a 234x435
+     * source-unit triangle pair at exactly {1.5,1.5,1.0}. Convert those
+     * authored transforms through Pikachu's 16px / 383-unit bind scale; the
+     * previous compact proxy (10px sweep and 7x9px cards) was why Jolt read
+     * as a single static speck instead of an articulated slinky. */
+    const float source_to_screen = 16.0f / 383.0f;
+    const float root_shift = (-390.0f + 990.0f *
+                              (float)(phase % 9u) / 8.0f) *
+                             source_to_screen * unit;
+    const float card_half_width = 117.0f * 1.5f * source_to_screen * unit;
+    const float card_half_height = 218.0f * 1.5f * source_to_screen * unit;
     unsigned joint;
     for (joint = 0; joint < 6u; ++joint) {
         if (!pikachu_jolt_card_visible(joint, phase)) continue;
@@ -237,7 +245,7 @@ static void draw_pikachu_jolt_rig(const Smash64ActionSlot *action,
             pikachu_jolt_material_frame(joint, phase),
             center_x + cosf(heading) * root_shift,
             center_y + sinf(heading) * root_shift,
-            3.5f * unit, 4.5f * unit,
+            card_half_width, card_half_height,
             heading + card_angle[joint], 3.0f * unit);
     }
 }

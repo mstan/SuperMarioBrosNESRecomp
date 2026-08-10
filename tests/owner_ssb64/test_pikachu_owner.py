@@ -28,6 +28,10 @@ class PikachuRecipeTests(unittest.TestCase):
         self.assertEqual(ids[:4], [243, 341, 342, 347])
         self.assertEqual(len(pikachu.ANIM_SPECS), 41)
         self.assertEqual(pikachu.MODEL_JOINT_COUNT, 27)
+        self.assertEqual((pikachu.EF_COMMON_THUNDER_AMP_SCRIPT_ID,
+                          pikachu.EF_COMMON_THUNDER_AMP_TEXTURE_ID,
+                          pikachu.EF_COMMON_THUNDER_AMP_FRAME_COUNT),
+                         (0x74, 46, 3))
         self.assertEqual(
             hashlib.sha256(repr(falcon_cache.RECIPE_FILES).encode()).hexdigest(),
             "f425406d553d0c3a8938bf811f89405a88df77cc31850e6533ba69d244aa3495",
@@ -76,7 +80,7 @@ class PikachuOwnerRomIntegrationTests(unittest.TestCase):
     def test_canonical_manifest_and_reloc_hashes(self):
         manifest_path = self.cache / "manifest.json"
         self.assertEqual(hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
-                         "76c1b3f160b8d9000e27d8e88711c079a4d7c9d9d88c9e3f26cd45b343076c1f")
+                         "144e9ba17090832ce05713fd6bba0d0945563a1d8b399cdbce18cff7f69749dd")
         expected = {
             243: "c217452a4a3919d1054e0b42311da68cea09b545aca74b3eb3fa33f5e464f69f",
             341: "0b99946b1e91697503c7f531711edeab18b275bd6ffb519e2599a7e0d18fedb4",
@@ -107,14 +111,19 @@ class PikachuOwnerRomIntegrationTests(unittest.TestCase):
         self.assertEqual(len(animations), 41)
         self.assertEqual(sum(item["joint_count"] == 27 for item in animations), 5)
         effects = json.loads((intermediate / "effects" / "manifest.json").read_text())
-        self.assertEqual([item["reloc_id"] for item in effects], [342, 347, 341])
+        self.assertEqual([item.get("reloc_id") for item in effects[:3]],
+                         [342, 347, 341])
+        common = effects[3]
+        self.assertEqual((common["bank"], common["script_id"],
+                          common["texture_id"]), ("efcommon", 0x74, 46))
+        self.assertEqual(len(common["texture_storage"]), 3)
 
     def test_runtime_baker_supports_hidden_costume_proof(self):
         expected = {
-            0: (593980, "42c5f3ab3eadeb6eff591592def24b6a13cd4f3499b6623c5446493a66fd6b8f"),
-            1: (596672, "7d92f76f23d069aee4fe7a521cf2c9ae00ba46e8b3e01a3df53f2fbfc897e3ad"),
-            2: (596672, "2702b47a164d728f9c1ba2c98ca26b00683c5985ffafa342bf02c6089f9dfd06"),
-            3: (596684, "dd64007e55995d8282d8847f11a8c5ecfa47b20e8161973ba4b8310d03cd42ba"),
+            0: (643156, "248d1b4e53568f14c13eaa85c14eea19ae7cc0e6d6d5c84bcce39388812d69f5"),
+            1: (645848, "8a2cce060382215079bcaf6616c7ae090a31b8fa7e228383fcb92a35478a8b41"),
+            2: (645848, "4bf130211a67c31e945a81e3a1846d267ef3cdb10bb4a67c438e92d2fbeb2ac6"),
+            3: (645860, "0e987e182c784e37380e5a6e2cc0422d430e240cdd786594203b4f15cdf7bb24"),
         }
         with tempfile.TemporaryDirectory(prefix="pikachu-runtime-") as temporary:
             outputs = []
@@ -126,13 +135,13 @@ class PikachuOwnerRomIntegrationTests(unittest.TestCase):
                 magic, version, joints, triangles, textures, animations = \
                     struct.unpack_from("<8s5I", payload, 0)
                 self.assertEqual((magic, version, joints, animations),
-                                 (b"FLCN64B\0", 7, 27, 41))
+                                 (b"FLCN64B\0", 8, 27, 41))
                 self.assertEqual((len(payload), hashlib.sha256(payload).hexdigest()),
                                  expected[costume])
                 outputs.append((triangles, textures))
             self.assertEqual(outputs[0][0], 317)
             self.assertEqual([item[0] for item in outputs[1:]], [326, 326, 326])
-            self.assertEqual([item[1] for item in outputs], [13, 16, 16, 17])
+            self.assertEqual([item[1] for item in outputs], [16, 19, 19, 20])
 
     def test_audio_inventory_and_no_rom_leak(self):
         audio = json.loads((self.cache / "intermediate" / "audio" /
