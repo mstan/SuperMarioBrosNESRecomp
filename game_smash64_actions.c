@@ -54,9 +54,22 @@ static int action_solid(const Smash64ActionHost *host,
 {
     const double half_width = action->width * 0.5;
     const double half_height = action->height * 0.5;
+    const int downward_self_contact_entering_playfield =
+        (action->flags & FOREIGN_ACTION_SELF_CONTACT) &&
+        action->vy > 0.0 &&
+        center_y - half_height < 32.0 &&
+        center_y + half_height >= 32.0;
+
+    /* Thunder begins above the visible playfield and falls through the HUD
+     * boundary.  Ignore only its two still-offscreen top corners while the
+     * lower half is entering; center/lower probes and every other action keep
+     * the ordinary host collision policy. */
     return host->solid_at(center_x, center_y) ||
-           host->solid_at(center_x - half_width, center_y - half_height) ||
-           host->solid_at(center_x + half_width, center_y - half_height) ||
+           (!downward_self_contact_entering_playfield &&
+            (host->solid_at(center_x - half_width,
+                            center_y - half_height) ||
+             host->solid_at(center_x + half_width,
+                            center_y - half_height))) ||
            host->solid_at(center_x - half_width, center_y + half_height) ||
            host->solid_at(center_x + half_width, center_y + half_height);
 }

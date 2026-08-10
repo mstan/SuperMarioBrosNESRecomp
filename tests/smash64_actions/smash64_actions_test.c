@@ -11,6 +11,7 @@ static int target_strip;
 static int perimeter_mode;
 static int large_perimeter_mode;
 static int floating_wall_mode;
+static int hud_boundary_mode;
 static int target_box;
 static double target_left, target_right, target_top, target_bottom;
 
@@ -21,7 +22,8 @@ static double target_left, target_right, target_top, target_bottom;
 
 static int solid_at(double x, double y)
 {
-    return (solid_mode && y >= 100.0) ||
+    return (hud_boundary_mode && y < 32.0) ||
+           (solid_mode && y >= 100.0) ||
            (solid_wall && x >= 70.0 && x < 71.0) ||
            (perimeter_mode &&
             (y >= 12.0 || (x >= 12.0 && x < 20.0 && y >= 4.0))) ||
@@ -422,6 +424,39 @@ int main(void)
     smash64_actions_drain_feedback(&feedback);
     CHECK(feedback.count == 1);
     CHECK(feedback.events[0].flags & FOREIGN_ACTION_HIT_SELF);
+
+    /* A downward self-contact Thunder body is allowed to enter from above
+     * the HUD, but the same geometry without SELF_CONTACT remains blocked. */
+    smash64_actions_clear();
+    memset(&commands, 0, sizeof(commands));
+    commands.count = 1;
+    commands.events[0] = spawn(7, FOREIGN_ACTION_SELF_CONTACT);
+    commands.events[0].velocity_x = 0.0;
+    commands.events[0].velocity_y = -450.0;
+    commands.events[0].width = 300.0;
+    commands.events[0].height = 300.0;
+    hud_boundary_mode = 1;
+    host.fighter_left = 200.0;
+    host.fighter_right = 216.0;
+    host.fighter_top = 176.0;
+    host.fighter_bottom = 208.0;
+    smash64_actions_apply_commands(&commands, 50.0, 208.0, 1.0, 0.08);
+    smash64_actions_step(&host); /* authored spawn frame */
+    smash64_actions_step(&host);
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].y > 32.0);
+
+    smash64_actions_clear();
+    commands.events[0].instance_id = 8;
+    commands.events[0].flags = 0;
+    smash64_actions_apply_commands(&commands, 50.0, 40.0, 1.0, 0.08);
+    smash64_actions_step(&host);
+    smash64_actions_step(&host);
+    CHECK(smash64_actions_snapshot(slots, 8) == 0);
+    smash64_actions_drain_feedback(&feedback);
+    CHECK(feedback.count == 1);
+    CHECK(feedback.events[0].flags & FOREIGN_ACTION_EXPIRED);
+    hud_boundary_mode = 0;
 
     commands.events[0].command = FOREIGN_ACTION_CANCEL_ALL;
     smash64_actions_apply_commands(&commands, 0, 0, 1, .08);
