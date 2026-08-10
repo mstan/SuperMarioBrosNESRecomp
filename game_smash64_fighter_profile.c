@@ -1,6 +1,7 @@
 #include "game_smash64_fighter_profile.h"
 
 #include "mods/smash64/characters/captain_falcon.h"
+#include "mods/smash64/characters/pikachu.h"
 
 #include <string.h>
 
@@ -64,8 +65,43 @@ static const Smash64FighterProfile kCaptainFalconProfile = {
     captain_falcon_state_traits
 };
 
+static uint32_t pikachu_state_traits(unsigned state)
+{
+    uint32_t traits = state < PK_STATE_COUNT
+                          ? SMASH64_STATE_TRAIT_STREAM_LIMIT
+                          : SMASH64_STATE_TRAIT_NONE;
+    switch (state) {
+    case PK_QUICK_ATTACK_START:
+    case PK_QUICK_ATTACK_ZIP1:
+    case PK_QUICK_ATTACK_WINDOW:
+    case PK_QUICK_ATTACK_ZIP2:
+    case PK_QUICK_ATTACK_RECOVERY:
+        traits |= SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER |
+                  SMASH64_STATE_TRAIT_SUPPRESS_UPWARD_SPEED_ON_CEILING |
+                  SMASH64_STATE_TRAIT_ROOT_BURST;
+        break;
+    default:
+        break;
+    }
+    return traits;
+}
+
+static const Smash64FighterProfile kPikachuProfile = {
+    SMASH64_PIKACHU_ID,
+    "Pikachu",
+    PIKACHU_SOURCE_SCALE,
+    0x0E,
+    1,
+    1,
+    0,
+    0x10,
+    0,
+    pikachu_state_traits
+};
+
 static const Smash64FighterProfile *const kProfiles[] = {
-    &kCaptainFalconProfile
+    &kCaptainFalconProfile,
+    &kPikachuProfile
 };
 
 const Smash64FighterProfile *smash64_fighter_profile_find(
@@ -87,4 +123,3 @@ uint32_t smash64_fighter_profile_state_traits(
     if (!profile || !profile->state_traits) return SMASH64_STATE_TRAIT_NONE;
     return profile->state_traits(state);
 }
-

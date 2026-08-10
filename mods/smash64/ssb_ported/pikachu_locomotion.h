@@ -81,6 +81,8 @@ void pikachu_sweep_zip(const PikachuFighter *fighter, const PikachuMotion *motio
                        PikachuCollision *out);
 /* Host projectile ownership reports an intersection with Pikachu here. */
 void pikachu_note_thunder_self_contact(PikachuFighter *fighter);
+void pikachu_note_projectile_finished(PikachuFighter *fighter,
+                                      uint32_t persistent_action_id);
 int pikachu_serialize(const PikachuFighter *fighter, uint8_t *buf, int cap);
 int pikachu_deserialize(PikachuFighter *fighter, const uint8_t *buf, int len);
 

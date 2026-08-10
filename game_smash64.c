@@ -28,6 +28,7 @@
 #include "game_smash64.h"
 #include "game_smash64_attack_policy.h"
 #include "game_smash64_assets.h"
+#include "game_smash64_actions.h"
 #include "game_smash64_audio.h"
 #include "game_smash64_fighter_profile.h"
 
@@ -50,6 +51,7 @@ _Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 /* ------------------------------------------------------------------ */
 /* Scale -- ONE conversion, applied here and nowhere else              */
@@ -192,6 +194,8 @@ _Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
 #define SMASH64_ADAPTER_SAVESTATE_ID "super-mario-bros.smash64.adapter"
 #define SMASH64_CONTROLLER_SAVESTATE_ID \
     "super-mario-bros.smash64.active-controller"
+#define SMASH64_ACTIONS_SAVESTATE_ID \
+    "super-mario-bros.smash64.persistent-actions"
 
 static int game_smash64_controller_savestate_get(uint8_t *buf, int cap)
 {
@@ -203,6 +207,29 @@ static int game_smash64_controller_savestate_set(const uint8_t *buf, int len)
     /* A zero-byte getter omits the record in current saves, but accepting it
      * keeps this callback harmless for tools that preserve empty records. */
     return len == 0 ? 1 : nes_foreign_deserialize_active(buf, len);
+}
+
+static int game_smash64_actions_savestate_get(uint8_t *buf, int cap)
+{
+    Smash64ActionSave saved;
+    if (!nes_foreign_active()) return 0;
+    if (cap < (int)(1 + sizeof(saved))) return -1;
+    buf[0] = 1;
+    smash64_actions_save(&saved);
+    memcpy(buf + 1, &saved, sizeof(saved));
+    return (int)(1 + sizeof(saved));
+}
+
+static int game_smash64_actions_savestate_set(const uint8_t *buf, int len)
+{
+    Smash64ActionSave saved;
+    if (len == 0) {
+        smash64_actions_clear();
+        return 1;
+    }
+    if (!buf || buf[0] != 1 || len != (int)(1 + sizeof(saved))) return 0;
+    memcpy(&saved, buf + 1, sizeof(saved));
+    return smash64_actions_restore(&saved);
 }
 
 /*
@@ -835,6 +862,7 @@ void game_smash64_update_input(uint64_t frame_count)
             s_forced_airborne_frames = 0;
             s_special_grace_pending = 0;
             s_pending_external_dy = 0.0;
+            smash64_actions_clear();
         }
         s_reseed_this_frame = reseed;
     }
@@ -898,6 +926,11 @@ void game_smash64_update_input(uint64_t frame_count)
     if (nes_foreign_tick(frame_count, &fin, &move)) {
         game_smash64_audio_play_events(&move.audio, frame_count);
         s_attack = move.attack;
+        smash64_actions_apply_commands(
+            &move.actions, (double)player_native_x() + 8.0,
+            (double)g_ram[Player_Y_Position] + 32.0,
+            (fs && fs->facing < 0.0f) ? -1.0 : 1.0,
+            s_profile ? s_profile->units_to_smb_px : 0.08);
         if (move.force_airborne && !s_forced_airborne_pending) {
             /* Generic controller-to-host departure handshake. SetFallS
              * ($DC82) writes Player_State=2 for SMB1's native falling state;
@@ -932,6 +965,7 @@ void game_smash64_update_input(uint64_t frame_count)
         s_pending_external_dy = 0.0;
         s_forced_airborne_pending = 0;
         s_forced_airborne_frames = 0;
+        smash64_actions_clear();
         /* SMB1 owns the player; keep our idea of velocity in step with it so
          * resuming control does not inject a stale speed. */
         s_xspeed = (int8_t)g_ram[Player_X_Speed];
@@ -1132,6 +1166,7 @@ void game_smash64_update_input(uint64_t frame_count)
     s_pending_flags = 0;
     hit.attack_connected = s_contact_pending;
     s_contact_pending = 0;
+    smash64_actions_drain_feedback(&hit.action_feedback);
 
     /*
      * The sweep's own verdict, independent of whether SMB1 chose to react.
@@ -1581,6 +1616,61 @@ static int defeat_enemies_in_attack(double left, double right,
     return hits;
 }
 
+static int action_solid_at(double world_x, double screen_y)
+{
+    int col, tile_top, row;
+    uint16_t base, addr;
+    uint8_t tile;
+
+    /* The status-bar boundary and bottom edge are host solids for persistent
+     * actions. This prevents a bolt/jolt from wrapping through the HUD or the
+     * 8-bit bottom of the gameplay field. */
+    if (screen_y < 32.0 || screen_y >= 240.0 || world_x < 0.0) return 1;
+    col = (int)floor(world_x / 16.0);
+    tile_top = (int)floor(screen_y / 16.0) * 16;
+    row = tile_top - 0x20;
+    if (row < 0 || row > 0xC0) return 1;
+    base = (col & 0x10) ? Block_Buffer_2 : Block_Buffer_1;
+    addr = (uint16_t)(base + (col & 0x0F) + row);
+    tile = g_ram[addr];
+    if (tile == 0x23) {
+        CPU6502State save_cpu = g_cpu;
+        uint8_t save_scratch[6];
+        memcpy(save_scratch, &g_ram[0x02], sizeof(save_scratch));
+        g_ram[0x02] = (uint8_t)row;
+        g_ram[0x06] = (uint8_t)(base + (col & 0x0F));
+        g_ram[0x07] = (uint8_t)(base >> 8);
+        tile = settle_orphaned_blank_metatile(tile);
+        memcpy(&g_ram[0x02], save_scratch, sizeof(save_scratch));
+        g_cpu = save_cpu;
+    }
+    /* Coins are collectible/pass-through, not projectile walls. */
+    return tile != 0 && tile != 0xC2 && tile != 0xC3;
+}
+
+static int action_defeat_target(double left, double right,
+                                double top, double bottom)
+{
+    return defeat_enemies_in_attack(left, right, top, bottom, 1) > 0;
+}
+
+static void apply_pending_actions(void)
+{
+    Smash64ActionHost host;
+    double x = (double)player_native_x();
+    double foot = (double)g_ram[Player_Y_Position] + 32.0;
+    double body_height = (s_profile && s_profile->block_adder_index != 0)
+                             ? 16.0 : 24.0;
+    memset(&host, 0, sizeof(host));
+    host.solid_at = action_solid_at;
+    host.defeat_target = action_defeat_target;
+    host.fighter_left = x;
+    host.fighter_right = x + 16.0;
+    host.fighter_top = foot - body_height;
+    host.fighter_bottom = foot;
+    smash64_actions_step(&host);
+}
+
 static int break_smb1_brick(int world_col, int tile_top)
 {
     CPU6502State save_cpu = g_cpu;
@@ -1770,6 +1860,7 @@ static int jumpsquat_hook(uint16_t addr)
      * the attack once in the guest's own execution context. */
     g_ram[A_B_Buttons] &= (uint8_t)~SMB1_B_BUTTON_BIT;
     apply_pending_attack();
+    apply_pending_actions();
 
     /*
      * Water is M5's problem, and masking A here would reach two swim readers:
@@ -2138,6 +2229,7 @@ int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_forced_airborne_frames = 0;
     s_controller_id[0] = '\0';
     s_profile = NULL;
+    smash64_actions_clear();
     nes_foreign_set_ownership(FOREIGN_OWNERSHIP_NATIVE);
     nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 0);
     nes_mod_set_function_hook_enabled(SMASH64_VERTICAL_HOOK_ID, 0);
@@ -2380,5 +2472,9 @@ int game_smash64_register_hooks(void)
         SMASH64_CONTROLLER_SAVESTATE_ID,
         game_smash64_controller_savestate_get,
         game_smash64_controller_savestate_set);
+    ok &= nes_mod_register_savestate_hook(
+        SMASH64_ACTIONS_SAVESTATE_ID,
+        game_smash64_actions_savestate_get,
+        game_smash64_actions_savestate_set);
     return ok;
 }

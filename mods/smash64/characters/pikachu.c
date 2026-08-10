@@ -26,6 +26,7 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
                     ForeignMoveResult *out)
 {
     PikachuInputRaw raw;
+    int was_grounded = s_fighter.grounded;
     memset(&raw, 0, sizeof(raw));
     raw.stick_x = (int)(input->stick_x * 80.0f);
     raw.stick_y = (int)(input->stick_y * 80.0f);
@@ -41,14 +42,48 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
     out->vx = s_fighter.vel_x;
     out->vy = s_fighter.vel_y;
     out->state = s_fighter.state;
-    out->force_airborne = s_fighter.last_motion.force_airborne;
-    out->attack.offset_x = s_fighter.last_motion.attack.offset_x * s_fighter.lr;
+    out->force_airborne = s_fighter.last_motion.force_airborne ||
+                          (was_grounded && !s_fighter.grounded);
+    out->attack.offset_x = s_fighter.last_motion.attack.offset_x;
     out->attack.offset_y = s_fighter.last_motion.attack.offset_y;
     out->attack.width = s_fighter.last_motion.attack.width;
     out->attack.height = s_fighter.last_motion.attack.height;
     out->attack.damage = s_fighter.last_motion.attack.damage;
     out->attack.flags = s_fighter.last_motion.attack.break_blocks ? FOREIGN_ATTACK_BREAK_BLOCKS : 0;
     out->attack.active = s_fighter.last_motion.attack.active;
+
+    if (s_fighter.last_motion.events &
+        PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_JOLT_SPAWN)) {
+        ForeignActionEvent *event = &out->actions.events[out->actions.count++];
+        memset(event, 0, sizeof(*event));
+        event->instance_id = s_fighter.projectile.persistent_action_id;
+        event->kind = PIKACHU_PROJECTILE_JOLT;
+        event->command = FOREIGN_ACTION_SPAWN;
+        event->flags = FOREIGN_ACTION_HOSTILE | FOREIGN_ACTION_FOLLOW_SURFACES;
+        event->offset_x = 40.0;
+        event->offset_y = 70.0;
+        event->velocity_x = 28.284271;
+        event->velocity_y = -28.284271;
+        event->width = 100.0;
+        event->height = 100.0;
+        event->damage = 10;
+        event->lifetime_ticks = 180;
+    }
+    if (s_fighter.last_motion.events &
+        PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_THUNDER_SPAWN)) {
+        ForeignActionEvent *event = &out->actions.events[out->actions.count++];
+        memset(event, 0, sizeof(*event));
+        event->instance_id = s_fighter.projectile.persistent_action_id;
+        event->kind = PIKACHU_PROJECTILE_THUNDER;
+        event->command = FOREIGN_ACTION_SPAWN;
+        event->flags = FOREIGN_ACTION_HOSTILE | FOREIGN_ACTION_SELF_CONTACT |
+                       FOREIGN_ACTION_DESTROY_ON_SOLID;
+        event->velocity_y = -450.0;
+        event->width = 160.0;
+        event->height = 300.0;
+        event->damage = 12;
+        event->lifetime_ticks = 60;
+    }
 
     state->state = s_fighter.state;
     state->state_frame = s_fighter.last_motion.action_frame;
@@ -62,6 +97,7 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
 static void pk_resolve(ForeignState *state, const ForeignCollisionResult *hit)
 {
     PikachuCollision collision;
+    uint32_t i;
     memset(&collision, 0, sizeof(collision));
     collision.actual_dx = hit->actual_dx;
     collision.actual_dy = hit->actual_dy;
@@ -69,6 +105,16 @@ static void pk_resolve(ForeignState *state, const ForeignCollisionResult *hit)
     collision.hit_ceiling = hit->hit_ceiling;
     collision.hit_floor = hit->hit_floor;
     collision.hit_wall = hit->hit_wall;
+    for (i = 0; i < hit->action_feedback.count; ++i) {
+        const ForeignActionFeedbackEvent *event =
+            &hit->action_feedback.events[i];
+        if (event->flags & FOREIGN_ACTION_HIT_SELF)
+            pikachu_note_thunder_self_contact(&s_fighter);
+        if (event->flags & (FOREIGN_ACTION_HIT_TARGET |
+                            FOREIGN_ACTION_EXPIRED))
+            pikachu_note_projectile_finished(&s_fighter,
+                                             event->instance_id);
+    }
     pikachu_resolve(&s_fighter, &collision);
     state->x = s_fighter.pos_x;
     state->y = s_fighter.pos_y;

@@ -275,6 +275,11 @@ void pikachu_sweep_zip(const PikachuFighter *f, const PikachuMotion *motion,
 }
 
 void pikachu_note_thunder_self_contact(PikachuFighter *f) { if (f->projectile.kind == PIKACHU_PROJECTILE_THUNDER && f->projectile.active) f->thunder_contact_pending = 1; }
+void pikachu_note_projectile_finished(PikachuFighter *f, uint32_t id)
+{
+    if (f && f->projectile.active && f->projectile.persistent_action_id == id)
+        f->projectile.active = 0;
+}
 
 static int valid(const PikachuFighter *f)
 {
