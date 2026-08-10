@@ -56,7 +56,7 @@ static int s_ready;
 static int s_trace;
 
 static const int s_gain[SAMUS_AUDIO_CUE_COUNT] = {
-    24, 34, 38, 36, 38, 30, 32, 30, 32, 30
+    24, 18, 38, 36, 38, 30, 32, 30, 32, 30
 };
 
 static const char *const s_names[SAMUS_AUDIO_CUE_COUNT] = {

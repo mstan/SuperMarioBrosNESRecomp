@@ -538,12 +538,12 @@ void game_samus_update(uint64_t frame_count)
                 s_prev_move_state != METROID_SAMUS_ROLL &&
                 s_prev_move_state != METROID_SAMUS_MORPH)
                 game_samus_audio_play(SAMUS_AUDIO_MORPH_BALL);
-            if (!move->grounded &&
-                (move->state == METROID_SAMUS_JUMP ||
-                 move->state == METROID_SAMUS_SPIN)) {
+            if (!move->grounded && move->state == METROID_SAMUS_JUMP) {
                 game_samus_audio_play(SAMUS_AUDIO_JUMP);
-                if (move->state == METROID_SAMUS_SPIN)
-                    game_samus_audio_play(SAMUS_AUDIO_SCREW_ATTACK);
+            } else if (!move->grounded &&
+                       move->state == METROID_SAMUS_SPIN) {
+                /* Screw Attack replaces, rather than stacks with, jump audio. */
+                game_samus_audio_play(SAMUS_AUDIO_SCREW_ATTACK);
             }
         }
         if (move->grounded && move->state == METROID_SAMUS_RUN &&
