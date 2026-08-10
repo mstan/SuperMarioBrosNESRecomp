@@ -52,12 +52,14 @@ normalized SHA-1 `fdbfc7871962f72a1ef57e5a7e456164fb93430b` (USA) or
 into memory from that verified ROM. No Metroid ROM data or derived graphics are
 shipped or written beside the game.
 
-Samus begins with 299 energy and every original upgrade equipped. A jumps, B
+Samus begins with 99 energy and every original upgrade equipped. A jumps, B
 fires, Down morphs, and Select switches between the combined Long/Wave/Ice beam
 and infinite missiles. B lays bombs in Morph Ball. Screw Attack, missiles, and
 bombs break only SMB's ordinary breakable bricks; contact hurts Samus instead
 of stomping enemies. Mushroom restores 30 energy, Fire Flower restores all
-energy, and Starman remains SMB's native temporary invincibility.
+energy. Bomb blasts boost a nearby Morph Ball upward, and Starman contact
+defeats enemies while its native temporary invincibility is active. Metroid's
+ability sound effects are rebuilt in memory from the verified owner ROM.
 
 The Samus and Smash 64 packages share the `player-controller` exclusive group,
 so the launcher permits only one at a time. See

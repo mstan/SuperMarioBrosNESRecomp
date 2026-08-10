@@ -29,10 +29,14 @@ copy Metroid executable code.
 - Metroid acceleration, traction, air control, variable-height High Jump,
   Morph Ball, bombs, Varia damage reduction, Screw Attack, and a combined
   Long/Wave/Ice beam.
+- A Morph Ball inside its bomb's compact blast radius receives Metroid's
+  `$FD` vertical knockback (3 px/frame upward) through the host adapter's
+  force-airborne handshake, so successive bombs can chain boosts.
 - Select toggles beam/missile mode. Missiles are unlimited but preserve the
   original one-missile-in-flight rule through the three-slot weapon pool.
-- 299 maximum energy. Mushroom restores 30; Fire Flower restores all; Starman
-  and 1-Up keep native SMB behavior.
+- 99 maximum energy. Mushroom restores 30; Fire Flower restores all; 1-Up keeps
+  native SMB behavior. Starman retains SMB's timer but defeats enemies on tight
+  Samus-body contact.
 - Enemy contact cannot stomp. It drains energy and grants a 60-frame damage
   grace period. Ordinary enemies die to weapons; Bowser is frozen as the
   multi-hit target and takes five missile/Screw hits before entering SMB's
@@ -46,6 +50,11 @@ copy Metroid executable code.
   active in water instead of handing movement to SMB's swim routine.
 
 ## Architecture and tests
+
+`game_samus_audio.c` reads Metroid's original APU register seeds from normalized
+PRG offset `$3230`, replays the sound-driver changes into temporary PCM, and
+registers it only for the active process. No extracted audio is written or
+packaged.
 
 `mods/metroid/samus_controller.c` is game-independent locomotion behind the
 nesrecomp `ForeignController` ABI. `game_smash64.c` remains the shared SMB host

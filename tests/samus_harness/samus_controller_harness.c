@@ -73,15 +73,51 @@ int main(void)
     expect(state->grounded, "host landing reconciles");
 
     memset(&input, 0, sizeof(input));
+    input.jump_pressed = 1;
+    input.jump_held = 1;
+    move = tick(input);
+    expect(move.force_airborne, "straight-up jump requests host departure");
+    expect(state->state == METROID_SAMUS_JUMP,
+           "straight-up jump stays in upright jump state");
+    accept(&move, 0);
+    expect(!metroid_samus_is_spinning(),
+           "straight-up jump does not activate Screw Attack");
+
+    memset(&input, 0, sizeof(input));
+    input.stick_x = -1.0f;
+    input.jump_held = 1;
+    move = tick(input);
+    accept(&move, 0);
+    expect(state->state == METROID_SAMUS_JUMP,
+           "adding direction in midair does not turn a straight jump into a spin");
+    expect(!metroid_samus_is_spinning(),
+           "midair direction does not activate Screw Attack retroactively");
+    accept(&move, 1);
+
+    memset(&input, 0, sizeof(input));
+    input.stick_x = -1.0f;
+    input.jump_pressed = 1;
+    input.jump_held = 1;
+    move = tick(input);
+    expect(state->state == METROID_SAMUS_SPIN,
+           "direction-plus-jump enters the somersault state");
+    accept(&move, 0);
+    expect(metroid_samus_is_spinning(),
+           "directional takeoff activates Screw Attack");
+    accept(&move, 1);
+
+    memset(&input, 0, sizeof(input));
     input.stick_y = -1.0f;
     move = tick(input);
     accept(&move, 1);
     expect(metroid_samus_is_morphed(), "Down enters Morph Ball");
     metroid_samus_bomb_jump();
-    expect(!state->grounded && state->vy == 50.0,
-           "bomb blast launches Morph Ball four pixels/frame");
+    expect(!state->grounded && state->vy == 37.5,
+           "bomb blast applies Metroid's three-pixel/frame vertical boost");
     memset(&input, 0, sizeof(input));
     move = tick(input);
+    expect(move.force_airborne && move.vy == 34.375,
+           "bomb boost survives SMB's next-frame floor reconciliation");
     accept(&move, 1);
     input.stick_y = 1.0f;
     move = tick(input);

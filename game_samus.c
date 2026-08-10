@@ -7,6 +7,7 @@
  * launcher's already verified Metroid ROM path.
  */
 #include "game_samus.h"
+#include "game_samus_audio.h"
 
 #include "game_smash64.h"
 #include "mods/metroid/samus_controller.h"
@@ -34,7 +35,7 @@
 #define PAD_SELECT 0x20
 #define PAD_UP     0x08
 
-#define SAMUS_MAX_ENERGY 299
+#define SAMUS_MAX_ENERGY 99
 #define SAMUS_INVULN_FRAMES 60
 #define SAMUS_FREEZE_FRAMES 300
 #define SAMUS_CHR_BYTES 1968
@@ -75,6 +76,7 @@ static int s_force_native_injury;
 static uint8_t s_prev_buttons;
 static uint8_t s_fire_pose;
 static uint64_t s_present_frame;
+static int s_prev_move_state;
 static uint8_t s_chr[SAMUS_CHR_BYTES];
 static int s_assets_ready;
 static SamusShot s_shots[3];
@@ -182,6 +184,7 @@ static void reset_runtime(void)
     s_prev_buttons = 0;
     s_fire_pose = 0;
     s_present_frame = 0;
+    s_prev_move_state = -1;
     memset(s_shots, 0, sizeof(s_shots));
     memset(s_bombs, 0, sizeof(s_bombs));
     memset(s_frozen, 0, sizeof(s_frozen));
@@ -195,9 +198,15 @@ int game_samus_set_enabled(int enabled, const char *owner_rom_path)
     nes_mod_set_function_hook_enabled(SAMUS_POWERUP_HOOK_ID, 0);
     nes_mod_set_function_hook_enabled(SAMUS_INJURY_HOOK_ID, 0);
     reset_runtime();
+    game_samus_audio_shutdown();
     if (!enabled) return 1;
     if (!load_owner_tiles(owner_rom_path)) {
         fprintf(stderr, "[Metroid] Could not extract Samus tiles from the "
+                        "verified owner ROM.\n");
+        return 0;
+    }
+    if (!game_samus_audio_prepare(owner_rom_path)) {
+        fprintf(stderr, "[Metroid] Could not build sound effects from the "
                         "verified owner ROM.\n");
         return 0;
     }
@@ -206,6 +215,7 @@ int game_samus_set_enabled(int enabled, const char *owner_rom_path)
         !nes_mod_set_function_hook_enabled(SAMUS_POWERUP_HOOK_ID, 1) ||
         !nes_mod_set_function_hook_enabled(SAMUS_INJURY_HOOK_ID, 1)) {
         game_smash64_set_mod_enabled(0, NULL);
+        game_samus_audio_shutdown();
         return 0;
     }
     s_assets_ready = 1;
@@ -241,6 +251,28 @@ static void defeat_slot(int slot)
     game_smash64_defeat_enemies(ex, ex + 16, ey, ey + 24, 1);
 }
 
+static void star_defeat_slot(int slot)
+{
+    if (g_ram[Enemy_ID + slot] == Bowser) {
+        g_ram[BowserHitPoints] = 0;
+        g_ram[Enemy_State + slot] = 0x20;
+        g_ram[Enemy_X_Speed + slot] = 0;
+        g_ram[Enemy_Y_Speed + slot] = 0xFE;
+        s_frozen[slot].timer = 0;
+    } else {
+        /* Star contact is broader than the weapon policy (notably cannon
+         * Bullet Bills). Once the tight Samus overlap is proven, invoke the
+         * same native defeat consequence SMB uses for invincible contact. */
+        CPU6502State save_cpu = g_cpu;
+        g_cpu.X = (uint8_t)slot;
+        RelativeEnemyPosition();
+        g_cpu.X = (uint8_t)slot;
+        ShellOrBlockDefeat();
+        g_cpu = save_cpu;
+    }
+    game_samus_audio_play(SAMUS_AUDIO_ENEMY_HIT);
+}
+
 static void hit_enemy(int slot, int missile, int screw)
 {
     uint8_t id = g_ram[Enemy_ID + slot];
@@ -257,6 +289,7 @@ static void hit_enemy(int slot, int missile, int screw)
                 g_ram[Enemy_Y_Speed + slot] = 0xFE;
                 g_ram[Square2SoundQueue] = 0x80;
                 f->timer = 0;
+                game_samus_audio_play(SAMUS_AUDIO_ENEMY_HIT);
                 return;
             }
         }
@@ -264,6 +297,7 @@ static void hit_enemy(int slot, int missile, int screw)
     } else {
         defeat_slot(slot);
     }
+    game_samus_audio_play(SAMUS_AUDIO_ENEMY_HIT);
 }
 
 static int shot_hits_enemy(SamusShot *shot)
@@ -304,6 +338,7 @@ static void spawn_weapon(void)
             s_bombs[i].timer = 45;
             s_bombs[i].x = px + 8;
             s_bombs[i].y = py + 28;
+            game_samus_audio_play(SAMUS_AUDIO_BOMB_LAUNCH);
             return;
         }
         return;
@@ -324,6 +359,8 @@ static void spawn_weapon(void)
         shot->dy = shot->vertical ? -(shot->missile ? 4.0 : 3.0) : 0.0;
         s_fire_pose = (uint8_t)(7u | (shot->vertical
                                       ? SAMUS_FIRE_POSE_UP : 0u));
+        game_samus_audio_play(shot->missile ? SAMUS_AUDIO_MISSILE_LAUNCH
+                                            : SAMUS_AUDIO_WAVE_BEAM);
         return;
     }
 }
@@ -444,6 +481,7 @@ static void update_bombs(void)
                                   bomb->y - 10, bomb->y + 10, 0);
             game_smash64_break_bricks(bomb->x - 10, bomb->x + 10,
                                       bomb->y - 10, bomb->y + 10);
+            game_samus_audio_play(SAMUS_AUDIO_BOMB_EXPLODE);
             if (overlap(bomb->x - 10, bomb->x + 10, px + 3, px + 13) &&
                 overlap(bomb->y - 10, bomb->y + 10, py + 19, py + 30))
                 metroid_samus_bomb_jump();
@@ -455,6 +493,7 @@ static void update_bombs(void)
 void game_samus_update(uint64_t frame_count)
 {
     int px, py;
+    const ForeignState *move;
     s_present_frame = frame_count;
     if (!game_samus_active()) return;
     if (g_ram[GameEngineSubroutine] == 11) {
@@ -477,6 +516,26 @@ void game_samus_update(uint64_t frame_count)
     update_freeze();
     update_shots();
     update_bombs();
+    move = nes_foreign_state();
+    if (move) {
+        if (s_prev_move_state >= 0 && move->state != s_prev_move_state) {
+            if (move->state == METROID_SAMUS_MORPH &&
+                s_prev_move_state != METROID_SAMUS_ROLL &&
+                s_prev_move_state != METROID_SAMUS_MORPH)
+                game_samus_audio_play(SAMUS_AUDIO_MORPH_BALL);
+            if (!move->grounded &&
+                (move->state == METROID_SAMUS_JUMP ||
+                 move->state == METROID_SAMUS_SPIN)) {
+                game_samus_audio_play(SAMUS_AUDIO_JUMP);
+                if (move->state == METROID_SAMUS_SPIN)
+                    game_samus_audio_play(SAMUS_AUDIO_SCREW_ATTACK);
+            }
+        }
+        if (move->grounded && move->state == METROID_SAMUS_RUN &&
+            (move->state_frame % 12u) == 0u)
+            game_samus_audio_play(SAMUS_AUDIO_WALK);
+        s_prev_move_state = move->state;
+    }
     if (metroid_samus_is_spinning()) {
         px = world_player_x();
         py = g_ram[Player_Y_Position];
@@ -503,6 +562,12 @@ static int contact_hook(uint16_t addr)
      * hidden-Mario bounding-box test. Own the hostile path completely and
      * apply effects only when Samus's visible body actually overlaps it. */
     if (!samus_overlaps_enemy(slot)) return 1;
+    /* SMB's Starman timer remains the source of truth, but its consequence is
+     * routed through Samus's visible contact box, never a screen-wide test. */
+    if (g_ram[StarInvincibleTimer]) {
+        star_defeat_slot(slot);
+        return 1;
+    }
     if (s_frozen[slot].timer) return 1;
     if (metroid_samus_is_spinning()) {
         hit_enemy(slot, 0, 1);
@@ -514,6 +579,7 @@ static int contact_hook(uint16_t addr)
     damage = (damage + 1) / 2; /* Varia Suit is permanently equipped. */
     s_energy -= damage;
     s_invuln = SAMUS_INVULN_FRAMES;
+    game_samus_audio_play(SAMUS_AUDIO_SAMUS_HIT);
     if (s_energy <= 0) {
         s_energy = 0;
         save_cpu = g_cpu;
@@ -537,6 +603,7 @@ static int injury_hook(uint16_t addr)
     if (s_invuln) return 1;
     s_energy -= 10; /* generic hazard damage after permanent Varia reduction */
     s_invuln = SAMUS_INVULN_FRAMES;
+    game_samus_audio_play(SAMUS_AUDIO_SAMUS_HIT);
     if (s_energy > 0) return 1;
     s_energy = 0;
     g_ram[PlayerStatus] = 0;

@@ -15,7 +15,7 @@ rom_crc32 = "d445f698"
 [[feature]]
 id = "metroid-samus-player"
 name = "Samus Player Replacement"
-description = "Replaces Mario with NES Metroid Samus: Metroid movement, 299 energy, Morph Ball bombs, combined Long/Wave/Ice beam, infinite missiles and Screw Attack. SMB worlds, music and progression remain native."
+description = "Replaces Mario with NES Metroid Samus: Metroid movement, 99 energy, bomb boosts, owner-ROM-backed sound effects, combined Long/Wave/Ice beam, infinite missiles and Screw Attack. Starman contact defeats enemies; SMB worlds, music and progression remain native."
 group = "Gameplay"
 exclusive_group = "player-controller"
 default_enabled = false

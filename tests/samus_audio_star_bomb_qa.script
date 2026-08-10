@@ -1,0 +1,89 @@
+LOG samus-audio-star-bomb-qa
+WAIT 120
+HOLD START
+WAIT 2
+RELEASE START
+WAIT 180
+
+# The HUD is the public integration check for the new 99-energy cap.
+SCREENSHOT F:\Projects\nesrecomp\_wt-samus-smb\build_samus\qa-samus-energy-99.png
+
+HOLD RIGHT
+WAIT 24
+RELEASE RIGHT
+WAIT 12
+
+# Exercise Wave, missile, directional jump/Screw, Morph and both bomb cues.
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 30
+HOLD SELECT
+WAIT 2
+RELEASE SELECT
+WAIT 2
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 30
+HOLD RIGHT
+HOLD A
+WAIT 3
+RELEASE A
+RELEASE RIGHT
+WAIT 90
+HOLD DOWN
+WAIT 2
+RELEASE DOWN
+WAIT 5
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 40
+SCREENSHOT F:\Projects\nesrecomp\_wt-samus-smb\build_samus\qa-samus-bomb-preboost.png
+WAIT 10
+SCREENSHOT F:\Projects\nesrecomp\_wt-samus-smb\build_samus\qa-samus-bomb-boost.png
+WAIT 30
+
+# Slot 4 is valid but far outside Samus's body: Star must not kill it.
+WRITE_RAM8 013 01
+WRITE_RAM8 01A 06
+WRITE_RAM8 022 00
+WRITE_RAM8 05C 00
+WRITE_RAM8 072 00
+WRITE_RAM8 08B C8
+WRITE_RAM8 0A4 00
+WRITE_RAM8 0BA 01
+WRITE_RAM8 0D3 B0
+WRITE_RAM8 79F FF
+WAIT 6
+ASSERT_RAM8 013 01 far_enemy_survives_star
+
+# The same enemy overlapping Samus is defeated by Starman contact.
+WRITE_RAM8 013 01
+WRITE_RAM8 01A 06
+WRITE_RAM8 022 00
+WRITE_RAM8 05C 00
+WRITE_RAM8 072 00
+WRITE_RAM8 08B 5C
+WRITE_RAM8 0A4 00
+WRITE_RAM8 0BA 01
+WRITE_RAM8 0D3 B0
+WAIT 4
+ASSERT_RAM8 022 22 overlapping_enemy_defeated_by_star
+
+# Ordinary contact without the Star still uses Samus damage and its hit cue.
+WRITE_RAM8 79F 00
+WRITE_RAM8 013 01
+WRITE_RAM8 01A 06
+WRITE_RAM8 022 00
+WRITE_RAM8 05C 00
+WRITE_RAM8 072 00
+WRITE_RAM8 08B 5C
+WRITE_RAM8 0A4 00
+WRITE_RAM8 0BA 01
+WRITE_RAM8 0D3 B0
+WAIT 4
+SCREENSHOT F:\Projects\nesrecomp\_wt-samus-smb\build_samus\qa-samus-damage.png
+WAIT 300
+EXIT 0

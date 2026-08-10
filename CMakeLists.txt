@@ -27,6 +27,7 @@ add_executable(SuperMarioBrosRecomp
     game_smash64_assets.c
     game_smash64_render.c
     game_samus.c
+    game_samus_audio.c
     mods/widescreen_plugin.c
     mods/voxel_plugin.c
     mods/smash64_player_plugin.c
