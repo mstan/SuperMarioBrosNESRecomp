@@ -1419,9 +1419,8 @@ static void draw_pikachu_effect_card(unsigned effect, unsigned frame,
         /* lbParticleDrawTextures is an XLU BILERP texture rectangle. Keep
          * ordinary cards nearest-filtered and opt only this common particle
          * into the matching host sampler. */
-        nes_voxel_mesh_bind_texture_bilinear(pixels, texture_width,
-                                             texture_height, texture_width,
-                                             1.0f, 1);
+        nes_voxel_mesh_bind_texture_bilinear_overlay(
+            pixels, texture_width, texture_height, texture_width, 1.0f, 8);
     } else {
         nes_voxel_mesh_bind_texture(pixels, texture_width, texture_height,
                                     texture_width, 1.0f, 1);
