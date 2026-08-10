@@ -1,0 +1,112 @@
+LOG falcon-max-run-streaming-qa
+
+# Owner reproduction: F1/slot 0 starts Falcon on the flat ceiling route in
+# World 1-2.  A quick Right release/repress enters Dash, then Run while the
+# button remains held.  The screenshots and RAM snapshots span multiple
+# eight-frame area-parser service cycles.
+WAIT 3
+HOLD RIGHT
+WAIT 1
+RELEASE RIGHT
+WAIT 1
+HOLD RIGHT
+
+WAIT 32
+DUMP_RAM 06D0 B0
+ASSERT_RAM8 06FF 04 max-run scroll delta stays at parser capacity
+ASSERT_RAM8 0700 40 max-run native speed stays at parser capacity
+ASSERT_RAM8 071A 00 first camera page
+ASSERT_RAM8 0725 01 parser remains ahead of camera
+ASSERT_RAM8 073D 06 parser debt remains below one column set
+SCREENSHOT C:/temp/falcon_max_run_stream_32.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_64.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_96.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_128.png
+WAIT 32
+DUMP_RAM 06D0 B0
+ASSERT_RAM8 06FF 04 sustained max-run scroll delta
+ASSERT_RAM8 0700 40 sustained max-run native speed
+ASSERT_RAM8 071A 02 mid-route camera page
+ASSERT_RAM8 0725 03 mid-route parser remains ahead
+ASSERT_RAM8 073D 16 mid-route parser debt remains bounded
+SCREENSHOT C:/temp/falcon_max_run_stream_160.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_192.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_224.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_256.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_288.png
+WAIT 32
+DUMP_RAM 06D0 B0
+ASSERT_RAM8 06FF 04 long-run scroll delta
+ASSERT_RAM8 0700 40 long-run native speed
+ASSERT_RAM8 071A 04 long-run camera page
+ASSERT_RAM8 0725 06 long-run parser remains ahead
+ASSERT_RAM8 073D 02 long-run parser debt remains bounded
+SCREENSHOT C:/temp/falcon_max_run_stream_320.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_352.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_384.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_416.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_448.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_480.png
+WAIT 32
+DUMP_RAM 06D0 B0
+ASSERT_RAM8 06FF 04 pre-obstacle scroll delta
+ASSERT_RAM8 0700 40 pre-obstacle native speed
+ASSERT_RAM8 071A 07 pre-obstacle camera page
+ASSERT_RAM8 0725 09 pre-obstacle parser remains ahead
+ASSERT_RAM8 073D 0A pre-obstacle parser debt remains bounded
+SCREENSHOT C:/temp/falcon_max_run_stream_512.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_544.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_576.png
+WAIT 32
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_608.png
+WAIT 64
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_672.png
+WAIT 64
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_736.png
+WAIT 64
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_800.png
+WAIT 64
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_864.png
+WAIT 64
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_928.png
+WAIT 64
+DUMP_RAM 06D0 B0
+SCREENSHOT C:/temp/falcon_max_run_stream_992.png
+
+RELEASE RIGHT
+WAIT 4
+EXIT 0

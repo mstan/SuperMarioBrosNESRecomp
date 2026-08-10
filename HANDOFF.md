@@ -2,11 +2,21 @@
 
 Date: 2026-08-09
 
-## Current QA status: release integration passing; final owner listen pending
+## Current QA status: v1.6.1 streamer fix accepted; dual-platform release gates passing
 
-The current worktree also addresses the owner's latest playtest findings while
-leaving the open `build_falcon` recomp-ui session untouched:
+The current worktree addresses the owner's latest playtest findings:
 
+- v1.6.0's sustained 6px/frame Falcon run could outrun SMB1's native area
+  parser, whose eight-task cycle prepares 32 pixels (4px/frame). The camera
+  then passed `CurrentPageLoc`, leaving stale collision, sprite, and warp-zone
+  context. Ordinary ground and air locomotion now cap physical host movement
+  at `$40`/4px per frame before `$BF09` integrates it; finite authored attacks
+  and specials keep their tested terrain reach. The owner's current F1/slot0
+  World 1-2 reproduction remains coherent under double-tap+hold Right, and the
+  owner accepted the rebuilt fix. `tests/falcon_max_run_streaming_qa.script`
+  asserts the speed/scroll boundary, bounded `ScrollThirtyTwo`, parser lead,
+  and captures the route through multiple streamed pages. Bead
+  `beads-2dw.2.1.23` tracks the patch.
 - the Falcon feature now declares a required owner-supplied Super Smash Bros.
   64 USA v1.0 ROM. The generic Mods UI exposes Select/Change file controls and
   status; z64/v64/n64 byte orders normalize in memory to canonical SHA-1
