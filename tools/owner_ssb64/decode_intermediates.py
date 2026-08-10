@@ -349,9 +349,9 @@ def _write_anims(reloc_dir: Path, output: Path) -> None:
 
 def materialize(reloc_cache: Path, output: Path) -> None:
     build_cache.verify_cache(reloc_cache)
-    source_root = Path(__file__).resolve().parents[2]
+    source_root = build_cache.SOURCE_ROOT
     resolved = output.resolve()
-    if resolved == source_root or source_root in resolved.parents:
+    if source_root is not None and (resolved == source_root or source_root in resolved.parents):
         raise ValueError("decoded owner assets must live outside the source tree")
     if output.exists():
         raise ValueError(f"output already exists: {output}")

@@ -28,7 +28,8 @@ RELOC_TABLE_ROM_ADDR = 0x001AC870
 RELOC_FILE_COUNT = 2132
 RELOC_TABLE_ENTRY_SIZE = 12
 RELOC_DATA_START = RELOC_TABLE_ROM_ADDR + (RELOC_FILE_COUNT + 1) * RELOC_TABLE_ENTRY_SIZE
-SOURCE_ROOT = Path(__file__).resolve().parents[2]
+IS_FROZEN = bool(getattr(sys, "frozen", False) or getattr(sys, "_MEIPASS", None))
+SOURCE_ROOT = None if IS_FROZEN else Path(__file__).resolve().parents[2]
 
 # Names are diagnostic only.  IDs and expected decompressed sizes are the
 # stable BattleShip/SmashBrosDecomp-derived recipe for this initial release.
@@ -196,7 +197,7 @@ def _require_external_cache_root(cache_root: Path) -> None:
         resolved = cache_root.resolve()
     except OSError as exc:
         raise ValueError(f"cannot resolve cache root {cache_root}: {exc}") from exc
-    if resolved == SOURCE_ROOT or SOURCE_ROOT in resolved.parents:
+    if SOURCE_ROOT is not None and (resolved == SOURCE_ROOT or SOURCE_ROOT in resolved.parents):
         raise ValueError("cache root must be outside the source tree")
 
 

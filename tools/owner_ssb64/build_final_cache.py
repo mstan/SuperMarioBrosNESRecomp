@@ -34,7 +34,8 @@ from typing import Any
 
 
 TOOLS_ROOT = Path(__file__).resolve().parents[1]
-SOURCE_ROOT = Path(__file__).resolve().parents[2]
+IS_FROZEN = bool(getattr(sys, "frozen", False) or getattr(sys, "_MEIPASS", None))
+SOURCE_ROOT = None if IS_FROZEN else Path(__file__).resolve().parents[2]
 if str(TOOLS_ROOT) not in sys.path:
     sys.path.insert(0, str(TOOLS_ROOT))
 if str(Path(__file__).resolve().parent) not in sys.path:
@@ -82,7 +83,7 @@ def _require_external(path: Path) -> Path:
         resolved = path.resolve()
     except OSError as exc:
         raise ValueError(f"cannot resolve cache path: {exc}") from exc
-    if resolved == SOURCE_ROOT or SOURCE_ROOT in resolved.parents:
+    if SOURCE_ROOT is not None and (resolved == SOURCE_ROOT or SOURCE_ROOT in resolved.parents):
         raise ValueError("owner-derived cache must be outside the source tree")
     return resolved
 
