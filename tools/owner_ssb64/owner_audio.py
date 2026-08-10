@@ -114,7 +114,7 @@ def _bank_wave_records(ctl: bytes) -> list[dict[str, int | tuple[int, ...]]]:
         base, length, wave_type, _flags = struct.unpack_from(">IiBB", ctl, offset)
         if wave_type != 0:
             raise ValueError(f"required B1_sounds2 wave at 0x{offset:X} is not VADPCM")
-        _loop, book = struct.unpack_from(">II", ctl, offset + 12)
+        loop, book = struct.unpack_from(">II", ctl, offset + 12)
         _checked_offset(ctl, book, 8, "ALADPCMBook")
         order, predictors = struct.unpack_from(">ii", ctl, book)
         if order <= 0 or predictors <= 0 or order > 8 or predictors > 64:
@@ -124,9 +124,15 @@ def _bank_wave_records(ctl: bytes) -> list[dict[str, int | tuple[int, ...]]]:
         codebook = struct.unpack_from(f">{coefficients}h", ctl, book + 8)
         if base < 0 or length <= 0:
             raise ValueError("invalid B1_sounds2 wave table span")
+        loop_start = loop_end = loop_count = 0
+        if loop:
+            _checked_offset(ctl, loop, 12, "ALADPCMloop")
+            loop_start, loop_end, loop_count = struct.unpack_from(">III", ctl, loop)
         waves[offset] = {
             "base": base, "length": length, "order": order,
             "predictors": predictors, "codebook": codebook,
+            "loop_start": loop_start, "loop_end": loop_end,
+            "loop_count": loop_count,
         }
 
     def visit_sound(offset: int) -> None:

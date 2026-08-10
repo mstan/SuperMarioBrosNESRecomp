@@ -112,3 +112,38 @@ claims of fully synthesized final effects. The manifest recursively hashes
 every nested manifest and payload, rejects ROM-like filenames and ROM-sized
 files, contains no input path, and is byte-identical for canonical z64, v64,
 and n64 inputs.
+
+### Minimal Pikachu runtime audio
+
+`pikachu_audio.py` turns the audio intermediates into a minimal 13-cue runtime
+set: three special-move voices, light swing S/M/L, Electric 1/2/3/5, Quick
+Attack start, Thunder, and ElectricLoop. Its manifest also records the exact
+numeric `PikachuEvent` ABI from `pikachu_locomotion.h` rather than assuming an
+FGM route number is a host event number.
+
+```powershell
+py -3 tools/owner_ssb64/pikachu_audio.py `
+  --rom 'D:\Roms\Super Smash Bros. (U) (V1.0).z64' `
+  --out "$env:LOCALAPPDATA\SuperMarioBrosRecomp\smash64\pikachu-audio-staging"
+```
+
+Direct voices are exact VADPCM decodes followed by the same deterministic
+windowed-sinc resampling used by Falcon. Each finite FGM cue validates its US
+1.0 UCD route, fork closure, articulation, and triggered wave, then applies a
+small recipe-specific pitch/gain approximation. It is explicitly not a full
+FGM or RSP synthesizer. `pikachu_electric_loop.wav` contains one bounded period
+of wave 12's canonical ALADPCM loop (source samples 100 through 7664); its
+manifest provides `[start_frame, end_frame)` forward-loop metadata instead of
+expanding the source's infinite loop count. The renderer writes atomically to
+an external new directory, embeds neither ROM bytes nor its path, and does not
+create tracked WAV assets.
+
+The current controller directly maps events 0-9 to the three voices, three
+swings, and Electric 1/2/3/5. Quick Attack route 231 maps to event 10 and is
+emitted alongside voice-Hi on each zip. ElectricLoop route 230 maps to Thunder
+Jolt projectile-spawn event 15, matching BattleShip's weapon creation path;
+Thunder route 232 maps to projectile-spawn event 16. Conversely, event 11
+(`PIKACHU_EVENT_FGM_SWING_PULSE`) represents Smash route 219
+(`nSYAudioFGMMarioUnkSwing2`), not ElectricLoop, and is listed as unresolved in
+the manifest until that distinct cue is added. Runtime integration must not
+substitute the ElectricLoop WAV for event 10.
