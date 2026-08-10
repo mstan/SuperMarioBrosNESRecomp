@@ -1,0 +1,30 @@
+LOG pikachu-thunder-amp-visual-qa
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+# Move past the opening hill.  Thunder originates at the map top and is
+# destroy-on-solid, so the hill would consume it before it could contact
+# Pikachu and would make this a false-negative aura capture.
+HOLD RIGHT
+WAIT 28
+RELEASE RIGHT
+WAIT 8
+
+# Down+B selects Thunder.  The ground source spawns its head on frame 24;
+# these captures bracket the authored loop, self-contact, and recovery.
+HOLD DOWN
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE DOWN
+WAIT 42
+SCREENSHOT C:/temp/pikachu_thunder_loop.png
+WAIT 16
+SCREENSHOT C:/temp/pikachu_thunder_contact.png
+WAIT 8
+SCREENSHOT C:/temp/pikachu_thunder_contact_late.png
+WAIT 20
+SCREENSHOT C:/temp/pikachu_thunder_recovery.png
+EXIT 0

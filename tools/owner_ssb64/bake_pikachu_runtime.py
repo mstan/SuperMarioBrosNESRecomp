@@ -23,7 +23,7 @@ import bake_falcon_runtime as common
 
 MAGIC = common.MAGIC
 VERSION = common.VERSION
-PIKACHU_RUNTIME_VERSION = 6
+PIKACHU_RUNTIME_VERSION = 7
 LOOPS = {"Idle", "Walk1", "Walk2", "Walk3", "Run", "CrouchIdle"}
 BODY_COLORS = (0xFFFFD933, 0xFFE8A828, 0xFFFFD933, 0xFFC8C828)
 ACCESSORY_COLORS = (0x00000000, 0xFFFF5B79, 0xFFFFFFFF, 0xFFB1FF24)
@@ -311,8 +311,27 @@ def effect_ci4(raw: bytes, palette_offset: int, image_offset: int,
     return name, 32, 32, bytes(pixels)
 
 
+def effect_ia8(raw: bytes, image_offset: int, name: str) -> tuple[str, int, int, bytes]:
+    """Bake one source-owned 32x32 IA8 Thunder Shock card.
+
+    The high nibble is intensity and the low nibble alpha.  Keeping both is
+    important: Thunder Shock is an additive-looking translucent aura in the
+    original, not an opaque yellow replacement card.
+    """
+    needed = 32 * 32
+    if image_offset < 0 or image_offset + needed > len(raw):
+        raise ValueError(f"truncated owner IA8 special-effect card {name}")
+    pixels = bytearray()
+    for value in raw[image_offset:image_offset + needed]:
+        intensity = (value >> 4) * 17
+        alpha = (value & 0x0F) * 17
+        pixels += struct.pack("<I", (alpha << 24) | (intensity << 16) |
+                      (intensity << 8) | intensity)
+    return name, 32, 32, bytes(pixels)
+
+
 def collect_effect_textures(root: Path) -> list[tuple[str, int, int, bytes]]:
-    """Return the source-owned Jolt and Thunder card cycles in draw order.
+    """Return source-owned Jolt, Thunder and Thunder Shock cards in order.
 
     Reloc 342's ThunderJolt MObj uses its 0x1C70 palette with the two 32x32
     cards at 0x1C98/0x1EA0.  Reloc 347's first MObj is the three-frame 32x32
@@ -329,6 +348,11 @@ def collect_effect_textures(root: Path) -> list[tuple[str, int, int, bytes]]:
         effect_ci4(thunder, 0x0008, 0x0030, "pikachu_thunder_0"),
         effect_ci4(thunder, 0x0008, 0x0238, "pikachu_thunder_1"),
         effect_ci4(thunder, 0x0008, 0x0440, "pikachu_thunder_2"),
+        # `ThunderShockMObjSub` in fid 347 uses these two IA8 cards in that
+        # order (0x0D98 then 0x0990), switching them by its source material
+        # timeline.  They are the owner-authored cards for the contact aura.
+        effect_ia8(thunder, 0x0D98, "pikachu_thunder_shock_0"),
+        effect_ia8(thunder, 0x0990, "pikachu_thunder_shock_1"),
     ]
 
 

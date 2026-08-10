@@ -135,6 +135,113 @@ static void draw_cube_face(NesVoxelMeshVertex p0, NesVoxelMeshVertex p1,
     nes_voxel_mesh_triangle(p0, p2, p3);
 }
 
+static void draw_persistent_effect_card(unsigned effect, unsigned frame,
+                                        float center_x, float center_y,
+                                        float half_width, float half_height,
+                                        float rotation, float z)
+{
+    const unsigned int *pixels;
+    int texture_width, texture_height;
+    const float c = cosf(rotation), s = sinf(rotation);
+    const float x[4] = { -half_width, half_width, half_width, -half_width };
+    const float y[4] = { -half_height, -half_height, half_height, half_height };
+    NesVoxelMeshVertex v[4];
+    unsigned i;
+
+    if (!game_smash64_assets_pikachu_effect_texture(
+            effect, frame, &pixels, &texture_width, &texture_height))
+        return;
+    for (i = 0; i < 4; ++i) {
+        v[i] = mesh_vertex(center_x + x[i] * c - y[i] * s,
+                           center_y + x[i] * s + y[i] * c, z);
+    }
+    v[0].u = 0.0f;                 v[0].v = 0.0f;
+    v[1].u = (float)texture_width; v[1].v = 0.0f;
+    v[2].u = (float)texture_width; v[2].v = (float)texture_height;
+    v[3].u = 0.0f;                 v[3].v = (float)texture_height;
+    nes_voxel_mesh_bind_texture(pixels, texture_width, texture_height,
+                                texture_width, 1.0f, 1);
+    /* PikachuSpecial3's alpha cards are two-sided. */
+    nes_voxel_mesh_triangle(v[0], v[1], v[2]);
+    nes_voxel_mesh_triangle(v[0], v[2], v[3]);
+    nes_voxel_mesh_triangle(v[2], v[1], v[0]);
+    nes_voxel_mesh_triangle(v[3], v[2], v[0]);
+}
+
+static unsigned pikachu_jolt_material_frame(unsigned joint, unsigned phase)
+{
+    /* Exact texture-id spans from the six 342:PikachuSpecial3
+     * ThunderJoltBMatAnimJoint streams (0x1AE0).  The source loop duration
+     * is 10/9/9/10/8/9 frames respectively; each stream selects card 0 or 1.
+     */
+    static const unsigned period[6] = { 10u, 9u, 9u, 10u, 8u, 9u };
+    const unsigned p = phase % period[joint];
+    switch (joint) {
+    case 0: return (p >= 2u && p < 3u) || (p >= 4u && p < 5u);
+    case 1: return p >= 4u && p < 6u || p == 8u;
+    case 2: return p == 8u;
+    case 3: return p == 1u || p == 3u || p >= 5u;
+    case 4: return p >= 3u && p < 4u || p == 5u;
+    default: return p >= 6u && p < 7u;
+    }
+}
+
+static int pikachu_jolt_card_visible(unsigned joint, unsigned phase)
+{
+    /* The matching six ThunderJoltBAnimJoint SetFlags streams (0x1A78..
+     * 0x1AC4) gate each card.  Bit 0x002 is hidden; flag 0 exposes it.
+     * This traveling visibility gate is why a single static card is wrong. */
+    phase %= 9u;
+    switch (joint) {
+    case 0: return phase >= 1u && phase < 5u;
+    case 1: return phase >= 3u && phase < 7u;
+    case 2: return phase >= 5u && phase < 9u;
+    case 3: return phase < 4u;
+    case 4: return phase >= 2u && phase < 6u;
+    default: return phase >= 4u && phase < 8u;
+    }
+}
+
+static void draw_pikachu_jolt_rig(const Smash64ActionSlot *action,
+                                  float center_x, float center_y,
+                                  float output_scale)
+{
+    /* Ground Jolt is an eight-DObj rig, not the transient two-card Thunder
+     * Jolt hit effect. wpPikachuThunderJoltGroundAddAnim reattaches its
+     * 0x1A20 AnimJoint and 0x1AE0 material streams at every surface segment
+     * and turn. Joint 1 sweeps -390..600 over 9 frames; joints 2..7 carry
+     * the six cards with authored -45,+15,+75,-75,-15,+45 degree rotations.
+     * Evaluate those visibility/material timelines here against saved action
+     * age, keeping physics and deterministic save state entirely separate.
+     */
+    static const float card_angle[6] = {
+        -0.785398006f, 0.261799008f, 1.30899704f,
+        -1.30899704f, -0.261799008f, 0.785398006f
+    };
+    const unsigned phase = action->age % 90u;
+    const float unit = output_scale > 0.0f ? output_scale : 1.0f;
+    const float tangent_x = (float)action->vx;
+    const float tangent_y = -(float)action->vy;
+    const float length = sqrtf(tangent_x * tangent_x + tangent_y * tangent_y);
+    const float heading = length > 0.0001f ? atan2f(tangent_y, tangent_x) : 0.0f;
+    /* The source's -390..600 local translation is in its effect coordinate
+     * system. Map that 990-unit cycle to a compact 10px host-space sweep,
+     * preserving direction and phase without turning a 16px SMB projectile
+     * into an 80px collision-looking billboard. */
+    const float root_shift = (-5.0f + 10.0f * (float)(phase % 9u) / 8.0f) * unit;
+    unsigned joint;
+    for (joint = 0; joint < 6u; ++joint) {
+        if (!pikachu_jolt_card_visible(joint, phase)) continue;
+        draw_persistent_effect_card(
+            SMASH64_PIKACHU_EFFECT_THUNDER_JOLT,
+            pikachu_jolt_material_frame(joint, phase),
+            center_x + cosf(heading) * root_shift,
+            center_y + sinf(heading) * root_shift,
+            3.5f * unit, 4.5f * unit,
+            heading + card_angle[joint], 3.0f * unit);
+    }
+}
+
 static void draw_persistent_actions(float output_scale)
 {
     Smash64ActionSlot slots[SMASH64_ACTION_SLOT_CAPACITY];
@@ -145,63 +252,45 @@ static void draw_persistent_actions(float output_scale)
         slots, SMASH64_ACTION_SLOT_CAPACITY);
     for (i = 0; i < count; ++i) {
         const Smash64ActionSlot *action = &slots[i];
-        const float center_x = (float)(action->x - screen_left +
-                                       g_widescreen_left) * output_scale;
+        float center_x = (float)(action->x - screen_left +
+                                 g_widescreen_left) * output_scale;
         /* Action simulation uses native framebuffer rows, where +Y points
          * down. The voxel renderer's world convention is the opposite (+Y
          * points up), exactly like the fighter foot conversion below. Keep
          * the simulation native and invert only at this presentation seam.
          * Without this conversion, a Jolt physically following the floor at
          * row 204 was drawn near row 36 and appeared to fly through the HUD. */
-        const float center_y = (240.0f - (float)action->y) * output_scale;
+        float center_y = (240.0f - (float)action->y) * output_scale;
         float half_width = fmaxf(2.0f, (float)action->width * 0.5f) *
                            output_scale;
         float half_height = fmaxf(2.0f, (float)action->height * 0.5f) *
                             output_scale;
-        NesVoxelMeshVertex a = mesh_vertex(center_x - half_width,
-                                           center_y - half_height, 2.0f);
-        NesVoxelMeshVertex b = mesh_vertex(center_x + half_width,
-                                           center_y - half_height, 2.0f);
-        NesVoxelMeshVertex c = mesh_vertex(center_x + half_width,
-                                           center_y + half_height, 2.0f);
-        NesVoxelMeshVertex d = mesh_vertex(center_x - half_width,
-                                           center_y + half_height, 2.0f);
-        const unsigned int *pixels;
-        int texture_width, texture_height;
         const unsigned effect = action->kind == 2u
                                     ? SMASH64_PIKACHU_EFFECT_THUNDER
                                     : SMASH64_PIKACHU_EFFECT_THUNDER_JOLT;
         if (effect == SMASH64_PIKACHU_EFFECT_THUNDER_JOLT) {
-            /* Reloc 342's Jolt DObj card is 180x180 source units with its
-             * authored 1.2x/1.5x card scale, while its combat capsule is
-             * only 100x100.  Collision dimensions are intentionally not a
-             * rendering proxy: retain that source-card ratio here. */
-            half_width *= 2.16f;
-            half_height *= 2.70f;
+            if (action->age == 0u) {
+                float joint_x, joint_y;
+                /* Source ftPikachuSpecialN calls
+                 * gmCollisionGetFighterPartsWorldPosition(joints[11]). The
+                 * persistent action already owns collision at its bridge
+                 * origin, but its first visible card must use the same
+                 * evaluated attachment rather than a fixed sprite offset. */
+                if (game_smash64_assets_pikachu_joint11_screen(&joint_x,
+                                                               &joint_y)) {
+                    center_x = joint_x;
+                    center_y = joint_y;
+                }
+            }
+            draw_pikachu_jolt_rig(action, center_x, center_y, output_scale);
+            continue;
         }
         /* Persistent actions advance at NES cadence.  Source cards are a
          * short material cycle, so the action age is the exact deterministic
          * phase key; its physics/save data remains untouched. */
-        if (!game_smash64_assets_pikachu_effect_texture(
-                effect, action->age, &pixels, &texture_width,
-                &texture_height))
-            continue;
-        /* mesh_vertex() deliberately defaults to 0,0 for the cube's 1x1
-         * material.  Owner effect cards are real 32x32 textures, so assign
-         * their texel-space UV rectangle explicitly rather than stretching
-         * one palette texel into another flat square. */
-        a.u = 0.0f;
-        a.v = 0.0f;
-        b.u = (float)texture_width;
-        b.v = 0.0f;
-        c.u = (float)texture_width;
-        c.v = (float)texture_height;
-        d.u = 0.0f;
-        d.v = (float)texture_height;
-        nes_voxel_mesh_bind_texture(pixels, texture_width, texture_height,
-                                    texture_width, 1.0f, 1);
-        nes_voxel_mesh_triangle(a, b, c);
-        nes_voxel_mesh_triangle(a, c, d);
+        draw_persistent_effect_card(effect, action->age, center_x, center_y,
+                                    half_width, half_height, 0.0f,
+                                    2.0f * output_scale);
     }
 }
 

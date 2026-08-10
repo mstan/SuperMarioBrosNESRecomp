@@ -19,6 +19,7 @@
 #define SMASH64_BLOB_VERSION_LEGACY 4u
 #define SMASH64_BLOB_VERSION_SKINNED 5u
 #define SMASH64_BLOB_VERSION_PIKACHU_EFFECTS 6u
+#define SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V2 7u
 #define SMASH64_MAX_JOINTS 32u
 #define FALCON_JOINT_COUNT 26u
 #define FALCON_RENDER_HEIGHT 32.0f
@@ -49,9 +50,11 @@
 #define FALCON_DIVE_DASH_FRAME              13u
 #define FALCON_DIVE_ATTACK_END_FRAME        45u
 #define FALCON_ROOT_TRACK_JOINT        0xFFFFu
-#define PIKACHU_EFFECT_TEXTURES         5u
+#define PIKACHU_EFFECT_TEXTURES_V1      5u
+#define PIKACHU_EFFECT_TEXTURES         7u
 #define PIKACHU_JOLT_EFFECT_TEXTURES    2u
 #define PIKACHU_THUNDER_EFFECT_TEXTURES 3u
+#define PIKACHU_THUNDER_SHOCK_TEXTURES  2u
 
 typedef struct FalconAssetJoint {
     int parent;
@@ -136,6 +139,8 @@ typedef struct Mat4 {
 
 static FalconAssetModel s_model;
 static int s_load_attempted;
+static int s_pikachu_joint11_valid;
+static float s_pikachu_joint11_x, s_pikachu_joint11_y;
 static const uint32_t s_fallback_color[1] = { 0xFF3060C8u };
 
 static int active_is_pikachu(void)
@@ -147,6 +152,8 @@ static int active_is_pikachu(void)
 static const uint32_t s_dive_dust_color[1] = { 0xFFC07838u };
 static const uint32_t s_dive_spark_color[1] = { 0xFFFFD848u };
 static const uint32_t s_dive_white_color[1] = { 0xFFFFFFFFu };
+static const uint32_t s_pikachu_spark_color[1] = { 0xFFFFF2A6u };
+static const uint32_t s_pikachu_dust_color[1] = { 0xFFC89B5Du };
 
 static int env_enabled(const char *name)
 {
@@ -371,7 +378,8 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
     version = read_u32(&reader);
     if (version != SMASH64_BLOB_VERSION_LEGACY &&
         version != SMASH64_BLOB_VERSION_SKINNED &&
-        version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS)
+        version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS &&
+        version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V2)
         return 0;
 
     model->joint_count = read_u32(&reader);
@@ -403,6 +411,13 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
          (model->punch_effect_texture_count != 0u ||
           model->punch_effect_texture_first != model->texture_count)) ||
         (version == SMASH64_BLOB_VERSION_PIKACHU_EFFECTS &&
+         (model->punch_effect_texture_count != PIKACHU_EFFECT_TEXTURES_V1 ||
+          !range_is_safe(model->punch_effect_texture_first,
+                         model->punch_effect_texture_count,
+                         model->texture_count) ||
+          model->punch_effect_texture_first +
+                  model->punch_effect_texture_count != model->texture_count)) ||
+        (version == SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V2 &&
          (model->punch_effect_texture_count != PIKACHU_EFFECT_TEXTURES ||
           !range_is_safe(model->punch_effect_texture_first,
                          model->punch_effect_texture_count,
@@ -540,7 +555,7 @@ int game_smash64_assets_pikachu_effect_texture(
     if (width) *width = 0;
     if (height) *height = 0;
     if (!active_is_pikachu() || !s_model.textures ||
-        s_model.punch_effect_texture_count != PIKACHU_EFFECT_TEXTURES)
+        s_model.punch_effect_texture_count < PIKACHU_EFFECT_TEXTURES_V1)
         return 0;
     first = s_model.punch_effect_texture_first;
     if (effect == SMASH64_PIKACHU_EFFECT_THUNDER_JOLT) {
@@ -548,6 +563,12 @@ int game_smash64_assets_pikachu_effect_texture(
     } else if (effect == SMASH64_PIKACHU_EFFECT_THUNDER) {
         first += PIKACHU_JOLT_EFFECT_TEXTURES;
         count = PIKACHU_THUNDER_EFFECT_TEXTURES;
+    } else if (effect == SMASH64_PIKACHU_EFFECT_THUNDER_SHOCK) {
+        if (s_model.punch_effect_texture_count < PIKACHU_EFFECT_TEXTURES)
+            return 0;
+        first += PIKACHU_JOLT_EFFECT_TEXTURES +
+                 PIKACHU_THUNDER_EFFECT_TEXTURES;
+        count = PIKACHU_THUNDER_SHOCK_TEXTURES;
     } else {
         return 0;
     }
@@ -557,6 +578,14 @@ int game_smash64_assets_pikachu_effect_texture(
     if (pixels) *pixels = s_model.textures[index].pixels;
     if (width) *width = s_model.textures[index].width;
     if (height) *height = s_model.textures[index].height;
+    return 1;
+}
+
+int game_smash64_assets_pikachu_joint11_screen(float *x, float *y)
+{
+    if (!s_pikachu_joint11_valid) return 0;
+    if (x) *x = s_pikachu_joint11_x;
+    if (y) *y = s_pikachu_joint11_y;
     return 1;
 }
 
@@ -674,6 +703,7 @@ void game_smash64_assets_clear(void)
     free_model(&s_model);
     memset(&s_model, 0, sizeof(s_model));
     s_load_attempted = 0;
+    s_pikachu_joint11_valid = 0;
 }
 
 static int pikachu_walk_tier(const ForeignState *state)
@@ -706,14 +736,24 @@ static const char *animation_for_state(const ForeignState *state)
             }
         case PK_DASH: return "Dash";
         case PK_RUN: return "Run";
+        case PK_RUN_BRAKE: return "RunBrake";
+        case PK_TURN_RUN: return "TurnRun";
+        case PK_CROUCH: return "Crouch";
+        case PK_CROUCH_WAIT: return "CrouchIdle";
+        case PK_CROUCH_END: return "CrouchEnd";
+        case PK_LANDING: return "LandingAirX";
         case PK_JUMP_GROUND: return "JumpF";
         case PK_JUMP_AERIAL: return "JumpAerialF";
         case PK_AIR_FALL: return "Fall";
         case PK_JAB: return "Jab1";
+        case PK_DASH_ATTACK: return "DashAttack";
         case PK_FTILT: return "AttackS3";
+        case PK_UTILT: return "AttackHi3";
+        case PK_DTILT: return "AttackLw3";
         case PK_NAIR: return "AttackAirN";
         case PK_FAIR: return "AttackAirF";
         case PK_BAIR: return "AttackAirB";
+        case PK_UAIR: return "AttackAirHi";
         case PK_DAIR: return "AttackAirD";
         case PK_THUNDER_JOLT_GROUND: return "NeutralSpecialGround";
         case PK_THUNDER_JOLT_AIR: return "NeutralSpecialAir";
@@ -722,9 +762,13 @@ static const char *animation_for_state(const ForeignState *state)
         case PK_QUICK_ATTACK_WINDOW:
         case PK_QUICK_ATTACK_ZIP2:
         case PK_QUICK_ATTACK_RECOVERY: return "UpSpecialAirEnd";
-        case PK_THUNDER_START: return "DownSpecialStartAir";
-        case PK_THUNDER_LOOP: return "DownSpecialEndAir";
-        case PK_THUNDER_SELF_HIT: return "DownSpecialThunderedAir";
+        /* Ground Thunder has four distinct ftdata motions.  In particular
+         * GettingThundered carries the 0x1644 loop and 0x1668 self-hit
+         * submotions; mapping either phase to the airborne end pose loses
+         * the authored grounded silhouette. */
+        case PK_THUNDER_START: return "DownSpecialStart";
+        case PK_THUNDER_LOOP:
+        case PK_THUNDER_SELF_HIT: return "GettingThundered";
         default: return "Idle";
         }
     }
@@ -1316,6 +1360,173 @@ static void draw_falcon_dive_effect(const ForeignState *state,
     }
 }
 
+/* Source Pikachu effects are alpha cards, and their DObjs are deliberately
+ * two-sided.  Keep the source card pixels and cycle intact while translating
+ * only their 3D placement to the NES screen plane. */
+static void draw_pikachu_effect_card(unsigned effect, unsigned frame,
+                                     float center_x, float center_y,
+                                     float half_width, float half_height,
+                                     float rotation, float z)
+{
+    const unsigned int *pixels;
+    int texture_width, texture_height;
+    const float c = cosf(rotation), s = sinf(rotation);
+    const float x[4] = { -half_width, half_width, half_width, -half_width };
+    const float y[4] = { -half_height, -half_height, half_height, half_height };
+    NesVoxelMeshVertex v[4];
+    unsigned i;
+
+    if (!game_smash64_assets_pikachu_effect_texture(
+            effect, frame, &pixels, &texture_width, &texture_height))
+        return;
+    for (i = 0; i < 4; ++i) {
+        v[i].x = center_x + x[i] * c - y[i] * s;
+        v[i].y = center_y + x[i] * s + y[i] * c;
+        v[i].z = z;
+    }
+    v[0].u = 0.0f;                 v[0].v = 0.0f;
+    v[1].u = (float)texture_width; v[1].v = 0.0f;
+    v[2].u = (float)texture_width; v[2].v = (float)texture_height;
+    v[3].u = 0.0f;                 v[3].v = (float)texture_height;
+    nes_voxel_mesh_bind_texture(pixels, texture_width, texture_height,
+                                texture_width, 1.0f, 1);
+    nes_voxel_mesh_triangle(v[0], v[1], v[2]);
+    nes_voxel_mesh_triangle(v[0], v[2], v[3]);
+    nes_voxel_mesh_triangle(v[2], v[1], v[0]);
+    nes_voxel_mesh_triangle(v[3], v[2], v[0]);
+}
+
+static void draw_pikachu_spark(float center_x, float center_y, float z,
+                                float radius)
+{
+    NesVoxelMeshVertex top = dive_effect_vertex(center_x, center_y + radius, z);
+    NesVoxelMeshVertex right = dive_effect_vertex(center_x + radius, center_y, z);
+    NesVoxelMeshVertex bottom = dive_effect_vertex(center_x, center_y - radius, z);
+    NesVoxelMeshVertex left = dive_effect_vertex(center_x - radius, center_y, z);
+    nes_voxel_mesh_triangle(top, right, bottom);
+    nes_voxel_mesh_triangle(top, bottom, left);
+    nes_voxel_mesh_triangle(bottom, right, top);
+    nes_voxel_mesh_triangle(left, bottom, top);
+}
+
+static int pikachu_quick_state(unsigned state)
+{
+    return state >= PK_QUICK_ATTACK_START && state <= PK_QUICK_ATTACK_RECOVERY;
+}
+
+static void apply_pikachu_quick_attack_pose(const ForeignState *state,
+                                            float r[SMASH64_MAX_JOINTS][3],
+                                            float s[SMASH64_MAX_JOINTS][3])
+{
+    const float pi = 3.14159265358979323846f;
+    /* BattleShip ftPikachuSpecialHiUpdateModelPitchScale rotates the complete
+     * joint-4 subtree by ArcTan2(vx, vy) * lr - 90deg and uses exactly
+     * {0.8, 0.8, 1.2}.  The bridge exposes the same source velocity/facing,
+     * so this is a skeletal transform rather than a screen-space squash. */
+    if (!state || !pikachu_quick_state(state->state) ||
+        s_model.joint_count <= 4u)
+        return;
+    r[4][0] = atan2f((float)state->vx, (float)state->vy) * state->facing -
+              pi * 0.5f;
+    s[4][0] = 0.8f;
+    s[4][1] = 0.8f;
+    s[4][2] = 1.2f;
+}
+
+static void draw_pikachu_quick_attack_effect(const ForeignState *state,
+                                              float center_x, float foot_y,
+                                              float output_scale)
+{
+    const unsigned frame = state->state_frame;
+    const float unit = output_scale > 0.0f ? output_scale : 1.0f;
+    const float middle_y = foot_y + PIKACHU_RENDER_HEIGHT * 0.48f * unit;
+    const float z = 3.0f * unit;
+    unsigned i;
+
+    if (!pikachu_quick_state(state->state)) return;
+    /* Quick Attack's source status marks the fighter intangible and applies
+     * colour animation throughout startup/zip/end. The host has no fighter
+     * colour-animation API, so show a bounded owner-card halo instead of
+     * silently omitting that visible status. */
+    if (state->state == PK_QUICK_ATTACK_START) {
+        const float pulse = 5.0f + 1.5f * sinf((float)frame * 0.7f);
+        draw_pikachu_effect_card(SMASH64_PIKACHU_EFFECT_THUNDER_SHOCK, frame,
+                                 center_x, middle_y, pulse * unit,
+                                 pulse * unit, (float)frame * 0.18f, z);
+        return;
+    }
+    if (state->state == PK_QUICK_ATTACK_ZIP1 ||
+        state->state == PK_QUICK_ATTACK_ZIP2) {
+        const float direction = atan2f((float)state->vy, (float)state->vx);
+        const float forward_x = cosf(direction), forward_y = sinf(direction);
+        nes_voxel_mesh_bind_texture(s_pikachu_spark_color, 1, 1, 1, 0.92f, 0);
+        for (i = 0; i < 5; ++i) {
+            const float angle = direction + (float)i * 1.25663706f +
+                                (float)frame * 0.35f;
+            const float distance = (3.0f + (float)(i & 1u) * 1.5f) * unit;
+            draw_pikachu_spark(center_x - forward_x * 2.0f * unit +
+                                    cosf(angle) * distance,
+                                middle_y - forward_y * 2.0f * unit +
+                                    sinf(angle) * distance,
+                                z, (0.70f + 0.15f * (float)(i & 1u)) * unit);
+        }
+        return;
+    }
+    /* Controller emits Ripple precisely at action frame 25 / 39, then
+     * changes state. Preserve an eight-frame expanding residual ring without
+     * needing a mutable particle pool in the authoritative gameplay code. */
+    if ((state->state == PK_QUICK_ATTACK_WINDOW && frame >= 25u && frame < 33u) ||
+        (state->state == PK_QUICK_ATTACK_RECOVERY && frame >= 39u && frame < 47u)) {
+        const unsigned first = state->state == PK_QUICK_ATTACK_WINDOW ? 25u : 39u;
+        const float phase = (float)(frame - first);
+        const float radius = (3.0f + phase * 1.1f) * unit;
+        nes_voxel_mesh_bind_texture(s_pikachu_spark_color, 1, 1, 1,
+                                    0.80f - phase * 0.075f, 0);
+        for (i = 0; i < 8; ++i) {
+            const float angle = (float)i * 0.78539816f;
+            draw_pikachu_spark(center_x + cosf(angle) * radius,
+                                middle_y + sinf(angle) * radius, z,
+                                0.45f * unit);
+        }
+    }
+}
+
+static void draw_pikachu_thunder_amp(const ForeignState *state,
+                                     float center_x, float foot_y,
+                                     float output_scale)
+{
+    const unsigned frame = state->state_frame;
+    const float unit = output_scale > 0.0f ? output_scale : 1.0f;
+    const float middle_y = foot_y + PIKACHU_RENDER_HEIGHT * 0.50f * unit;
+    const float z = 3.5f * unit;
+    unsigned i;
+
+    if (state->state != PK_THUNDER_SELF_HIT || frame >= 18u) return;
+    /* ThunderAmp itself is a common particle-bank script (0x74), whereas
+     * PikachuSpecial2 owns the adjacent ThunderShock cards. Use those actual
+     * owner cards as a short, rotating contact aura; the dust/ring supplies
+     * the common particle's ground-response silhouette without fabricating
+     * unowned texture data. */
+    for (i = 0; i < 6; ++i) {
+        const float phase = (float)frame * 0.32f + (float)i * 1.04719755f;
+        const float orbit = (2.5f + 0.30f * (float)frame) * unit;
+        const float scale = (3.5f + 0.10f * (float)(frame & 3u)) * unit;
+        draw_pikachu_effect_card(SMASH64_PIKACHU_EFFECT_THUNDER_SHOCK,
+                                 frame + i,
+                                 center_x + cosf(phase) * orbit,
+                                 middle_y + sinf(phase) * orbit,
+                                 scale, scale, phase, z);
+    }
+    if (frame < 9u) {
+        const float phase = (float)frame;
+        nes_voxel_mesh_bind_texture(s_pikachu_dust_color, 1, 1, 1,
+                                    0.75f - phase * 0.07f, 0);
+        draw_dive_effect_quad(center_x, foot_y + 0.6f * unit, z,
+                              (3.0f + phase * 1.2f) * unit,
+                              (0.55f + phase * 0.05f) * unit);
+    }
+}
+
 static NesVoxelMeshVertex render_death_vertex(
     Mat4 matrix, const FalconAssetVertex *vertex,
     const float pose_min[3], const float pose_max[3],
@@ -1398,6 +1609,9 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
                                           ? 0.0f
                                           : presentation_animation_frame(state))),
                         t, r, s);
+    if (active_is_pikachu() && !death_mode && !still_mode &&
+        !animation_override)
+        apply_pikachu_quick_attack_pose(state, r, s);
     build_matrices(&s_model, t, r, s, world);
     /* Figatree root translations are absolute fighter-pose coordinates, not
      * SMB1 world motion. Anchor the animated mesh's current lowest point to
@@ -1442,6 +1656,20 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
         }
         yaw_rad = yaw_degrees *
             (3.14159265358979323846f / 180.0f);
+    }
+
+    s_pikachu_joint11_valid = 0;
+    if (active_is_pikachu() && s_model.joint_count > 11u) {
+        float origin[3] = { 0.0f, 0.0f, 0.0f }, point[3];
+        const float c = cosf(yaw_rad), yaw_sin = sinf(yaw_rad);
+        mat_point(world[11], origin, point);
+        point[0] = (point[0] - (pose_min[0] + pose_max[0]) * 0.5f) * facing;
+        point[2] = (point[2] - (pose_min[2] + pose_max[2]) * 0.5f) * facing;
+        s_pikachu_joint11_x = center_x +
+            (point[0] * c - point[2] * yaw_sin) * model_scale;
+        s_pikachu_joint11_y = anchor_y +
+            (point[1] - pose_min[1]) * model_scale;
+        s_pikachu_joint11_valid = 1;
     }
 
     for (i = 0; i < s_model.triangle_count; ++i) {
@@ -1489,7 +1717,12 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
         }
         nes_voxel_mesh_triangle(a, b, c);
     }
-    if (!active_is_pikachu() && !death_mode && !still_mode &&
+    if (active_is_pikachu() && !death_mode && !still_mode &&
+        !animation_override) {
+        draw_pikachu_quick_attack_effect(state, center_x, anchor_y,
+                                         output_scale);
+        draw_pikachu_thunder_amp(state, center_x, anchor_y, output_scale);
+    } else if (!active_is_pikachu() && !death_mode && !still_mode &&
         !animation_override) {
         draw_falcon_punch_effect(&s_model, state, world, pose_min, pose_max,
                                  center_x, anchor_y, facing, model_scale,

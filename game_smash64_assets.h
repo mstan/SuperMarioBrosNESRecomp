@@ -24,10 +24,18 @@ void game_smash64_assets_clear(void);
 enum {
     SMASH64_PIKACHU_EFFECT_THUNDER_JOLT = 0,
     SMASH64_PIKACHU_EFFECT_THUNDER = 1,
+    /* The two IA8 cards owned by PikachuSpecial2's ThunderShock MObj. */
+    SMASH64_PIKACHU_EFFECT_THUNDER_SHOCK = 2,
 };
 int game_smash64_assets_pikachu_effect_texture(
     unsigned effect, unsigned frame, const unsigned int **pixels,
     int *width, int *height);
+
+/* Last evaluated source joint-11 screen position for the active Pikachu
+ * draw.  Neutral Special and Thunder source both spawn from this joint.
+ * Presentation callers use it only to align a newly spawned card; gameplay
+ * ownership stays in the persistent-action bridge. */
+int game_smash64_assets_pikachu_joint11_screen(float *x, float *y);
 
 int game_smash64_assets_draw(float center_x, float foot_y,
                              float output_scale);

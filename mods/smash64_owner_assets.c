@@ -9,7 +9,7 @@
 #include <string.h>
 
 #define FALCON_CACHE_PREFIX "falcon-final-r1-e2929e10fccc0aa84e5776227e798abc07cedabf-"
-#define PIKACHU_CACHE_PREFIX "pikachu-final-r4-"
+#define PIKACHU_CACHE_PREFIX "pikachu-final-r6-"
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN

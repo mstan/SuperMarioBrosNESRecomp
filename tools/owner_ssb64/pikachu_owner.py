@@ -30,7 +30,7 @@ import decode_intermediates as falcon_decode
 import owner_audio
 
 
-RECIPE_VERSION = 3
+RECIPE_VERSION = 4
 CACHE_FORMAT = "smb1-smash64-pikachu-prototype-cache"
 MODEL_ID = 341
 MAIN_ID = 243
@@ -56,9 +56,12 @@ ANIM_SPECS = (
     (1971, "Fall", 26), (1972, "FallAerial", 26), (1973, "Crouch", 26),
     (1974, "CrouchIdle", 26), (1975, "CrouchEnd", 26),
     (1976, "LandingAirX", 26), (1990, "FallSpecial", 26),
-    (2016, "Jab1", 26), (2019, "AttackS3", 26),
+    (2016, "Jab1", 26), (2017, "DashAttack", 26),
+    (2019, "AttackS3", 26), (2021, "AttackHi3", 26),
+    (2022, "AttackLw3", 26),
     (2026, "AttackAirN", 26), (2027, "AttackAirF", 27),
-    (2028, "AttackAirB", 26), (2030, "AttackAirD", 27),
+    (2028, "AttackAirB", 26), (2029, "AttackAirHi", 26),
+    (2030, "AttackAirD", 27),
     (2086, "NeutralSpecialGround", 26), (2087, "NeutralSpecialAir", 26),
     (2088, "UpSpecialEnd", 27), (2089, "UpSpecialAirEnd", 27),
     (2090, "DownSpecialStart", 26), (2091, "GettingThundered", 26),
@@ -77,8 +80,9 @@ RELOC_FILES = (
     1962: 2896, 1963: 1952, 1964: 2896, 1965: 1536, 1966: 3264,
     1967: 2288, 1968: 2016, 1969: 2000, 1970: 1792, 1971: 1040,
     1972: 1056, 1973: 1152, 1974: 4592, 1975: 1456, 1976: 1904,
-    1990: 1008, 2016: 3296, 2019: 4448, 2026: 2928, 2027: 4112,
-    2028: 4320, 2030: 4208, 2086: 5472, 2087: 5936, 2088: 6064,
+    1990: 1008, 2016: 3296, 2017: 6336, 2019: 4448, 2021: 3216,
+    2022: 3600, 2026: 2928, 2027: 4112, 2028: 4320, 2029: 2336,
+    2030: 4208, 2086: 5472, 2087: 5936, 2088: 6064,
     2089: 3248, 2090: 2464, 2091: 1728, 2092: 2992, 2093: 2544,
     2094: 1408, 2095: 3136,
 }[file_id]) for file_id, name, _count in ANIM_SPECS)
