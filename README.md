@@ -42,6 +42,28 @@ ROM nor generated Falcon assets are included in the download or copied into
 the game directory. A is Falcon's normal attack, B is his special, and Up is
 his four-frame jump; Up+B is Falcon Dive and Down+B is Falcon Kick.
 
+## Samus (bundled mod)
+
+Open **Mods**, enable **Metroid Samus Player Replacement**, and select a legally
+owned canonical **Metroid USA PRG0 or Europe/PAL** ROM. Headered and headerless
+images are accepted; the launcher strips a valid iNES header and verifies
+normalized SHA-1 `fdbfc7871962f72a1ef57e5a7e456164fb93430b` (USA) or
+`68a55eafcefa3014a4771cb7983d7db42f80456a` (Europe). Samus's sprite tiles are extracted
+into memory from that verified ROM. No Metroid ROM data or derived graphics are
+shipped or written beside the game.
+
+Samus begins with 299 energy and every original upgrade equipped. A jumps, B
+fires, Down morphs, and Select switches between the combined Long/Wave/Ice beam
+and infinite missiles. B lays bombs in Morph Ball. Screw Attack, missiles, and
+bombs break only SMB's ordinary breakable bricks; contact hurts Samus instead
+of stomping enemies. Mushroom restores 30 energy, Fire Flower restores all
+energy, and Starman remains SMB's native temporary invincibility.
+
+The Samus and Smash 64 packages share the `player-controller` exclusive group,
+so the launcher permits only one at a time. See
+[docs/METROID_SAMUS_MOD.md](docs/METROID_SAMUS_MOD.md) for implementation and
+validation details.
+
 ## Widescreen mod (experimental)
 
 An optional 16:9 mode renders the world beyond the NES's 256-px viewport

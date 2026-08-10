@@ -28060,6 +28060,7 @@ label_E3AC:; return;
 }
 
 void func_D853(void) { /* PlayerEnemyCollision */
+    if (nes_mod_function_entry(0xD853u)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_D853");
 #endif

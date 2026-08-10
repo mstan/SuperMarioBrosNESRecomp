@@ -45,6 +45,16 @@ uint8_t game_smash64_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val);
 /* 1 while Falcon is actually driving the player this frame. */
 int game_smash64_active(void);
 
+/* Controller identity gates for presentation and character-specific policy. */
+int game_smash64_falcon_selected(void);
+int game_smash64_samus_selected(void);
+
+/* Native SMB consequences shared by player-replacement combat adapters. */
+int game_smash64_defeat_enemies(double left, double right,
+                                double top, double bottom, int max_hits);
+int game_smash64_break_bricks(double left, double right,
+                              double top, double bottom);
+
 /* Presentation-only exception for SMB1's native PlayerDeath routine. Falcon
  * never owns death physics or progression, but the renderer may replace the
  * Mario death metasprite with a falling Smash-style tumble while this is 1. */

@@ -181,3 +181,15 @@ addr = 0xBF09           # MovePlayerHorizontally
 # Falcon cannot inherit Small Mario's one-tile contact box.
 [[mod_function_hook]]
 addr = 0xE29C           # BoundingBoxCore
+
+# Metroid Samus replacement: contact is routed to the energy/no-stomp layer,
+# and mushroom/fire-flower collection is converted to energy restoration.
+# Both callbacks self-gate and are enabled only by the Samus package.
+[[mod_function_hook]]
+addr = 0xD853           # PlayerEnemyCollision
+
+[[mod_function_hook]]
+addr = 0xD800           # HandlePowerUpCollision
+
+[[mod_function_hook]]
+addr = 0xD92C           # InjurePlayer (firebars and other native hazards)
