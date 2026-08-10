@@ -30,9 +30,11 @@ the external cache, following the Captain Falcon asset gate.
 - Use the existing `0.08 SMB pixels/source unit` conversion.  The source
   attributes in `243_PikachuMain.c` specify size `0.95`, walk multiplier
   `0.42`, dash `60`, run `55`, gravity `3`, terminal velocity `52`, and two
-  source jumps.  SMB retains its single supported jump, but uses Pikachu's
-  source idle/walk/dash/run/jump/fall motions.
-- The default presentation is a side-on 24-pixel-tall Pikachu, with a stable
+  source jumps.  Pikachu retains both source jumps: fresh `Up` launches the
+  ground jump or, while airborne with one jump remaining, the aerial jump.
+  Both use Pikachu's source idle/walk/dash/run/jump/fall motions.
+- The default presentation is a side-on approximately 16-pixel-tall Pikachu,
+  with a stable
   small-player collision profile.  It must fit every normal two-block SMB
   passage, including the HUD-route opening.  A mushroom, fire flower, and
   damage state may change native game state but must not grow, recolor, or
@@ -60,7 +62,7 @@ the external cache, following the Captain Falcon asset gate.
 | `B`, `Left+B`, or `Right+B` | Thunder Jolt | Thunder Jolt |
 | `Up+B` | Quick Attack | Quick Attack |
 | `Down+B` | Thunder | Thunder |
-| fresh `Up` | source-style single jump | no second host jump |
+| fresh `Up` | source ground jump | source aerial jump when one remains |
 
 Specials outrank A when both edges occur on one emulated frame.  Physical A
 and B are masked from SMB's normal jump/run/fireball paths while Pikachu owns
@@ -72,16 +74,18 @@ never selects a separate move.
 `[a,b)` means active on source frames `a` through `b - 1`, with frame zero the
 frame that consumes the input edge.  Damage is source US damage and is
 converted to one conservative SMB enemy contact union per active interval.
-No Pikachu normal or projectile breaks blocks in this milestone.
+Pikachu's physical A attacks may break eligible SMB bricks through the same
+host terrain-contact path as Captain Falcon. Thunder Jolt and Thunder are
+projectiles and never alter SMB blocks.
 
 | Move | Source animation + motion script | Active frame(s), source damage | Required event(s) and host result |
 |---|---|---|---|
 | Jab | reloc `2016_FTPikachuAnimJab1`; `0x0E34` | `[2,6)`, 4 | `FGMLightSwingS` at 2; one forward union; no root travel. |
 | Forward tilt | reloc `2019_FTPikachuAnimFTilt`; `0x0F50` | `[5,15)`, 10 | `FGMLightSwingM` at 5; one forward union; no root travel. |
-| Neutral air | reloc `2026_FTPikachuAnimAttackAirN`; `0x12E8` | `[3,11)`, 14 then `[11,29)`, 11 | `FGMLightSwingM` at 3; body union follows the pose; no terrain damage. |
+| Neutral air | reloc `2026_FTPikachuAnimAttackAirN`; `0x12E8` | `[3,11)`, 14 then `[11,29)`, 11 | `FGMLightSwingM` at 3; body union follows the pose; physical contact may break eligible bricks. |
 | Forward air | reloc `2027_FTPikachuAnimAttackAirF`; `0x1380`, `TRANSN_JOINT` | `[7,9)`, `[10,12)`, `[13,15)`, `[16,18)`, `[19,21)`, `[22,24)`, `[25,27)`, each 3 | `FGMPikachuElectric2` at 7, then `FGMMarioUnkSwing2` for each pulse; show electric color/effect on the attack side. |
 | Back air | reloc `2028_FTPikachuAnimAttackAirB`; `0x1420` | `[10,14)`, 16 then `[14,22)`, 14 | `FGMLightSwingL` at 10; union is behind logical facing. |
-| Down air | reloc `2030_FTPikachuAnimAttackAirD`; `0x14DC`, `TRANSN_JOINT` | `[8,26)`, 13 | `FGMPikachuElectric3` and electric effect at 8; downward union only; no block break. |
+| Down air | reloc `2030_FTPikachuAnimAttackAirD`; `0x14DC`, `TRANSN_JOINT` | `[8,26)`, 13 | `FGMPikachuElectric3` and electric effect at 8; downward union only; physical contact may break eligible bricks. |
 | Thunder Jolt | ground `0x15AC`; air `0x15F0` | projectile begins at 21 | `VoicePikachuSpecialN` at entry; air also plays `FGMPikachuElectric5` at entry. Spawn from source joint 11, facing-relative, at -45 degrees with source speed 40. It may defeat eligible enemies once, follows floor/wall surfaces after contact, and expires on unsupported/invalid surfaces. It never changes SMB blocks. |
 | Quick Attack | start has no source motion; zip/end `0x1710`, `0x1730` | no hitbox | 20-frame intangible aim startup; first 5-frame zip; after the end-script's 9-frame direction window, one second 5-frame zip only if stick magnitude is at least 60 and differs by more than 42 degrees. `VoicePikachuSpecialHi`, `FGMPikachuElectric1`, and sparkle fire on each zip entry; ripple and rumble fire at each zip end. Render the authored 0.8/0.8/1.2 scale/pitch transform on joint 4. |
 | Thunder | start `0x162C`; loop `0x1644`; self-hit `0x1668` | self-hit `[0,10)`, 16 | `VoicePikachuSpecialLw` at entry; spawn a vertical bolt at frame 24 from the gameplay top above Pikachu. While it falls it owns all trail/effect events. On self-contact, consume the bolt, emit ThunderAmp + dust + quake + color event, and give airborne Pikachu source +20 vertical velocity. Pikachu does not take host damage from own Thunder. Thunder may defeat an eligible enemy once but never breaks blocks. |
