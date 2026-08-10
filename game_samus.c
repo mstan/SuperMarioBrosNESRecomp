@@ -82,6 +82,10 @@ static int s_assets_ready;
 static SamusShot s_shots[3];
 static SamusBomb s_bombs[3];
 static FrozenEnemy s_frozen[5];
+/* SMB marks pipe sprites with OAM priority bit $20. Samus is composited after
+ * the native PPU frame, so reproduce that priority explicitly while drawing
+ * her; otherwise the completed pipe background can never cover her. */
+static int s_draw_behind_background;
 
 #define SAMUS_FIRE_POSE_TICKS 0x7Fu
 #define SAMUS_FIRE_POSE_UP    0x80u
@@ -701,7 +705,9 @@ int game_samus_register_hooks(void)
 
 static void put_pixel(uint32_t *fb, int x, int y, uint32_t color)
 {
-    if (x >= 0 && x < g_render_width && y >= 0 && y < 240)
+    if (x >= 0 && x < g_render_width && y >= 0 && y < 240 &&
+        !(s_draw_behind_background &&
+          ppu_renderer_background_opaque(x, y)))
         fb[y * g_render_width + x] = color;
 }
 
@@ -1120,14 +1126,21 @@ static void draw_hud(uint32_t *fb)
 
 void game_samus_render_post_render(uint32_t *framebuffer)
 {
+    Smash64ScriptedPresentation scripted_presentation;
     if (!framebuffer || !game_samus_active() || g_ram[OperMode] != 1) return;
+    scripted_presentation = game_smash64_scripted_presentation();
     if (!game_smash64_active() &&
         !game_smash64_death_presentation_active() &&
         !game_smash64_still_presentation_active() &&
         !game_smash64_swim_presentation_active() &&
-        game_smash64_scripted_presentation() ==
-            SMASH64_SCRIPTED_PRESENTATION_NONE) return;
+        scripted_presentation == SMASH64_SCRIPTED_PRESENTATION_NONE) return;
+    s_draw_behind_background =
+        (scripted_presentation == SMASH64_SCRIPTED_PRESENTATION_PIPE_SIDE ||
+         scripted_presentation ==
+             SMASH64_SCRIPTED_PRESENTATION_PIPE_VERTICAL) &&
+        (g_ram[Player_SprAttrib] & 0x20) != 0;
     draw_samus(framebuffer);
+    s_draw_behind_background = 0;
     draw_projectiles(framebuffer);
     for (int slot = 0; slot < 5; ++slot) if (s_frozen[slot].timer) {
         int x = (int)s_frozen[slot].x + ((int)s_frozen[slot].page << 8) -
