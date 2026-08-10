@@ -1573,6 +1573,7 @@ static int break_smb1_brick(int world_col, int tile_top)
     uint16_t base;
     uint16_t addr;
     uint8_t tile;
+    int block_slot;
     int broke;
 
     if (world_col < 0 || anchor_x < 0 ||
@@ -1583,6 +1584,23 @@ static int break_smb1_brick(int world_col, int tile_top)
     /* $51/$52 are the ordinary breakable bricks. Question, coin, invisible,
      * scenery, pipe, and castle metatiles never enter the native shatter path. */
     if (tile != 0x51 && tile != 0x52) return 0;
+
+    /* PlayerHeadCollision does not allocate a block object: it trusts
+     * SprDataOffset_Ctrl and overwrites that slot before toggling to the
+     * other one. Native Mario reaches this path slowly enough for the two
+     * asynchronous slots to drain. Foreign attacks can overlap fresh bricks
+     * on consecutive frames, so never replace a slot whose debris or deferred
+     * metatile update is still live. Overwriting its saved row/pointer makes
+     * BlockObjMT_Updater emit a malformed VRAM command later. */
+    block_slot = g_ram[SprDataOffset_Ctrl] & 1;
+    if (g_ram[Block_State + block_slot] ||
+        g_ram[Block_RepFlag + block_slot]) {
+        block_slot ^= 1;
+        if (g_ram[Block_State + block_slot] ||
+            g_ram[Block_RepFlag + block_slot])
+            return 0;
+        g_ram[SprDataOffset_Ctrl] = (uint8_t)block_slot;
+    }
 
     memcpy(save_scratch, &g_ram[0x00], sizeof save_scratch);
     g_ram[0x02] = (uint8_t)row;
@@ -1625,7 +1643,8 @@ static int break_smb1_brick(int world_col, int tile_top)
 }
 
 static int break_bricks_in_attack(double left, double right,
-                                  double top, double bottom)
+                                  double top, double bottom,
+                                  int max_blocks)
 {
     int first_col = (int)(left / 16.0);
     int last_col = (int)((right - 0.001) / 16.0);
@@ -1633,14 +1652,14 @@ static int break_bricks_in_attack(double left, double right,
     int last_row = (int)((bottom - 0.001) / 16.0);
     int broken = 0;
 
+    if (max_blocks < 1) return 0;
+    if (max_blocks > 2) max_blocks = 2;
+
     for (int row = first_row; row <= last_row; ++row) {
         int tile_top = row * 16;
         for (int col = first_col; col <= last_col; ++col) {
             broken += break_smb1_brick(col, tile_top);
-            /* SMB1 has exactly two block-object slots. Do not overwrite one
-             * before BlockObjMT_Updater consumes it later this frame; an
-             * active multi-frame attack can take the next pair next frame. */
-            if (broken >= 2) return broken;
+            if (broken >= max_blocks) return broken;
         }
     }
     return broken;
@@ -1649,7 +1668,14 @@ static int break_bricks_in_attack(double left, double right,
 int game_smash64_break_bricks(double left, double right,
                               double top, double bottom)
 {
-    return break_bricks_in_attack(left, right, top, bottom);
+    return break_bricks_in_attack(left, right, top, bottom, 2);
+}
+
+int game_smash64_break_bricks_limited(double left, double right,
+                                      double top, double bottom,
+                                      int max_blocks)
+{
+    return break_bricks_in_attack(left, right, top, bottom, max_blocks);
 }
 
 static void apply_pending_attack(void)
@@ -1679,7 +1705,7 @@ static void apply_pending_attack(void)
         (s_attack.flags & FOREIGN_ATTACK_CONTACT_ONLY) ? 1 : 0);
     if (!(s_attack.flags & FOREIGN_ATTACK_CONTACT_ONLY) &&
         (s_attack.flags & FOREIGN_ATTACK_BREAK_BLOCKS))
-        blocks = break_bricks_in_attack(left, right, top, bottom);
+        blocks = break_bricks_in_attack(left, right, top, bottom, 2);
     if (enemies) nes_foreign_trace_note_flags(SMASH64_CF_ENEMY_DEFEATED);
     if (blocks) nes_foreign_trace_note_flags(SMASH64_CF_BLOCK_BROKEN);
     if (enemies || blocks) {

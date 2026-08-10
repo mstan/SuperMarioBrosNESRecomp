@@ -462,8 +462,8 @@ static void update_shots(void)
             continue;
         }
         if (shot->missile &&
-            game_smash64_break_bricks(shot->x - 6, shot->x + 6,
-                                      shot->y - 2, shot->y + 2))
+            game_smash64_break_bricks_limited(shot->x - 2, shot->x + 2,
+                                              shot->y - 2, shot->y + 2, 1))
             begin_shot_impact(shot);
     }
 }

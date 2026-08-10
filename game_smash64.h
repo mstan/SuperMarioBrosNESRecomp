@@ -54,6 +54,9 @@ int game_smash64_defeat_enemies(double left, double right,
                                 double top, double bottom, int max_hits);
 int game_smash64_break_bricks(double left, double right,
                               double top, double bottom);
+int game_smash64_break_bricks_limited(double left, double right,
+                                      double top, double bottom,
+                                      int max_blocks);
 
 /* Presentation-only exception for SMB1's native PlayerDeath routine. Falcon
  * never owns death physics or progression, but the renderer may replace the
