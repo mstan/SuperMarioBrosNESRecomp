@@ -32,17 +32,19 @@ WAIT 3
 SCREENSHOT C:/temp/pikachu_quick_pipe_start.png
 WAIT 2
 
-# Up+B enters the 20-frame aim. With the stick released at zip entry, source
-# fallback aims along facing and the first solid pipe pixel must end the zip.
+# Up+B enters the 20-frame aim. Right is held before zip entry so the first
+# point targets the pipe; neutral source fallback is UP, never facing.
 HOLD UP
 HOLD B
 WAIT 2
 RELEASE B
 RELEASE UP
+HOLD RIGHT
 WAIT 18
 SCREENSHOT C:/temp/pikachu_quick_pipe_zip.png
 WAIT 2
 WAIT 4
+RELEASE RIGHT
 SCREENSHOT C:/temp/pikachu_quick_pipe_recovery.png
 WAIT 2
 DUMP_RAM 0060 40

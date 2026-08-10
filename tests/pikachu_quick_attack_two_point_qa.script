@@ -1,0 +1,47 @@
+LOG pikachu-quick-attack-two-point-qa
+
+# Direct gameplay fixture: boot 1-1, launch into open air, then aim the first
+# Quick Attack zip right and the second zip up.  The two turns are held across
+# the exact source input samples so this exercises the public NES mapping, the
+# controller's 20-frame aim, the 5-frame first zip, and the changed-direction
+# second-zip window—not an injected controller harness state.
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 30
+
+# Start from ordinary ground: the zip itself owns its takeoff, and this keeps
+# the neutral-UP first point below the HUD so the second Right point is visible.
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+
+# First aim: neutral is sampled at source frame 20 and must default UP.
+WAIT 17
+SCREENSHOT C:/temp/pikachu_quick_two_point_aim1.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_quick_two_point_zip1.png
+WAIT 4
+
+# Second aim: right, a 90-degree change. Hold it through the source end-script
+# decision rather than requiring a frame-perfect tap.
+HOLD RIGHT
+SCREENSHOT C:/temp/pikachu_quick_two_point_aim2.png
+WAIT 12
+SCREENSHOT C:/temp/pikachu_quick_two_point_zip2.png
+WAIT 5
+RELEASE RIGHT
+SCREENSHOT C:/temp/pikachu_quick_two_point_recovery.png
+WAIT 24
+
+# The source end-script decides on the ninth wait tick; retain Right one extra
+# host frame so screenshot/UI command scheduling cannot release it early.
+# Any forced scripted handoff here is a host-coupling regression.
+ASSERT_RAM8 000E 08
+DUMP_RAM 0060 40
+DUMP_RAM 00B0 30
+EXIT 0

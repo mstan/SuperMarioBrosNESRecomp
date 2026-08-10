@@ -29,8 +29,15 @@
     "quick_attack_zip_count_max": 2,
     "quick_attack_start_frames": 20,
     "quick_attack_zip_frames": 5,
+    "quick_attack_second_aim_frames": 9,
+    "quick_attack_speed_formula": "normalized(stick) * (3 * min(length(stick), 80) + 90); second_zip *= 0.9",
+    "quick_attack_neutral_first_direction": [0, 80],
+    "quick_attack_full_cardinal_speed_source_units": 330,
+    "quick_attack_second_cardinal_speed_source_units": 297,
     "quick_attack_second_zip_min_stick": 60,
     "quick_attack_second_zip_min_angle_deg": 42,
+    "quick_attack_zip_end_velocity_backup_multiplier": 0.2,
+    "quick_attack_fall_special_drift": 0.4,
     "quick_attack_sweep_required": true,
     "small_collision_fits_two_block_gap": true,
     "save_replays_future_events_once": true
@@ -109,13 +116,13 @@
     {
       "action": "DASH_ATTACK",
       "motion": "2017_FTPikachuAnimDashAttack / 0x0E80",
-      "windows": [{ "from": 4, "to": 23, "damage": 40, "side": "forward" }],
+      "windows": [{ "from": 4, "to": 23, "damage": 12, "side": "forward" }],
       "events": [{ "frame": 4, "id": "FGM_LIGHT_L" }]
     },
     {
       "action": "UTILT",
       "motion": "2021_FTPikachuAnimUTilt / 0x0FF0",
-      "windows": [{ "from": 5, "to": 15, "damage": 10, "side": "up" }],
+      "windows": [{ "from": 5, "to": 15, "damage": 11, "side": "up" }],
       "events": [{ "frame": 5, "id": "FGM_LIGHT_M" }]
     },
     {

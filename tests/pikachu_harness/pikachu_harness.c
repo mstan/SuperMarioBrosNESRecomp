@@ -1,11 +1,14 @@
 /* Executable assertions for behavior_vectors.json's normative timing. */
 #include "../../mods/smash64/ssb_ported/pikachu_locomotion.h"
 
+#include <math.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
 static int failures;
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #expr); failures++; } } while (0)
+#define CHECK_NEAR(actual, expected) CHECK(fabs((actual) - (expected)) < 0.0001)
 
 static PikachuMotion step(PikachuFighter *f, PikachuInputRaw in)
 {
@@ -176,7 +179,7 @@ static void standard_state_timing_vectors(void)
     PikachuFighter f; PikachuInputRaw in; PikachuMotion m; int i;
     pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.attack_pressed = 1;
     in.stick_y = 80;
-    for (i = 0; i < 16; ++i) { m = step(&f, in); CHECK(m.attack.active == (i >= 5 && i < 15)); }
+    for (i = 0; i < 16; ++i) { m = step(&f, in); CHECK(m.attack.active == (i >= 5 && i < 15)); if (m.attack.active) CHECK(m.attack.damage == 11); }
     pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.attack_pressed = 1;
     in.stick_y = -80;
     for (i = 0; i < 15; ++i) { m = step(&f, in); CHECK(m.attack.active == (i >= 6 && i < 14)); }
@@ -185,7 +188,7 @@ static void standard_state_timing_vectors(void)
     for (i = 0; i < 12; ++i) { m = step(&f, in); CHECK(m.attack.active == (i >= 3 && i < 11)); }
     pikachu_reset(&f); f.state = PK_RUN; f.vel_x = PIKACHU_SOURCE_RUN_SPEED;
     memset(&in, 0, sizeof(in)); in.attack_pressed = 1; in.stick_x = 80;
-    for (i = 0; i < 24; ++i) { m = step(&f, in); CHECK(m.attack.active == (i >= 4 && i < 23)); }
+    for (i = 0; i < 24; ++i) { m = step(&f, in); CHECK(m.attack.active == (i >= 4 && i < 23)); if (m.attack.active) CHECK(m.attack.damage == 12); }
 }
 
 static void crouch_and_landing_vectors(void)
@@ -227,6 +230,47 @@ static void quick_attack_and_save_vectors(void)
      * probe is read-only, so this cannot mutate a tile. */
     { PikachuCollision hit; pikachu_sweep_zip(&f, &m, solid_at_twelve, NULL, &hit); CHECK(hit.hit_wall && hit.actual_dx == 0.0); pikachu_resolve(&f, &hit); CHECK(f.state == PK_QUICK_ATTACK_RECOVERY); }
     CHECK(saved.persistent_action_id == f.persistent_action_id);
+
+    /* v1 records ended before End/FallSpecial bookkeeping. They must still
+     * load a source zip without fabricating an already-complete end clip. */
+    {
+        uint8_t v1[1 + offsetof(PikachuFighter, quick_end_frame)];
+        saved.quick_end_frame = 45;
+        saved.quick_fall_special = 1;
+        v1[0] = 1;
+        memcpy(v1 + 1, &saved, offsetof(PikachuFighter, quick_end_frame));
+        pikachu_reset(&f);
+        CHECK(pikachu_deserialize(&f, v1, (int)sizeof(v1)));
+        CHECK(f.quick_end_frame == 0 && f.quick_fall_special == 0);
+    }
+}
+
+static void quick_attack_source_recovery_vector(void)
+{
+    PikachuFighter f; PikachuCollision hit; PikachuInputRaw in; int i;
+    pikachu_reset(&f);
+    f.grounded = 0;
+    f.state = PK_QUICK_ATTACK_ZIP1;
+    f.vel_x = 330.0;
+    f.vel_y = 297.0;
+    memset(&hit, 0, sizeof(hit));
+    hit.hit_wall = 1;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_QUICK_ATTACK_RECOVERY);
+    CHECK_NEAR(f.vel_x, 66.0);
+    CHECK_NEAR(f.vel_y, 59.4);
+    CHECK(f.quick_end_frame == 0 && !f.quick_fall_special);
+
+    memset(&in, 0, sizeof(in));
+    for (i = 0; i < (int)PIKACHU_SOURCE_QUICK_ATTACK_END_ANIMATION_FRAMES;
+         ++i)
+        step(&f, in);
+    CHECK(f.quick_fall_special);
+    CHECK(f.quick_end_frame == PIKACHU_SOURCE_QUICK_ATTACK_END_ANIMATION_FRAMES);
+    in.stick_x = 80;
+    for (i = 0; i < 400; ++i) step(&f, in);
+    CHECK(f.vel_x <= PIKACHU_SOURCE_AIR_SPEED_MAX *
+          PIKACHU_SOURCE_QUICK_ATTACK_FALL_SPECIAL_DRIFT + 0.0001);
 }
 
 static void quick_attack_second_zip_motion_vector(void)
@@ -237,7 +281,7 @@ static void quick_attack_second_zip_motion_vector(void)
     step(&f, in);
     memset(&in, 0, sizeof(in)); in.stick_x = 80;
     for (i = 1; i <= 20; ++i) m = step(&f, in);
-    CHECK(f.state == PK_QUICK_ATTACK_ZIP1 && m.requested_dx == 60.0);
+    CHECK(f.state == PK_QUICK_ATTACK_ZIP1); CHECK_NEAR(m.requested_dx, 330.0);
     memset(&in, 0, sizeof(in)); in.stick_y = 80;
     for (i = 21; i <= 34; ++i) m = step(&f, in);
     CHECK(f.state == PK_QUICK_ATTACK_ZIP2);
@@ -245,10 +289,70 @@ static void quick_attack_second_zip_motion_vector(void)
           (PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_HI) |
            PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_1) |
            PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_SPARKLE)));
-    CHECK(!f.grounded && f.vel_x == 0.0 && f.vel_y == 60.0);
+    CHECK(!f.grounded && f.vel_x == 0.0); CHECK_NEAR(f.vel_y, 297.0);
     CHECK(m.requested_dx == f.vel_x && m.requested_dy == f.vel_y);
     m = step(&f, in);
-    CHECK(m.requested_dx == 0.0 && m.requested_dy == 60.0);
+    CHECK(m.requested_dx == 0.0); CHECK_NEAR(m.requested_dy, 297.0);
+}
+
+static void quick_attack_source_velocity_and_two_point_vectors(void)
+{
+    PikachuFighter f; PikachuInputRaw in; PikachuMotion m; int i;
+
+    /* A diagonal uses its normalized heading after the 80-unit magnitude cap,
+     * not a per-component 330/330 square. */
+    pikachu_reset(&f); f.grounded = 0;
+    memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = 80;
+    step(&f, in);
+    memset(&in, 0, sizeof(in)); in.stick_x = 80; in.stick_y = 80;
+    for (i = 1; i <= (int)PIKACHU_SOURCE_QUICK_ATTACK_AIM_FRAMES; ++i)
+        m = step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_ZIP1);
+    CHECK_NEAR(m.requested_dx, 330.0 / sqrt(2.0));
+    CHECK_NEAR(m.requested_dy, 330.0 / sqrt(2.0));
+
+    /* The source's low-stick fallback is UP, not logical facing. Holding
+     * Right only for the second decision therefore forms a valid 90-degree
+     * upward-then-right two-point Quick Attack. */
+    pikachu_reset(&f); f.grounded = 0; f.lr = -1;
+    memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = 80;
+    step(&f, in);
+    memset(&in, 0, sizeof(in));
+    for (i = 1; i <= (int)PIKACHU_SOURCE_QUICK_ATTACK_AIM_FRAMES; ++i)
+        m = step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_ZIP1);
+    CHECK_NEAR(m.requested_dx, 0.0); CHECK_NEAR(m.requested_dy, 330.0);
+    for (i = 1; i < (int)PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES; ++i)
+        m = step(&f, in);
+    memset(&in, 0, sizeof(in)); in.stick_x = 80;
+    for (i = 0; i <= (int)PIKACHU_SOURCE_QUICK_ATTACK_SECOND_AIM_FRAMES; ++i)
+        m = step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_ZIP2);
+    CHECK_NEAR(m.requested_dx, 297.0); CHECK_NEAR(m.requested_dy, 0.0);
+
+    /* The five-tick first point finishes before the nine-tick direction
+     * window. A held perpendicular aim deterministically produces one 0.9x
+     * second point, and cannot queue a third. */
+    pikachu_reset(&f); f.grounded = 0;
+    memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = 80;
+    step(&f, in);
+    memset(&in, 0, sizeof(in)); in.stick_x = 80;
+    for (i = 1; i <= (int)PIKACHU_SOURCE_QUICK_ATTACK_AIM_FRAMES; ++i)
+        m = step(&f, in);
+    CHECK_NEAR(m.requested_dx, 330.0);
+    for (i = 1; i <= (int)PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES - 1; ++i)
+        m = step(&f, in);
+    memset(&in, 0, sizeof(in)); in.stick_y = 80;
+    /* The end-script tick begins the 9-frame window; the following decision
+     * tick is its first possible second-zip entry. */
+    for (i = 0; i <= (int)PIKACHU_SOURCE_QUICK_ATTACK_SECOND_AIM_FRAMES; ++i)
+        m = step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_ZIP2);
+    CHECK_NEAR(m.requested_dy, 297.0);
+    for (i = 0; i < (int)PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES + 2; ++i)
+        m = step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_RECOVERY);
+    CHECK(!m.attack.active);
 }
 
 int main(void)
@@ -256,7 +360,9 @@ int main(void)
     selection_vectors(); timing_and_projectile_vectors(); aerial_normal_motion_vectors();
     locomotion_vectors(); jump_fall_vectors(); standard_state_timing_vectors();
     crouch_and_landing_vectors();
-    quick_attack_and_save_vectors(); quick_attack_second_zip_motion_vector();
+    quick_attack_and_save_vectors(); quick_attack_source_recovery_vector();
+    quick_attack_second_zip_motion_vector();
+    quick_attack_source_velocity_and_two_point_vectors();
     if (failures) { fprintf(stderr, "pikachu_harness: %d failures\n", failures); return 1; }
     puts("pikachu_harness: PASS behavior_vectors.json"); return 0;
 }

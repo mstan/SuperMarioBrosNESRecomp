@@ -1,8 +1,10 @@
 #include "pikachu_locomotion.h"
 
+#include <math.h>
+#include <stddef.h>
 #include <string.h>
 
-#define PIKACHU_SAVE_VERSION 1u
+#define PIKACHU_SAVE_VERSION 2u
 
 static void enter(PikachuFighter *f, int state)
 {
@@ -176,13 +178,16 @@ static void normal_schedule(PikachuFighter *f, PikachuMotion *out)
         break;
     case PK_DASH_ATTACK:
         if (n == 4) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_L);
-        if (n >= 4 && n < 23) set_attack(out, 85, 45, 160, 90, 40, 1);
+        /* MOTION_ATTACK is (aid, gid, jid, damage, ..., kbb). The US 0x0E80
+         * record's damage is 12; 40 is knockback base, not damage. */
+        if (n >= 4 && n < 23) set_attack(out, 85, 45, 160, 90, 12, 1);
         if (n >= PIKACHU_SOURCE_DASH_ATTACK_FRAMES)
             enter(f, f->grounded ? PK_GROUND_WAIT : PK_AIR_FALL);
         break;
     case PK_UTILT:
         if (n == 5) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_M);
-        if (n >= 5 && n < 15) set_attack(out, 0, 135, 150, 120, 10, 1);
+        /* The US 0x0FF0 macro likewise spells source damage 11. */
+        if (n >= 5 && n < 15) set_attack(out, 0, 135, 150, 120, 11, 1);
         if (n >= PIKACHU_SOURCE_UTILT_FRAMES)
             enter(f, f->grounded ? PK_GROUND_WAIT : PK_AIR_FALL);
         break;
@@ -237,12 +242,86 @@ static void choose_action(PikachuFighter *f, const PikachuInputRaw *in)
 static int vector_changed_enough(const PikachuFighter *f, const PikachuInputRaw *in)
 {
     long dot, old_sq, new_sq;
-    if (in->stick_x * in->stick_x + in->stick_y * in->stick_y < 60 * 60) return 0;
+    if (in->stick_x * in->stick_x + in->stick_y * in->stick_y <
+        (int)(PIKACHU_SOURCE_QUICK_ATTACK_STICK_MIN *
+              PIKACHU_SOURCE_QUICK_ATTACK_STICK_MIN)) return 0;
     dot = (long)f->quick_first_x * in->stick_x + (long)f->quick_first_y * in->stick_y;
     old_sq = (long)f->quick_first_x * f->quick_first_x + (long)f->quick_first_y * f->quick_first_y;
     new_sq = (long)in->stick_x * in->stick_x + (long)in->stick_y * in->stick_y;
     /* cos(42 degrees)^2 ~= .552. Negative dot is necessarily a changed aim. */
     return dot < 0 || dot * dot * 1000L < old_sq * new_sq * 552L;
+}
+
+/* SpecialHi does not use raw stick components as its velocity.  The source
+ * clamps the vector length, normalizes it, then uses
+ * speed = 3 * min(|stick|, 80) + 90.  The second zip applies 0.9x.
+ * Keep it source-correct here; the SMB adapter makes one direction-preserving
+ * safety projection rather than independently clipping X and Y. */
+static void quick_zip_velocity(const PikachuFighter *f, int stick_x, int stick_y,
+                               double multiplier, double *out_x, double *out_y)
+{
+    double length = sqrt((double)stick_x * stick_x +
+                         (double)stick_y * stick_y);
+    double capped, speed;
+
+    if (length == 0.0) {
+        stick_x = f->lr * (int)PIKACHU_SOURCE_QUICK_ATTACK_STICK_CAP;
+        stick_y = 0;
+        length = PIKACHU_SOURCE_QUICK_ATTACK_STICK_CAP;
+    }
+    capped = length > PIKACHU_SOURCE_QUICK_ATTACK_STICK_CAP
+                 ? PIKACHU_SOURCE_QUICK_ATTACK_STICK_CAP : length;
+    speed = (PIKACHU_SOURCE_QUICK_ATTACK_STICK_SPEED * capped +
+             PIKACHU_SOURCE_QUICK_ATTACK_BASE_SPEED) * multiplier;
+    *out_x = speed * (double)stick_x / length;
+    *out_y = speed * (double)stick_y / length;
+}
+
+/* ftpikachuspecialhi.c:326-351 defaults the *first* low-magnitude aim upward,
+ * not toward facing. This is why neutral Up+B then Right is a valid 90-degree
+ * two-point route. Store the substituted direction before angle comparison so
+ * the source's second-point test compares against the same vector it used. */
+static void quick_first_direction(PikachuFighter *f, const PikachuInputRaw *in)
+{
+    const double length = sqrt((double)in->stick_x * in->stick_x +
+                               (double)in->stick_y * in->stick_y);
+    if (length > PIKACHU_SOURCE_QUICK_ATTACK_STICK_MIN) {
+        f->quick_first_x = in->stick_x;
+        f->quick_first_y = in->stick_y;
+    } else {
+        f->quick_first_x = 0;
+        f->quick_first_y = (int)PIKACHU_SOURCE_QUICK_ATTACK_STICK_CAP;
+    }
+}
+
+static void quick_attack_begin_end(PikachuFighter *f)
+{
+    /* ftPikachuSpecialAirHiEndSetStatus backs the completed zip up by 0.2
+     * and restarts the 46-frame UpSpecialAirEnd motion. */
+    f->vel_x *= PIKACHU_SOURCE_QUICK_ATTACK_VELOCITY_BACKUP_MULTIPLIER;
+    f->vel_y *= PIKACHU_SOURCE_QUICK_ATTACK_VELOCITY_BACKUP_MULTIPLIER;
+    f->quick_end_frame = 0;
+    f->quick_fall_special = 0;
+}
+
+static void quick_air_control(PikachuFighter *f, const PikachuInputRaw *in,
+                              double accel, double speed_cap)
+{
+    const double target = (double)in->stick_x / 80.0 * speed_cap;
+    if (in->stick_x > 10 || in->stick_x < -10) {
+        if (f->vel_x < target) f->vel_x += accel;
+        else if (f->vel_x > target) f->vel_x -= accel;
+    }
+    if ((f->vel_x > 0.0 && (in->stick_x <= 10 || f->vel_x > target)) ||
+        (f->vel_x < 0.0 && (in->stick_x >= -10 || f->vel_x < target))) {
+        if (f->vel_x > 0.0) f->vel_x -= PIKACHU_SOURCE_AIR_FRICTION;
+        else f->vel_x += PIKACHU_SOURCE_AIR_FRICTION;
+        if ((f->vel_x > 0.0 && f->vel_x < PIKACHU_SOURCE_AIR_FRICTION) ||
+            (f->vel_x < 0.0 && f->vel_x > -PIKACHU_SOURCE_AIR_FRICTION))
+            f->vel_x = 0.0;
+    }
+    if (f->vel_x > speed_cap) f->vel_x = speed_cap;
+    if (f->vel_x < -speed_cap) f->vel_x = -speed_cap;
 }
 
 static int stick_abs(int value) { return value < 0 ? -value : value; }
@@ -452,16 +531,17 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
         if (n == 0)
             out->events |= PIKACHU_EVENT_BIT(
                 PIKACHU_EVENT_FGM_QUICK_ATTACK_START);
-        if (n == 20) {
-            f->quick_first_x = in->stick_x; f->quick_first_y = in->stick_y;
-            if (!f->quick_first_x && !f->quick_first_y) f->quick_first_x = f->lr * 80;
+        if (n == PIKACHU_SOURCE_QUICK_ATTACK_AIM_FRAMES) {
+            quick_first_direction(f, in);
             phase(f, PK_QUICK_ATTACK_ZIP1);
             /* Quick Attack owns an airborne velocity from the first zip, so
              * the host's vertical mover sees the same kinetic state as the
              * swept horizontal/vertical request. */
             f->grounded = 0;
-            f->vel_x = f->quick_first_x * 0.75;
-            f->vel_y = f->quick_first_y * 0.75;
+            /* SpecialHi consumes both source jumps when its zip starts. */
+            f->jumps_used = PIKACHU_SOURCE_JUMP_COUNT;
+            quick_zip_velocity(f, f->quick_first_x, f->quick_first_y, 1.0,
+                               &f->vel_x, &f->vel_y);
             out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_HI) |
                 PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_1) |
                 PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_SPARKLE);
@@ -469,19 +549,45 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
             out->requested_dy = f->vel_y;
         }
     } else if (f->state == PK_QUICK_ATTACK_ZIP1 || f->state == PK_QUICK_ATTACK_ZIP2) {
-        if ((f->state == PK_QUICK_ATTACK_ZIP1 && n < 25) ||
-            (f->state == PK_QUICK_ATTACK_ZIP2 && n < 39)) {
+        if ((f->state == PK_QUICK_ATTACK_ZIP1 &&
+             n < PIKACHU_SOURCE_QUICK_ATTACK_AIM_FRAMES +
+                 PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES) ||
+            (f->state == PK_QUICK_ATTACK_ZIP2 &&
+             n < PIKACHU_SOURCE_QUICK_ATTACK_AIM_FRAMES +
+                 PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES +
+                 PIKACHU_SOURCE_QUICK_ATTACK_SECOND_AIM_FRAMES +
+                 PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES)) {
             out->requested_dx = f->vel_x;
             out->requested_dy = f->vel_y; /* swept by host */
         }
-        if ((f->state == PK_QUICK_ATTACK_ZIP1 && n == 25) || (f->state == PK_QUICK_ATTACK_ZIP2 && n == 39)) { out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_RIPPLE); phase(f, f->state == PK_QUICK_ATTACK_ZIP1 ? PK_QUICK_ATTACK_WINDOW : PK_QUICK_ATTACK_RECOVERY); }
+        if ((f->state == PK_QUICK_ATTACK_ZIP1 &&
+             n == PIKACHU_SOURCE_QUICK_ATTACK_AIM_FRAMES +
+                  PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES) ||
+            (f->state == PK_QUICK_ATTACK_ZIP2 &&
+             n == PIKACHU_SOURCE_QUICK_ATTACK_AIM_FRAMES +
+                  PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES +
+                  PIKACHU_SOURCE_QUICK_ATTACK_SECOND_AIM_FRAMES +
+                  PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES)) {
+            out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_RIPPLE);
+            quick_attack_begin_end(f);
+            phase(f, f->state == PK_QUICK_ATTACK_ZIP1
+                         ? PK_QUICK_ATTACK_WINDOW : PK_QUICK_ATTACK_RECOVERY);
+        }
     } else if (f->state == PK_QUICK_ATTACK_WINDOW) {
-        if (n >= 34) {
+        /* End motion 0x1730 waits 9 ticks then raises flag1 for exactly one
+         * changed-direction decision. While waiting it decays vertical zip
+         * velocity by /9 and applies normal air friction. */
+        f->vel_y -= f->vel_y / 9.0;
+        quick_air_control(f, in, 0.0, PIKACHU_SOURCE_AIR_SPEED_MAX);
+        out->requested_dx = f->vel_x;
+        out->requested_dy = f->vel_y;
+        if (++f->quick_end_frame >= PIKACHU_SOURCE_QUICK_ATTACK_SECOND_AIM_FRAMES) {
             if (vector_changed_enough(f, in)) {
                 phase(f, PK_QUICK_ATTACK_ZIP2);
                 f->grounded = 0;
-                f->vel_x = in->stick_x * 0.75;
-                f->vel_y = in->stick_y * 0.75;
+                quick_zip_velocity(f, in->stick_x, in->stick_y,
+                                   PIKACHU_SOURCE_QUICK_ATTACK_SECOND_MULTIPLIER,
+                                   &f->vel_x, &f->vel_y);
                 out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_HI) |
                     PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_1) |
                     PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_SPARKLE);
@@ -490,8 +596,26 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
             } else phase(f, PK_QUICK_ATTACK_RECOVERY);
         }
     } else if (f->state == PK_QUICK_ATTACK_RECOVERY) {
-        f->vel_x *= 0.4; f->vel_y -= PIKACHU_SOURCE_GRAVITY; out->requested_dx = f->vel_x; out->requested_dy = f->vel_y;
-        if (n >= 60) enter(f, PK_AIR_FALL);
+        /* Once flag1 has rejected (or exhausted) the second point, EndProc
+         * uses gravity + half air control until the actual 46-frame end clip
+         * completes. Then the common FallSpecial path uses full source air
+         * accel capped at 37.5 * 0.4 = 15, without cancelling its landing
+         * animation. This is a physical state, not the former frame-60 hack. */
+        f->vel_y -= PIKACHU_SOURCE_GRAVITY;
+        if (f->vel_y < -PIKACHU_SOURCE_TERMINAL_VELOCITY)
+            f->vel_y = -PIKACHU_SOURCE_TERMINAL_VELOCITY;
+        if (!f->quick_fall_special &&
+            ++f->quick_end_frame >= PIKACHU_SOURCE_QUICK_ATTACK_END_ANIMATION_FRAMES)
+            f->quick_fall_special = 1;
+        if (f->quick_fall_special)
+            quick_air_control(f, in, PIKACHU_SOURCE_AIR_ACCEL,
+                              PIKACHU_SOURCE_AIR_SPEED_MAX *
+                              PIKACHU_SOURCE_QUICK_ATTACK_FALL_SPECIAL_DRIFT);
+        else
+            quick_air_control(f, in, PIKACHU_SOURCE_AIR_ACCEL * 0.5,
+                              PIKACHU_SOURCE_AIR_SPEED_MAX * 0.5);
+        out->requested_dx = f->vel_x;
+        out->requested_dy = f->vel_y;
     } else if (f->state == PK_THUNDER_START || f->state == PK_THUNDER_LOOP || f->state == PK_THUNDER_SELF_HIT) {
         if (n == 0 && f->state == PK_THUNDER_START) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_LW);
         if (n == 24) { spawn_thunder(f, out); phase(f, PK_THUNDER_LOOP); }
@@ -511,7 +635,10 @@ void pikachu_resolve(PikachuFighter *f, const PikachuCollision *hit)
 {
     const int was_grounded = f->grounded;
     f->pos_x += hit->actual_dx; f->pos_y += hit->actual_dy;
-    if (hit->hit_wall && (f->state == PK_QUICK_ATTACK_ZIP1 || f->state == PK_QUICK_ATTACK_ZIP2)) phase(f, PK_QUICK_ATTACK_RECOVERY);
+    if (hit->hit_wall && (f->state == PK_QUICK_ATTACK_ZIP1 || f->state == PK_QUICK_ATTACK_ZIP2)) {
+        quick_attack_begin_end(f);
+        phase(f, PK_QUICK_ATTACK_RECOVERY);
+    }
     if (hit->hit_ceiling && f->vel_y > 0.0) f->vel_y = 0.0;
     f->grounded = hit->grounded;
     if (hit->grounded) {
@@ -559,7 +686,14 @@ void pikachu_note_projectile_finished(PikachuFighter *f, uint32_t id)
 
 static int valid(const PikachuFighter *f)
 {
-    return f->state >= 0 && f->state < PK_STATE_COUNT && (f->lr == -1 || f->lr == 1) && f->grounded >= 0 && f->grounded <= 1 && f->jumps_used >= 0 && f->jumps_used <= PIKACHU_SOURCE_JUMP_COUNT && f->projectile.kind >= PIKACHU_PROJECTILE_NONE && f->projectile.kind <= PIKACHU_PROJECTILE_THUNDER;
+    return f->state >= 0 && f->state < PK_STATE_COUNT &&
+        (f->lr == -1 || f->lr == 1) &&
+        f->grounded >= 0 && f->grounded <= 1 &&
+        f->jumps_used >= 0 && f->jumps_used <= PIKACHU_SOURCE_JUMP_COUNT &&
+        f->projectile.kind >= PIKACHU_PROJECTILE_NONE &&
+        f->projectile.kind <= PIKACHU_PROJECTILE_THUNDER &&
+        f->quick_end_frame <= PIKACHU_SOURCE_QUICK_ATTACK_END_ANIMATION_FRAMES &&
+        f->quick_fall_special >= 0 && f->quick_fall_special <= 1;
 }
 int pikachu_serialize(const PikachuFighter *f, uint8_t *buf, int cap)
 {
@@ -569,6 +703,18 @@ int pikachu_serialize(const PikachuFighter *f, uint8_t *buf, int cap)
 int pikachu_deserialize(PikachuFighter *f, const uint8_t *buf, int len)
 {
     PikachuFighter candidate;
-    if (!f || !buf || len != (int)(1 + sizeof(candidate)) || buf[0] != PIKACHU_SAVE_VERSION) return 0;
-    memcpy(&candidate, buf + 1, sizeof(candidate)); if (!valid(&candidate)) return 0; *f = candidate; return 1;
+    const size_t v1_size = offsetof(PikachuFighter, quick_end_frame);
+    if (!f || !buf) return 0;
+    memset(&candidate, 0, sizeof(candidate));
+    if (buf[0] == PIKACHU_SAVE_VERSION && len == (int)(1 + sizeof(candidate))) {
+        memcpy(&candidate, buf + 1, sizeof(candidate));
+    } else if (buf[0] == 1u && len == (int)(1 + v1_size)) {
+        /* v1 ended immediately after quick_first_{x,y}. Its new End/Fall
+         * Special bookkeeping has no active legacy equivalent, so zero is
+         * the only safe reconstruction. */
+        memcpy(&candidate, buf + 1, v1_size);
+    } else return 0;
+    if (!valid(&candidate)) return 0;
+    *f = candidate;
+    return 1;
 }

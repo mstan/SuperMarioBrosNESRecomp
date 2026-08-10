@@ -34,6 +34,20 @@
 #define PIKACHU_SOURCE_JUMP_HORIZONTAL_MULTIPLIER 0.35
 #define PIKACHU_SOURCE_JUMP_GROUND_FRAMES 45u
 #define PIKACHU_SOURCE_JUMP_AERIAL_FRAMES 60u
+#define PIKACHU_SOURCE_QUICK_ATTACK_AIM_FRAMES 20u
+#define PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES 5u
+#define PIKACHU_SOURCE_QUICK_ATTACK_SECOND_AIM_FRAMES 9u
+#define PIKACHU_SOURCE_QUICK_ATTACK_STICK_CAP 80.0
+#define PIKACHU_SOURCE_QUICK_ATTACK_BASE_SPEED 90.0
+#define PIKACHU_SOURCE_QUICK_ATTACK_STICK_SPEED 3.0
+#define PIKACHU_SOURCE_QUICK_ATTACK_SECOND_MULTIPLIER 0.9
+#define PIKACHU_SOURCE_QUICK_ATTACK_STICK_MIN 60.0
+#define PIKACHU_SOURCE_QUICK_ATTACK_VELOCITY_BACKUP_MULTIPLIER 0.2
+#define PIKACHU_SOURCE_QUICK_ATTACK_FALL_SPECIAL_DRIFT 0.4
+#define PIKACHU_SOURCE_QUICK_ATTACK_END_ANIMATION_FRAMES 46u
+#define PIKACHU_SOURCE_AIR_ACCEL 0.055
+#define PIKACHU_SOURCE_AIR_FRICTION 0.45
+#define PIKACHU_SOURCE_AIR_SPEED_MAX 37.5
 
 typedef enum {
     PK_GROUND_WAIT, PK_WALK, PK_DASH, PK_RUN, PK_JUMP_GROUND, PK_JUMP_AERIAL,
@@ -95,6 +109,10 @@ typedef struct {
     unsigned thunder_contact_frame;
     PikachuProjectile projectile;
     PikachuMotion last_motion;
+    /* Appended: private source End/FallSpecial clock. Versioned serializer
+     * accepts pre-clock v1 records with these fields cleared. */
+    unsigned quick_end_frame;
+    int quick_fall_special;
 } PikachuFighter;
 
 const char *pikachu_state_name(int state);
