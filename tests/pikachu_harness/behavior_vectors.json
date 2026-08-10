@@ -13,9 +13,16 @@
     "normal_attack_breaks_eligible_bricks": true,
     "projectile_breaks_blocks": false,
     "source_jump_count": 2,
+    "jump_launch_velocity_source_units": 90.6,
+    "jump_horizontal_stick_multiplier": 0.35,
     "jump_ground_animation_frames": 45,
     "jump_aerial_animation_frames": 60,
     "dash_to_run_frames": 13,
+    "run_brake_friction_source_units": 2.5,
+    "turn_run_flip_frame": 13,
+    "turn_run_animation_frames": 18,
+    "crouch_animation_frames": 4,
+    "landing_animation_frames": 16,
     "held_full_direction_persists_run": true,
     "visual_height_px": 16,
     "quick_attack_has_hitbox": false,
@@ -35,6 +42,10 @@
     { "name": "air_facing_a", "initial": "AIR_FALL_FACING_RIGHT", "edge": ["RIGHT", "A"], "expect_action": "FAIR" },
     { "name": "air_opposite_a", "initial": "AIR_FALL_FACING_RIGHT", "edge": ["LEFT", "A"], "expect_action": "BAIR" },
     { "name": "air_down_a", "initial": "AIR_FALL", "edge": ["DOWN", "A"], "expect_action": "DAIR" },
+    { "name": "ground_up_a", "initial": "GROUND_WAIT", "edge": ["UP", "A"], "expect_action": "UTILT" },
+    { "name": "ground_down_a", "initial": "GROUND_WAIT", "edge": ["DOWN", "A"], "expect_action": "DTILT" },
+    { "name": "air_up_a", "initial": "AIR_FALL", "edge": ["UP", "A"], "expect_action": "UAIR" },
+    { "name": "run_a", "initial": "RUN_FACING_RIGHT", "edge": ["RIGHT", "A"], "expect_action": "DASH_ATTACK" },
     { "name": "ground_horizontal_b", "initial": "GROUND_WAIT", "edge": ["RIGHT", "B"], "expect_action": "THUNDER_JOLT" },
     { "name": "air_horizontal_b", "initial": "AIR_FALL", "edge": ["LEFT", "B"], "expect_action": "THUNDER_JOLT" },
     { "name": "up_b", "initial": "AIR_FALL", "edge": ["UP", "B"], "expect_action": "QUICK_ATTACK_START" },
@@ -94,6 +105,30 @@
       "motion": "2030_FTPikachuAnimAttackAirD / 0x14DC / TRANSN_JOINT",
       "windows": [{ "from": 8, "to": 26, "damage": 13, "side": "down" }],
       "events": [{ "frame": 8, "id": "FGM_ELECTRIC_3" }]
+    },
+    {
+      "action": "DASH_ATTACK",
+      "motion": "2017_FTPikachuAnimDashAttack / 0x0E80",
+      "windows": [{ "from": 4, "to": 23, "damage": 40, "side": "forward" }],
+      "events": [{ "frame": 4, "id": "FGM_LIGHT_L" }]
+    },
+    {
+      "action": "UTILT",
+      "motion": "2021_FTPikachuAnimUTilt / 0x0FF0",
+      "windows": [{ "from": 5, "to": 15, "damage": 10, "side": "up" }],
+      "events": [{ "frame": 5, "id": "FGM_LIGHT_M" }]
+    },
+    {
+      "action": "DTILT",
+      "motion": "2022_FTPikachuAnimDTilt / 0x103C",
+      "windows": [{ "from": 6, "to": 14, "damage": 12, "side": "forward_low" }],
+      "events": [{ "frame": 6, "id": "FGM_LIGHT_M" }]
+    },
+    {
+      "action": "UAIR",
+      "motion": "2029_FTPikachuAnimAttackAirU / 0x1490 / TRANSN_JOINT",
+      "windows": [{ "from": 3, "to": 11, "damage": 10, "side": "up" }],
+      "events": [{ "frame": 3, "id": "FGM_LIGHT_M" }]
     },
     {
       "action": "THUNDER_JOLT_GROUND",

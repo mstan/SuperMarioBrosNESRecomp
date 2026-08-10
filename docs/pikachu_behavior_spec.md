@@ -1,9 +1,10 @@
 # Pikachu behavior contract for SMB1
 
 This document is the implementation contract for the first Pikachu release.
-It intentionally describes only the agreed subset: locomotion; Jab, forward
-tilt, neutral/forward/back/down aerials; Thunder Jolt; Quick Attack; and
-Thunder.  It is not a promise to port every SSB64 action state.
+It covers the standard-state tranche: locomotion, Run Brake/Turn Run, crouch,
+landing, Jab, dash/forward/up/down tilts, neutral/forward/back/up/down aerials,
+Thunder Jolt, Quick Attack, and Thunder. It is not a promise to port every
+SSB64 action state.
 
 The authoritative behavioral reference is the local BattleShip checkout, not
 the shipped game or this document:
@@ -30,8 +31,10 @@ the external cache, following the Captain Falcon asset gate.
 - Use the existing `0.08 SMB pixels/source unit` conversion.  The source
   attributes in `243_PikachuMain.c` specify size `0.95`, walk multiplier
   `0.42`, dash `60`, run `55`, gravity `3`, terminal velocity `52`, and two
-  source jumps.  Pikachu retains both source jumps: fresh `Up` launches the
+  source jumps. Pikachu retains both source jumps: fresh `Up` launches the
   ground jump or, while airborne with one jump remaining, the aerial jump.
+  Both use the source `((80 * 0.67) + 37) * jump_height = 90.6` vertical
+  launch and `0.35 * stick_x` horizontal launch, before normal gravity.
   Both use Pikachu's source idle/walk/dash/run/jump/fall motions.
 - A full directional press enters Dash for source frames 0 through 12 and
   transitions to Run at frame 13. Run persists while the same full direction
@@ -40,6 +43,15 @@ the external cache, following the Captain Falcon asset gate.
   then installs the source run speed `55` at the transition. Walk1/2/3 remain
   the low/middle/high analog walk tiers;
   an ordinary digital NES direction naturally takes the Dash-to-Run path.
+- Releasing Run enters Run Brake (source traction `2 * 1.25 = 2.5` per
+  frame). Reversing a held full run enters Turn Run, keeps the old facing and
+  speed through frame 12, flips facing and run velocity at frame 13, and
+  returns to Run at frame 18. This follows the frame-13 flags in `0x00E4`;
+  it is distinct from the separate common Turn used to reverse during Dash.
+- Down without an A edge enters 4-frame Crouch, then Crouch Wait; release
+  plays the 8-frame Crouch End. Standard aerial landings play the 16-frame
+  LandingAirX pause before Ground Wait. These state values are append-only in
+  savestates; all pre-existing state ordinals remain unchanged.
 - The default presentation is a side-on approximately 16-pixel-tall Pikachu,
   with a stable
   small-player collision profile.  It must fit every normal two-block SMB
@@ -65,7 +77,9 @@ the external cache, following the Captain Falcon asset gate.
 |---|---|---|
 | `A` | Jab | Neutral air |
 | facing direction + `A` | Forward tilt | Fair if facing direction; Bair if opposite |
-| `Down+A` | consumed/reserved | Down air |
+| `Up+A` | Up tilt | Up air |
+| `Down+A` | Down tilt | Down air |
+| full held run + facing direction + `A` | Dash attack | n/a |
 | `B`, `Left+B`, or `Right+B` | Thunder Jolt | Thunder Jolt |
 | `Up+B` | Quick Attack | Quick Attack |
 | `Down+B` | Thunder | Thunder |
@@ -89,10 +103,14 @@ projectiles and never alter SMB blocks.
 |---|---|---|---|
 | Jab | reloc `2016_FTPikachuAnimJab1`; `0x0E34` | `[2,6)`, 4 | `FGMLightSwingS` at 2; one forward union; no root travel. |
 | Forward tilt | reloc `2019_FTPikachuAnimFTilt`; `0x0F50` | `[5,15)`, 10 | `FGMLightSwingM` at 5; one forward union; no root travel. |
+| Dash attack | reloc `2017_FTPikachuAnimDashAttack`; `0x0E80` | `[4,23)`, 40 | `FGMLightSwingL` at 4; one forward union; no root travel. |
+| Up tilt | reloc `2021_FTPikachuAnimUTilt`; `0x0FF0` | `[5,15)`, 10 | `FGMLightSwingM` at 5; upward union; no root travel. |
+| Down tilt | reloc `2022_FTPikachuAnimDTilt`; `0x103C` | `[6,14)`, 12 | `FGMLightSwingM` at 6; low forward union; no root travel. |
 | Neutral air | reloc `2026_FTPikachuAnimAttackAirN`; `0x12E8` | `[3,11)`, 14 then `[11,29)`, 11 | `FGMLightSwingM` at 3; body union follows the pose; physical contact may break eligible bricks. |
 | Forward air | reloc `2027_FTPikachuAnimAttackAirF`; `0x1380`, `TRANSN_JOINT` | `[7,9)`, `[10,12)`, `[13,15)`, `[16,18)`, `[19,21)`, `[22,24)`, `[25,27)`, each 3 | `FGMPikachuElectric2` at 7, then `FGMMarioUnkSwing2` for each pulse; show electric color/effect on the attack side. |
 | Back air | reloc `2028_FTPikachuAnimAttackAirB`; `0x1420` | `[10,14)`, 16 then `[14,22)`, 14 | `FGMLightSwingL` at 10; union is behind logical facing. |
 | Down air | reloc `2030_FTPikachuAnimAttackAirD`; `0x14DC`, `TRANSN_JOINT` | `[8,26)`, 13 | `FGMPikachuElectric3` and electric effect at 8; downward union only; physical contact may break eligible bricks. |
+| Up air | reloc `2029_FTPikachuAnimAttackAirU`; `0x1490`, `TRANSN_JOINT` | `[3,11)`, 10 | `FGMLightSwingM` at 3; upward union follows the pose; physical contact may break eligible bricks. |
 | Thunder Jolt | ground `0x15AC`; air `0x15F0` | projectile begins at 21 | `VoicePikachuSpecialN` at entry; air also plays `FGMPikachuElectric5` at entry. Spawn from source joint 11, facing-relative, at -45 degrees with source speed 40. It may defeat eligible enemies once, follows floor/wall surfaces after contact, and expires on unsupported/invalid surfaces. It never changes SMB blocks. |
 | Quick Attack | start has no source motion; zip/end `0x1710`, `0x1730` | no hitbox | `FGMPikachuSpecialHiStart` begins the 20-frame intangible aim startup; first 5-frame zip; after the end-script's 9-frame direction window, one second 5-frame zip only if stick magnitude is at least 60 and differs by more than 42 degrees. `VoicePikachuSpecialHi`, `FGMPikachuElectric1`, and sparkle fire on each zip entry; ripple and rumble fire at each zip end. Render the authored 0.8/0.8/1.2 scale/pitch transform on joint 4. |
 | Thunder | start `0x162C`; loop `0x1644`; self-hit `0x1668` | self-hit `[0,10)`, 16 | `VoicePikachuSpecialLw` at entry; spawn a vertical bolt at frame 24 from the gameplay top above Pikachu. While it falls it owns all trail/effect events. On self-contact, consume the bolt, emit ThunderAmp + dust + quake + color event, and give airborne Pikachu source +20 vertical velocity. Pikachu does not take host damage from own Thunder. Thunder may defeat an eligible enemy once but never breaks blocks. |
