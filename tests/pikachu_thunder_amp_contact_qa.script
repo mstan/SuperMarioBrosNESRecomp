@@ -1,0 +1,29 @@
+LOG pikachu-thunder-amp-contact-qa
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+
+# The normal host action currently begins at native Y=32 and is consumed by
+# the HUD boundary before it can reach ground Pikachu. This diagnostic HUD
+# fixture deliberately overlaps the fighter body with that authored spawn box
+# and proves the renderer's state-local self-hit presentation path.
+HOLD RIGHT
+WAIT 28
+RELEASE RIGHT
+WAIT 8
+HOLD DOWN
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE DOWN
+WAIT 18
+WRITE_RAM8 00CE 0C
+WAIT 6
+SCREENSHOT C:/temp/pikachu_thunder_amp_contact_00.png
+WAIT 5
+SCREENSHOT C:/temp/pikachu_thunder_amp_contact_05.png
+WAIT 12
+SCREENSHOT C:/temp/pikachu_thunder_amp_contact_late.png
+EXIT 0

@@ -141,6 +141,11 @@ static FalconAssetModel s_model;
 static int s_load_attempted;
 static int s_pikachu_joint11_valid;
 static float s_pikachu_joint11_x, s_pikachu_joint11_y;
+/* The controller deliberately preserves one action clock across Thunder's
+ * start/loop/self-hit phases.  Presentation needs the self-hit-local clock
+ * for effects authored at source frame zero. */
+static int s_pikachu_thunder_self_hit_active;
+static unsigned s_pikachu_thunder_self_hit_start_frame;
 static const uint32_t s_fallback_color[1] = { 0xFF3060C8u };
 
 static int active_is_pikachu(void)
@@ -704,6 +709,7 @@ void game_smash64_assets_clear(void)
     memset(&s_model, 0, sizeof(s_model));
     s_load_attempted = 0;
     s_pikachu_joint11_valid = 0;
+    s_pikachu_thunder_self_hit_active = 0;
 }
 
 static int pikachu_walk_tier(const ForeignState *state)
@@ -1495,13 +1501,28 @@ static void draw_pikachu_thunder_amp(const ForeignState *state,
                                      float center_x, float foot_y,
                                      float output_scale)
 {
-    const unsigned frame = state->state_frame;
+    unsigned frame;
     const float unit = output_scale > 0.0f ? output_scale : 1.0f;
     const float middle_y = foot_y + PIKACHU_RENDER_HEIGHT * 0.50f * unit;
     const float z = 3.5f * unit;
     unsigned i;
 
-    if (state->state != PK_THUNDER_SELF_HIT || frame >= 18u) return;
+    if (state->state != PK_THUNDER_SELF_HIT) {
+        s_pikachu_thunder_self_hit_active = 0;
+        return;
+    }
+    /* PK_THUNDER_SELF_HIT does not reset ForeignState::state_frame: source
+     * motion 0x1668 starts at zero but the compact controller keeps the
+     * complete Down-B action time. Latch the transition solely for rendering.
+     * A savestate restore makes that counter go backwards, which is likewise
+     * a new local presentation epoch. */
+    if (!s_pikachu_thunder_self_hit_active ||
+        state->state_frame < s_pikachu_thunder_self_hit_start_frame) {
+        s_pikachu_thunder_self_hit_active = 1;
+        s_pikachu_thunder_self_hit_start_frame = state->state_frame;
+    }
+    frame = state->state_frame - s_pikachu_thunder_self_hit_start_frame;
+    if (frame >= 18u) return;
     /* ThunderAmp itself is a common particle-bank script (0x74), whereas
      * PikachuSpecial2 owns the adjacent ThunderShock cards. Use those actual
      * owner cards as a short, rotating contact aura; the dust/ring supplies
