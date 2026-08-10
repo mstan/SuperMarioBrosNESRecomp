@@ -8,12 +8,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define FALCON_CACHE_PREFIX "falcon-final-r1-e2929e10fccc0aa84e5776227e798abc07cedabf-"
+
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 #define FALCON_HELPER_NAME "falcon_owner_assets.exe"
-#define FALCON_CACHE_PREFIX "falcon-final-r1-e2929e10fccc0aa84e5776227e798abc07cedabf-"
 
 static int utf8_to_wide(const char *source, wchar_t *target, size_t capacity)
 {
@@ -183,13 +184,120 @@ done:
 
 #else
 
+#include <errno.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+#define FALCON_HELPER_NAME "falcon_owner_assets"
+
+static int run_helper(const char *helper, const char *rom,
+                      const char *cache, const char *result)
+{
+    pid_t child;
+    int status = 0;
+    unsigned elapsed_ms = 0;
+    char *const arguments[] = {
+        (char *)helper,
+        (char *)"--rom", (char *)rom,
+        (char *)"--cache-root", (char *)cache,
+        (char *)"--result-file", (char *)result,
+        NULL
+    };
+
+    child = fork();
+    if (child < 0) return 0;
+    if (child == 0) {
+        int null_output;
+        (void)setpgid(0, 0);
+        if (!getenv("NESRECOMP_FALCON_OWNER_DEBUG")) {
+            null_output = open("/dev/null", O_WRONLY);
+            if (null_output >= 0) {
+                (void)dup2(null_output, STDOUT_FILENO);
+                (void)dup2(null_output, STDERR_FILENO);
+                if (null_output > STDERR_FILENO) close(null_output);
+            }
+        }
+        execv(helper, arguments);
+        _exit(127);
+    }
+
+    (void)setpgid(child, child);
+    while (elapsed_ms < 180000u) {
+        pid_t result_pid = waitpid(child, &status, WNOHANG);
+        if (result_pid == child)
+            return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+        if (result_pid < 0 && errno != EINTR) return 0;
+        SDL_Delay(50u);
+        elapsed_ms += 50u;
+    }
+    (void)kill(-child, SIGKILL);
+    while (waitpid(child, &status, 0) < 0 && errno == EINTR) {}
+    return 0;
+}
+
+static int read_cache_name(const char *path, char *name, size_t capacity)
+{
+    FILE *file;
+    size_t length, i;
+    if (!path || !name || capacity < 2) return 0;
+    file = fopen(path, "rb");
+    if (!file) return 0;
+    length = fread(name, 1, capacity - 1, file);
+    if (ferror(file) || !feof(file)) {
+        fclose(file);
+        return 0;
+    }
+    fclose(file);
+    while (length && (name[length - 1] == '\r' || name[length - 1] == '\n')) length--;
+    name[length] = '\0';
+    if (strncmp(name, FALCON_CACHE_PREFIX, strlen(FALCON_CACHE_PREFIX)) != 0)
+        return 0;
+    for (i = 0; i < length; ++i) {
+        unsigned char ch = (unsigned char)name[i];
+        if (!(isalnum(ch) || ch == '-')) return 0;
+    }
+    return length > strlen(FALCON_CACHE_PREFIX);
+}
+
 int smash64_owner_assets_prepare(const char *owner_rom_path,
                                  char *cache_root, size_t cache_root_size)
 {
-    (void)owner_rom_path;
-    if (cache_root && cache_root_size) cache_root[0] = '\0';
-    fprintf(stderr, "[Smash64] owner-ROM asset preparation is not available on this platform\n");
-    return 0;
+    char *base = NULL, *pref = NULL;
+    char helper[2048], parent[2048], result[2048], name[512];
+    int helper_len, parent_len, result_len, root_len;
+    int ok = 0;
+    long process_id;
+    if (!owner_rom_path || !*owner_rom_path || !cache_root || cache_root_size == 0)
+        return 0;
+    result[0] = '\0';
+    base = SDL_GetBasePath();
+    pref = SDL_GetPrefPath("NESRecomp", "SuperMarioBrosRecomp");
+    if (!base || !pref) goto done;
+    process_id = (long)getpid();
+    helper_len = snprintf(helper, sizeof(helper), "%s%s", base, FALCON_HELPER_NAME);
+    parent_len = snprintf(parent, sizeof(parent), "%ssmash64", pref);
+    if (helper_len < 0 || (size_t)helper_len >= sizeof(helper) ||
+        parent_len < 0 || (size_t)parent_len >= sizeof(parent))
+        goto done;
+    result_len = snprintf(result, sizeof(result), "%s/active-cache-%ld.txt",
+                          parent, process_id);
+    if (result_len < 0 || (size_t)result_len >= sizeof(result)) goto done;
+    (void)unlink(result);
+    if (!run_helper(helper, owner_rom_path, parent, result) ||
+        !read_cache_name(result, name, sizeof(name)))
+        goto done;
+    root_len = snprintf(cache_root, cache_root_size, "%s/%s", parent, name);
+    if (root_len < 0 || (size_t)root_len >= cache_root_size) goto done;
+    ok = 1;
+done:
+    if (result[0]) (void)unlink(result);
+    if (base) SDL_free(base);
+    if (pref) SDL_free(pref);
+    if (!ok && cache_root_size) cache_root[0] = '\0';
+    return ok;
 }
 
 #endif

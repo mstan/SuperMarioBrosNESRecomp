@@ -70,9 +70,24 @@ _Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
 #define FALCON_TO_SMB1_XSPEED (FALCON_TO_SMB1_PX * SMB1_XSPEED_PER_PX)
 
 /* SMB1's own caps, for scale: MaxRightXSpdData $B443 = {40,24,16,12}, so
- * Mario's top run is 40/16 = 2.5 px/frame. Falcon's run is 75 * 1.28 = 96,
- * which is 2.4x Mario and still inside the signed 8-bit field. */
-#define SMB1_XSPEED_LIMIT 127
+ * Mario's top run is 40/16 = 2.5 px/frame. Falcon's authored run would map to
+ * 75 * 1.28 = 96, or 6 px/frame, but the world streamer cannot sustain that.
+ *
+ * UpdScrollVar ($AF6F) advances exactly one AreaParserTaskHandler task per
+ * frame. One complete job is eight tasks and advances two 16px columns, so
+ * SMB1 can prepare at most 32px / 8 frames = 4px/frame. Feeding a larger
+ * Player_X_Scroll makes ScrollThirtyTwo accumulate unserviced thresholds;
+ * once its byte reaches $A0, the original signed BMI test even treats the debt
+ * as below $20. The camera then outruns CurrentColumnPos/BlockBufferColumnPos,
+ * corrupting upcoming collision, enemy and warp-zone context.
+ *
+ * Clamp the PHYSICAL foreign movement here, before $BF09 integrates it, rather
+ * than clamping only the camera return value. That keeps player, camera and
+ * parser in one world coordinate system. $40 is the streamer's exact service
+ * boundary; $7f remains the signed host-field boundary for bounded authored
+ * attack motion, whose enforced recovery lets the parser repay a short burst. */
+#define SMB1_STREAM_XSPEED_LIMIT 64
+#define SMB1_XSPEED_FIELD_LIMIT 127
 
 /* ------------------------------------------------------------------ */
 /* SMB1 player state -- every address Ghidra-confirmed                 */
@@ -726,12 +741,48 @@ static void sample_input(ForeignInput *out)
 /* Per frame                                                          */
 /* ------------------------------------------------------------------ */
 
-static int8_t clamp_xspeed(double smash_units)
+/* These ordinary locomotion states can hold or inherit player-controlled speed
+ * long enough to outrun the area parser, so their physical movement must stay
+ * within the streamer's steady capacity on the ground and in the air. Attack
+ * and special root tracks are finite bursts with mandatory recovery; clipping
+ * those here breaks their authored terrain reach (notably Falcon Kick) while
+ * providing no additional sustained-rate safety. */
+static int state_needs_stream_speed_limit(unsigned state)
+{
+    switch (state) {
+    case FL_WAIT:
+    case FL_WALK_SLOW:
+    case FL_WALK_MIDDLE:
+    case FL_WALK_FAST:
+    case FL_DASH:
+    case FL_RUN:
+    case FL_RUN_BRAKE:
+    case FL_TURN:
+    case FL_TURN_RUN:
+    case FL_KNEEBEND:
+    case FL_JUMP_F:
+    case FL_JUMP_B:
+    case FL_JUMP_AERIAL_F:
+    case FL_JUMP_AERIAL_B:
+    case FL_FALL:
+    case FL_FALL_AERIAL:
+    case FL_LANDING_LIGHT:
+    case FL_LANDING_HEAVY:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+static int8_t clamp_xspeed(double smash_units, unsigned state)
 {
     double v = smash_units * FALCON_TO_SMB1_XSPEED;
+    const double limit = state_needs_stream_speed_limit(state)
+                             ? SMB1_STREAM_XSPEED_LIMIT
+                             : SMB1_XSPEED_FIELD_LIMIT;
 
-    if (v >  SMB1_XSPEED_LIMIT) v =  SMB1_XSPEED_LIMIT;
-    if (v < -SMB1_XSPEED_LIMIT) v = -SMB1_XSPEED_LIMIT;
+    if (v >  limit) v =  limit;
+    if (v < -limit) v = -limit;
     return (int8_t)((v >= 0.0) ? (v + 0.5) : (v - 0.5));
 }
 
@@ -899,7 +950,7 @@ void game_smash64_update_input(uint64_t frame_count)
             move.requested_dx = 0.0;
             s_wall_frames++;
         }
-        s_xspeed = clamp_xspeed(move.requested_dx);
+        s_xspeed = clamp_xspeed(move.requested_dx, move.state);
         s_owned_frames++;
     } else {
         memset(&s_attack, 0, sizeof(s_attack));

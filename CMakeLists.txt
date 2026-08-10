@@ -93,61 +93,59 @@ endif()
 # ROM or generated asset is staged beside the game.
 option(NESRECOMP_REQUIRE_FALCON_OWNER_HELPER
     "Fail configuration unless the release Falcon owner-ROM helper can be built" OFF)
-if(WIN32)
-    find_package(Python3 COMPONENTS Interpreter QUIET)
-    if(Python3_Interpreter_FOUND)
-        execute_process(
-            COMMAND "${Python3_EXECUTABLE}" -c "import PyInstaller; import PIL"
-            RESULT_VARIABLE FALCON_PYINSTALLER_AVAILABLE
-            OUTPUT_QUIET ERROR_QUIET)
-        if(FALCON_PYINSTALLER_AVAILABLE EQUAL 0)
-            file(GLOB FALCON_OWNER_HELPER_SOURCES CONFIGURE_DEPENDS
-                "${CMAKE_SOURCE_DIR}/tools/owner_ssb64/*.py")
-            set(FALCON_OWNER_HELPER_BUILD
-                "${CMAKE_BINARY_DIR}/falcon_owner_helper_build")
-            set(FALCON_OWNER_HELPER_DIST
-                "${CMAKE_BINARY_DIR}/falcon_owner_helper_dist")
-            set(FALCON_OWNER_HELPER_EXE
-                "${FALCON_OWNER_HELPER_DIST}/falcon_owner_assets.exe")
-            add_custom_command(
-                OUTPUT "${FALCON_OWNER_HELPER_EXE}"
-                COMMAND "${CMAKE_COMMAND}" -E make_directory
-                    "${FALCON_OWNER_HELPER_BUILD}" "${FALCON_OWNER_HELPER_DIST}"
-                COMMAND "${Python3_EXECUTABLE}" -m PyInstaller
-                    --noconfirm --clean --onefile --exclude-module numpy
-                    --name falcon_owner_assets
-                    --distpath "${FALCON_OWNER_HELPER_DIST}"
-                    --workpath "${FALCON_OWNER_HELPER_BUILD}/work"
-                    --specpath "${FALCON_OWNER_HELPER_BUILD}"
-                    --paths "${CMAKE_SOURCE_DIR}/tools"
-                    --paths "${CMAKE_SOURCE_DIR}/tools/owner_ssb64"
-                    "${CMAKE_SOURCE_DIR}/tools/owner_ssb64/build_final_cache.py"
-                DEPENDS
-                    "${CMAKE_SOURCE_DIR}/tools/bake_falcon_runtime.py"
-                    ${FALCON_OWNER_HELPER_SOURCES}
-                WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-                COMMENT "Packaging the Falcon owner-ROM cache helper"
-                VERBATIM)
-            add_custom_target(falcon_owner_assets_helper
-                DEPENDS "${FALCON_OWNER_HELPER_EXE}")
-            add_dependencies(SuperMarioBrosRecomp falcon_owner_assets_helper)
-            add_custom_command(TARGET SuperMarioBrosRecomp POST_BUILD
-                COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-                    "${FALCON_OWNER_HELPER_EXE}"
-                    "$<TARGET_FILE_DIR:SuperMarioBrosRecomp>/falcon_owner_assets.exe")
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_Interpreter_FOUND)
+    execute_process(
+        COMMAND "${Python3_EXECUTABLE}" -c "import PyInstaller; import PIL"
+        RESULT_VARIABLE FALCON_PYINSTALLER_AVAILABLE
+        OUTPUT_QUIET ERROR_QUIET)
+    if(FALCON_PYINSTALLER_AVAILABLE EQUAL 0)
+        file(GLOB FALCON_OWNER_HELPER_SOURCES CONFIGURE_DEPENDS
+            "${CMAKE_SOURCE_DIR}/tools/owner_ssb64/*.py")
+        set(FALCON_OWNER_HELPER_BUILD
+            "${CMAKE_BINARY_DIR}/falcon_owner_helper_build")
+        set(FALCON_OWNER_HELPER_DIST
+            "${CMAKE_BINARY_DIR}/falcon_owner_helper_dist")
+        set(FALCON_OWNER_HELPER_EXE
+            "${FALCON_OWNER_HELPER_DIST}/falcon_owner_assets${CMAKE_EXECUTABLE_SUFFIX}")
+        add_custom_command(
+            OUTPUT "${FALCON_OWNER_HELPER_EXE}"
+            COMMAND "${CMAKE_COMMAND}" -E make_directory
+                "${FALCON_OWNER_HELPER_BUILD}" "${FALCON_OWNER_HELPER_DIST}"
+            COMMAND "${Python3_EXECUTABLE}" -m PyInstaller
+                --noconfirm --clean --onefile --exclude-module numpy
+                --name falcon_owner_assets
+                --distpath "${FALCON_OWNER_HELPER_DIST}"
+                --workpath "${FALCON_OWNER_HELPER_BUILD}/work"
+                --specpath "${FALCON_OWNER_HELPER_BUILD}"
+                --paths "${CMAKE_SOURCE_DIR}/tools"
+                --paths "${CMAKE_SOURCE_DIR}/tools/owner_ssb64"
+                "${CMAKE_SOURCE_DIR}/tools/owner_ssb64/build_final_cache.py"
+            DEPENDS
+                "${CMAKE_SOURCE_DIR}/tools/bake_falcon_runtime.py"
+                ${FALCON_OWNER_HELPER_SOURCES}
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+            COMMENT "Packaging the Falcon owner-ROM cache helper"
+            VERBATIM)
+        add_custom_target(falcon_owner_assets_helper
+            DEPENDS "${FALCON_OWNER_HELPER_EXE}")
+        add_dependencies(SuperMarioBrosRecomp falcon_owner_assets_helper)
+        add_custom_command(TARGET SuperMarioBrosRecomp POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "${FALCON_OWNER_HELPER_EXE}"
+                "$<TARGET_FILE_DIR:SuperMarioBrosRecomp>/falcon_owner_assets${CMAKE_EXECUTABLE_SUFFIX}")
+    else()
+        if(NESRECOMP_REQUIRE_FALCON_OWNER_HELPER)
+            message(FATAL_ERROR
+                "Release requires Python packages PyInstaller and Pillow for the Falcon owner-ROM helper")
         else()
-            if(NESRECOMP_REQUIRE_FALCON_OWNER_HELPER)
-                message(FATAL_ERROR
-                    "Release requires Python packages PyInstaller and Pillow for the Falcon owner-ROM helper")
-            else()
-                message(WARNING
-                    "PyInstaller/Pillow unavailable; Falcon owner-ROM helper will not be built")
-            endif()
+            message(WARNING
+                "PyInstaller/Pillow unavailable; Falcon owner-ROM helper will not be built")
         endif()
-    elseif(NESRECOMP_REQUIRE_FALCON_OWNER_HELPER)
-        message(FATAL_ERROR
-            "Release requires Python 3 for the Falcon owner-ROM helper")
     endif()
+elseif(NESRECOMP_REQUIRE_FALCON_OWNER_HELPER)
+    message(FATAL_ERROR
+        "Release requires Python 3 for the Falcon owner-ROM helper")
 endif()
 
 if(WIN32)

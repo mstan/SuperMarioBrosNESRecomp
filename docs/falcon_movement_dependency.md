@@ -435,8 +435,8 @@ Applied to the US attributes (per frame, or per frame² for accelerations):
 
 | Quantity | Smash units | SMB1 px |
 |---|---|---|
-| `dash_speed` | 80.0 | **6.40** |
-| `run_speed` | 75.0 | **6.00** |
+| `dash_speed` | 80.0 | **6.40 authored; 4.00 host-stream cap** |
+| `run_speed` | 75.0 | **6.00 authored; 4.00 host-stream cap** |
 | walk, full analog | 80 × 0.32 = 25.6 | 2.05 |
 | `air_speed_max_x` | 31.0 | 2.48 |
 | `gravity` | 3.4 | 0.272 |

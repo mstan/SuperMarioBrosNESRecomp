@@ -44,6 +44,12 @@ if (-not $SkipBuild) {
 
 $exe = Join-Path $bin 'SuperMarioBrosRecomp.exe'
 if (-not (Test-Path $exe)) { throw "missing $exe -- run build_all.bat first" }
+$cmakeCache = Join-Path $bin 'CMakeCache.txt'
+if (-not (Test-Path $cmakeCache)) { throw "missing $cmakeCache -- run build_all.bat first" }
+$traceSetting = Select-String -LiteralPath $cmakeCache -Pattern '^NESRECOMP_ENABLE_TRACE:BOOL=OFF$'
+if (-not $traceSetting) {
+  throw 'refusing to package a Windows build with NESRECOMP_ENABLE_TRACE enabled or unset'
+}
 
 $readmeCommon = @'
 Super Mario Bros. - Static Recompilation
@@ -174,7 +180,10 @@ function Assert-ReleaseArchive([string]$zip, [string]$stage) {
   try {
     $seen = @{}
     foreach ($entry in $archive.Entries) {
-      $relative = $entry.FullName.Replace('\', '/')
+      if ($entry.FullName.Contains('\')) {
+        throw "release archive contains a non-portable Windows path: $($entry.FullName)"
+      }
+      $relative = $entry.FullName
       if ([string]::IsNullOrEmpty($entry.Name)) { continue }
       if ($relative.StartsWith('/') -or $relative -match '(^|/)\.\.(/|$)') {
         throw "release archive contains unsafe path: $relative"
@@ -267,7 +276,28 @@ function New-ReleaseZip([string]$kind) {
   Assert-ReleaseStage $stage $kind $preloadedMods
 
   if (Test-Path $zip) { Remove-Item $zip }
-  Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $zip
+  Add-Type -AssemblyName System.IO.Compression
+  Add-Type -AssemblyName System.IO.Compression.FileSystem
+  $stageFull = [IO.Path]::GetFullPath($stage).TrimEnd('\') + '\'
+  $archive = [IO.Compression.ZipFile]::Open(
+    [IO.Path]::GetFullPath($zip), [IO.Compression.ZipArchiveMode]::Create)
+  try {
+    foreach ($file in Get-ChildItem -LiteralPath $stage -Recurse -File | Sort-Object FullName) {
+      $fileFull = [IO.Path]::GetFullPath($file.FullName)
+      if (-not $fileFull.StartsWith($stageFull, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "refusing to archive a file outside the release stage: $fileFull"
+      }
+      $entryName = $fileFull.Substring($stageFull.Length).Replace('\', '/')
+      if ($entryName.StartsWith('/') -or $entryName -match '(^|/)\.\.(/|$)') {
+        throw "unsafe ZIP entry name: $entryName"
+      }
+      [IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+        $archive, $fileFull, $entryName,
+        [IO.Compression.CompressionLevel]::Optimal) | Out-Null
+    }
+  } finally {
+    $archive.Dispose()
+  }
   Assert-ReleaseArchive $zip $stage
   Remove-Item -Recurse -Force $stage
   Write-Host "staged $zip"

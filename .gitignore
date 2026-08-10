@@ -30,6 +30,8 @@ hdpack/
 nestopia-core
 
 build_ui/
+build-linux-prod/
+release-linux/
 
 # Local Python tooling bytecode
 __pycache__/

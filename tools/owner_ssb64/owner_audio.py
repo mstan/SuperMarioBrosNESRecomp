@@ -32,7 +32,8 @@ from pathlib import Path
 
 CANONICAL_SHA1 = "e2929e10fccc0aa84e5776227e798abc07cedabf"
 CANONICAL_SIZE = 16 * 1024 * 1024
-SOURCE_ROOT = Path(__file__).resolve().parents[2]
+IS_FROZEN = bool(getattr(sys, "frozen", False) or getattr(sys, "_MEIPASS", None))
+SOURCE_ROOT = None if IS_FROZEN else Path(__file__).resolve().parents[2]
 OUTPUT_RATE = 44100
 SYNTH_RATE = 32000
 FGM_TICK_SECONDS = 184.0 / SYNTH_RATE
@@ -76,7 +77,7 @@ def normalize_rom(source: bytes) -> bytes:
 
 def _external_output(path: Path) -> None:
     resolved = path.resolve()
-    if resolved == SOURCE_ROOT or SOURCE_ROOT in resolved.parents:
+    if SOURCE_ROOT is not None and (resolved == SOURCE_ROOT or SOURCE_ROOT in resolved.parents):
         raise ValueError("audio output must be outside the source tree")
 
 

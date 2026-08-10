@@ -225,7 +225,10 @@ SMB1's own caps, read straight from the ROM:
 | `MaxLeftXSpdData $B440` | `D8 E8 F0` | −2.50, −1.50, −1.00 |
 | `FrictionData $B447` | `E4 98 D0` | 228, 152, 208 subpixel/frame |
 
-**Mario's top speed is 2.50 px/frame.** Falcon's run is 6.00 and his dash 6.38
+**Mario's top speed is 2.50 px/frame.** Falcon's authored run/dash convert to
+6.00/6.38 px/frame, but ordinary host locomotion is physically capped at
+4.00 px/frame so SMB1's eight-task area parser can keep collision, objects,
+enemies, and warp-zone state ahead of the camera.
 — 2.4× and 2.55× — and both fit inside the signed 8-bit field, which is why
 writing `Player_X_Speed` directly works at all.
 
@@ -298,7 +301,7 @@ introduced into SMB1.
 
 | Address | Name | Value | Why SMB1 needs it |
 |---|---|---|---|
-| `$0057` | `Player_X_Speed` | `round(requested_dx * 1.28)`, clamped ±127 | the velocity `MoveObjectHorizontally` integrates |
+| `$0057` | `Player_X_Speed` | `round(requested_dx * 1.28)`; ordinary locomotion capped at ±64, bounded attack/root bursts remain within signed ±127 | the velocity `MoveObjectHorizontally` integrates |
 | `$0700` | `Player_XSpeedAbsolute` | `abs(Player_X_Speed)` | **not decoration** — `$B51C` reads it to pick the speed tier and `$B4BB` reads it to scale jump height, so a stale value makes Falcon jump like a walking Mario |
 
 Three more from the vertical hook, all of them bytes `ImposeGravity` itself
@@ -373,18 +376,22 @@ Scripted run, mod enabled, World 1-1, from the always-on ring:
 
 ```
 f  28  WAIT        X_Speed    0 =  0.00 px/f
-f 621  DASH        X_Speed  102 =  6.38 px/f
-f 637  RUN         X_Speed   96 =  6.00 px/f     (+16 frames = dash_to_run)
-f1048  RUN_BRAKE   X_Speed   93 =  5.81 px/f
-f1054  WAIT        X_Speed   76 =  4.75 px/f
-f1059  TURN        X_Speed   65 =  4.06 px/f
+f 621  DASH        X_Speed   64 =  4.00 px/f
+f 637  RUN         X_Speed   64 =  4.00 px/f     (+16 frames = dash_to_run)
+f1048  RUN_BRAKE   X_Speed   64 =  4.00 px/f
+f1054  WAIT        X_Speed   64 =  4.00 px/f
+f1059  TURN        X_Speed   64 =  4.00 px/f
 f1063  WALK_FAST   X_Speed  -33 = -2.06 px/f     (+4 frames = TURN flag frame)
 ```
 
 - Dash → run fires exactly 16 frames after dash entry, matching `dash_to_run`.
 - Turn flips direction exactly 4 frames in, matching the motion script's
   `SetFlag1` at t=4.
-- Peak 6.38 px/frame = **2.55× Mario's own maximum**.
+- Host peak for sustained locomotion is 4.00 px/frame = **1.60× Mario's own maximum**.
+- The 4px boundary is structural: `UpdScrollVar` services one parser task per
+  frame and an eight-task cycle prepares two 16px columns (32/8 = 4px/frame).
+  The former 6px run let `ScrollThirtyTwo` accumulate signed-byte debt and
+  allowed the camera to outrun `CurrentPageLoc`.
 - A/B screenshots at frame 120 of identical held input: vanilla Mario is at the
   first question block, Falcon is past the block row at the pipe.
 
