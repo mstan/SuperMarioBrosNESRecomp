@@ -235,80 +235,67 @@ static const char *cf_state_name(ForeignMoveState state)
     return falcon_state_name(state);
 }
 
-/*
- * Save-state hook (M5.5). Registered under SMASH64_CAPTAIN_FALCON_ID -- the
- * fighter's own instance lives here (s_fighter above), and s_fighter is what
- * every host, not just SMB1's adapter, drives through this ABI.
- *
- * ForeignState travels in the same blob as the fighter, not the adapter's:
- * it is engine-owned but per-fighter (nes_foreign_state() returns whichever
- * controller is active), and this file already owns the reset path for both
- * (cf_reset sets state fields straight from s_fighter). Splitting it into a
- * second hook would let the two drift out of sync on load with no way to
- * detect it; one hook, one atomic restore.
- *
- * Layout: [0] version, [1] fighter blob length, [2..] fighter blob (itself
- * version-tagged by falcon_serialize), [2+n] ForeignState length, [3+n..]
- * raw ForeignState. The length prefixes let either half change size across
- * a future version without the other needing to know.
- */
+/* The engine's active-controller record now owns ForeignState and the stable
+ * controller identity. Captain Falcon contributes only its private fighter
+ * struct. The old id below remains registered as a read-only migration path
+ * for existing Falcon saves; new saves emit no record under that id. */
 #define CF_SAVESTATE_VERSION 1
 
-static int cf_savestate_get(uint8_t *buf, int cap)
+static int cf_private_state_get(const ForeignState *state, uint8_t *buf,
+                                int cap)
 {
-    const ForeignState *fs = nes_foreign_state();
-    uint8_t fs_len = fs ? (uint8_t)sizeof(*fs) : 0;
-    int fighter_len;
-    int off = 0;
-
-    if (cap < 3) return -1;
-    buf[off++] = CF_SAVESTATE_VERSION;
-
-    /* Reserve the length byte, then let falcon_serialize write straight past
-     * it -- avoids a second buffer and a copy. */
-    fighter_len = falcon_serialize(&s_fighter, buf + off + 1, cap - off - 1);
-    if (fighter_len < 0 || fighter_len > 255) return -1;
-    buf[off] = (uint8_t)fighter_len;
-    off += 1 + fighter_len;
-
-    if (off + 1 > cap) return -1;
-    buf[off++] = fs_len;
-    if (fs_len) {
-        if (off + fs_len > cap) return -1;
-        memcpy(buf + off, fs, fs_len);
-        off += fs_len;
-    }
-    return off;
+    (void)state;
+    return falcon_serialize(&s_fighter, buf, cap);
 }
 
-static int cf_savestate_set(const uint8_t *buf, int len)
+static int cf_private_state_set(ForeignState *state, const uint8_t *buf,
+                                int len)
+{
+    FalconFighter candidate;
+    (void)state;
+    if (!falcon_deserialize(&candidate, buf, len)) return 0;
+    s_fighter = candidate;
+    return 1;
+}
+
+static int cf_legacy_savestate_get(uint8_t *buf, int cap)
+{
+    (void)buf;
+    (void)cap;
+    return 0;
+}
+
+static int cf_legacy_savestate_set(const uint8_t *buf, int len)
 {
     uint8_t fighter_len, fs_len;
+    FalconFighter fighter_candidate;
+    ForeignState fs_candidate;
+    const ForeignController *active;
     ForeignState *fs;
     int off = 1;
 
+    if (len == 0) return 1;
+    active = nes_foreign_active();
+    if (!active || strcmp(active->id, SMASH64_CAPTAIN_FALCON_ID) != 0)
+        return 1; /* A legacy Falcon record cannot alter another fighter. */
     if (len < 1 || buf[0] != CF_SAVESTATE_VERSION) return 0;
 
     if (off + 1 > len) return 0;
     fighter_len = buf[off++];
     if (off + fighter_len > len) return 0;
-    if (!falcon_deserialize(&s_fighter, buf + off, fighter_len))
+    if (!falcon_deserialize(&fighter_candidate, buf + off, fighter_len))
         return 0;
     off += fighter_len;
 
     if (off + 1 > len) return 0;
     fs_len = buf[off++];
     fs = nes_foreign_state();
-    if (fs_len && fs) {
-        if (off + fs_len > len) return 0;
-        /* Size mismatch means a layout drift this version byte does not
-         * otherwise gate on (e.g. built against a different engine). Skip
-         * restoring ForeignState rather than memcpy a foreign layout over
-         * it; the fighter half above is still restored. */
-        if (fs_len == (uint8_t)sizeof(*fs))
-            memcpy(fs, buf + off, fs_len);
-        off += fs_len;
-    }
+    if (!fs || (fs_len != 0 && fs_len != (uint8_t)sizeof(*fs))) return 0;
+    if (off + fs_len != len) return 0;
+    if (fs_len) memcpy(&fs_candidate, buf + off, sizeof(fs_candidate));
+
+    s_fighter = fighter_candidate;
+    if (fs_len) *fs = fs_candidate;
     return 1;
 }
 
@@ -324,7 +311,11 @@ static const ForeignController kCaptainFalcon = {
 int smash64_captain_falcon_register(void)
 {
     int ok = nes_foreign_register(&kCaptainFalcon);
+    ok &= nes_foreign_register_private_state(SMASH64_CAPTAIN_FALCON_ID,
+                                             cf_private_state_get,
+                                             cf_private_state_set);
     ok &= nes_mod_register_savestate_hook(SMASH64_CAPTAIN_FALCON_ID,
-                                          cf_savestate_get, cf_savestate_set);
+                                          cf_legacy_savestate_get,
+                                          cf_legacy_savestate_set);
     return ok;
 }

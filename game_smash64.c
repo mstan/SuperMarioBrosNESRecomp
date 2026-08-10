@@ -190,6 +190,20 @@ _Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
 /* M5.5 save-state hook id -- the adapter half. See game_smash64_savestate_get
  * below for the layout and what it deliberately omits. */
 #define SMASH64_ADAPTER_SAVESTATE_ID "super-mario-bros.smash64.adapter"
+#define SMASH64_CONTROLLER_SAVESTATE_ID \
+    "super-mario-bros.smash64.active-controller"
+
+static int game_smash64_controller_savestate_get(uint8_t *buf, int cap)
+{
+    return nes_foreign_serialize_active(buf, cap);
+}
+
+static int game_smash64_controller_savestate_set(const uint8_t *buf, int len)
+{
+    /* A zero-byte getter omits the record in current saves, but accepting it
+     * keeps this callback harmless for tools that preserve empty records. */
+    return len == 0 ? 1 : nes_foreign_deserialize_active(buf, len);
+}
 
 /*
  * PlayerPhysicsSub ($B450) -- M3.5, the jumpsquat window.
@@ -2362,5 +2376,9 @@ int game_smash64_register_hooks(void)
     ok &= nes_mod_register_savestate_hook(SMASH64_ADAPTER_SAVESTATE_ID,
                                           game_smash64_savestate_get,
                                           game_smash64_savestate_set);
+    ok &= nes_mod_register_savestate_hook(
+        SMASH64_CONTROLLER_SAVESTATE_ID,
+        game_smash64_controller_savestate_get,
+        game_smash64_controller_savestate_set);
     return ok;
 }
