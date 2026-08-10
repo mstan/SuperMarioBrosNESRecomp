@@ -33,6 +33,8 @@ add_executable(SuperMarioBrosRecomp
     mods/smash64_owner_assets.c
     mods/smash64/characters/captain_falcon.c
     mods/smash64/ssb_ported/falcon_locomotion.c
+    mods/smash64/characters/pikachu.c
+    mods/smash64/ssb_ported/pikachu_locomotion.c
     nes_snapshot.c
     verify_mode.c
     watchdog.c
