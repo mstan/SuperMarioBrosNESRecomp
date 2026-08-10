@@ -243,16 +243,25 @@ static void freeze_enemy(int slot, unsigned frames)
     f->y_speed = g_ram[Enemy_Y_Speed + slot];
 }
 
-static void defeat_slot(int slot)
+static int defeat_slot(int slot)
 {
     int ex = ((int)g_ram[Enemy_PageLoc + slot] << 8) |
              g_ram[Enemy_X_Position + slot];
     int ey = g_ram[Enemy_Y_Position + slot];
-    game_smash64_defeat_enemies(ex, ex + 16, ey, ey + 24, 1);
+    uint8_t square1 = g_ram[Square1SoundQueue];
+    int hits = game_smash64_defeat_enemies(ex, ex + 16, ey, ey + 24, 1);
+    /* ShellOrBlockDefeat always queues SMB's $08 enemy-smack effect. Samus
+     * supplies Metroid's EnemyHit cue below, and playing both produces a harsh
+     * detuned stack, most obvious under the sustained Screw Attack noise. Keep
+     * the native state/score/floatey-number consequences, but restore whatever
+     * unrelated Square 1 request existed before the native helper. */
+    g_ram[Square1SoundQueue] = square1;
+    return hits;
 }
 
 static void star_defeat_slot(int slot)
 {
+    if (g_ram[Enemy_State + slot] & 0x20) return;
     if (g_ram[Enemy_ID + slot] == Bowser) {
         g_ram[BowserHitPoints] = 0;
         g_ram[Enemy_State + slot] = 0x20;
@@ -264,10 +273,12 @@ static void star_defeat_slot(int slot)
          * Bullet Bills). Once the tight Samus overlap is proven, invoke the
          * same native defeat consequence SMB uses for invincible contact. */
         CPU6502State save_cpu = g_cpu;
+        uint8_t square1 = g_ram[Square1SoundQueue];
         g_cpu.X = (uint8_t)slot;
         RelativeEnemyPosition();
         g_cpu.X = (uint8_t)slot;
         ShellOrBlockDefeat();
+        g_ram[Square1SoundQueue] = square1;
         g_cpu = save_cpu;
     }
     game_samus_audio_play(SAMUS_AUDIO_ENEMY_HIT);
@@ -294,9 +305,7 @@ static void hit_enemy(int slot, int missile, int screw)
             }
         }
         freeze_enemy(slot, missile ? 90u : SAMUS_FREEZE_FRAMES);
-    } else {
-        defeat_slot(slot);
-    }
+    } else if (!defeat_slot(slot)) return;
     game_samus_audio_play(SAMUS_AUDIO_ENEMY_HIT);
 }
 
@@ -307,7 +316,8 @@ static int shot_hits_enemy(SamusShot *shot)
         double half_w = shot->missile ? 6.0 : 2.0;
         double half_h = 2.0;
         if (!g_ram[Enemy_Flag + slot] ||
-            g_ram[Enemy_Y_HighPos + slot] != 1) continue;
+            g_ram[Enemy_Y_HighPos + slot] != 1 ||
+            (g_ram[Enemy_State + slot] & 0x20)) continue;
         enemy_hurtbox(slot, &el, &er, &et, &eb);
         if (overlap(shot->x - half_w, shot->x + half_w, el, er) &&
             overlap(shot->y - half_h, shot->y + half_h, et, eb)) {
@@ -460,7 +470,8 @@ static void damage_enemies_in_box(double left, double right,
     for (int slot = 0; slot < 5; ++slot) {
         double el, er, et, eb;
         if (!g_ram[Enemy_Flag + slot] ||
-            g_ram[Enemy_Y_HighPos + slot] != 1) continue;
+            g_ram[Enemy_Y_HighPos + slot] != 1 ||
+            (g_ram[Enemy_State + slot] & 0x20)) continue;
         if (screw && s_frozen[slot].timer) continue;
         enemy_hurtbox(slot, &el, &er, &et, &eb);
         if (overlap(left, right, el, er) &&
