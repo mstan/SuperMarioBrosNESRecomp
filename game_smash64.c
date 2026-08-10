@@ -29,7 +29,7 @@
 #include "game_smash64_attack_policy.h"
 #include "game_smash64_assets.h"
 #include "game_smash64_audio.h"
-#include "mods/smash64/characters/captain_falcon.h"
+#include "game_smash64_fighter_profile.h"
 
 #include "foreign_controller.h"
 #include "mod_function_hooks.h"
@@ -64,9 +64,7 @@ _Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
 /* nibble into the position. So a Smash unit converts as               */
 /*     smash_units * 0.08 px/unit * 16 = smash_units * 1.28            */
 /* ------------------------------------------------------------------ */
-#define FALCON_TO_SMB1_PX     0.08
 #define SMB1_XSPEED_PER_PX    16.0
-#define FALCON_TO_SMB1_XSPEED (FALCON_TO_SMB1_PX * SMB1_XSPEED_PER_PX)
 
 /* SMB1's own caps, for scale: MaxRightXSpdData $B443 = {40,24,16,12}, so
  * Mario's top run is 40/16 = 2.5 px/frame. Falcon's authored run would map to
@@ -238,6 +236,7 @@ _Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
 
 static int  s_enabled = 0;
 static char s_controller_id[96] = {0};
+static const Smash64FighterProfile *s_profile = NULL;
 static int  s_selected = 0;
 static int  s_announced = 0;
 
@@ -388,10 +387,24 @@ static uint32_t s_pending_flags = 0;
  */
 static uint8_t block_adder_index(void)
 {
-    /* Falcon always uses SMB1's Big-Mario collision envelope regardless of
-     * the hidden native power-up size. Its Y+8/Y+24 side probes fit a true
-     * 32px passage with margin but still reject a 16px passage. */
-    return 0x00;
+    return s_profile ? s_profile->block_adder_index : 0x00;
+}
+
+static double source_units_to_px(double units)
+{
+    return units * (s_profile ? s_profile->units_to_smb_px : 0.08);
+}
+
+static double smb_px_to_source_units(double pixels)
+{
+    const double scale = s_profile ? s_profile->units_to_smb_px : 0.08;
+    return pixels / scale;
+}
+
+static int state_has_trait(unsigned state, uint32_t trait)
+{
+    return (smash64_fighter_profile_state_traits(s_profile, state) & trait)
+           != 0;
 }
 
 /* PlayerHeadCollision writes $23 as a temporary blank while one of SMB1's
@@ -611,7 +624,8 @@ static int smb1_can_step_down_one_tile(int x_pos, int page, int dir)
     int down_y;
     int clear;
 
-    if (g_ram[Player_State] != 0 || g_ram[Player_Y_HighPos] != 1 ||
+    if (!s_profile || !s_profile->allow_one_tile_step_down ||
+        g_ram[Player_State] != 0 || g_ram[Player_Y_HighPos] != 1 ||
         save_y >= 0xBF)
         return 0;
 
@@ -727,37 +741,11 @@ static void sample_input(ForeignInput *out)
  * and special root tracks are finite bursts with mandatory recovery; clipping
  * those here breaks their authored terrain reach (notably Falcon Kick) while
  * providing no additional sustained-rate safety. */
-static int state_needs_stream_speed_limit(unsigned state)
-{
-    switch (state) {
-    case FL_WAIT:
-    case FL_WALK_SLOW:
-    case FL_WALK_MIDDLE:
-    case FL_WALK_FAST:
-    case FL_DASH:
-    case FL_RUN:
-    case FL_RUN_BRAKE:
-    case FL_TURN:
-    case FL_TURN_RUN:
-    case FL_KNEEBEND:
-    case FL_JUMP_F:
-    case FL_JUMP_B:
-    case FL_JUMP_AERIAL_F:
-    case FL_JUMP_AERIAL_B:
-    case FL_FALL:
-    case FL_FALL_AERIAL:
-    case FL_LANDING_LIGHT:
-    case FL_LANDING_HEAVY:
-        return 1;
-    default:
-        return 0;
-    }
-}
-
 static int8_t clamp_xspeed(double smash_units, unsigned state)
 {
-    double v = smash_units * FALCON_TO_SMB1_XSPEED;
-    const double limit = state_needs_stream_speed_limit(state)
+    double v = source_units_to_px(smash_units) * SMB1_XSPEED_PER_PX;
+    const double limit = state_has_trait(
+                             state, SMASH64_STATE_TRAIT_STREAM_LIMIT)
                              ? SMB1_STREAM_XSPEED_LIMIT
                              : SMB1_XSPEED_FIELD_LIMIT;
 
@@ -870,7 +858,8 @@ void game_smash64_update_input(uint64_t frame_count)
          * would cancel Bound before its authentic root track turns downward.
          * Keep only this screen-edge frame airborne; once Y moves below $20,
          * ordinary host grounding regains authority immediately. */
-        if (fs->state == FL_FALCON_KICK_BOUND &&
+        if (state_has_trait(fs->state,
+                            SMASH64_STATE_TRAIT_KEEP_AIRBORNE_AT_TOP) &&
             g_ram[Player_Y_HighPos] == 1 &&
             g_ram[Player_Y_Position] <= 0x20 && pstate == 0) {
             pstate = 2;
@@ -1027,7 +1016,7 @@ void game_smash64_update_input(uint64_t frame_count)
             /* SMB1's Y grows downward and is in whole px/frame; Falcon's is
              * +up in his own units. The one scale constant undoes both. */
             hit.has_imposed_vy = 1;
-            hit.imposed_vy = -(double)now_ys / FALCON_TO_SMB1_PX;
+            hit.imposed_vy = smb_px_to_source_units(-(double)now_ys);
             s_imposed_frames++;
 
             /*
@@ -1065,7 +1054,8 @@ void game_smash64_update_input(uint64_t frame_count)
         /* Back into the controller's units and sign: SMB1's Y grows downward,
          * Falcon's grows upward, and the one scale constant undoes the
          * projection the hook applied. */
-        hit.actual_dy = -(double)(now_y - s_y_before) / FALCON_TO_SMB1_PX;
+        hit.actual_dy = smb_px_to_source_units(
+            -(double)(now_y - s_y_before));
         s_wrote_y_valid = 0;
     }
 
@@ -1084,7 +1074,8 @@ void game_smash64_update_input(uint64_t frame_count)
             hit.hit_wall = 1;
             s_x_sub = 0.0;
         }
-        hit.actual_dx = (double)(now_x - s_x_before) / FALCON_TO_SMB1_PX;
+        hit.actual_dx = smb_px_to_source_units(
+            (double)(now_x - s_x_before));
         s_wrote_x_valid = 0;
     }
 
@@ -1251,7 +1242,7 @@ static int move_player_vertically_hook(uint16_t addr)
     if (fs->grounded) return 0;
 
     /* Falcon's vel_air_y is +UP in his own units; SMB1's Y grows DOWNWARD. */
-    dy_px = -(fs->vy) * FALCON_TO_SMB1_PX;
+    dy_px = source_units_to_px(-(fs->vy));
 
     s_y_sub += dy_px;
     whole = (int)s_y_sub;          /* truncate toward zero, either sign */
@@ -1308,7 +1299,9 @@ static int move_player_vertically_hook(uint16_t addr)
              * that hazardous special only. Ordinary jumps and Dive must keep
              * SMB1's native high-byte-0 representation: World 1-2 deliberately
              * routes the player above the ceiling to its hidden warp zone. */
-            if (!feet && fs->state == FL_FALCON_KICK_BOUND &&
+            if (!feet && state_has_trait(
+                             fs->state,
+                             SMASH64_STATE_TRAIT_CLAMP_AT_GAMEPLAY_TOP) &&
                 (cand_hi < 1 || (cand_hi == 1 && cand < 0x20))) {
                 pos = 0x20;
                 high = 1;
@@ -1325,12 +1318,13 @@ static int move_player_vertically_hook(uint16_t addr)
              * Falcon's stable profile is always the Big $20 extent.
              */
             {
-                int dive_head_barrier =
-                    !feet &&
-                    (fs->state == FL_FALCON_DIVE_GROUND ||
-                     fs->state == FL_FALCON_DIVE_AIR);
+                int dive_head_barrier = !feet && state_has_trait(
+                    fs->state, SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER);
                 if (cand_hi == 1 &&
-                    (feet ? (cand < 0xCF) : (cand >= 0x20)) &&
+                    (feet ? (cand < 0xCF)
+                          : (cand >= (s_profile
+                                         ? s_profile->head_upper_extent
+                                         : 0x20))) &&
                     smb1_solid_at(cand, feet, dive_head_barrier)) {
                     /* Ordinary contact parks at the first blocked coordinate
                      * so SMB1's alignment-gated collision can resolve it.
@@ -1396,8 +1390,9 @@ static int move_player_vertically_hook(uint16_t addr)
          * blocks. A small non-upward value preserves the solid tile while
          * resolve receives hit_ceiling. */
         if (s_swept_block == SMASH64_SWEEP_CEILING &&
-            (fs->state == FL_FALCON_DIVE_GROUND ||
-             fs->state == FL_FALCON_DIVE_AIR))
+            state_has_trait(
+                fs->state,
+                SMASH64_STATE_TRAIT_SUPPRESS_UPWARD_SPEED_ON_CEILING))
             ys = 1;
         if (ys >  127) ys =  127;
         if (ys < -128) ys = -128;
@@ -1499,7 +1494,7 @@ static int move_player_horizontally_hook(uint16_t addr)
                         (uint8_t)(g_ram[Player_Y_Position] + 16);
                     s_y_sub = 0.0;
                     s_pending_external_dy +=
-                        -16.0 / FALCON_TO_SMB1_PX;
+                        smb_px_to_source_units(-16.0);
                 } else {
                     s_x_swept_wall = 1;
                     if (!s_sweep_noblock) break;
@@ -1672,11 +1667,11 @@ static void apply_pending_attack(void)
     if (!s_attack.active || !fs) return;
     facing = fs->facing < 0.0f ? -1.0 : 1.0;
     center_x = (double)player_native_x() + 8.0 +
-               facing * s_attack.offset_x * FALCON_TO_SMB1_PX;
+               facing * source_units_to_px(s_attack.offset_x);
     foot_y = (double)g_ram[Player_Y_Position] + 32.0;
-    center_y = foot_y - s_attack.offset_y * FALCON_TO_SMB1_PX;
-    half_w = s_attack.width * FALCON_TO_SMB1_PX * 0.5;
-    half_h = s_attack.height * FALCON_TO_SMB1_PX * 0.5;
+    center_y = foot_y - source_units_to_px(s_attack.offset_y);
+    half_w = source_units_to_px(s_attack.width) * 0.5;
+    half_h = source_units_to_px(s_attack.height) * 0.5;
     left = center_x - half_w;
     right = center_x + half_w;
     top = center_y - half_h;
@@ -1814,8 +1809,8 @@ static int bounding_box_core_hook(uint16_t addr)
 {
     (void)addr;
     if (g_cpu.X == 0 && g_cpu.Y == 0 &&
-        decide_ownership() == FOREIGN_OWNERSHIP_FOREIGN)
-        g_ram[Player_BoundBoxCtrl] = 0;
+        decide_ownership() == FOREIGN_OWNERSHIP_FOREIGN && s_profile)
+        g_ram[Player_BoundBoxCtrl] = s_profile->player_bbox_ctrl;
     return 0;
 }
 
@@ -1831,12 +1826,13 @@ uint8_t game_smash64_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val)
      * one tile too low. The earlier consequence reads in PlayerHeadCollision
      * remain native, so small Falcon still bumps a brick instead of shattering
      * it. */
+    if (!s_profile) return val;
     if (addr == CrouchingFlag &&
         (pc == 0xDC9A || pc == 0xDCB4 || pc == 0xBD57))
-        return 0;
+        return s_profile->collision_crouching;
     if (addr == PlayerSize &&
         (pc == 0xDC9F || pc == 0xDCB1 || pc == 0xBD5C))
-        return 0;
+        return s_profile->collision_player_size;
     return val;
 }
 
@@ -2127,6 +2123,7 @@ int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_forced_airborne_pending = 0;
     s_forced_airborne_frames = 0;
     s_controller_id[0] = '\0';
+    s_profile = NULL;
     nes_foreign_set_ownership(FOREIGN_OWNERSHIP_NATIVE);
     nes_mod_set_function_hook_enabled(SMASH64_FRICTION_HOOK_ID, 0);
     nes_mod_set_function_hook_enabled(SMASH64_VERTICAL_HOOK_ID, 0);
@@ -2140,6 +2137,14 @@ int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
         return 1;
     }
 
+    s_profile = smash64_fighter_profile_find(controller_id);
+    if (!s_profile) {
+        fprintf(stderr,
+                "[Smash64] No SMB fighter profile registered for '%s' - "
+                "player replacement stays OFF\n", controller_id);
+        return 0;
+    }
+
     snprintf(s_controller_id, sizeof s_controller_id, "%s", controller_id);
     s_selected = nes_foreign_select(s_controller_id);
     if (!s_selected) {
@@ -2148,6 +2153,7 @@ int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
         fprintf(stderr,
                 "[Smash64] No controller registered for '%s' - "
                 "player replacement stays OFF\n", s_controller_id);
+        s_profile = NULL;
         return 0;
     }
 
@@ -2225,7 +2231,7 @@ int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     }
     if (!nes_mod_set_function_hook_enabled(SMASH64_BOUNDING_BOX_HOOK_ID, 1)) {
         fprintf(stderr,
-                "[Smash64] BoundingBoxCore hook is not registered; Falcon "
+                "[Smash64] BoundingBoxCore hook is not registered; fighter "
                 "contact bounds may follow hidden Mario size\n");
     }
     s_enabled = 1;
@@ -2314,8 +2320,10 @@ void game_smash64_update(uint64_t frame_count)
         const ForeignController *ctl = nes_foreign_active();
         const ForeignState *fs = nes_foreign_state();
         s_announced = 1;
-        printf("[Smash64] Falcon has the wheel (state %s, X_Speed %d = %.2f "
+        printf("[Smash64] %s has the wheel (state %s, X_Speed %d = %.2f "
                "px/frame; Mario's own max run is 40 = 2.50)\n",
+               s_profile && s_profile->display_name
+                   ? s_profile->display_name : "Fighter",
                (ctl && ctl->state_name && fs) ? ctl->state_name(fs->state) : "?",
                (int)s_xspeed, (double)s_xspeed / SMB1_XSPEED_PER_PX);
     }
