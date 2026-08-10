@@ -349,16 +349,14 @@ def effect_ia8_particle_env(raw: bytes, name: str) -> tuple[str, int, int, bytes
         red = intensity
         green = 100 + (155 * intensity + 127) // 255
         blue = 255
-        # The N64 XLU particle path visually gates the blue ENV field by the
-        # IA intensity lobe as well as its texel alpha.  The host's ordinary
-        # straight-alpha compositor otherwise preserves low-intensity but
-        # nonzero-alpha background texels as a hard dark 64px rectangle.
-        # Min(I, A) is the bounded host equivalent: it retains every bright
-        # owner-authored lightning edge while clipping the card's invisible
-        # field before the host blend pass.
-        alpha = (200 * min(intensity, tex_alpha) + 127) // 255
-        # script_116 leaves ALPHABLEND disabled, so N64 threshold comparison
-        # discards alpha at or below the source blend color (8).
+        # This is the alpha half of the same source combine LERP: with
+        # PRIM.a=200 and ENV.a=0 it is (200 - 0) * TEXEL0.a + 0.  Do not gate
+        # it by intensity: IA8's low-intensity/high-alpha texels are genuine
+        # source data. Their presentation is handled by the XLU blend mode,
+        # rather than deleting them while baking the immutable owner card.
+        alpha = (200 * tex_alpha + 127) // 255
+        # script_116 leaves ALPHABLEND disabled, so the N64 threshold compare
+        # rejects combined alpha at or below the blend color (8).
         if alpha <= 8:
             alpha = 0
         pixels += struct.pack("<I", (alpha << 24) | (red << 16) |

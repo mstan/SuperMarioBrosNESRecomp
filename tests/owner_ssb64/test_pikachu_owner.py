@@ -120,10 +120,10 @@ class PikachuOwnerRomIntegrationTests(unittest.TestCase):
 
     def test_runtime_baker_supports_hidden_costume_proof(self):
         expected = {
-            0: (643156, "248d1b4e53568f14c13eaa85c14eea19ae7cc0e6d6d5c84bcce39388812d69f5"),
-            1: (645848, "8a2cce060382215079bcaf6616c7ae090a31b8fa7e228383fcb92a35478a8b41"),
-            2: (645848, "4bf130211a67c31e945a81e3a1846d267ef3cdb10bb4a67c438e92d2fbeb2ac6"),
-            3: (645860, "0e987e182c784e37380e5a6e2cc0422d430e240cdd786594203b4f15cdf7bb24"),
+            0: (643156, "e63bd596532f8d0ce9d86afdb972c948cac64a31aef5dd4c0c912187e876b36e"),
+            1: (645848, "0bc3eba571a1947c1acfba54a4610a9b98328fe82c267b340ee4fc060832124f"),
+            2: (645848, "9dcf91c1508ae5e4fab7c7f1339742c264eed041e899c879ea6d1614ccdb3f03"),
+            3: (645860, "b8dc578d31f4772ab2a5ed5b3571aa2c96d67d29ab59ad21ebf38abeb69e8e93"),
         }
         with tempfile.TemporaryDirectory(prefix="pikachu-runtime-") as temporary:
             outputs = []

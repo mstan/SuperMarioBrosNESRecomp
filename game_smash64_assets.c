@@ -1415,8 +1415,17 @@ static void draw_pikachu_effect_card(unsigned effect, unsigned frame,
     v[1].u = (float)texture_width; v[1].v = 0.0f;
     v[2].u = (float)texture_width; v[2].v = (float)texture_height;
     v[3].u = 0.0f;                 v[3].v = (float)texture_height;
-    nes_voxel_mesh_bind_texture(pixels, texture_width, texture_height,
-                                texture_width, 1.0f, 1);
+    if (effect == SMASH64_PIKACHU_EFFECT_THUNDER_AMP) {
+        /* lbParticleDrawTextures is an XLU BILERP texture rectangle. Keep
+         * ordinary cards nearest-filtered and opt only this common particle
+         * into the matching host sampler. */
+        nes_voxel_mesh_bind_texture_bilinear(pixels, texture_width,
+                                             texture_height, texture_width,
+                                             1.0f, 1);
+    } else {
+        nes_voxel_mesh_bind_texture(pixels, texture_width, texture_height,
+                                    texture_width, 1.0f, 1);
+    }
     nes_voxel_mesh_triangle(v[0], v[1], v[2]);
     nes_voxel_mesh_triangle(v[0], v[2], v[3]);
 }
@@ -1556,7 +1565,7 @@ static void draw_pikachu_thunder_amp(const ForeignState *state,
         source_size = 210.0f;
     } else if (frame <= 18u) {
         const unsigned phase = (frame - 1u) % 9u;
-        card = phase < 3u ? 0u : (phase < 6u ? 1u : 2u);
+        card = ((phase + 1u) / 3u) % 3u;
         source_y = phase == 0u || phase == 1u ||
                    phase == 3u || phase == 4u ||
                    phase == 6u || phase == 7u ? 400.0f : 300.0f;

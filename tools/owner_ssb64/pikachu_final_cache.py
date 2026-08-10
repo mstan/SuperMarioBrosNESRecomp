@@ -19,16 +19,16 @@ import pikachu_owner
 
 
 FORMAT = "smb1-smash64-pikachu-owner-cache"
-RECIPE_VERSION = 8
+RECIPE_VERSION = 9
 RUNTIME_FILENAME = "pikachu_runtime.bin"
 # Source-derived runtime hashes are intentionally updated with the cache
 # recipe whenever the binary layout changes. These were regenerated from the
 # accepted US v1.0 owner ROM after the presentation-animation expansion.
 RUNTIME_HASHES = {
-    0: "248d1b4e53568f14c13eaa85c14eea19ae7cc0e6d6d5c84bcce39388812d69f5",
-    1: "8a2cce060382215079bcaf6616c7ae090a31b8fa7e228383fcb92a35478a8b41",
-    2: "4bf130211a67c31e945a81e3a1846d267ef3cdb10bb4a67c438e92d2fbeb2ac6",
-    3: "0e987e182c784e37380e5a6e2cc0422d430e240cdd786594203b4f15cdf7bb24",
+    0: "e63bd596532f8d0ce9d86afdb972c948cac64a31aef5dd4c0c912187e876b36e",
+    1: "0bc3eba571a1947c1acfba54a4610a9b98328fe82c267b340ee4fc060832124f",
+    2: "9dcf91c1508ae5e4fab7c7f1339742c264eed041e899c879ea6d1614ccdb3f03",
+    3: "b8dc578d31f4772ab2a5ed5b3571aa2c96d67d29ab59ad21ebf38abeb69e8e93",
 }
 
 
@@ -88,9 +88,11 @@ def verify(root: Path, costume: int | None = None) -> dict:
             manifest.get("normalized_rom_sha1") != build_cache.CANONICAL_SHA1:
         raise ValueError("Pikachu cache identity changed")
     runtime = root / RUNTIME_FILENAME
-    if _sha256(runtime) != RUNTIME_HASHES[selected] or \
+    runtime_hash = _sha256(runtime)
+    if runtime_hash != RUNTIME_HASHES[selected] or \
             manifest.get("runtime_sha256") != RUNTIME_HASHES[selected]:
-        raise ValueError("Pikachu runtime blob failed validation")
+        raise ValueError("Pikachu runtime blob failed validation "
+                         f"(expected {RUNTIME_HASHES[selected]}, got {runtime_hash})")
     clips = manifest.get("audio")
     if not isinstance(clips, list) or len(clips) != len(pikachu_audio.APPROVED_CUES):
         raise ValueError("Pikachu audio manifest is incomplete")

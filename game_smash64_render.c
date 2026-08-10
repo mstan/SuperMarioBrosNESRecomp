@@ -323,33 +323,38 @@ static void composite_falcon_ssaa(uint32_t *framebuffer, int width,
                 s_falcon_ssaa[(sy + 1) * source_width + sx],
                 s_falcon_ssaa[(sy + 1) * source_width + sx + 1]
             };
-            unsigned count = 0, red = 0, green = 0, blue = 0;
+            unsigned alpha_sum = 0, red_sum = 0, green_sum = 0, blue_sum = 0;
             uint32_t destination;
             unsigned dr, dg, db;
             if (behind_background &&
                 ppu_renderer_background_opaque(x, y))
                 continue;
             for (int i = 0; i < 4; ++i) {
-                if ((samples[i] >> 24) == 0) continue;
-                ++count;
-                red += (samples[i] >> 16) & 0xFFu;
-                green += (samples[i] >> 8) & 0xFFu;
-                blue += samples[i] & 0xFFu;
+                const unsigned alpha = samples[i] >> 24;
+                if (!alpha) continue;
+                alpha_sum += alpha;
+                red_sum += ((samples[i] >> 16) & 0xFFu) * alpha;
+                green_sum += ((samples[i] >> 8) & 0xFFu) * alpha;
+                blue_sum += (samples[i] & 0xFFu) * alpha;
             }
-            if (!count) continue;
+            if (!alpha_sum) continue;
 
             destination = framebuffer[y * width + x];
             dr = (destination >> 16) & 0xFFu;
             dg = (destination >> 8) & 0xFFu;
             db = destination & 0xFFu;
-            /* Averaging the covered model samples with one copy of the
-             * untouched NES pixel per uncovered subpixel is a 2x box filter
-             * in premultiplied-coverage form. */
-            red = (red + (4u - count) * dr + 2u) / 4u;
-            green = (green + (4u - count) * dg + 2u) / 4u;
-            blue = (blue + (4u - count) * db + 2u) / 4u;
+            /* Resolve the transparent SSAA target in premultiplied alpha.
+             * Each subpixel is a straight-alpha XLU result; averaging only
+             * its RGB, as the original opaque-model resolver did, preblends
+             * cards over black. */
+            red_sum += dr * (4u * 255u - alpha_sum);
+            green_sum += dg * (4u * 255u - alpha_sum);
+            blue_sum += db * (4u * 255u - alpha_sum);
             framebuffer[y * width + x] =
-                0xFF000000u | (red << 16) | (green << 8) | blue;
+                0xFF000000u |
+                (((red_sum + 510u) / 1020u) << 16) |
+                (((green_sum + 510u) / 1020u) << 8) |
+                ((blue_sum + 510u) / 1020u);
         }
     }
 }

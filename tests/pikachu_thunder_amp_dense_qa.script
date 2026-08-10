@@ -50,4 +50,10 @@ WAIT 2
 SCREENSHOT C:/temp/pikachu_thunder_dense_56.png
 WAIT 2
 SCREENSHOT C:/temp/pikachu_thunder_dense_58.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_dense_60.png
+WAIT 4
+SCREENSHOT C:/temp/pikachu_thunder_dense_64.png
+WAIT 4
+SCREENSHOT C:/temp/pikachu_thunder_dense_68.png
 EXIT 0
