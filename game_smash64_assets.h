@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Runtime-only Captain Falcon asset presentation.
+ * Runtime-only selected Smash 64 fighter presentation.
  *
  * The loader consumes assets_ssb64/falcon_runtime.bin, which is generated
  * locally from the owner's ignored ROM extraction. No model, texture, or
@@ -12,7 +12,22 @@
  * 2 for the Falcon-only supersample surface).
  */
 int game_smash64_assets_prepare_root(const char *root);
+int game_smash64_assets_prepare_character_root(const char *root,
+                                                const char *controller_id);
 void game_smash64_assets_clear(void);
+
+/* Owner-baked Pikachu special-effect cards.  These are deliberately exposed
+ * as read-only texture views rather than making the generic model layout part
+ * of the presentation API.  Returns zero when an older/incomplete cache is
+ * active, so callers can simply omit the effect rather than inventing a
+ * misleading flat replacement. */
+enum {
+    SMASH64_PIKACHU_EFFECT_THUNDER_JOLT = 0,
+    SMASH64_PIKACHU_EFFECT_THUNDER = 1,
+};
+int game_smash64_assets_pikachu_effect_texture(
+    unsigned effect, unsigned frame, const unsigned int **pixels,
+    int *width, int *height);
 
 int game_smash64_assets_draw(float center_x, float foot_y,
                              float output_scale);

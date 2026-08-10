@@ -45,6 +45,7 @@ import bake_falcon_runtime  # noqa: E402
 import build_cache  # noqa: E402
 import decode_intermediates  # noqa: E402
 import owner_audio  # noqa: E402
+import pikachu_final_cache  # noqa: E402
 
 
 FINAL_FORMAT = "smb1-smash64-falcon-owner-cache"
@@ -312,9 +313,13 @@ def write_result_file(path: Path, cache: Path) -> None:
     target = _require_external(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     name = cache.name
-    if not name.startswith(f"falcon-final-r{FINAL_RECIPE_VERSION}-") or any(
+    valid_prefix = (
+        name.startswith(f"falcon-final-r{FINAL_RECIPE_VERSION}-") or
+        name.startswith(
+            f"pikachu-final-r{pikachu_final_cache.RECIPE_VERSION}-"))
+    if not valid_prefix or any(
             separator in name for separator in ("/", "\\")):
-        raise ValueError("refusing to publish an invalid Falcon cache name")
+        raise ValueError("refusing to publish an invalid fighter cache name")
     temporary = target.with_name(f".{target.name}.{os.getpid()}.tmp")
     try:
         temporary.write_text(name + "\n", encoding="utf-8")
@@ -332,15 +337,25 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--result-file", type=Path,
                         help="atomically write the final cache directory basename here")
     parser.add_argument("--rebuild", action="store_true", help="re-run all stages even if a valid final cache exists")
+    parser.add_argument("--fighter", choices=("captain-falcon", "pikachu"),
+                        default="captain-falcon")
+    parser.add_argument("--costume", type=int, default=0,
+                        help="developer-only Pikachu costume id (0..3)")
     args = parser.parse_args(argv)
     try:
         if args.verify is not None:
-            manifest = verify_final_cache(args.verify)
+            manifest = (pikachu_final_cache.verify(args.verify)
+                        if args.fighter == "pikachu"
+                        else verify_final_cache(args.verify))
             print(f"verified {args.verify} (recipe {manifest['recipe_version']})")
             return 0
         if args.rom is None:
             parser.error("--rom is required unless --verify is used")
-        output = build_final_cache(args.rom, args.cache_root, args.rebuild)
+        output = (pikachu_final_cache.build(
+                      args.rom, _require_external(args.cache_root), args.costume)
+                  if args.fighter == "pikachu"
+                  else build_final_cache(args.rom, args.cache_root,
+                                         args.rebuild))
         if args.result_file is not None:
             write_result_file(args.result_file, output)
         print(output)

@@ -30,7 +30,7 @@ import decode_intermediates as falcon_decode
 import owner_audio
 
 
-RECIPE_VERSION = 2
+RECIPE_VERSION = 3
 CACHE_FORMAT = "smb1-smash64-pikachu-prototype-cache"
 MODEL_ID = 341
 MAIN_ID = 243
@@ -227,9 +227,25 @@ def _mobj(raw: bytes, offset: int) -> dict:
         raise ValueError(f"MObjSub at 0x{offset:X} exceeds model")
     sprite_table = _token(raw, offset + 4)
     palette_table = _token(raw, offset + 0x2C)
+    sprite = _token(raw, sprite_table) if sprite_table is not None else None
+    palette = _token(raw, palette_table) if palette_table is not None else None
+    palette_argb = None
+    if palette is not None:
+        if palette + 32 > len(raw):
+            raise ValueError(f"MObjSub palette at 0x{palette:X} exceeds model")
+        palette_argb = [
+            falcon_decode._rgba16_to_argb(
+                struct.unpack_from(">H", raw, palette + index * 2)[0])
+            for index in range(16)
+        ]
     return {
         "offset": offset, "format": raw[offset + 2], "size": raw[offset + 3],
         "sprite_table": sprite_table, "palette_table": palette_table,
+        "selected_sprite_offset": sprite,
+        "selected_palette_offset": palette,
+        "selected_palette_argb": palette_argb,
+        "source_width": struct.unpack_from(">H", raw, offset + 0x0C)[0],
+        "source_height": struct.unpack_from(">H", raw, offset + 0x0E)[0],
         "primary_argb": falcon_decode._mobj_primary(raw, offset),
         "env_rgba": raw[offset + 0x58:offset + 0x5C].hex(),
         "sha256": hashlib.sha256(raw[offset:offset + 0x78]).hexdigest(),

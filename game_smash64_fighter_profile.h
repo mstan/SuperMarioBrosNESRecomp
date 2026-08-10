@@ -18,12 +18,18 @@ typedef enum Smash64FighterStateTrait {
     SMASH64_STATE_TRAIT_CLAMP_AT_GAMEPLAY_TOP = 1u << 2,
     SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER = 1u << 3,
     SMASH64_STATE_TRAIT_SUPPRESS_UPWARD_SPEED_ON_CEILING = 1u << 4,
-    SMASH64_STATE_TRAIT_ROOT_BURST = 1u << 5
+    SMASH64_STATE_TRAIT_ROOT_BURST = 1u << 5,
+    /* Move both axes through one <=1px DDA. Quick Attack cannot use the
+     * ordinary horizontal-then-vertical L-shaped integration without cutting
+     * a solid tile corner that its authored diagonal never cleared. */
+    SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP = 1u << 6
 } Smash64FighterStateTrait;
 
 typedef struct Smash64FighterProfile {
     const char *controller_id;
     const char *display_name;
+    /* Stable host-local identity for adapter/action save records. */
+    uint32_t savestate_tag;
 
     /* Source-space to SMB pixel conversion. */
     double units_to_smb_px;
@@ -47,4 +53,3 @@ const Smash64FighterProfile *smash64_fighter_profile_find(
     const char *controller_id);
 uint32_t smash64_fighter_profile_state_traits(
     const Smash64FighterProfile *profile, unsigned state);
-

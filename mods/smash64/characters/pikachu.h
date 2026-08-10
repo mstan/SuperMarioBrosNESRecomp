@@ -4,6 +4,26 @@
 
 #include "../ssb_ported/pikachu_locomotion.h"
 
+/* Cue ids are controller-private and deliberately outside Captain Falcon's
+ * legacy 1..11 range. The SMB audio adapter selects exactly one character
+ * table before activation, but disjoint ids keep traces and saves unambiguous. */
+typedef enum PikachuAudioCue {
+    PIKACHU_AUDIO_SPECIAL_N = 0x100,
+    PIKACHU_AUDIO_SPECIAL_HI,
+    PIKACHU_AUDIO_SPECIAL_LW,
+    PIKACHU_AUDIO_LIGHT_S,
+    PIKACHU_AUDIO_LIGHT_M,
+    PIKACHU_AUDIO_LIGHT_L,
+    PIKACHU_AUDIO_ELECTRIC_1,
+    PIKACHU_AUDIO_ELECTRIC_2,
+    PIKACHU_AUDIO_ELECTRIC_3,
+    PIKACHU_AUDIO_ELECTRIC_5,
+    PIKACHU_AUDIO_QUICK_ATTACK_START,
+    PIKACHU_AUDIO_THUNDER,
+    PIKACHU_AUDIO_ELECTRIC_LOOP,
+    PIKACHU_AUDIO_CUE_COUNT
+} PikachuAudioCue;
+
 /* Registers the generic controller and its versioned private state callbacks. */
 int smash64_pikachu_register(void);
 /* Controller-local event/projectile interface until the SMB host ABI consumes it. */

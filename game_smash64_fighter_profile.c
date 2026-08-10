@@ -55,6 +55,7 @@ static uint32_t captain_falcon_state_traits(unsigned state)
 static const Smash64FighterProfile kCaptainFalconProfile = {
     SMASH64_CAPTAIN_FALCON_ID,
     "Captain Falcon",
+    0x43463634u, /* CF64 */
     0.08,
     0x00,
     0,
@@ -71,10 +72,15 @@ static uint32_t pikachu_state_traits(unsigned state)
                           ? SMASH64_STATE_TRAIT_STREAM_LIMIT
                           : SMASH64_STATE_TRAIT_NONE;
     switch (state) {
-    case PK_QUICK_ATTACK_START:
     case PK_QUICK_ATTACK_ZIP1:
-    case PK_QUICK_ATTACK_WINDOW:
     case PK_QUICK_ATTACK_ZIP2:
+        traits |= SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER |
+                  SMASH64_STATE_TRAIT_SUPPRESS_UPWARD_SPEED_ON_CEILING |
+                  SMASH64_STATE_TRAIT_ROOT_BURST |
+                  SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP;
+        break;
+    case PK_QUICK_ATTACK_START:
+    case PK_QUICK_ATTACK_WINDOW:
     case PK_QUICK_ATTACK_RECOVERY:
         traits |= SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER |
                   SMASH64_STATE_TRAIT_SUPPRESS_UPWARD_SPEED_ON_CEILING |
@@ -89,6 +95,7 @@ static uint32_t pikachu_state_traits(unsigned state)
 static const Smash64FighterProfile kPikachuProfile = {
     SMASH64_PIKACHU_ID,
     "Pikachu",
+    0x504B3634u, /* PK64 */
     PIKACHU_SOURCE_SCALE,
     0x0E,
     1,

@@ -1,0 +1,34 @@
+LOG pikachu-model-visual-qa
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 100
+
+# Leave the opening hill so the model is read against sky/ground rather than
+# similarly colored scenery.
+HOLD RIGHT
+WAIT 38
+RELEASE RIGHT
+WAIT 4
+SCREENSHOT C:/temp/pikachu_model_idle_right.png
+
+HOLD LEFT
+WAIT 2
+RELEASE LEFT
+WAIT 4
+SCREENSHOT C:/temp/pikachu_model_idle_left.png
+
+HOLD UP
+WAIT 2
+RELEASE UP
+WAIT 2
+SCREENSHOT C:/temp/pikachu_model_jump_start.png
+WAIT 8
+SCREENSHOT C:/temp/pikachu_model_jump_rise.png
+WAIT 9
+SCREENSHOT C:/temp/pikachu_model_jump_peak.png
+WAIT 45
+SCREENSHOT C:/temp/pikachu_model_landed.png
+EXIT 0

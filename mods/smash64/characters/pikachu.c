@@ -4,10 +4,20 @@
 
 #include "foreign_controller.h"
 
+#include <limits.h>
 #include <string.h>
 
 /* The sole mutable fighter instance behind the generic controller ABI. */
 static PikachuFighter s_fighter;
+
+static void push_audio(ForeignMoveResult *out, uint32_t cue)
+{
+    ForeignAudioEvent *event;
+    if (out->audio.count >= FOREIGN_AUDIO_EVENT_CAPACITY) return;
+    event = &out->audio.events[out->audio.count++];
+    event->cue = cue;
+    event->gain_percent = 100;
+}
 
 static void pk_reset(ForeignState *state)
 {
@@ -26,6 +36,8 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
                     ForeignMoveResult *out)
 {
     PikachuInputRaw raw;
+    const ForeignMoveState previous_state = state->state;
+    const unsigned previous_frame = state->state_frame;
     int was_grounded = s_fighter.grounded;
     memset(&raw, 0, sizeof(raw));
     raw.stick_x = (int)(input->stick_x * 80.0f);
@@ -51,6 +63,42 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
     out->attack.damage = s_fighter.last_motion.attack.damage;
     out->attack.flags = s_fighter.last_motion.attack.break_blocks ? FOREIGN_ATTACK_BREAK_BLOCKS : 0;
     out->attack.active = s_fighter.last_motion.attack.active;
+
+    {
+        const uint32_t events = s_fighter.last_motion.events;
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_N))
+            push_audio(out, PIKACHU_AUDIO_SPECIAL_N);
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_HI))
+            push_audio(out, PIKACHU_AUDIO_SPECIAL_HI);
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_LW))
+            push_audio(out, PIKACHU_AUDIO_SPECIAL_LW);
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_S))
+            push_audio(out, PIKACHU_AUDIO_LIGHT_S);
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_M))
+            push_audio(out, PIKACHU_AUDIO_LIGHT_M);
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_L))
+            push_audio(out, PIKACHU_AUDIO_LIGHT_L);
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_1))
+            push_audio(out, PIKACHU_AUDIO_ELECTRIC_1);
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_2))
+            push_audio(out, PIKACHU_AUDIO_ELECTRIC_2);
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_3))
+            push_audio(out, PIKACHU_AUDIO_ELECTRIC_3);
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_5))
+            push_audio(out, PIKACHU_AUDIO_ELECTRIC_5);
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_QUICK_ATTACK_START))
+            push_audio(out, PIKACHU_AUDIO_QUICK_ATTACK_START);
+        /* FGM_SWING_PULSE is route 219, a distinct unresolved program. Do
+         * not disguise it as one of the three finite light-swing clips. */
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_JOLT_SPAWN)) {
+            /* BattleShip starts ElectricLoop with the Jolt weapon. The mixer
+             * has no loop handle yet, so this is one bounded source period. */
+            push_audio(out, PIKACHU_AUDIO_ELECTRIC_LOOP);
+        }
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_THUNDER_SPAWN)) {
+            push_audio(out, PIKACHU_AUDIO_THUNDER);
+        }
+    }
 
     if (s_fighter.last_motion.events &
         PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_JOLT_SPAWN)) {
@@ -86,7 +134,18 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
     }
 
     state->state = s_fighter.state;
-    state->state_frame = s_fighter.last_motion.action_frame;
+    if (s_fighter.state < PK_JAB) {
+        /* Keep presentation time in the generic state so locomotion poses do
+         * not freeze. The private timer separately owns source transitions
+         * such as Dash-to-Run and Jump-to-Fall. ForeignState is already saved
+         * by the engine-owned active-controller record, so the visible cycle
+         * also resumes exactly. */
+        state->state_frame = previous_state == s_fighter.state
+            ? (previous_frame == UINT_MAX ? 0u : previous_frame + 1u)
+            : 0u;
+    } else {
+        state->state_frame = s_fighter.last_motion.action_frame;
+    }
     state->facing = (float)s_fighter.lr;
     state->grounded = s_fighter.grounded;
     state->vx = out->vx;

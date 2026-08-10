@@ -1,0 +1,85 @@
+LOG pikachu-quick-attack-host-qa
+
+# Build a deterministic first-pipe fixture from a clean boot. This deliberately
+# exercises the public Up-jump mapping and avoids any dependency on mutable
+# owner savestates or files outside the test itself.
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 30
+HOLD RIGHT
+WAIT 30
+HOLD UP
+WAIT 2
+RELEASE UP
+WAIT 48
+HOLD UP
+WAIT 2
+RELEASE UP
+WAIT 43
+RELEASE RIGHT
+WAIT 35
+SAVE_STATE C:/temp/pikachu_quick_pipe_base.sav
+WAIT 2
+
+# Place Pikachu just left of the first short pipe while preserving the real
+# page, camera, block buffer, and visible pipe geometry from the fixture.
+WRITE_RAM8 006D 01
+WRITE_RAM8 0086 B0
+WAIT 3
+SCREENSHOT C:/temp/pikachu_quick_pipe_start.png
+WAIT 2
+
+# Up+B enters the 20-frame aim. With the stick released at zip entry, source
+# fallback aims along facing and the first solid pipe pixel must end the zip.
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 18
+SCREENSHOT C:/temp/pikachu_quick_pipe_zip.png
+WAIT 2
+WAIT 4
+SCREENSHOT C:/temp/pikachu_quick_pipe_recovery.png
+WAIT 2
+DUMP_RAM 0060 40
+DUMP_RAM 00B0 30
+WAIT 12
+SCREENSHOT C:/temp/pikachu_quick_pipe_after.png
+WAIT 2
+
+# Diagonal control: a broad synthetic brick ceiling crosses the complete zip
+# path. The coupled DDA must stop before it without starting native block-bump
+# state or cutting through the corner between separate X/Y integrations.
+LOAD_STATE C:/temp/pikachu_quick_pipe_base.sav
+WAIT 3
+WRITE_RAM8 0654 52
+WRITE_RAM8 0655 52
+WRITE_RAM8 0656 52
+WRITE_RAM8 0657 52
+WRITE_RAM8 0658 52
+HOLD RIGHT
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 22
+SCREENSHOT C:/temp/pikachu_quick_ceiling_contact.png
+WAIT 2
+RELEASE RIGHT
+RELEASE UP
+WAIT 16
+ASSERT_RAM8 0654 52
+ASSERT_RAM8 0655 52
+ASSERT_RAM8 0656 52
+ASSERT_RAM8 0657 52
+ASSERT_RAM8 0658 52
+ASSERT_RAM8 0026 00
+ASSERT_RAM8 0027 00
+ASSERT_RAM8 00B5 01
+SCREENSHOT C:/temp/pikachu_quick_ceiling_recovery.png
+WAIT 2
+EXIT 0

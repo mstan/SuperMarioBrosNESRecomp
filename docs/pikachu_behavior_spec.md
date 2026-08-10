@@ -33,6 +33,13 @@ the external cache, following the Captain Falcon asset gate.
   source jumps.  Pikachu retains both source jumps: fresh `Up` launches the
   ground jump or, while airborne with one jump remaining, the aerial jump.
   Both use Pikachu's source idle/walk/dash/run/jump/fall motions.
+- A full directional press enters Dash for source frames 0 through 12 and
+  transitions to Run at frame 13. Run persists while the same full direction
+  remains held; it must not collapse into Walk after one frame. The dash
+  begins decelerating by the source `4.5` friction attribute at frame 7; Run
+  then installs the source run speed `55` at the transition. Walk1/2/3 remain
+  the low/middle/high analog walk tiers;
+  an ordinary digital NES direction naturally takes the Dash-to-Run path.
 - The default presentation is a side-on approximately 16-pixel-tall Pikachu,
   with a stable
   small-player collision profile.  It must fit every normal two-block SMB
@@ -87,7 +94,7 @@ projectiles and never alter SMB blocks.
 | Back air | reloc `2028_FTPikachuAnimAttackAirB`; `0x1420` | `[10,14)`, 16 then `[14,22)`, 14 | `FGMLightSwingL` at 10; union is behind logical facing. |
 | Down air | reloc `2030_FTPikachuAnimAttackAirD`; `0x14DC`, `TRANSN_JOINT` | `[8,26)`, 13 | `FGMPikachuElectric3` and electric effect at 8; downward union only; physical contact may break eligible bricks. |
 | Thunder Jolt | ground `0x15AC`; air `0x15F0` | projectile begins at 21 | `VoicePikachuSpecialN` at entry; air also plays `FGMPikachuElectric5` at entry. Spawn from source joint 11, facing-relative, at -45 degrees with source speed 40. It may defeat eligible enemies once, follows floor/wall surfaces after contact, and expires on unsupported/invalid surfaces. It never changes SMB blocks. |
-| Quick Attack | start has no source motion; zip/end `0x1710`, `0x1730` | no hitbox | 20-frame intangible aim startup; first 5-frame zip; after the end-script's 9-frame direction window, one second 5-frame zip only if stick magnitude is at least 60 and differs by more than 42 degrees. `VoicePikachuSpecialHi`, `FGMPikachuElectric1`, and sparkle fire on each zip entry; ripple and rumble fire at each zip end. Render the authored 0.8/0.8/1.2 scale/pitch transform on joint 4. |
+| Quick Attack | start has no source motion; zip/end `0x1710`, `0x1730` | no hitbox | `FGMPikachuSpecialHiStart` begins the 20-frame intangible aim startup; first 5-frame zip; after the end-script's 9-frame direction window, one second 5-frame zip only if stick magnitude is at least 60 and differs by more than 42 degrees. `VoicePikachuSpecialHi`, `FGMPikachuElectric1`, and sparkle fire on each zip entry; ripple and rumble fire at each zip end. Render the authored 0.8/0.8/1.2 scale/pitch transform on joint 4. |
 | Thunder | start `0x162C`; loop `0x1644`; self-hit `0x1668` | self-hit `[0,10)`, 16 | `VoicePikachuSpecialLw` at entry; spawn a vertical bolt at frame 24 from the gameplay top above Pikachu. While it falls it owns all trail/effect events. On self-contact, consume the bolt, emit ThunderAmp + dust + quake + color event, and give airborne Pikachu source +20 vertical velocity. Pikachu does not take host damage from own Thunder. Thunder may defeat an eligible enemy once but never breaks blocks. |
 
 The `0x0E34`, `0x0F50`, `0x12E8`, `0x1380`, `0x1420`, and `0x14DC`
@@ -120,7 +127,8 @@ The controller must expose a monotonic per-action `action_frame`, a
 `persistent_action_id`, and a bitset/queue of logical events:
 `VOICE_SPECIAL_N`, `VOICE_SPECIAL_HI`, `VOICE_SPECIAL_LW`, `FGM_LIGHT_S`,
 `FGM_LIGHT_M`, `FGM_LIGHT_L`, `FGM_ELECTRIC_1`, `FGM_ELECTRIC_2`,
-`FGM_ELECTRIC_3`, `FGM_ELECTRIC_5`, `EFFECT_SPARKLE`, `EFFECT_RIPPLE`,
+`FGM_ELECTRIC_3`, `FGM_ELECTRIC_5`, `FGM_QUICK_ATTACK_START`,
+`EFFECT_SPARKLE`, `EFFECT_RIPPLE`,
 `EFFECT_THUNDER_AMP`, `PROJECTILE_JOLT_SPAWN`, `PROJECTILE_THUNDER_SPAWN`,
 and `PROJECTILE_THUNDER_SELF_HIT`.  Events are emitted once on their listed
 frame and survive save/load exactly once: restoring before an event may emit

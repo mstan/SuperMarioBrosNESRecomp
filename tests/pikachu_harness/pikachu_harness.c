@@ -35,6 +35,7 @@ static void selection_vectors(void)
     pikachu_reset(&f); f.grounded = 0; in.stick_x = 80; step(&f, in); CHECK(f.state == PK_FAIR);
     pikachu_reset(&f); f.grounded = 0; in.stick_x = -80; step(&f, in); CHECK(f.state == PK_BAIR);
     pikachu_reset(&f); f.grounded = 0; in.stick_x = 0; in.stick_y = -80; step(&f, in); CHECK(f.state == PK_DAIR);
+    pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.attack_pressed = 1; in.stick_y = -80; step(&f, in); CHECK(f.state == PK_GROUND_WAIT);
     pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_x = 80; step(&f, in); CHECK(f.state == PK_THUNDER_JOLT_GROUND);
     pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = 80; step(&f, in); CHECK(f.state == PK_QUICK_ATTACK_START);
     pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = -80; step(&f, in); CHECK(f.state == PK_THUNDER_START);
@@ -51,9 +52,16 @@ static void timing_and_projectile_vectors(void)
     memset(&in, 0, sizeof(in));
     for (i = 1; i <= 6; ++i) { m = step(&f, in); if (i >= 2 && i < 6) CHECK(m.attack.active && m.attack.damage == 4 && m.attack.break_blocks); else CHECK(!m.attack.active); if (i == 2) CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_S)); }
     pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.special_pressed = 1;
-    m = step(&f, in); CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_N));
+    m = step(&f, in);
+    CHECK(m.events == PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_N));
     memset(&in, 0, sizeof(in));
     for (i = 1; i <= 21; ++i) { m = step(&f, in); if (i == 21) { CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_JOLT_SPAWN)); CHECK(m.projectile.kind == PIKACHU_PROJECTILE_JOLT); CHECK(!m.projectile.can_break_blocks); } }
+    pikachu_reset(&f); memset(&in, 0, sizeof(in));
+    f.grounded = 0; f.state = PK_AIR_FALL; in.special_pressed = 1;
+    m = step(&f, in);
+    CHECK(m.events ==
+          (PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_N) |
+           PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_5)));
     pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = -80;
     m = step(&f, in); CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_LW));
     memset(&in, 0, sizeof(in));
@@ -79,10 +87,71 @@ static void aerial_normal_motion_vectors(void)
     CHECK(m.requested_dx == 17.0 && m.requested_dy == 6.0);
 }
 
+static void locomotion_vectors(void)
+{
+    PikachuFighter f; PikachuInputRaw in; PikachuMotion m; int i;
+    pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.stick_x = 80;
+    for (i = 0; i < (int)PIKACHU_SOURCE_DASH_TO_RUN_FRAMES; ++i) {
+        const double expected = i >= 7
+            ? PIKACHU_SOURCE_DASH_SPEED -
+                  PIKACHU_SOURCE_DASH_DECEL * (double)(i - 6)
+            : PIKACHU_SOURCE_DASH_SPEED;
+        m = step(&f, in);
+        CHECK(f.state == PK_DASH);
+        CHECK(m.requested_dx == expected);
+    }
+    m = step(&f, in);
+    CHECK(f.state == PK_RUN);
+    CHECK(m.requested_dx == PIKACHU_SOURCE_RUN_SPEED);
+    for (i = 0; i < 100; ++i) {
+        m = step(&f, in);
+        CHECK(f.state == PK_RUN);
+        CHECK(m.requested_dx == PIKACHU_SOURCE_RUN_SPEED);
+    }
+    in.stick_x = -80;
+    m = step(&f, in);
+    CHECK(f.state == PK_DASH && f.lr == -1 &&
+          m.requested_dx == -PIKACHU_SOURCE_DASH_SPEED);
+    memset(&in, 0, sizeof(in));
+    m = step(&f, in);
+    CHECK(f.state == PK_GROUND_WAIT && m.requested_dx == 0.0);
+
+    /* Analog tiers remain deterministic even though an NES pad normally
+     * supplies only the fast tier. */
+    pikachu_reset(&f); in.stick_x = 20; m = step(&f, in);
+    CHECK(f.state == PK_WALK && m.requested_dx == 8.4);
+    in.stick_x = 40; m = step(&f, in);
+    CHECK(f.state == PK_WALK && m.requested_dx == 16.8);
+}
+
+static void jump_fall_vectors(void)
+{
+    PikachuFighter f; PikachuInputRaw in; unsigned i;
+    pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.jump_pressed = 1;
+    step(&f, in); CHECK(f.state == PK_JUMP_GROUND);
+    memset(&in, 0, sizeof(in));
+    for (i = 1; i < PIKACHU_SOURCE_JUMP_GROUND_FRAMES; ++i) {
+        step(&f, in); CHECK(f.state == PK_JUMP_GROUND);
+    }
+    step(&f, in); CHECK(f.state == PK_AIR_FALL);
+
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_AIR_FALL;
+    memset(&in, 0, sizeof(in)); in.jump_pressed = 1;
+    step(&f, in); CHECK(f.state == PK_JUMP_AERIAL);
+    memset(&in, 0, sizeof(in));
+    for (i = 1; i < PIKACHU_SOURCE_JUMP_AERIAL_FRAMES; ++i) {
+        step(&f, in); CHECK(f.state == PK_JUMP_AERIAL);
+    }
+    step(&f, in); CHECK(f.state == PK_AIR_FALL);
+}
+
 static void quick_attack_and_save_vectors(void)
 {
     PikachuFighter f, saved; PikachuInputRaw in; PikachuMotion m; int i;
-    pikachu_reset(&f); f.grounded = 0; memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = 80; step(&f, in);
+    pikachu_reset(&f); f.grounded = 0; memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = 80;
+    m = step(&f, in);
+    CHECK(m.events == PIKACHU_EVENT_BIT(
+              PIKACHU_EVENT_FGM_QUICK_ATTACK_START));
     memset(&in, 0, sizeof(in)); in.stick_x = 80;
     for (i = 1; i <= 20; ++i) m = step(&f, in);
     CHECK(m.events == (PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_HI) | PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_1) | PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_SPARKLE)));
@@ -109,6 +178,10 @@ static void quick_attack_second_zip_motion_vector(void)
     memset(&in, 0, sizeof(in)); in.stick_y = 80;
     for (i = 21; i <= 34; ++i) m = step(&f, in);
     CHECK(f.state == PK_QUICK_ATTACK_ZIP2);
+    CHECK(m.events ==
+          (PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_HI) |
+           PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_1) |
+           PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_SPARKLE)));
     CHECK(!f.grounded && f.vel_x == 0.0 && f.vel_y == 60.0);
     CHECK(m.requested_dx == f.vel_x && m.requested_dy == f.vel_y);
     m = step(&f, in);
@@ -118,6 +191,7 @@ static void quick_attack_second_zip_motion_vector(void)
 int main(void)
 {
     selection_vectors(); timing_and_projectile_vectors(); aerial_normal_motion_vectors();
+    locomotion_vectors(); jump_fall_vectors();
     quick_attack_and_save_vectors(); quick_attack_second_zip_motion_vector();
     if (failures) { fprintf(stderr, "pikachu_harness: %d failures\n", failures); return 1; }
     puts("pikachu_harness: PASS behavior_vectors.json"); return 0;

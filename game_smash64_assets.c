@@ -1,9 +1,10 @@
-/* Runtime loader and skeletal renderer for the ignored Falcon asset blob. */
+/* Runtime loader and skeletal renderer for one selected owner-cache fighter. */
 #include "game_smash64_assets.h"
 
 #include "game_smash64.h"
 #include "foreign_controller.h"
 #include "mods/smash64/characters/captain_falcon.h"
+#include "mods/smash64/characters/pikachu.h"
 #include "voxel_renderer.h"
 
 #include <SDL.h>
@@ -15,10 +16,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FALCON_BLOB_VERSION 4u
+#define SMASH64_BLOB_VERSION_LEGACY 4u
+#define SMASH64_BLOB_VERSION_SKINNED 5u
+#define SMASH64_BLOB_VERSION_PIKACHU_EFFECTS 6u
+#define SMASH64_MAX_JOINTS 32u
 #define FALCON_JOINT_COUNT 26u
 #define FALCON_RENDER_HEIGHT 32.0f
+#define PIKACHU_RENDER_HEIGHT 16.0f
 #define FALCON_YAW_DEG 88.0f
+#define PIKACHU_YAW_DEG 90.0f
 #define FALCON_WAIT_GROUNDED_FIRST 37.0f
 #define FALCON_WAIT_GROUNDED_SPAN   4.0f
 #define FALCON_WAIT_RATE            0.25f
@@ -43,6 +49,9 @@
 #define FALCON_DIVE_DASH_FRAME              13u
 #define FALCON_DIVE_ATTACK_END_FRAME        45u
 #define FALCON_ROOT_TRACK_JOINT        0xFFFFu
+#define PIKACHU_EFFECT_TEXTURES         5u
+#define PIKACHU_JOLT_EFFECT_TEXTURES    2u
+#define PIKACHU_THUNDER_EFFECT_TEXTURES 3u
 
 typedef struct FalconAssetJoint {
     int parent;
@@ -59,7 +68,7 @@ typedef struct FalconAssetVertex {
 } FalconAssetVertex;
 
 typedef struct FalconAssetTriangle {
-    uint16_t joint;
+    uint16_t joint[3];
     uint16_t texture;
     FalconAssetVertex vertex[3];
 } FalconAssetTriangle;
@@ -128,6 +137,13 @@ typedef struct Mat4 {
 static FalconAssetModel s_model;
 static int s_load_attempted;
 static const uint32_t s_fallback_color[1] = { 0xFF3060C8u };
+
+static int active_is_pikachu(void)
+{
+    const ForeignController *controller = nes_foreign_active();
+    return controller && controller->id &&
+           strcmp(controller->id, SMASH64_PIKACHU_ID) == 0;
+}
 static const uint32_t s_dive_dust_color[1] = { 0xFFC07838u };
 static const uint32_t s_dive_spark_color[1] = { 0xFFFFD848u };
 static const uint32_t s_dive_white_color[1] = { 0xFFFFFFFFu };
@@ -283,10 +299,10 @@ static void mat_point(Mat4 matrix, const float in[3], float out[3])
 }
 
 static void build_matrices(const FalconAssetModel *model,
-                           float pose_translate[FALCON_JOINT_COUNT][3],
-                           float pose_rotate[FALCON_JOINT_COUNT][3],
-                           float pose_scale[FALCON_JOINT_COUNT][3],
-                           Mat4 world[FALCON_JOINT_COUNT])
+                           float pose_translate[SMASH64_MAX_JOINTS][3],
+                           float pose_rotate[SMASH64_MAX_JOINTS][3],
+                           float pose_scale[SMASH64_MAX_JOINTS][3],
+                           Mat4 world[SMASH64_MAX_JOINTS])
 {
     uint32_t i;
     for (i = 0; i < model->joint_count; ++i) {
@@ -297,7 +313,7 @@ static void build_matrices(const FalconAssetModel *model,
 }
 
 static void compute_world_bounds(const FalconAssetModel *model,
-                                 Mat4 world[FALCON_JOINT_COUNT],
+                                 Mat4 world[SMASH64_MAX_JOINTS],
                                  float bounds_min[3], float bounds_max[3])
 {
     uint32_t i, v;
@@ -310,7 +326,8 @@ static void compute_world_bounds(const FalconAssetModel *model,
         for (v = 0; v < 3; ++v) {
             float point[3];
             int axis;
-            mat_point(world[triangle->joint], triangle->vertex[v].pos, point);
+            mat_point(world[triangle->joint[v]], triangle->vertex[v].pos,
+                      point);
             for (axis = 0; axis < 3; ++axis) {
                 if (point[axis] < bounds_min[axis]) bounds_min[axis] = point[axis];
                 if (point[axis] > bounds_max[axis]) bounds_max[axis] = point[axis];
@@ -321,10 +338,10 @@ static void compute_world_bounds(const FalconAssetModel *model,
 
 static void compute_bind_bounds(FalconAssetModel *model)
 {
-    float t[FALCON_JOINT_COUNT][3];
-    float r[FALCON_JOINT_COUNT][3];
-    float s[FALCON_JOINT_COUNT][3];
-    Mat4 world[FALCON_JOINT_COUNT];
+    float t[SMASH64_MAX_JOINTS][3];
+    float r[SMASH64_MAX_JOINTS][3];
+    float s[SMASH64_MAX_JOINTS][3];
+    Mat4 world[SMASH64_MAX_JOINTS];
     uint32_t i;
 
     for (i = 0; i < model->joint_count; ++i) {
@@ -352,7 +369,10 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
         memcmp(magic, expected_magic, sizeof(magic)) != 0)
         return 0;
     version = read_u32(&reader);
-    if (version != FALCON_BLOB_VERSION) return 0;
+    if (version != SMASH64_BLOB_VERSION_LEGACY &&
+        version != SMASH64_BLOB_VERSION_SKINNED &&
+        version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS)
+        return 0;
 
     model->joint_count = read_u32(&reader);
     model->triangle_count = read_u32(&reader);
@@ -362,21 +382,33 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
     model->segment_count = read_u32(&reader);
     model->punch_effect_texture_first = read_u32(&reader);
     model->punch_effect_texture_count = read_u32(&reader);
-    if (model->joint_count != FALCON_JOINT_COUNT ||
+    if (!model->joint_count || model->joint_count > SMASH64_MAX_JOINTS ||
         !count_is_safe(model->triangle_count, 10000) ||
         !count_is_safe(model->texture_count, 256) ||
         !count_is_safe(model->animation_count, 128) ||
         !count_is_safe(model->track_count, 100000) ||
         !count_is_safe(model->segment_count, 1000000) ||
-        model->punch_effect_texture_count !=
-            FALCON_PUNCH_EFFECT_TEXTURES ||
-        !range_is_safe(model->punch_effect_texture_first,
-                       model->punch_effect_texture_count,
-                       model->texture_count) ||
-        !range_is_safe(model->punch_effect_texture_first +
-                           model->punch_effect_texture_count,
-                       FALCON_KICK_EFFECT_TEXTURES,
-                       model->texture_count))
+        (version == SMASH64_BLOB_VERSION_LEGACY &&
+         (model->joint_count != FALCON_JOINT_COUNT ||
+          model->punch_effect_texture_count !=
+              FALCON_PUNCH_EFFECT_TEXTURES ||
+          !range_is_safe(model->punch_effect_texture_first,
+                         model->punch_effect_texture_count,
+                         model->texture_count) ||
+          !range_is_safe(model->punch_effect_texture_first +
+                             model->punch_effect_texture_count,
+                         FALCON_KICK_EFFECT_TEXTURES,
+                         model->texture_count))) ||
+        (version == SMASH64_BLOB_VERSION_SKINNED &&
+         (model->punch_effect_texture_count != 0u ||
+          model->punch_effect_texture_first != model->texture_count)) ||
+        (version == SMASH64_BLOB_VERSION_PIKACHU_EFFECTS &&
+         (model->punch_effect_texture_count != PIKACHU_EFFECT_TEXTURES ||
+          !range_is_safe(model->punch_effect_texture_first,
+                         model->punch_effect_texture_count,
+                         model->texture_count) ||
+          model->punch_effect_texture_first +
+                  model->punch_effect_texture_count != model->texture_count)))
         return 0;
 
     model->joints = (FalconAssetJoint *)calloc(model->joint_count,
@@ -410,8 +442,17 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
     }
     for (i = 0; i < model->triangle_count; ++i) {
         FalconAssetTriangle *triangle = &model->triangles[i];
-        triangle->joint = read_u16(&reader);
-        triangle->texture = read_u16(&reader);
+        if (version == SMASH64_BLOB_VERSION_LEGACY) {
+            triangle->joint[0] = read_u16(&reader);
+            triangle->joint[1] = triangle->joint[0];
+            triangle->joint[2] = triangle->joint[0];
+            triangle->texture = read_u16(&reader);
+        } else {
+            triangle->joint[0] = read_u16(&reader);
+            triangle->joint[1] = read_u16(&reader);
+            triangle->joint[2] = read_u16(&reader);
+            triangle->texture = read_u16(&reader);
+        }
         for (j = 0; j < 3; ++j) {
             uint32_t axis;
             for (axis = 0; axis < 3; ++axis)
@@ -419,7 +460,9 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
             for (axis = 0; axis < 2; ++axis)
                 triangle->vertex[j].uv[axis] = read_f32(&reader);
         }
-        if (triangle->joint >= model->joint_count ||
+        if (triangle->joint[0] >= model->joint_count ||
+            triangle->joint[1] >= model->joint_count ||
+            triangle->joint[2] >= model->joint_count ||
             (triangle->texture != 0xFFFFu &&
              triangle->texture >= model->texture_count))
             reader.ok = 0;
@@ -488,6 +531,35 @@ fail:
     return 0;
 }
 
+int game_smash64_assets_pikachu_effect_texture(
+    unsigned effect, unsigned frame, const unsigned int **pixels,
+    int *width, int *height)
+{
+    uint32_t first, count, index;
+    if (pixels) *pixels = NULL;
+    if (width) *width = 0;
+    if (height) *height = 0;
+    if (!active_is_pikachu() || !s_model.textures ||
+        s_model.punch_effect_texture_count != PIKACHU_EFFECT_TEXTURES)
+        return 0;
+    first = s_model.punch_effect_texture_first;
+    if (effect == SMASH64_PIKACHU_EFFECT_THUNDER_JOLT) {
+        count = PIKACHU_JOLT_EFFECT_TEXTURES;
+    } else if (effect == SMASH64_PIKACHU_EFFECT_THUNDER) {
+        first += PIKACHU_JOLT_EFFECT_TEXTURES;
+        count = PIKACHU_THUNDER_EFFECT_TEXTURES;
+    } else {
+        return 0;
+    }
+    index = first + frame % count;
+    if (index >= s_model.texture_count || !s_model.textures[index].pixels)
+        return 0;
+    if (pixels) *pixels = s_model.textures[index].pixels;
+    if (width) *width = s_model.textures[index].width;
+    if (height) *height = s_model.textures[index].height;
+    return 1;
+}
+
 static int load_path(const char *path, FalconAssetModel *model)
 {
     FILE *file;
@@ -521,7 +593,7 @@ static int load_path(const char *path, FalconAssetModel *model)
     free(data);
     if (ok) {
         fprintf(stderr,
-                "[Smash64] Falcon assets loaded: %u triangles, %u textures, %u animations (%s)\n",
+                "[Smash64] fighter assets loaded: %u triangles, %u textures, %u animations (%s)\n",
                 model->triangle_count, model->texture_count,
                 model->animation_count, path);
     }
@@ -569,20 +641,32 @@ static int ensure_loaded(void)
     return 0;
 }
 
-int game_smash64_assets_prepare_root(const char *root)
+int game_smash64_assets_prepare_character_root(const char *root,
+                                                const char *controller_id)
 {
     char path[1024];
+    const char *filename = "falcon_runtime.bin";
     size_t len;
     int written;
     if (!root || !*root) return 0;
+    if (controller_id && strcmp(controller_id, SMASH64_PIKACHU_ID) == 0)
+        filename = "pikachu_runtime.bin";
     len = strlen(root);
-    written = snprintf(path, sizeof(path), "%s%sfalcon_runtime.bin", root,
-                       (root[len - 1] == '/' || root[len - 1] == '\\') ? "" : "/");
+    written = snprintf(path, sizeof(path), "%s%s%s", root,
+                       (root[len - 1] == '/' || root[len - 1] == '\\')
+                           ? "" : "/",
+                       filename);
     if (written < 0 || (size_t)written >= sizeof(path)) return 0;
     free_model(&s_model);
     memset(&s_model, 0, sizeof(s_model));
     s_load_attempted = 1;
     return load_path(path, &s_model);
+}
+
+int game_smash64_assets_prepare_root(const char *root)
+{
+    return game_smash64_assets_prepare_character_root(
+        root, SMASH64_CAPTAIN_FALCON_ID);
 }
 
 void game_smash64_assets_clear(void)
@@ -592,9 +676,59 @@ void game_smash64_assets_clear(void)
     s_load_attempted = 0;
 }
 
-static const char *animation_for_state(int state)
+static int pikachu_walk_tier(const ForeignState *state)
 {
-    switch (state) {
+    double stick_magnitude;
+    if (!state || PIKACHU_SOURCE_WALK_MULTIPLIER <= 0.0)
+        return 2;
+    /* ftCommonWalkGetWalkStatus selects the source motion from stick range.
+     * The generic state retains velocity rather than the synthetic NES stick,
+     * so invert Pikachu's sourced walk multiplier to recover that range. */
+    stick_magnitude = fabs(state->vx) / PIKACHU_SOURCE_WALK_MULTIPLIER;
+    if (stick_magnitude >= PIKACHU_SOURCE_WALK_FAST_STICK_MIN)
+        return 3;
+    if (stick_magnitude >= PIKACHU_SOURCE_WALK_MIDDLE_STICK_MIN)
+        return 2;
+    return 1;
+}
+
+static const char *animation_for_state(const ForeignState *state)
+{
+    const int move_state = state ? state->state : 0;
+    if (active_is_pikachu()) {
+        switch (move_state) {
+        case PK_GROUND_WAIT: return "Idle";
+        case PK_WALK:
+            switch (pikachu_walk_tier(state)) {
+            case 1: return "Walk1";
+            case 3: return "Walk3";
+            default: return "Walk2";
+            }
+        case PK_DASH: return "Dash";
+        case PK_RUN: return "Run";
+        case PK_JUMP_GROUND: return "JumpF";
+        case PK_JUMP_AERIAL: return "JumpAerialF";
+        case PK_AIR_FALL: return "Fall";
+        case PK_JAB: return "Jab1";
+        case PK_FTILT: return "AttackS3";
+        case PK_NAIR: return "AttackAirN";
+        case PK_FAIR: return "AttackAirF";
+        case PK_BAIR: return "AttackAirB";
+        case PK_DAIR: return "AttackAirD";
+        case PK_THUNDER_JOLT_GROUND: return "NeutralSpecialGround";
+        case PK_THUNDER_JOLT_AIR: return "NeutralSpecialAir";
+        case PK_QUICK_ATTACK_START:
+        case PK_QUICK_ATTACK_ZIP1:
+        case PK_QUICK_ATTACK_WINDOW:
+        case PK_QUICK_ATTACK_ZIP2:
+        case PK_QUICK_ATTACK_RECOVERY: return "UpSpecialAirEnd";
+        case PK_THUNDER_START: return "DownSpecialStartAir";
+        case PK_THUNDER_LOOP: return "DownSpecialEndAir";
+        case PK_THUNDER_SELF_HIT: return "DownSpecialThunderedAir";
+        default: return "Idle";
+        }
+    }
+    switch (move_state) {
     case FL_WAIT: return "Wait";
     case FL_WALK_SLOW: return "Walk1";
     case FL_WALK_MIDDLE: return "Walk2";
@@ -732,9 +866,9 @@ int game_smash64_assets_root_delta(const char *animation_name, float frame,
 
 static void apply_animation(const FalconAssetModel *model,
                             const FalconAssetAnimation *animation, float frame,
-                            float t[FALCON_JOINT_COUNT][3],
-                            float r[FALCON_JOINT_COUNT][3],
-                            float s[FALCON_JOINT_COUNT][3])
+                            float t[SMASH64_MAX_JOINTS][3],
+                            float r[SMASH64_MAX_JOINTS][3],
+                            float s[SMASH64_MAX_JOINTS][3])
 {
     uint32_t i;
     if (!animation) return;
@@ -760,7 +894,7 @@ static float presentation_animation_frame(const ForeignState *state)
     if (forced && *forced)
         return env_float("NESRECOMP_FALCON_ANIM_FRAME",
                          (float)state->state_frame);
-    if (state->state == FL_WAIT) {
+    if (!active_is_pikachu() && state->state == FL_WAIT) {
         const float extent = FALCON_WAIT_GROUNDED_SPAN * 2.0f;
         float phase = fmodf((float)state->state_frame * FALCON_WAIT_RATE,
                             extent);
@@ -768,8 +902,18 @@ static float presentation_animation_frame(const ForeignState *state)
             phase = extent - phase;
         return FALCON_WAIT_GROUNDED_FIRST + phase;
     }
-    if (state->state == FL_FALCON_DIVE_LANDING)
+    if (!active_is_pikachu() && state->state == FL_FALCON_DIVE_LANDING)
         return (float)state->state_frame * 0.65f;
+    if (active_is_pikachu() && state->state == PK_WALK) {
+        /* The cached Figatree timelines end at 45/30/24, while Pikachu's
+         * source walk phase lengths are 60/30/30. Preserve the source cycle
+         * cadence instead of making the fast clip skate 20% too quickly. */
+        switch (pikachu_walk_tier(state)) {
+        case 1: return (float)state->state_frame * (45.0f / 60.0f);
+        case 3: return (float)state->state_frame * (24.0f / 30.0f);
+        default: break;
+        }
+    }
     return (float)state->state_frame;
 }
 
@@ -847,7 +991,7 @@ static NesVoxelMeshVertex render_punch_effect_vertex(
 
 static void draw_falcon_punch_effect(
     const FalconAssetModel *model, const ForeignState *state,
-    Mat4 world[FALCON_JOINT_COUNT], const float pose_min[3],
+    Mat4 world[SMASH64_MAX_JOINTS], const float pose_min[3],
     const float pose_max[3], float center_x, float foot_y, float facing,
     float model_scale, float yaw_rad, float output_scale)
 {
@@ -950,7 +1094,7 @@ static NesVoxelMeshVertex render_kick_effect_vertex(
 
 static void draw_falcon_kick_effect(
     const FalconAssetModel *model, const ForeignState *state,
-    Mat4 world[FALCON_JOINT_COUNT], const float pose_min[3],
+    Mat4 world[SMASH64_MAX_JOINTS], const float pose_min[3],
     const float pose_max[3], float center_x, float foot_y, float facing,
     float model_scale, float yaw_rad, float output_scale)
 {
@@ -1210,10 +1354,10 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
 {
     const ForeignState *state;
     const FalconAssetAnimation *animation;
-    float t[FALCON_JOINT_COUNT][3];
-    float r[FALCON_JOINT_COUNT][3];
-    float s[FALCON_JOINT_COUNT][3];
-    Mat4 world[FALCON_JOINT_COUNT];
+    float t[SMASH64_MAX_JOINTS][3];
+    float r[SMASH64_MAX_JOINTS][3];
+    float s[SMASH64_MAX_JOINTS][3];
+    Mat4 world[SMASH64_MAX_JOINTS];
     float pose_min[3], pose_max[3];
     float model_scale, reference_height, facing, yaw_rad;
     uint16_t bound_texture = 0xFFFEu;
@@ -1238,18 +1382,21 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
         : find_animation(&s_model,
                          animation_override
                              ? animation_override
-                             : (still_mode ? "Wait"
-                                           : animation_for_state(state->state)));
+                             : (still_mode ? (active_is_pikachu()
+                                                  ? "Idle" : "Wait")
+                                           : animation_for_state(state)));
     if (death_mode && !animation)
         animation = find_animation(&s_model, "FallAerial");
     if (!env_enabled("NESRECOMP_FALCON_BIND_POSE"))
         apply_animation(&s_model, animation,
                         (death_mode || animation_override)
                             ? animation_frame
-                            : (still_mode
+                            : (still_mode && !active_is_pikachu()
                                    ? FALCON_WAIT_GROUNDED_FIRST +
                                          FALCON_WAIT_GROUNDED_SPAN * 0.5f
-                                   : presentation_animation_frame(state)),
+                                   : (still_mode
+                                          ? 0.0f
+                                          : presentation_animation_frame(state))),
                         t, r, s);
     build_matrices(&s_model, t, r, s, world);
     /* Figatree root translations are absolute fighter-pose coordinates, not
@@ -1265,8 +1412,12 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
      * bounds remain useful only for centering and foot anchoring. */
     reference_height = s_model.bounds_max[1] - s_model.bounds_min[1];
     if (output_scale <= 0.0f) output_scale = 1.0f;
-    model_scale = env_float("NESRECOMP_FALCON_RENDER_HEIGHT",
-                            FALCON_RENDER_HEIGHT) * output_scale /
+    model_scale = env_float(active_is_pikachu()
+                                ? "NESRECOMP_PIKACHU_RENDER_HEIGHT"
+                                : "NESRECOMP_FALCON_RENDER_HEIGHT",
+                            active_is_pikachu()
+                                ? PIKACHU_RENDER_HEIGHT
+                                : FALCON_RENDER_HEIGHT) * output_scale /
                   reference_height;
     /* Smash's +LR model orientation is opposite our screen-space projection.
      * Mirror the mesh against that authored convention, not against movement
@@ -1278,9 +1429,14 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
                  : -1.0f;
     {
         float yaw_degrees =
-            env_float("NESRECOMP_FALCON_YAW_DEG", FALCON_YAW_DEG);
-        if (state->state == FL_FALCON_PUNCH_GROUND ||
-            state->state == FL_FALCON_PUNCH_AIR) {
+            env_float(active_is_pikachu()
+                          ? "NESRECOMP_PIKACHU_YAW_DEG"
+                          : "NESRECOMP_FALCON_YAW_DEG",
+                      active_is_pikachu() ? PIKACHU_YAW_DEG
+                                          : FALCON_YAW_DEG);
+        if (!active_is_pikachu() &&
+            (state->state == FL_FALCON_PUNCH_GROUND ||
+             state->state == FL_FALCON_PUNCH_AIR)) {
             yaw_degrees = env_float("NESRECOMP_FALCON_PUNCH_YAW_DEG",
                                     yaw_degrees);
         }
@@ -1305,35 +1461,36 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
             }
         }
         if (death_mode) {
-            a = render_death_vertex(world[triangle->joint],
+            a = render_death_vertex(world[triangle->joint[0]],
                                     &triangle->vertex[0], pose_min, pose_max,
                                     center_x, anchor_y, facing, model_scale,
                                     yaw_rad, spin_radians);
-            b = render_death_vertex(world[triangle->joint],
+            b = render_death_vertex(world[triangle->joint[1]],
                                     &triangle->vertex[1], pose_min, pose_max,
                                     center_x, anchor_y, facing, model_scale,
                                     yaw_rad, spin_radians);
-            c = render_death_vertex(world[triangle->joint],
+            c = render_death_vertex(world[triangle->joint[2]],
                                     &triangle->vertex[2], pose_min, pose_max,
                                     center_x, anchor_y, facing, model_scale,
                                     yaw_rad, spin_radians);
         } else {
-            a = render_vertex(&s_model, world[triangle->joint],
+            a = render_vertex(&s_model, world[triangle->joint[0]],
                               &triangle->vertex[0], pose_min, pose_max,
                               center_x, anchor_y,
                               facing, model_scale, yaw_rad);
-            b = render_vertex(&s_model, world[triangle->joint],
+            b = render_vertex(&s_model, world[triangle->joint[1]],
                               &triangle->vertex[1], pose_min, pose_max,
                               center_x, anchor_y,
                               facing, model_scale, yaw_rad);
-            c = render_vertex(&s_model, world[triangle->joint],
+            c = render_vertex(&s_model, world[triangle->joint[2]],
                               &triangle->vertex[2], pose_min, pose_max,
                               center_x, anchor_y,
                               facing, model_scale, yaw_rad);
         }
         nes_voxel_mesh_triangle(a, b, c);
     }
-    if (!death_mode && !still_mode && !animation_override) {
+    if (!active_is_pikachu() && !death_mode && !still_mode &&
+        !animation_override) {
         draw_falcon_punch_effect(&s_model, state, world, pose_min, pose_max,
                                  center_x, anchor_y, facing, model_scale,
                                  yaw_rad, output_scale);

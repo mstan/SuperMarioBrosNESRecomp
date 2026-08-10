@@ -11,6 +11,7 @@
 #include "game_smash64_render.h"
 
 #include "game_smash64_assets.h"
+#include "game_smash64_actions.h"
 #include "game_smash64.h"
 #include "nes_runtime.h"
 #include "voxel_renderer.h"
@@ -132,6 +133,76 @@ static void draw_cube_face(NesVoxelMeshVertex p0, NesVoxelMeshVertex p1,
     nes_voxel_mesh_bind_texture(k_cube_color, 1, 1, 1, shade, 0);
     nes_voxel_mesh_triangle(p0, p1, p2);
     nes_voxel_mesh_triangle(p0, p2, p3);
+}
+
+static void draw_persistent_actions(float output_scale)
+{
+    Smash64ActionSlot slots[SMASH64_ACTION_SLOT_CAPACITY];
+    const double screen_left =
+        (double)g_ram[ScreenLeft_PageLoc] * 256.0 +
+        (double)g_ram[ScreenLeft_X_Pos];
+    int i, count = smash64_actions_snapshot(
+        slots, SMASH64_ACTION_SLOT_CAPACITY);
+    for (i = 0; i < count; ++i) {
+        const Smash64ActionSlot *action = &slots[i];
+        const float center_x = (float)(action->x - screen_left +
+                                       g_widescreen_left) * output_scale;
+        /* Action simulation uses native framebuffer rows, where +Y points
+         * down. The voxel renderer's world convention is the opposite (+Y
+         * points up), exactly like the fighter foot conversion below. Keep
+         * the simulation native and invert only at this presentation seam.
+         * Without this conversion, a Jolt physically following the floor at
+         * row 204 was drawn near row 36 and appeared to fly through the HUD. */
+        const float center_y = (240.0f - (float)action->y) * output_scale;
+        float half_width = fmaxf(2.0f, (float)action->width * 0.5f) *
+                           output_scale;
+        float half_height = fmaxf(2.0f, (float)action->height * 0.5f) *
+                            output_scale;
+        NesVoxelMeshVertex a = mesh_vertex(center_x - half_width,
+                                           center_y - half_height, 2.0f);
+        NesVoxelMeshVertex b = mesh_vertex(center_x + half_width,
+                                           center_y - half_height, 2.0f);
+        NesVoxelMeshVertex c = mesh_vertex(center_x + half_width,
+                                           center_y + half_height, 2.0f);
+        NesVoxelMeshVertex d = mesh_vertex(center_x - half_width,
+                                           center_y + half_height, 2.0f);
+        const unsigned int *pixels;
+        int texture_width, texture_height;
+        const unsigned effect = action->kind == 2u
+                                    ? SMASH64_PIKACHU_EFFECT_THUNDER
+                                    : SMASH64_PIKACHU_EFFECT_THUNDER_JOLT;
+        if (effect == SMASH64_PIKACHU_EFFECT_THUNDER_JOLT) {
+            /* Reloc 342's Jolt DObj card is 180x180 source units with its
+             * authored 1.2x/1.5x card scale, while its combat capsule is
+             * only 100x100.  Collision dimensions are intentionally not a
+             * rendering proxy: retain that source-card ratio here. */
+            half_width *= 2.16f;
+            half_height *= 2.70f;
+        }
+        /* Persistent actions advance at NES cadence.  Source cards are a
+         * short material cycle, so the action age is the exact deterministic
+         * phase key; its physics/save data remains untouched. */
+        if (!game_smash64_assets_pikachu_effect_texture(
+                effect, action->age, &pixels, &texture_width,
+                &texture_height))
+            continue;
+        /* mesh_vertex() deliberately defaults to 0,0 for the cube's 1x1
+         * material.  Owner effect cards are real 32x32 textures, so assign
+         * their texel-space UV rectangle explicitly rather than stretching
+         * one palette texel into another flat square. */
+        a.u = 0.0f;
+        a.v = 0.0f;
+        b.u = (float)texture_width;
+        b.v = 0.0f;
+        c.u = (float)texture_width;
+        c.v = (float)texture_height;
+        d.u = 0.0f;
+        d.v = (float)texture_height;
+        nes_voxel_mesh_bind_texture(pixels, texture_width, texture_height,
+                                    texture_width, 1.0f, 1);
+        nes_voxel_mesh_triangle(a, b, c);
+        nes_voxel_mesh_triangle(a, c, d);
+    }
 }
 
 static int falcon_ssaa_enabled(void) {
@@ -413,6 +484,8 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
         draw_cube_face(b, c, g, f, 0.70f);  /* right */
         draw_cube_face(a, d, c, b, 0.35f);  /* bottom */
     }
+
+    draw_persistent_actions(output_scale);
 
     nes_voxel_mesh_end();
     if (output_scale > 1.0f) {

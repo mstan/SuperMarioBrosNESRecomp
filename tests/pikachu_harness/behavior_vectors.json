@@ -13,6 +13,10 @@
     "normal_attack_breaks_eligible_bricks": true,
     "projectile_breaks_blocks": false,
     "source_jump_count": 2,
+    "jump_ground_animation_frames": 45,
+    "jump_aerial_animation_frames": 60,
+    "dash_to_run_frames": 13,
+    "held_full_direction_persists_run": true,
     "visual_height_px": 16,
     "quick_attack_has_hitbox": false,
     "quick_attack_zip_count_max": 2,
@@ -118,7 +122,7 @@
       "windows": [],
       "events": [
         { "frame": 20, "id": "VOICE_SPECIAL_HI" },
-        { "frame": 20, "id": "FGM_ELECTRIC_1" },
+        { "frame": 20, "id": "FGM_QUICK_ATTACK_START" },
         { "frame": 20, "id": "EFFECT_SPARKLE" },
         { "frame": 25, "id": "EFFECT_RIPPLE" },
         { "frame": 34, "id": "SECOND_ZIP_WINDOW_OPEN" }
@@ -141,7 +145,7 @@
   "adversarial_vectors": [
     { "name": "quick_attack_ceiling", "setup": "solid ceiling one pixel above zip path", "expect": ["stops_at_first_solid_pixel", "no_tile_mutation", "recovery"] },
     { "name": "quick_attack_wall", "setup": "solid wall in zip path", "expect": ["stops_at_first_solid_pixel", "no_camera_desync", "recovery"] },
-    { "name": "quick_attack_save_before_zip_event", "setup": "save at frame 19; load; advance 2", "expect": ["VOICE_SPECIAL_HI_once", "FGM_ELECTRIC_1_once", "EFFECT_SPARKLE_once"] },
+    { "name": "quick_attack_save_before_zip_event", "setup": "save at frame 19; load; advance 2", "expect": ["VOICE_SPECIAL_HI_once", "FGM_QUICK_ATTACK_START_once", "EFFECT_SPARKLE_once"] },
     { "name": "quick_attack_save_after_zip_event", "setup": "save at frame 21; load; advance 2", "expect": ["no_duplicate_zip_entry_event"] },
     { "name": "jolt_brick", "setup": "ordinary brick intersects projectile", "expect": ["brick_unchanged", "projectile_resolved"] },
     { "name": "thunder_brick", "setup": "ordinary brick intersects bolt", "expect": ["brick_unchanged", "bolt_resolved"] },

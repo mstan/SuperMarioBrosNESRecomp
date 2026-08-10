@@ -5,12 +5,25 @@
 #include <stdint.h>
 
 #define SMASH64_ACTION_SLOT_CAPACITY 8
+/* Version 3 compact record: 4-byte header, eight 56-byte active slots, and
+ * four 8-byte feedback events. This stays below the mod hook's 512-byte
+ * payload ceiling without enlarging that engine-wide safety bound. */
+#define SMASH64_ACTION_SERIALIZED_MAX 484
+
+typedef enum Smash64ActionSurfaceNormal {
+    SMASH64_ACTION_SURFACE_NONE = 0,
+    SMASH64_ACTION_SURFACE_DOWN = 1,
+    SMASH64_ACTION_SURFACE_RIGHT = 2,
+    SMASH64_ACTION_SURFACE_UP = 3,
+    SMASH64_ACTION_SURFACE_LEFT = 4,
+} Smash64ActionSurfaceNormal;
 
 typedef struct Smash64ActionSlot {
     uint32_t active;
     uint32_t instance_id;
     uint32_t kind;
     uint32_t flags;
+    uint32_t surface_normal;
     double x;
     double y;
     double vx;
@@ -49,5 +62,7 @@ void smash64_actions_drain_feedback(ForeignActionFeedback *out);
 
 void smash64_actions_save(Smash64ActionSave *out);
 int smash64_actions_restore(const Smash64ActionSave *saved);
+int smash64_actions_serialize(uint8_t *buf, int capacity);
+int smash64_actions_deserialize(const uint8_t *buf, int length);
 
 int smash64_actions_snapshot(Smash64ActionSlot *out, int capacity);

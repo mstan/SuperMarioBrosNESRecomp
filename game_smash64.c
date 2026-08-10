@@ -196,6 +196,25 @@ _Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
     "super-mario-bros.smash64.active-controller"
 #define SMASH64_ACTIONS_SAVESTATE_ID \
     "super-mario-bros.smash64.persistent-actions"
+#define SMASH64_ACTIONS_RECORD_HEADER 8
+
+static int s_savestate_controller_compatible = 1;
+static const Smash64FighterProfile *s_profile = NULL;
+static void game_smash64_request_savestate_reseed(void);
+
+static void save_write_u32le(uint8_t *dst, uint32_t value)
+{
+    dst[0] = (uint8_t)value;
+    dst[1] = (uint8_t)(value >> 8);
+    dst[2] = (uint8_t)(value >> 16);
+    dst[3] = (uint8_t)(value >> 24);
+}
+
+static uint32_t save_read_u32le(const uint8_t *src)
+{
+    return (uint32_t)src[0] | ((uint32_t)src[1] << 8) |
+           ((uint32_t)src[2] << 16) | ((uint32_t)src[3] << 24);
+}
 
 static int game_smash64_controller_savestate_get(uint8_t *buf, int cap)
 {
@@ -204,32 +223,61 @@ static int game_smash64_controller_savestate_get(uint8_t *buf, int cap)
 
 static int game_smash64_controller_savestate_set(const uint8_t *buf, int len)
 {
-    /* A zero-byte getter omits the record in current saves, but accepting it
-     * keeps this callback harmless for tools that preserve empty records. */
-    return len == 0 ? 1 : nes_foreign_deserialize_active(buf, len);
+    if (len > 0 && nes_foreign_deserialize_active(buf, len)) {
+        s_savestate_controller_compatible = 1;
+        return 1;
+    }
+    /* Loading a save made with another selected fighter must not leave its
+     * adapter/action records paired with the live controller. Keep the user's
+     * current selection, discard incompatible transients, and force the same
+     * native-position reseed used after a scripted SMB handoff. */
+    s_savestate_controller_compatible = 0;
+    game_smash64_request_savestate_reseed();
+    fprintf(stderr,
+            "[Smash64] Save has no compatible active-controller record; "
+            "reseeded the currently selected fighter\n");
+    return 1;
 }
 
 static int game_smash64_actions_savestate_get(uint8_t *buf, int cap)
 {
-    Smash64ActionSave saved;
-    if (!nes_foreign_active()) return 0;
-    if (cap < (int)(1 + sizeof(saved))) return -1;
-    buf[0] = 1;
-    smash64_actions_save(&saved);
-    memcpy(buf + 1, &saved, sizeof(saved));
-    return (int)(1 + sizeof(saved));
+    int payload;
+    if (!nes_foreign_active() || !s_profile) return 0;
+    if (!buf || cap < SMASH64_ACTIONS_RECORD_HEADER) return -1;
+    memcpy(buf, "S64A", 4);
+    save_write_u32le(buf + 4, s_profile->savestate_tag);
+    payload = smash64_actions_serialize(
+        buf + SMASH64_ACTIONS_RECORD_HEADER,
+        cap - SMASH64_ACTIONS_RECORD_HEADER);
+    return payload < 0 ? payload : payload + SMASH64_ACTIONS_RECORD_HEADER;
 }
 
 static int game_smash64_actions_savestate_set(const uint8_t *buf, int len)
 {
-    Smash64ActionSave saved;
     if (len == 0) {
         smash64_actions_clear();
         return 1;
     }
-    if (!buf || buf[0] != 1 || len != (int)(1 + sizeof(saved))) return 0;
-    memcpy(&saved, buf + 1, sizeof(saved));
-    return smash64_actions_restore(&saved);
+    if (!s_savestate_controller_compatible || !s_profile) {
+        smash64_actions_clear();
+        return 1;
+    }
+    if (len >= SMASH64_ACTIONS_RECORD_HEADER &&
+        memcmp(buf, "S64A", 4) == 0) {
+        if (save_read_u32le(buf + 4) != s_profile->savestate_tag) {
+            smash64_actions_clear();
+            return 1;
+        }
+        buf += SMASH64_ACTIONS_RECORD_HEADER;
+        len -= SMASH64_ACTIONS_RECORD_HEADER;
+    } else if (s_profile->savestate_tag != 0x504B3634u) {
+        /* Headerless action records only existed on the pre-release Pikachu
+         * branch. Never interpret one while another fighter is active. */
+        smash64_actions_clear();
+        return 1;
+    }
+    if (!smash64_actions_deserialize(buf, len)) smash64_actions_clear();
+    return 1;
 }
 
 /*
@@ -277,7 +325,6 @@ static int game_smash64_actions_savestate_set(const uint8_t *buf, int len)
 
 static int  s_enabled = 0;
 static char s_controller_id[96] = {0};
-static const Smash64FighterProfile *s_profile = NULL;
 static int  s_selected = 0;
 static int  s_announced = 0;
 
@@ -419,6 +466,40 @@ static int s_reseed_this_frame = 0;   /* marks the ring row after the tick
  * is assembled. Sampling them at the later point read a different instant of
  * the frame -- see the drain site. */
 static uint32_t s_pending_flags = 0;
+
+static void game_smash64_request_savestate_reseed(void)
+{
+    s_xspeed = 0;
+    s_y_sub = 0.0;
+    s_x_sub = 0.0;
+    s_pending_external_dy = 0.0;
+    s_wrote_y = 0;
+    s_wrote_y_valid = 0;
+    s_wrote_yspeed = 0;
+    s_wrote_yspeed_valid = 0;
+    s_y_before = 0;
+    s_wrote_dy_px = 0.0;
+    s_wrote_x = 0;
+    s_wrote_x_valid = 0;
+    s_x_before = 0;
+    s_prev_buttons = 0;
+    s_special_grace_pending = 0;
+    s_swept_block = SMASH64_SWEEP_NONE;
+    s_swept_ran = 0;
+    s_x_swept_wall = 0;
+    s_x_swept_ran = 0;
+    s_pending_flags = 0;
+    s_contact_pending = 0;
+    s_forced_airborne_pending = 0;
+    s_forced_airborne_frames = 0;
+    memset(&s_attack, 0, sizeof(s_attack));
+    smash64_actions_clear();
+    /* The next ordinary-control update takes the existing, well-tested
+     * SCRIPTED->FOREIGN reseed path and reanchors the selected fighter to the
+     * guest RAM that the save loader just restored. */
+    s_prev_ownership = FOREIGN_OWNERSHIP_SCRIPTED;
+    s_reseed_this_frame = 0;
+}
 
 /*
  * Index into BlockBuffer_X_Adder / BlockBuffer_Y_Adder for the player's
@@ -753,6 +834,8 @@ static void sample_input(ForeignInput *out)
      * through Smash's fresh Up-stick path; the jumpsquat hook below masks A
      * from SMB1 so an A normal cannot also trigger Mario's native jump. */
     out->attack_pressed = (pressed & PAD_A) != 0;
+    out->jump_pressed = (pressed & PAD_UP) != 0;
+    out->jump_held = up;
     out->down_pressed = (pressed & PAD_DOWN) != 0;
     if (pressed & PAD_B) {
         if (left || right || up || down) {
@@ -1272,6 +1355,34 @@ static int move_player_vertically_hook(uint16_t addr)
     fs = nes_foreign_state();
     if (!fs) return 0;
 
+    /* Quick Attack's horizontal hook has already advanced both axes through
+     * one coupled <=1px DDA. Do not integrate Y a second time here. We still
+     * publish the corresponding native Y speed because PlayerBGCollision and
+     * the next-frame imposed-velocity readback consume that byte. */
+    if (state_has_trait(fs->state,
+                        SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP) &&
+        s_wrote_y_valid) {
+        double coupled_dy_px = source_units_to_px(-(fs->vy));
+        int ys = (int)((coupled_dy_px >= 0.0)
+                           ? (coupled_dy_px + 0.5)
+                           : (coupled_dy_px - 0.5));
+        if (s_swept_block == SMASH64_SWEEP_CEILING &&
+            state_has_trait(
+                fs->state,
+                SMASH64_STATE_TRAIT_SUPPRESS_UPWARD_SPEED_ON_CEILING))
+            ys = 1;
+        if (ys > 127) ys = 127;
+        if (ys < -128) ys = -128;
+        g_ram[Player_Y_Speed] = (uint8_t)(int8_t)ys;
+        s_wrote_yspeed = (int8_t)ys;
+        s_wrote_yspeed_valid = 1;
+        if (!s_friction_ran) write_xspeed(s_xspeed);
+        nes_foreign_trace_note_native(player_native_x(),
+                                      (int32_t)g_ram[Player_Y_Position]);
+        s_air_frames++;
+        return 1;
+    }
+
     /*
      * The handoff frame belongs to SMB1.
      *
@@ -1482,6 +1593,138 @@ static int move_player_vertically_hook(uint16_t addr)
     return 1;
 }
 
+/* Integrate a diagonal root burst as one path, not as a horizontal move
+ * followed by a vertical move. The latter is individually swept but traces an
+ * L shape and can cut around a one-pixel tile corner. This DDA advances at
+ * most one native pixel on either axis per probe, asks the same SMB1 side and
+ * head/foot predicates as the ordinary hooks at the COMBINED candidate, and
+ * stops before the first rejected candidate. */
+static int move_player_coupled_2d(const ForeignState *fs)
+{
+    double dx_px, dy_px;
+    int whole_x, whole_y, steps, i;
+    int done_x = 0, done_y = 0;
+    int pos, page, y_pos, y_high;
+
+    if (!fs) return 0;
+
+    dx_px = (double)(int8_t)g_ram[Player_X_Speed] /
+            SMB1_XSPEED_PER_PX;
+    dy_px = source_units_to_px(-(fs->vy));
+    s_x_before = (int)player_native_x();
+    s_y_before = ((int)(int8_t)g_ram[Player_Y_HighPos] * 256) +
+                 (int)g_ram[Player_Y_Position];
+
+    s_x_sub += dx_px;
+    whole_x = (int)s_x_sub;
+    s_x_sub -= (double)whole_x;
+    s_y_sub += dy_px;
+    whole_y = (int)s_y_sub;
+    s_y_sub -= (double)whole_y;
+
+    steps = abs(whole_x);
+    if (abs(whole_y) > steps) steps = abs(whole_y);
+    pos = (int)g_ram[Player_X_Position];
+    page = (int)g_ram[Player_PageLoc];
+    y_pos = (int)g_ram[Player_Y_Position];
+    y_high = (int8_t)g_ram[Player_Y_HighPos];
+
+    for (i = 1; i <= steps; ++i) {
+        const int want_x = (whole_x * i) / steps;
+        const int want_y = (whole_y * i) / steps;
+        const int step_x = want_x - done_x;
+        const int step_y = want_y - done_y;
+        int cand_x = pos + step_x;
+        int cand_page = page;
+        int cand_y = y_pos + step_y;
+        int cand_high = y_high;
+        int wall = 0, vertical = 0;
+
+        while (cand_x < 0) { cand_x += 256; cand_page -= 1; }
+        while (cand_x > 255) { cand_x -= 256; cand_page += 1; }
+        while (cand_y < 0) { cand_y += 256; cand_high -= 1; }
+        while (cand_y > 255) { cand_y -= 256; cand_high += 1; }
+
+        /* Both predicates read the other axis from player RAM. Present the
+         * combined candidate for the duration of the read-only queries. */
+        g_ram[Player_X_Position] = (uint8_t)cand_x;
+        g_ram[Player_PageLoc] = (uint8_t)cand_page;
+        g_ram[Player_Y_Position] = (uint8_t)cand_y;
+        g_ram[Player_Y_HighPos] = (uint8_t)(int8_t)cand_high;
+
+        if (step_x != 0 && cand_page >= 0 && cand_high == 1) {
+            s_x_swept_ran = 1;
+            wall = smb1_side_solid_at(cand_x, cand_page, step_x);
+        }
+        if (step_y != 0 && cand_high == 1) {
+            const int feet = step_y > 0;
+            const int within_native_extent = feet
+                ? cand_y < 0xCF
+                : cand_y >= (s_profile ? s_profile->head_upper_extent
+                                       : 0x20);
+            s_swept_ran = 1;
+            if (within_native_extent)
+                vertical = smb1_solid_at(
+                    cand_y, feet,
+                    !feet && state_has_trait(
+                        fs->state,
+                        SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER));
+        }
+
+        /* Queries restore only the coordinate they temporarily own. Restore
+         * the last accepted full position before deciding this candidate. */
+        g_ram[Player_X_Position] = (uint8_t)pos;
+        g_ram[Player_PageLoc] = (uint8_t)page;
+        g_ram[Player_Y_Position] = (uint8_t)y_pos;
+        g_ram[Player_Y_HighPos] = (uint8_t)(int8_t)y_high;
+
+        if (wall || vertical) {
+            if (wall) s_x_swept_wall = 1;
+            if (vertical)
+                s_swept_block = step_y > 0 ? SMASH64_SWEEP_FLOOR
+                                           : SMASH64_SWEEP_CEILING;
+            if (!s_sweep_noblock) {
+                s_x_sub = 0.0;
+                s_y_sub = 0.0;
+                break;
+            }
+        }
+
+        pos = cand_x;
+        page = cand_page;
+        y_pos = cand_y;
+        y_high = cand_high;
+        done_x = want_x;
+        done_y = want_y;
+    }
+
+    g_ram[Player_X_Position] = (uint8_t)pos;
+    g_ram[Player_PageLoc] = (uint8_t)page;
+    g_ram[Player_Y_Position] = (uint8_t)y_pos;
+    g_ram[Player_Y_HighPos] = (uint8_t)(int8_t)y_high;
+
+    s_wrote_x = page * 256 + pos;
+    s_wrote_x_valid = 1;
+    s_wrote_y = y_high * 256 + y_pos;
+    s_wrote_y_valid = 1;
+    s_wrote_dy_px = dy_px;
+
+    if (s_forced_airborne_pending && s_wrote_y < s_y_before &&
+        s_swept_block != SMASH64_SWEEP_CEILING) {
+        s_forced_airborne_pending = 0;
+        s_forced_airborne_frames = 0;
+    }
+    if (y_high == 1) {
+        if (smb1_solid_at(y_pos, 0, 0))
+            s_pending_flags |= SMASH64_CF_HEAD_IN_SOLID;
+        if (smb1_solid_at(y_pos, 1, 0))
+            s_pending_flags |= SMASH64_CF_FEET_IN_SOLID;
+    }
+
+    g_cpu.A = (uint8_t)(int8_t)(s_wrote_x - s_x_before);
+    return 1;
+}
+
 /*
  * Replaces MovePlayerHorizontally ($BF09) while Falcon owns the player.
  *
@@ -1498,6 +1741,7 @@ static int move_player_vertically_hook(uint16_t addr)
  */
 static int move_player_horizontally_hook(uint16_t addr)
 {
+    const ForeignState *fs;
     double dx_px;
     int whole, pos, page;
 
@@ -1508,6 +1752,11 @@ static int move_player_horizontally_hook(uint16_t addr)
     /* MovePlayerHorizontally's own first act is to leave while a jumpspring
      * animates ($BF09: LDA $070E / BNE ExXMove); declining preserves it. */
     if (g_ram[JumpspringAnimCtrl] != 0) return 0;
+
+    fs = nes_foreign_state();
+    if (fs && state_has_trait(fs->state,
+                              SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP))
+        return move_player_coupled_2d(fs);
 
     dx_px = (double)(int8_t)g_ram[Player_X_Speed] / SMB1_XSPEED_PER_PX;
 
@@ -2061,7 +2310,8 @@ typedef struct {
     ForeignAttackHitbox attack;
 } AdapterSaveFieldsV5;
 
-#define SMASH64_ADAPTER_SAVESTATE_VERSION 7
+#define SMASH64_ADAPTER_SAVESTATE_VERSION 8
+#define SMASH64_ADAPTER_SAVESTATE_HEADER 5
 
 /*
  * Returns 0 bytes while the mod is off. There is no adapter trajectory to
@@ -2073,8 +2323,8 @@ static int game_smash64_savestate_get(uint8_t *buf, int cap)
 {
     AdapterSaveFields f;
 
-    if (!s_enabled) return 0;
-    if (cap < (int)(1 + sizeof f)) return -1;
+    if (!s_enabled || !s_profile) return 0;
+    if (cap < (int)(SMASH64_ADAPTER_SAVESTATE_HEADER + sizeof f)) return -1;
 
     f.xspeed              = s_xspeed;
     f.y_sub               = s_y_sub;
@@ -2103,8 +2353,9 @@ static int game_smash64_savestate_get(uint8_t *buf, int cap)
     f.attack              = s_attack;
 
     buf[0] = SMASH64_ADAPTER_SAVESTATE_VERSION;
-    memcpy(buf + 1, &f, sizeof f);
-    return (int)(1 + sizeof f);
+    save_write_u32le(buf + 1, s_profile->savestate_tag);
+    memcpy(buf + SMASH64_ADAPTER_SAVESTATE_HEADER, &f, sizeof f);
+    return (int)(SMASH64_ADAPTER_SAVESTATE_HEADER + sizeof f);
 }
 
 /*
@@ -2119,7 +2370,14 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
     if (len == 0) return 1;
     memset(&f, 0, sizeof f);
     if (buf[0] == SMASH64_ADAPTER_SAVESTATE_VERSION &&
-        len == (int)(1 + sizeof f)) {
+        len == (int)(SMASH64_ADAPTER_SAVESTATE_HEADER + sizeof f)) {
+        if (!s_profile || save_read_u32le(buf + 1) != s_profile->savestate_tag)
+            return 1;
+        memcpy(&f, buf + SMASH64_ADAPTER_SAVESTATE_HEADER, sizeof f);
+    } else if (buf[0] == 7 && len == (int)(1 + sizeof f)) {
+        /* v7 predates multi-fighter identity. The later controller record
+         * still validates the exact fighter and requests a reseed on a
+         * mismatch, so retaining this reader preserves Falcon saves. */
         memcpy(&f, buf + 1, sizeof f);
     } else if (buf[0] == 6 &&
                len == (int)(1 + sizeof(AdapterSaveFieldsV6))) {
@@ -2227,6 +2485,7 @@ int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_pending_external_dy = 0.0;
     s_forced_airborne_pending = 0;
     s_forced_airborne_frames = 0;
+    s_savestate_controller_compatible = 1;
     s_controller_id[0] = '\0';
     s_profile = NULL;
     smash64_actions_clear();

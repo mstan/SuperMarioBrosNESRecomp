@@ -153,6 +153,7 @@ static void choose_action(PikachuFighter *f, const PikachuInputRaw *in)
         enter(f, air ? PK_THUNDER_JOLT_AIR : PK_THUNDER_JOLT_GROUND); return;
     }
     if (in->attack_pressed) {
+        if (!air && in->stick_y <= -20) return;
         if (air && in->stick_y <= -20) enter(f, PK_DAIR);
         else if (air && in->stick_x * f->lr < -20) enter(f, PK_BAIR);
         else if (air && in->stick_x * f->lr >= 20) enter(f, PK_FAIR);
@@ -179,6 +180,69 @@ static int vector_changed_enough(const PikachuFighter *f, const PikachuInputRaw 
     return dot < 0 || dot * dot * 1000L < old_sq * new_sq * 552L;
 }
 
+static int stick_abs(int value) { return value < 0 ? -value : value; }
+
+static void ground_locomotion(PikachuFighter *f, const PikachuInputRaw *in)
+{
+    const int magnitude = stick_abs(in->stick_x);
+    const int input_lr = in->stick_x < 0 ? -1 : 1;
+
+    if (magnitude <= 10) {
+        f->vel_x = 0.0;
+        f->state = PK_GROUND_WAIT;
+        f->action_frame = 0;
+        return;
+    }
+
+    if (f->state == PK_DASH) {
+        if (input_lr != f->lr) {
+            /* The current MVP has no separate TurnRun clip. Restarting the
+             * sourced dash window is the closest deterministic presentation
+             * and avoids falling through to a fast walk on reversal. */
+            f->lr = input_lr;
+            f->vel_x = PIKACHU_SOURCE_DASH_SPEED * f->lr;
+            f->action_frame = 0;
+            return;
+        }
+        if (f->action_frame >= PIKACHU_SOURCE_DASH_TO_RUN_FRAMES) {
+            f->state = PK_RUN;
+            f->vel_x = PIKACHU_SOURCE_RUN_SPEED * f->lr;
+            f->action_frame = 0;
+            return;
+        }
+        {
+            double speed = PIKACHU_SOURCE_DASH_SPEED;
+            if (f->action_frame >= 7u) {
+                speed -= PIKACHU_SOURCE_DASH_DECEL *
+                         (double)(f->action_frame - 6u);
+            }
+            f->vel_x = speed * f->lr;
+        }
+        return;
+    }
+
+    if (f->state == PK_RUN && input_lr == f->lr &&
+        magnitude >= PIKACHU_SOURCE_RUN_STICK_MIN) {
+        f->vel_x = PIKACHU_SOURCE_RUN_SPEED * f->lr;
+        return;
+    }
+
+    if ((f->state == PK_GROUND_WAIT || f->state == PK_RUN ||
+         f->state == PK_WALK) &&
+        magnitude >= PIKACHU_SOURCE_RUN_STICK_MIN) {
+        f->state = PK_DASH;
+        f->lr = input_lr;
+        f->vel_x = PIKACHU_SOURCE_DASH_SPEED * f->lr;
+        f->action_frame = 0;
+        return;
+    }
+
+    f->state = PK_WALK;
+    f->lr = input_lr;
+    f->vel_x = in->stick_x * PIKACHU_SOURCE_WALK_MULTIPLIER;
+    f->action_frame = 0;
+}
+
 void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *out)
 {
     unsigned n;
@@ -187,32 +251,43 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
     n = f->action_frame;
 
     if (!is_action(f->state)) {
-        if (in->stick_x > 10 || in->stick_x < -10) {
+        if (f->grounded) {
+            ground_locomotion(f, in);
+        } else if (in->stick_x > 10 || in->stick_x < -10) {
             f->lr = in->stick_x < 0 ? -1 : 1;
-            if (f->state == PK_GROUND_WAIT) {
-                f->vel_x = PIKACHU_SOURCE_DASH_SPEED * f->lr;
-                f->state = PK_DASH;
-            } else if (f->state == PK_DASH) {
-                f->vel_x = PIKACHU_SOURCE_RUN_SPEED * f->lr;
-                f->state = PK_RUN;
-            } else {
-                f->vel_x = in->stick_x * PIKACHU_SOURCE_WALK_MULTIPLIER;
-                f->state = PK_WALK;
-            }
-        } else if (f->grounded) { f->vel_x = 0.0; f->state = PK_GROUND_WAIT; }
+            f->vel_x = in->stick_x * PIKACHU_SOURCE_WALK_MULTIPLIER;
+        }
         if (!f->grounded) {
             f->vel_y -= PIKACHU_SOURCE_GRAVITY;
             if (f->vel_y < -PIKACHU_SOURCE_TERMINAL_VELOCITY) f->vel_y = -PIKACHU_SOURCE_TERMINAL_VELOCITY;
-            if (f->state != PK_JUMP_GROUND && f->state != PK_JUMP_AERIAL) f->state = PK_AIR_FALL;
+            if ((f->state == PK_JUMP_GROUND &&
+                 n >= PIKACHU_SOURCE_JUMP_GROUND_FRAMES) ||
+                (f->state == PK_JUMP_AERIAL &&
+                 n >= PIKACHU_SOURCE_JUMP_AERIAL_FRAMES)) {
+                enter(f, PK_AIR_FALL);
+            } else if (f->state != PK_JUMP_GROUND &&
+                       f->state != PK_JUMP_AERIAL) {
+                f->state = PK_AIR_FALL;
+            }
         }
         out->requested_dx = f->vel_x; out->requested_dy = f->vel_y;
     } else if (f->state >= PK_JAB && f->state <= PK_DAIR) {
         normal_schedule(f, out);
     } else if (f->state == PK_THUNDER_JOLT_GROUND || f->state == PK_THUNDER_JOLT_AIR) {
-        if (n == 0) { out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_N); if (f->state == PK_THUNDER_JOLT_AIR) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_5); }
+        if (n == 0) {
+            /* PikachuMainMotion plays only the voice on grounded SpecialN;
+             * the aerial script adds Electric5. Electric1 belongs to Quick
+             * Attack and must not be doubled onto Thunder Jolt. */
+            out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_N);
+            if (f->state == PK_THUNDER_JOLT_AIR)
+                out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_5);
+        }
         if (n == 21) spawn_jolt(f, out);
         if (n >= 35) enter(f, f->grounded ? PK_GROUND_WAIT : PK_AIR_FALL);
     } else if (f->state == PK_QUICK_ATTACK_START) {
+        if (n == 0)
+            out->events |= PIKACHU_EVENT_BIT(
+                PIKACHU_EVENT_FGM_QUICK_ATTACK_START);
         if (n == 20) {
             f->quick_first_x = in->stick_x; f->quick_first_y = in->stick_y;
             if (!f->quick_first_x && !f->quick_first_y) f->quick_first_x = f->lr * 80;
@@ -260,7 +335,9 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
         if (f->state == PK_THUNDER_SELF_HIT && n >= f->thunder_contact_frame && n < f->thunder_contact_frame + 10) set_attack(out, 0, 90, 80, 180, 16, 0);
         if (n >= 70) enter(f, f->grounded ? PK_GROUND_WAIT : PK_AIR_FALL);
     }
-    if (is_action(f->state)) f->action_frame++;
+    if (is_action(f->state) || f->state == PK_DASH ||
+        f->state == PK_JUMP_GROUND || f->state == PK_JUMP_AERIAL)
+        f->action_frame++;
     out->projectile = f->projectile;
     out->persistent_action_id = f->persistent_action_id;
     out->action_frame = n;

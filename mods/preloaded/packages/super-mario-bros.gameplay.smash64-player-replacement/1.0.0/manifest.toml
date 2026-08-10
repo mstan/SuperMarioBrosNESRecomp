@@ -43,6 +43,10 @@ default = "captain-falcon"
 value = "captain-falcon"
 label = "Captain Falcon"
 
+[[option.choice]]
+value = "pikachu"
+label = "Pikachu (prototype)"
+
 # One trusted plugin per character, selected by the dropdown above. Adding a
 # fighter means adding an [[option.choice]] and a conditioned [[plugin]] — no
 # string dispatch in game code.
@@ -51,3 +55,9 @@ feature = "smash64-player"
 id = "super-mario-bros.smash64.captain-falcon"
 when_option = "character"
 when_value = "captain-falcon"
+
+[[plugin]]
+feature = "smash64-player"
+id = "super-mario-bros.smash64.pikachu"
+when_option = "character"
+when_value = "pikachu"

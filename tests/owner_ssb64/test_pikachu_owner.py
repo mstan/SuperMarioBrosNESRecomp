@@ -7,15 +7,18 @@ import json
 import os
 import sys
 import tempfile
+import struct
 import unittest
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools" / "owner_ssb64"))
+sys.path.insert(0, str(ROOT / "tools"))
 
 import build_cache as falcon_cache  # noqa: E402
 import pikachu_owner as pikachu  # noqa: E402
+import bake_pikachu_runtime  # noqa: E402
 
 
 class PikachuRecipeTests(unittest.TestCase):
@@ -73,7 +76,7 @@ class PikachuOwnerRomIntegrationTests(unittest.TestCase):
     def test_canonical_manifest_and_reloc_hashes(self):
         manifest_path = self.cache / "manifest.json"
         self.assertEqual(hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
-                         "d6e3123ca51e7852ff2c5606d6b2f02f6edd2b9c88e27b3de3007adc7b56c1d2")
+                         "481769832b15e463e3597041335519c5a0e0db628aea5bb4c11e0e6e1df7e5d3")
         expected = {
             243: "c217452a4a3919d1054e0b42311da68cea09b545aca74b3eb3fa33f5e464f69f",
             341: "0b99946b1e91697503c7f531711edeab18b275bd6ffb519e2599a7e0d18fedb4",
@@ -105,6 +108,31 @@ class PikachuOwnerRomIntegrationTests(unittest.TestCase):
         self.assertEqual(sum(item["joint_count"] == 27 for item in animations), 5)
         effects = json.loads((intermediate / "effects" / "manifest.json").read_text())
         self.assertEqual([item["reloc_id"] for item in effects], [342, 347, 341])
+
+    def test_runtime_baker_supports_hidden_costume_proof(self):
+        expected = {
+            0: (519672, "f4e71bcb3abf23000dbae91948162a6dd1c8d6e8064219874bda7b46171bf1ec"),
+            1: (522364, "4f8256e4d667bb7c6ccd8fbc90398aa4374461f633c501a9dc73968162dabe17"),
+            2: (522364, "2f51d7e4a123e89f4591784644c50a453aa7588a0fcfa23c47940c0e9504e33c"),
+            3: (522376, "00d299887cf2241c6a77a5b01801c223c955802766619aac07a497b9b4a7d0e4"),
+        }
+        with tempfile.TemporaryDirectory(prefix="pikachu-runtime-") as temporary:
+            outputs = []
+            for costume in range(4):
+                output = Path(temporary) / f"pikachu_costume_{costume}.bin"
+                bake_pikachu_runtime.write_blob(self.cache / "intermediate",
+                                                output, costume)
+                payload = output.read_bytes()
+                magic, version, joints, triangles, textures, animations = \
+                    struct.unpack_from("<8s5I", payload, 0)
+                self.assertEqual((magic, version, joints, animations),
+                                 (b"FLCN64B\0", 6, 27, 37))
+                self.assertEqual((len(payload), hashlib.sha256(payload).hexdigest()),
+                                 expected[costume])
+                outputs.append((triangles, textures))
+            self.assertEqual(outputs[0][0], 317)
+            self.assertEqual([item[0] for item in outputs[1:]], [326, 326, 326])
+            self.assertEqual([item[1] for item in outputs], [11, 14, 14, 15])
 
     def test_audio_inventory_and_no_rom_leak(self):
         audio = json.loads((self.cache / "intermediate" / "audio" /

@@ -1,0 +1,36 @@
+LOG pikachu-walk-visual-qa
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 100
+
+# A held digital direction represents source stick magnitude 80. Pikachu must
+# present the sourced 13-frame Dash window, then remain in Run for the hold;
+# it must not fall back into Walk3 after one Run frame.
+HOLD RIGHT
+WAIT 6
+SCREENSHOT C:/temp/pikachu_dash_right_06.png
+WAIT 6
+SCREENSHOT C:/temp/pikachu_dash_right_12.png
+WAIT 8
+SCREENSHOT C:/temp/pikachu_run_right_20.png
+WAIT 12
+SCREENSHOT C:/temp/pikachu_run_right_32.png
+RELEASE RIGHT
+WAIT 4
+
+# Reverse and capture the same sourced transition mirrored.
+HOLD LEFT
+WAIT 6
+SCREENSHOT C:/temp/pikachu_dash_left_06.png
+WAIT 6
+SCREENSHOT C:/temp/pikachu_dash_left_12.png
+WAIT 8
+SCREENSHOT C:/temp/pikachu_run_left_20.png
+WAIT 12
+SCREENSHOT C:/temp/pikachu_run_left_32.png
+RELEASE LEFT
+WAIT 4
+EXIT 0

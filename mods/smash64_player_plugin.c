@@ -14,6 +14,7 @@
 #include "game_smash64_assets.h"
 #include "game_smash64_audio.h"
 #include "smash64/characters/captain_falcon.h"
+#include "smash64/characters/pikachu.h"
 #include "smash64_owner_assets.h"
 
 #include <SDL.h>
@@ -55,25 +56,46 @@ static void report_selected_character(const char *expected) {
         printf("[Smash64] Character: %s\n", selected);
 }
 
-static void activate_captain_falcon(void) {
+static void activate_character(const char *fighter_key,
+                               const char *controller_id,
+                               const char *display_name,
+                               int costume) {
     const char *owner_rom;
     char cache_root[1024];
-    report_selected_character("captain-falcon");
     owner_rom = nes_mod_external_rom_path(SMASH64_PACKAGE_ID,
                                           SMASH64_FEATURE_ID,
                                           SMASH64_OWNER_ROM_ID);
     if (!owner_rom || !*owner_rom ||
-        !smash64_owner_assets_prepare(owner_rom, cache_root, sizeof(cache_root)) ||
+        !smash64_owner_assets_prepare_character(
+            owner_rom, fighter_key, costume, cache_root, sizeof(cache_root)) ||
         SDL_setenv("NESRECOMP_SSB64_ASSETS", cache_root, 1) != 0 ||
-        !game_smash64_assets_prepare_root(cache_root) ||
-        !game_smash64_audio_prepare_root(cache_root) ||
-        !game_smash64_set_mod_enabled(1, SMASH64_CAPTAIN_FALCON_ID)) {
+        !game_smash64_assets_prepare_character_root(cache_root, controller_id) ||
+        !game_smash64_audio_prepare_character_root(cache_root, controller_id) ||
+        !game_smash64_set_mod_enabled(1, controller_id)) {
         game_smash64_set_mod_enabled(0, NULL);
         fprintf(stderr,
-                "[Smash64] Captain Falcon assets could not be prepared. "
+                "[Smash64] %s assets could not be prepared. "
                 "Recheck the selected verified Smash 64 ROM and writable "
-                "user-data folder; player replacement stays OFF.\n");
+                "user-data folder; player replacement stays OFF.\n",
+                display_name);
     }
+}
+
+static void activate_captain_falcon(void) {
+    report_selected_character("captain-falcon");
+    activate_character("captain-falcon", SMASH64_CAPTAIN_FALCON_ID,
+                       "Captain Falcon", 0);
+}
+
+static void activate_pikachu(void) {
+    const char *costume_env = SDL_getenv("NESRECOMP_SMASH64_PIKACHU_COSTUME");
+    int costume = 0;
+    if (costume_env && costume_env[0] >= '0' && costume_env[0] <= '3' &&
+        costume_env[1] == '\0')
+        costume = costume_env[0] - '0';
+    report_selected_character("pikachu");
+    fprintf(stderr, "[Smash64] Pikachu prototype costume %d\n", costume);
+    activate_character("pikachu", SMASH64_PIKACHU_ID, "Pikachu", costume);
 }
 
 NES_MOD_CONSTRUCTOR(register_smash64_player_plugin) {
@@ -82,6 +104,9 @@ NES_MOD_CONSTRUCTOR(register_smash64_player_plugin) {
     if (!smash64_captain_falcon_register())
         fprintf(stderr,
                 "[Mods] Failed to register the Captain Falcon controller\n");
+    if (!smash64_pikachu_register())
+        fprintf(stderr,
+                "[Mods] Failed to register the Pikachu prototype controller\n");
 
     /* The trusted 6502 function-entry hook that takes over SMB1's horizontal
      * velocity integrator. Registered DISABLED, so registration alone cannot
@@ -92,7 +117,9 @@ NES_MOD_CONSTRUCTOR(register_smash64_player_plugin) {
 
     if (!nes_mod_register_reset_callback(reset_smash64_player) ||
         !nes_mod_register_activation_plugin(
-            SMASH64_CAPTAIN_FALCON_ID, activate_captain_falcon))
+            SMASH64_CAPTAIN_FALCON_ID, activate_captain_falcon) ||
+        !nes_mod_register_activation_plugin(
+            SMASH64_PIKACHU_ID, activate_pikachu))
         fprintf(stderr,
                 "[Mods] Failed to register the Smash 64 player replacement "
                 "plugin\n");

@@ -4,6 +4,7 @@ build_release/
 build_debug/
 build_falcon/
 build_falcon_qa/
+build_pikachu*/
 build_harness/
 release/
 widescreen.ini

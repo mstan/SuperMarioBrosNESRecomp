@@ -1,0 +1,66 @@
+LOG pikachu-jump-jolt-visual-qa
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 30
+
+# Reach the first short 1-1 pipe without depending on an owner save. Fresh Up
+# presses exercise the real host jump mapping while the route builds the
+# deterministic floor/pipe fixture used below.
+HOLD RIGHT
+WAIT 30
+HOLD UP
+WAIT 2
+RELEASE UP
+WAIT 48
+HOLD UP
+WAIT 2
+RELEASE UP
+WAIT 43
+RELEASE RIGHT
+WAIT 35
+SCREENSHOT C:/temp/pikachu_jolt_pipe_approach.png
+WAIT 2
+
+# Neutral B spawns Jolt at source frame 21. The keyed frames prove floor ->
+# near wall -> pipe top -> far wall -> floor with the real 8x8 action box.
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 22
+SCREENSHOT C:/temp/pikachu_jolt_pipe_00.png
+WAIT 2
+WAIT 14
+SCREENSHOT C:/temp/pikachu_jolt_pipe_16.png
+WAIT 2
+WAIT 14
+SCREENSHOT C:/temp/pikachu_jolt_pipe_32.png
+WAIT 2
+WAIT 10
+SCREENSHOT C:/temp/pikachu_jolt_pipe_44.png
+WAIT 2
+WAIT 6
+
+# Save while attached to the near wall. Replaying the same 16 frames must
+# produce a byte-identical screenshot, proving surface normal and tangent are
+# both in the compact mod record rather than reconstructed heuristically.
+SAVE_STATE C:/temp/pikachu_jolt_pipe_mid.sav
+SCREENSHOT C:/temp/pikachu_jolt_pipe_52.png
+WAIT 2
+LOAD_STATE C:/temp/pikachu_jolt_pipe_mid.sav
+WAIT 16
+SCREENSHOT C:/temp/pikachu_jolt_pipe_future.png
+WAIT 2
+LOAD_STATE C:/temp/pikachu_jolt_pipe_mid.sav
+WAIT 16
+SCREENSHOT C:/temp/pikachu_jolt_pipe_replay.png
+WAIT 2
+WAIT 14
+SCREENSHOT C:/temp/pikachu_jolt_pipe_84.png
+WAIT 2
+WAIT 14
+SCREENSHOT C:/temp/pikachu_jolt_pipe_100.png
+WAIT 2
+EXIT 0

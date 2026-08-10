@@ -94,7 +94,7 @@ CONTROLLER_BINDINGS = {
     "electric_2": ((7, "PIKACHU_EVENT_FGM_ELECTRIC_2"),),
     "electric_3": ((8, "PIKACHU_EVENT_FGM_ELECTRIC_3"),),
     "electric_5": ((9, "PIKACHU_EVENT_FGM_ELECTRIC_5"),),
-    # Quick Attack emits this alongside the SpecialHi voice on each zip.
+    # Quick Attack emits this once when its 20-frame charge begins.
     "quick_attack_start": ((10, "PIKACHU_EVENT_FGM_QUICK_ATTACK_START"),),
     # Current Thunder motion plays this when the projectile spawns.
     "thunder": ((16, "PIKACHU_EVENT_PROJECTILE_THUNDER_SPAWN"),),
@@ -224,6 +224,16 @@ def _loop_clip(rom: bytes, samples: list[int]) -> tuple[list[int], dict]:
     }
 
 
+def expected_loop_metadata() -> dict:
+    return {
+        "mode": "forward", "start_frame": 0,
+        "end_frame": APPROVED_CUES[LOOP_EVENT][0],
+        "source_start_sample": 100, "source_end_sample": 7664,
+        "source_loop_count": 0xFFFFFFFF,
+        "note": "One bounded source loop period; runtime repeats [start_frame,end_frame).",
+    }
+
+
 def verify(output_dir: Path, expected_rom_sha1: str | None = None) -> dict:
     manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
     if manifest.get("format") != FORMAT or manifest.get("recipe_version") != RECIPE_VERSION:
@@ -286,14 +296,7 @@ def verify(output_dir: Path, expected_rom_sha1: str | None = None) -> dict:
             raise ValueError(f"Pikachu controller mapping mismatch: {clip['event']}")
         expected_files.add(filename)
     loop = next(clip for clip in clips if clip["event"] == LOOP_EVENT)
-    expected_loop = {
-        "mode": "forward", "start_frame": 0,
-        "end_frame": APPROVED_CUES[LOOP_EVENT][0],
-        "source_start_sample": 100, "source_end_sample": 7664,
-        "source_loop_count": 0xFFFFFFFF,
-        "note": "One bounded source loop period; runtime repeats [start_frame,end_frame).",
-    }
-    if loop.get("loop") != expected_loop:
+    if loop.get("loop") != expected_loop_metadata():
         raise ValueError("Pikachu ElectricLoop metadata mismatch")
     actual_files = {path.name for path in output_dir.iterdir() if path.is_file()}
     if actual_files != expected_files:
