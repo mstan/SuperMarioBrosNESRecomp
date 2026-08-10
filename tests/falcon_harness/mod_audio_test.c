@@ -48,6 +48,21 @@ int main(void)
     nes_mod_audio_mix(out, 1);
     ok &= expect_sample("stop loop preserves one-shot", out[0], 1000);
 
+    /* Save loading flushes delivery cursors. A subsequently reconciled live
+     * action begins a fresh source loop and cannot continue a pre-load one. */
+    nes_mod_audio_stop_all();
+    out[0] = 0;
+    ok &= nes_mod_audio_play_loop(clip, 100);
+    nes_mod_audio_mix(out, 1);
+    ok &= expect_sample("loop before save load", out[0], 1000);
+    nes_mod_audio_stop_all();
+    out[0] = 0;
+    nes_mod_audio_mix(out, 1);
+    ok &= expect_sample("save load flushes loop", out[0], 0);
+    ok &= nes_mod_audio_play_loop(clip, 100);
+    nes_mod_audio_mix(out, 1);
+    ok &= expect_sample("loop reload restarts", out[0], 1000);
+
     out[0] = 0;
     ok &= nes_mod_audio_play(loud_clip, 100);
     ok &= nes_mod_audio_play(loud_clip, 100);
