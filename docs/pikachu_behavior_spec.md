@@ -63,6 +63,19 @@ the external cache, following the Captain Falcon asset gate.
   against SMB1's own collision buffer and every crossed camera/metatile
   boundary must be presented to the streamer.  Never teleport a fighter,
   bypass a ceiling/wall, or leave a deferred position after blocked movement.
+- Quick Attack is the narrow finite-burst exception.  Its source values remain
+  330 and 297 units/tick in the fighter state, but the host snapshots one
+  direction-preserving collision plan at each zip: at parser debt below `$20`,
+  ZIP1 may use 16 px/component/tick (80 px cardinal total); at debt below
+  `$6C`, ZIP2 may use 14.4 px/component/tick (72 px cardinal total).  At or
+  above either boundary it uses 4 px/component/tick.  This is not a claim that
+  SMB1 can safely stream the 132/118.8 px source distances: ZIP1 incurs 60 px
+  of finite debt, the nine-frame aim repays 36 px, and ZIP2 incurs 52 px from
+  its admitted starting range, remaining below the signed `$A0` hazard.
+  The profile owns the thresholds; the generic adapter neither identifies
+  Pikachu states nor mutates its source velocity.  The complete selected plan
+  is serialized in adapter save v9.  Older adapter records fall back to 4 px
+  until the coupled action ends, never re-deciding an active zip from live RAM.
 - Model root motion is visual only unless a move explicitly declares host
   travel below.  For motions marked `TRANSN_JOINT` (Fair and DAir), remove
   the root track from the model pose before binding joints, exactly as the
@@ -103,8 +116,8 @@ projectiles and never alter SMB blocks.
 |---|---|---|---|
 | Jab | reloc `2016_FTPikachuAnimJab1`; `0x0E34` | `[2,6)`, 4 | `FGMLightSwingS` at 2; one forward union; no root travel. |
 | Forward tilt | reloc `2019_FTPikachuAnimFTilt`; `0x0F50` | `[5,15)`, 10 | `FGMLightSwingM` at 5; one forward union; no root travel. |
-| Dash attack | reloc `2017_FTPikachuAnimDashAttack`; `0x0E80` | `[4,23)`, 12 | `FGMLightSwingL` at 4; one forward union; no root travel. The audited `MOTION_ATTACK(aid,gid,jid,damage,...,kbb)` record's 40 is KBB, not damage. |
-| Up tilt | reloc `2021_FTPikachuAnimUTilt`; `0x0FF0` | `[5,15)`, 11 | `FGMLightSwingM` at 5; upward union; no root travel. The fourth macro argument is source damage. |
+| Dash attack | reloc `2017_FTPikachuAnimDashAttack`; `0x0E80` | `[4,23)`, 12 | `FGMLightSwingL` at 4; one forward union; no root travel. Regression rule: source macros are `(aid,gid,jid,damage,...,kbb)`; the record's 40 is KBB, not damage. |
+| Up tilt | reloc `2021_FTPikachuAnimUTilt`; `0x0FF0` | `[5,15)`, 11 | `FGMLightSwingM` at 5; upward union; no root travel. The same fourth-argument rule prevents regressing this to 10. |
 | Down tilt | reloc `2022_FTPikachuAnimDTilt`; `0x103C` | `[6,14)`, 12 | `FGMLightSwingM` at 6; low forward union; no root travel. |
 | Neutral air | reloc `2026_FTPikachuAnimAttackAirN`; `0x12E8` | `[3,11)`, 14 then `[11,29)`, 11 | `FGMLightSwingM` at 3; body union follows the pose; physical contact may break eligible bricks. |
 | Forward air | reloc `2027_FTPikachuAnimAttackAirF`; `0x1380`, `TRANSN_JOINT` | `[7,9)`, `[10,12)`, `[13,15)`, `[16,18)`, `[19,21)`, `[22,24)`, `[25,27)`, each 3 | `FGMPikachuElectric2` at 7, then `FGMMarioUnkSwing2` for each pulse; show electric color/effect on the attack side. |
@@ -128,9 +141,14 @@ rather than Mario's fireball slot.
   at that pixel and enters recovery; it cannot phase through a ceiling, wall,
   floor, HUD-route tile, pipe, or block.  The source's platform pass buffer is
   not an authorization to pass SMB solid tiles.
-- After no second zip, recovery has 0.4 normal air drift and source landing
-  multiplier `0.4`, per `ftpikachuspecialhi.c:404-553`.  The host must preserve
-  this state and its zip/direction counters in savestates.
+- After no second zip, recovery backs the zip vector up by 0.2, then has 0.4
+  normal-air drift and source FallSpecial landing playback at 0.4, per
+  `ftpikachuspecialhi.c:404-553`.  A floor contact enters the explicit
+  append-only `FALL_SPECIAL_LANDING` state (20 host ticks for the 8-frame
+  source motion at 0.4), not ordinary `GROUND_WAIT`.  The host must preserve
+  this state and its zip/direction counters in savestates; a v1 controller
+  save in any active Quick Attack phase is rejected rather than guessing its
+  missing end/recovery clock.
 - Water, pipe entry/exit, flagpole, level transition, injury, growth, and
   death remain native SMB motion/collision timing.  During each scripted
   window, render Pikachu's corresponding presentation or a stable Pikachu

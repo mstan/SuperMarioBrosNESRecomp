@@ -40,6 +40,7 @@ const char *pikachu_state_name(int state)
     case PK_CROUCH_END: return "CROUCH_END"; case PK_LANDING: return "LANDING";
     case PK_DASH_ATTACK: return "DASH_ATTACK"; case PK_UTILT: return "UTILT";
     case PK_DTILT: return "DTILT"; case PK_UAIR: return "UAIR";
+    case PK_FALL_SPECIAL_LANDING: return "FALL_SPECIAL_LANDING";
     default: return "INVALID";
     }
 }
@@ -71,7 +72,8 @@ static int is_action(int state)
 static int is_timed_ground_state(int state)
 {
     return state == PK_DASH || state == PK_RUN_BRAKE || state == PK_TURN_RUN ||
-           state == PK_CROUCH || state == PK_CROUCH_END || state == PK_LANDING;
+           state == PK_CROUCH || state == PK_CROUCH_END || state == PK_LANDING ||
+           state == PK_FALL_SPECIAL_LANDING;
 }
 
 static int is_standard_air_state(int state)
@@ -241,15 +243,22 @@ static void choose_action(PikachuFighter *f, const PikachuInputRaw *in)
 
 static int vector_changed_enough(const PikachuFighter *f, const PikachuInputRaw *in)
 {
-    long dot, old_sq, new_sq;
+    double dot, old_length, new_length, cosine, angle_degrees;
     if (in->stick_x * in->stick_x + in->stick_y * in->stick_y <
         (int)(PIKACHU_SOURCE_QUICK_ATTACK_STICK_MIN *
               PIKACHU_SOURCE_QUICK_ATTACK_STICK_MIN)) return 0;
-    dot = (long)f->quick_first_x * in->stick_x + (long)f->quick_first_y * in->stick_y;
-    old_sq = (long)f->quick_first_x * f->quick_first_x + (long)f->quick_first_y * f->quick_first_y;
-    new_sq = (long)in->stick_x * in->stick_x + (long)in->stick_y * in->stick_y;
-    /* cos(42 degrees)^2 ~= .552. Negative dot is necessarily a changed aim. */
-    return dot < 0 || dot * dot * 1000L < old_sq * new_sq * 552L;
+    dot = (double)f->quick_first_x * in->stick_x +
+          (double)f->quick_first_y * in->stick_y;
+    old_length = sqrt((double)f->quick_first_x * f->quick_first_x +
+                      (double)f->quick_first_y * f->quick_first_y);
+    new_length = sqrt((double)in->stick_x * in->stick_x +
+                      (double)in->stick_y * in->stick_y);
+    if (old_length == 0.0 || new_length == 0.0) return 0;
+    cosine = dot / (old_length * new_length);
+    if (cosine > 1.0) cosine = 1.0;
+    if (cosine < -1.0) cosine = -1.0;
+    angle_degrees = acos(cosine) * (180.0 / 3.14159265358979323846);
+    return angle_degrees > 42.0;
 }
 
 /* SpecialHi does not use raw stick components as its velocity.  The source
@@ -359,6 +368,16 @@ static void ground_locomotion(PikachuFighter *f, const PikachuInputRaw *in)
     if (f->state == PK_LANDING) {
         f->vel_x = 0.0;
         if (f->action_frame >= PIKACHU_SOURCE_LANDING_FRAMES) {
+            f->state = PK_GROUND_WAIT;
+            f->action_frame = 0;
+        }
+        return;
+    }
+
+    if (f->state == PK_FALL_SPECIAL_LANDING) {
+        f->vel_x = 0.0;
+        if (f->action_frame >=
+            PIKACHU_SOURCE_QUICK_ATTACK_FALL_SPECIAL_LANDING_FRAMES) {
             f->state = PK_GROUND_WAIT;
             f->action_frame = 0;
         }
@@ -648,8 +667,14 @@ void pikachu_resolve(PikachuFighter *f, const PikachuCollision *hit)
             f->action_frame = 0;
             f->vel_x = 0.0;
             f->vel_y = 0.0;
-        } else if (f->state == PK_AIR_FALL ||
-                   f->state == PK_QUICK_ATTACK_RECOVERY) {
+        } else if (f->state == PK_QUICK_ATTACK_RECOVERY) {
+            /* Common FallSpecial enters its .4-rate landing animation; it
+             * must not turn a Quick Attack floor contact into plain Wait. */
+            f->state = PK_FALL_SPECIAL_LANDING;
+            f->action_frame = 0;
+            f->vel_x = 0.0;
+            f->vel_y = 0.0;
+        } else if (f->state == PK_AIR_FALL) {
             f->state = PK_GROUND_WAIT;
         }
     }
@@ -713,6 +738,15 @@ int pikachu_deserialize(PikachuFighter *f, const uint8_t *buf, int len)
          * Special bookkeeping has no active legacy equivalent, so zero is
          * the only safe reconstruction. */
         memcpy(&candidate, buf + 1, v1_size);
+        /* v1 lacked the source End/FallSpecial clock. An active Quick
+         * Attack cannot be resumed safely without inventing a re-aim or
+         * skipping landing lag, so reject it rather than guessing. */
+        if (candidate.state == PK_QUICK_ATTACK_START ||
+            candidate.state == PK_QUICK_ATTACK_ZIP1 ||
+            candidate.state == PK_QUICK_ATTACK_WINDOW ||
+            candidate.state == PK_QUICK_ATTACK_ZIP2 ||
+            candidate.state == PK_QUICK_ATTACK_RECOVERY)
+            return 0;
     } else return 0;
     if (!valid(&candidate)) return 0;
     *f = candidate;

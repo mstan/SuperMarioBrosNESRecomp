@@ -54,6 +54,7 @@ _Static_assert(SMASH64_ENEMY_FIRST_SPECIAL == BowserFlame,
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <limits.h>
 
 /* ------------------------------------------------------------------ */
 /* Scale -- ONE conversion, applied here and nowhere else              */
@@ -469,6 +470,21 @@ static int s_sweep_noblock = 0;
  * by the next update_input -- the exact pattern of s_swept_block above. */
 static int s_x_swept_wall = 0;
 static int s_x_swept_ran = 0;
+/* Coupled root-burst projection lives one host tick. It cannot be recovered
+ * from ForeignState after the controller resolves, because that state retains
+ * source-space velocity for source action timing and savestates. */
+static double s_coupled_dx = 0.0;
+static double s_coupled_dy = 0.0;
+static int s_coupled_motion_valid = 0;
+/* A profile-produced burst plan lives entirely on the host side. It preserves
+ * the source fighter's velocity for source timing/save semantics while giving
+ * the SMB mover one stable vector cap for this exact phase. */
+static unsigned s_coupled_plan_state = UINT_MAX;
+static double s_coupled_plan_component_px_limit = 0.0;
+static int s_coupled_plan_active = 0;
+/* Older adapter records did not carry a plan. They may resume a zip only at
+ * conservative streamer service, never by re-deciding a fast plan mid-zip. */
+static int s_coupled_plan_conservative_chain = 0;
 static double s_x_sub = 0.0;   /* horizontal subpixel remainder, host-side --
                                 * replaces SprObject_X_MoveForce ($0400), which
                                 * the skipped integrator owned */
@@ -504,6 +520,12 @@ static void game_smash64_request_savestate_reseed(void)
     s_wrote_x = 0;
     s_wrote_x_valid = 0;
     s_x_before = 0;
+    s_coupled_dx = s_coupled_dy = 0.0;
+    s_coupled_motion_valid = 0;
+    s_coupled_plan_state = UINT_MAX;
+    s_coupled_plan_component_px_limit = 0.0;
+    s_coupled_plan_active = 0;
+    s_coupled_plan_conservative_chain = 0;
     s_prev_buttons = 0;
     s_special_grace_pending = 0;
     s_swept_block = SMASH64_SWEEP_NONE;
@@ -901,6 +923,68 @@ static int8_t clamp_xspeed(double smash_units, unsigned state)
     return (int8_t)((v >= 0.0) ? (v + 0.5) : (v - 0.5));
 }
 
+/* Quick Attack is a 330-source-unit/tick source zip (26.4 SMB px/tick) and
+ * its second point is 0.9x that. SMB1's area parser can prepare only 4 px of
+ * new horizontal world per tick, but its authored 20f aim plus 9f re-aim
+ * window gives bounded parser-service credit. A 16px first zip adds 60px of
+ * debt across five frames; the window repays 36px, then the 14.4px 0.9x
+ * second zip adds 52px. From the required <32px starting debt this remains
+ * below ScrollThirtyTwo's $A0 signed hazard and recovery keeps repaying.
+ * The 26.4px source value does not satisfy that proof and corrupts columns.
+ *
+ * Project the whole vector ONCE to the profile's component limit. This retains
+ * its exact chosen heading -- cardinal remains cardinal and a 90-degree second
+ * point remains a true corner -- unlike independent X/Y clipping. A cardinal
+ * point becomes a visibly teleport-like 80px first and 72px second path, not
+ * the unsafe source 132/118.8px distance. Effects/presentation may sell the
+ * teleport but must never move the collision body farther. */
+static void adapt_coupled_burst_to_host(ForeignMoveResult *move,
+                                        ForeignState *state)
+{
+    double max_component_px, scale;
+    double limit;
+
+    if (!move || !state)
+        return;
+    if (!state_has_trait(move->state, SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP)) {
+        s_coupled_plan_state = UINT_MAX;
+        s_coupled_plan_component_px_limit = 0.0;
+        s_coupled_plan_active = 0;
+        s_coupled_plan_conservative_chain = 0;
+        return;
+    }
+    if (!s_profile || !s_profile->coupled_burst_plan) return;
+    /* The callback is run only on a phase edge. Thus a diagonal's full vector
+     * is projected once and remains exactly that heading for every ZIP tick.
+     * A migrated old save has conservative_chain set and receives 4px rather
+     * than re-evaluating live parser RAM halfway through its source action. */
+    if (!s_coupled_plan_active || s_coupled_plan_state != move->state) {
+        s_coupled_plan_state = move->state;
+        s_coupled_plan_component_px_limit =
+            s_coupled_plan_conservative_chain ? 4.0 :
+            smash64_fighter_profile_coupled_burst_component_px_limit(
+                s_profile, move->state, g_ram[ScrollThirtyTwo]);
+        s_coupled_plan_active = 1;
+    }
+    limit = s_coupled_plan_component_px_limit;
+    if (limit <= 0.0) return;
+    max_component_px = fabs(source_units_to_px(move->requested_dx));
+    if (fabs(source_units_to_px(move->requested_dy)) > max_component_px)
+        max_component_px = fabs(source_units_to_px(move->requested_dy));
+    if (max_component_px > limit && max_component_px != 0.0) {
+        scale = limit / max_component_px;
+        /* Do not edit move/state source velocity: controller trace, source
+         * action timing, and fighter serializer must all retain 330/297.
+         * Only this one-tick host shadow feeds the collision DDA. */
+        s_coupled_dx = move->requested_dx * scale;
+        s_coupled_dy = move->requested_dy * scale;
+    } else {
+        s_coupled_dx = move->requested_dx;
+        s_coupled_dy = move->requested_dy;
+    }
+    s_coupled_motion_valid = 1;
+}
+
 void game_smash64_update_input(uint64_t frame_count)
 {
     ForeignInput fin;
@@ -1030,7 +1114,9 @@ void game_smash64_update_input(uint64_t frame_count)
     wall = s_x_swept_wall;
 
     memset(&move, 0, sizeof(move));
+    s_coupled_motion_valid = 0;
     if (nes_foreign_tick(frame_count, &fin, &move)) {
+        adapt_coupled_burst_to_host(&move, fs);
         game_smash64_audio_play_events(&move.audio, frame_count);
         s_attack = move.attack;
         smash64_actions_apply_commands(
@@ -1388,7 +1474,9 @@ static int move_player_vertically_hook(uint16_t addr)
     if (state_has_trait(fs->state,
                         SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP) &&
         s_wrote_y_valid) {
-        double coupled_dy_px = source_units_to_px(-(fs->vy));
+        double coupled_dy_px = s_coupled_motion_valid
+            ? source_units_to_px(-s_coupled_dy)
+            : source_units_to_px(-(fs->vy));
         int ys = (int)((coupled_dy_px >= 0.0)
                            ? (coupled_dy_px + 0.5)
                            : (coupled_dy_px - 0.5));
@@ -1634,9 +1722,12 @@ static int move_player_coupled_2d(const ForeignState *fs)
 
     if (!fs) return 0;
 
-    dx_px = (double)(int8_t)g_ram[Player_X_Speed] /
-            SMB1_XSPEED_PER_PX;
-    dy_px = source_units_to_px(-(fs->vy));
+    dx_px = s_coupled_motion_valid
+        ? source_units_to_px(s_coupled_dx)
+        : (double)(int8_t)g_ram[Player_X_Speed] / SMB1_XSPEED_PER_PX;
+    dy_px = s_coupled_motion_valid
+        ? source_units_to_px(-s_coupled_dy)
+        : source_units_to_px(-(fs->vy));
     s_x_before = (int)player_native_x();
     s_y_before = ((int)(int8_t)g_ram[Player_Y_HighPos] * 256) +
                  (int)g_ram[Player_Y_Position];
@@ -2278,6 +2369,16 @@ typedef struct {
     ForeignAttackHitbox attack;
 } AdapterSaveFields;
 
+/* Kept separately after the stable v8 adapter payload so old records can be
+ * read without copying a platform-padded prefix struct. This is host-only:
+ * it records the already-selected projection plan, never source velocity. */
+typedef struct {
+    uint32_t state;
+    double component_px_limit;
+    int32_t active;
+    int32_t conservative_chain;
+} CoupledBurstPlanSave;
+
 /* Version 6 added the B-special grace latch but predates the host-authored
  * step-down displacement. Preserve it because the owner's active slots were
  * created while that adapter was in use. */
@@ -2337,7 +2438,7 @@ typedef struct {
     ForeignAttackHitbox attack;
 } AdapterSaveFieldsV5;
 
-#define SMASH64_ADAPTER_SAVESTATE_VERSION 8
+#define SMASH64_ADAPTER_SAVESTATE_VERSION 9
 #define SMASH64_ADAPTER_SAVESTATE_HEADER 5
 
 /*
@@ -2349,9 +2450,11 @@ typedef struct {
 static int game_smash64_savestate_get(uint8_t *buf, int cap)
 {
     AdapterSaveFields f;
+    CoupledBurstPlanSave plan;
 
     if (!s_enabled || !s_profile) return 0;
-    if (cap < (int)(SMASH64_ADAPTER_SAVESTATE_HEADER + sizeof f)) return -1;
+    if (cap < (int)(SMASH64_ADAPTER_SAVESTATE_HEADER + sizeof f +
+                     sizeof plan)) return -1;
 
     f.xspeed              = s_xspeed;
     f.y_sub               = s_y_sub;
@@ -2378,11 +2481,17 @@ static int game_smash64_savestate_get(uint8_t *buf, int cap)
     f.forced_airborne_pending = s_forced_airborne_pending;
     f.forced_airborne_frames = s_forced_airborne_frames;
     f.attack              = s_attack;
+    plan.state = s_coupled_plan_state;
+    plan.component_px_limit = s_coupled_plan_component_px_limit;
+    plan.active = s_coupled_plan_active;
+    plan.conservative_chain = s_coupled_plan_conservative_chain;
 
     buf[0] = SMASH64_ADAPTER_SAVESTATE_VERSION;
     save_write_u32le(buf + 1, s_profile->savestate_tag);
     memcpy(buf + SMASH64_ADAPTER_SAVESTATE_HEADER, &f, sizeof f);
-    return (int)(SMASH64_ADAPTER_SAVESTATE_HEADER + sizeof f);
+    memcpy(buf + SMASH64_ADAPTER_SAVESTATE_HEADER + sizeof f,
+           &plan, sizeof plan);
+    return (int)(SMASH64_ADAPTER_SAVESTATE_HEADER + sizeof f + sizeof plan);
 }
 
 /*
@@ -2393,19 +2502,32 @@ static int game_smash64_savestate_get(uint8_t *buf, int cap)
 static int game_smash64_savestate_set(const uint8_t *buf, int len)
 {
     AdapterSaveFields f;
+    CoupledBurstPlanSave plan;
+    int legacy_plan = 0;
 
     if (len == 0) return 1;
     memset(&f, 0, sizeof f);
+    memset(&plan, 0, sizeof plan);
     if (buf[0] == SMASH64_ADAPTER_SAVESTATE_VERSION &&
-        len == (int)(SMASH64_ADAPTER_SAVESTATE_HEADER + sizeof f)) {
+        len == (int)(SMASH64_ADAPTER_SAVESTATE_HEADER + sizeof f +
+                      sizeof plan)) {
         if (!s_profile || save_read_u32le(buf + 1) != s_profile->savestate_tag)
             return 1;
         memcpy(&f, buf + SMASH64_ADAPTER_SAVESTATE_HEADER, sizeof f);
+        memcpy(&plan, buf + SMASH64_ADAPTER_SAVESTATE_HEADER + sizeof f,
+               sizeof plan);
+    } else if (buf[0] == 8 &&
+               len == (int)(SMASH64_ADAPTER_SAVESTATE_HEADER + sizeof f)) {
+        if (!s_profile || save_read_u32le(buf + 1) != s_profile->savestate_tag)
+            return 1;
+        memcpy(&f, buf + SMASH64_ADAPTER_SAVESTATE_HEADER, sizeof f);
+        legacy_plan = 1;
     } else if (buf[0] == 7 && len == (int)(1 + sizeof f)) {
         /* v7 predates multi-fighter identity. The later controller record
          * still validates the exact fighter and requests a reseed on a
          * mismatch, so retaining this reader preserves Falcon saves. */
         memcpy(&f, buf + 1, sizeof f);
+        legacy_plan = 1;
     } else if (buf[0] == 6 &&
                len == (int)(1 + sizeof(AdapterSaveFieldsV6))) {
         AdapterSaveFieldsV6 old;
@@ -2435,6 +2557,7 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
         f.forced_airborne_pending = old.forced_airborne_pending;
         f.forced_airborne_frames = old.forced_airborne_frames;
         f.attack = old.attack;
+        legacy_plan = 1;
     } else if (buf[0] == 5 &&
                len == (int)(1 + sizeof(AdapterSaveFieldsV5))) {
         AdapterSaveFieldsV5 old;
@@ -2463,6 +2586,7 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
         f.forced_airborne_pending = old.forced_airborne_pending;
         f.forced_airborne_frames = old.forced_airborne_frames;
         f.attack = old.attack;
+        legacy_plan = 1;
     } else {
         return 0;
     }
@@ -2492,6 +2616,28 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
     s_forced_airborne_pending = f.forced_airborne_pending;
     s_forced_airborne_frames = f.forced_airborne_frames;
     s_attack              = f.attack;
+    if (!legacy_plan &&
+        (!isfinite(plan.component_px_limit) ||
+         plan.component_px_limit < 0.0 || plan.component_px_limit > 16.0 ||
+         (plan.active != 0 && plan.active != 1) ||
+         (plan.conservative_chain != 0 && plan.conservative_chain != 1))) {
+        /* Treat a malformed plan exactly like a pre-plan record. */
+        legacy_plan = 1;
+    }
+    if (legacy_plan) {
+        /* The old record cannot tell us whether its current source action was
+         * already admitted. Keep it conservative until it exits the coupled
+         * action instead of reading current parser debt and changing mid-zip. */
+        s_coupled_plan_state = UINT_MAX;
+        s_coupled_plan_component_px_limit = 4.0;
+        s_coupled_plan_active = 1;
+        s_coupled_plan_conservative_chain = 1;
+    } else {
+        s_coupled_plan_state = plan.state;
+        s_coupled_plan_component_px_limit = plan.component_px_limit;
+        s_coupled_plan_active = plan.active != 0;
+        s_coupled_plan_conservative_chain = plan.conservative_chain != 0;
+    }
     return 1;
 }
 
@@ -2512,6 +2658,10 @@ int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     s_pending_external_dy = 0.0;
     s_forced_airborne_pending = 0;
     s_forced_airborne_frames = 0;
+    s_coupled_plan_state = UINT_MAX;
+    s_coupled_plan_component_px_limit = 0.0;
+    s_coupled_plan_active = 0;
+    s_coupled_plan_conservative_chain = 0;
     s_savestate_controller_compatible = 1;
     s_controller_id[0] = '\0';
     s_profile = NULL;

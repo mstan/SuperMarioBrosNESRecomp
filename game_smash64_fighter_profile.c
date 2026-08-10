@@ -63,6 +63,7 @@ static const Smash64FighterProfile kCaptainFalconProfile = {
     0,
     0x20,
     1,
+    NULL,
     captain_falcon_state_traits
 };
 
@@ -84,12 +85,33 @@ static uint32_t pikachu_state_traits(unsigned state)
     case PK_QUICK_ATTACK_RECOVERY:
         traits |= SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER |
                   SMASH64_STATE_TRAIT_SUPPRESS_UPWARD_SPEED_ON_CEILING |
-                  SMASH64_STATE_TRAIT_ROOT_BURST;
+                  SMASH64_STATE_TRAIT_ROOT_BURST |
+                  /* End/FallSpecial still carries one residual 2D vector;
+                   * retain the same DDA collision path rather than turning
+                   * a diagonal into a horizontal-then-vertical corner cut. */
+                  SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP;
         break;
     default:
         break;
     }
     return traits;
+}
+
+/* Finite Quick Attack parser credit is character policy, not a generic SMB
+ * adapter guess. These entry snapshots leave room below signed $A0 for the
+ * entire phase: 5*16px ZIP1 from <$20 and 5*14.4px ZIP2 from <$6C. */
+static double pikachu_coupled_burst_plan(unsigned state, uint8_t parser_debt)
+{
+    switch (state) {
+    case PK_QUICK_ATTACK_ZIP1:
+        return parser_debt < 0x20u ? 16.0 : 4.0;
+    case PK_QUICK_ATTACK_ZIP2:
+        return parser_debt < 0x6Cu ? 14.4 : 4.0;
+    default:
+        /* Start/window/recovery carry only residual motion. Keeping that
+         * conservative avoids treating a non-zip state as fresh credit. */
+        return 4.0;
+    }
 }
 
 static const Smash64FighterProfile kPikachuProfile = {
@@ -103,6 +125,7 @@ static const Smash64FighterProfile kPikachuProfile = {
     0,
     0x10,
     0,
+    pikachu_coupled_burst_plan,
     pikachu_state_traits
 };
 
@@ -129,4 +152,12 @@ uint32_t smash64_fighter_profile_state_traits(
 {
     if (!profile || !profile->state_traits) return SMASH64_STATE_TRAIT_NONE;
     return profile->state_traits(state);
+}
+
+double smash64_fighter_profile_coupled_burst_component_px_limit(
+    const Smash64FighterProfile *profile, unsigned state,
+    uint8_t parser_debt)
+{
+    if (!profile || !profile->coupled_burst_plan) return 0.0;
+    return profile->coupled_burst_plan(state, parser_debt);
 }

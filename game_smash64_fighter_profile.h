@@ -25,6 +25,12 @@ typedef enum Smash64FighterStateTrait {
     SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP = 1u << 6
 } Smash64FighterStateTrait;
 
+/* Return the maximum SMB pixels/tick for one component of a coupled burst.
+ * The fighter profile owns phase/debt policy; the generic SMB adapter only
+ * latches and applies the resulting direction-preserving projection. */
+typedef double (*Smash64CoupledBurstPlanProducer)(unsigned state,
+                                                  uint8_t parser_debt);
+
 typedef struct Smash64FighterProfile {
     const char *controller_id;
     const char *display_name;
@@ -46,6 +52,11 @@ typedef struct Smash64FighterProfile {
      * proven two-tile cavity. Small-profile fighters already fit directly. */
     uint8_t allow_one_tile_step_down;
 
+    /* NULL means no coupled-burst projection. A producer makes the
+     * character-specific phase/debt decision; the adapter persists that plan
+     * over saves so it can never change heading or cap mid-zip. */
+    Smash64CoupledBurstPlanProducer coupled_burst_plan;
+
     uint32_t (*state_traits)(unsigned state);
 } Smash64FighterProfile;
 
@@ -53,3 +64,6 @@ const Smash64FighterProfile *smash64_fighter_profile_find(
     const char *controller_id);
 uint32_t smash64_fighter_profile_state_traits(
     const Smash64FighterProfile *profile, unsigned state);
+double smash64_fighter_profile_coupled_burst_component_px_limit(
+    const Smash64FighterProfile *profile, unsigned state,
+    uint8_t parser_debt);

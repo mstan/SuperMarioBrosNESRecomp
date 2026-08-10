@@ -231,17 +231,25 @@ static void quick_attack_and_save_vectors(void)
     { PikachuCollision hit; pikachu_sweep_zip(&f, &m, solid_at_twelve, NULL, &hit); CHECK(hit.hit_wall && hit.actual_dx == 0.0); pikachu_resolve(&f, &hit); CHECK(f.state == PK_QUICK_ATTACK_RECOVERY); }
     CHECK(saved.persistent_action_id == f.persistent_action_id);
 
-    /* v1 records ended before End/FallSpecial bookkeeping. They must still
-     * load a source zip without fabricating an already-complete end clip. */
+    /* v1 records ended before End/FallSpecial bookkeeping. Non-Quick states
+     * retain their prefix, but active Quick phases must reject rather than
+     * invent an end clock or a second-zip decision. */
     {
         uint8_t v1[1 + offsetof(PikachuFighter, quick_end_frame)];
-        saved.quick_end_frame = 45;
-        saved.quick_fall_special = 1;
+        saved.state = PK_AIR_FALL;
+        saved.quick_end_frame = 0;
+        saved.quick_fall_special = 0;
         v1[0] = 1;
         memcpy(v1 + 1, &saved, offsetof(PikachuFighter, quick_end_frame));
         pikachu_reset(&f);
         CHECK(pikachu_deserialize(&f, v1, (int)sizeof(v1)));
         CHECK(f.quick_end_frame == 0 && f.quick_fall_special == 0);
+        saved.state = PK_QUICK_ATTACK_WINDOW;
+        memcpy(v1 + 1, &saved, offsetof(PikachuFighter, quick_end_frame));
+        CHECK(!pikachu_deserialize(&f, v1, (int)sizeof(v1)));
+        saved.state = PK_QUICK_ATTACK_RECOVERY;
+        memcpy(v1 + 1, &saved, offsetof(PikachuFighter, quick_end_frame));
+        CHECK(!pikachu_deserialize(&f, v1, (int)sizeof(v1)));
     }
 }
 
@@ -271,6 +279,32 @@ static void quick_attack_source_recovery_vector(void)
     for (i = 0; i < 400; ++i) step(&f, in);
     CHECK(f.vel_x <= PIKACHU_SOURCE_AIR_SPEED_MAX *
           PIKACHU_SOURCE_QUICK_ATTACK_FALL_SPECIAL_DRIFT + 0.0001);
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 1;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_FALL_SPECIAL_LANDING);
+    memset(&in, 0, sizeof(in));
+    for (i = 0;
+         i <= (int)PIKACHU_SOURCE_QUICK_ATTACK_FALL_SPECIAL_LANDING_FRAMES;
+         ++i)
+        step(&f, in);
+    CHECK(f.state == PK_GROUND_WAIT);
+}
+
+static int quick_attack_second_at_raw_angle_y(int y)
+{
+    PikachuFighter f; PikachuInputRaw in; int i;
+    pikachu_reset(&f); f.grounded = 0;
+    memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = 80;
+    step(&f, in);
+    memset(&in, 0, sizeof(in)); in.stick_x = 1000;
+    for (i = 0; i < (int)PIKACHU_SOURCE_QUICK_ATTACK_AIM_FRAMES; ++i)
+        step(&f, in);
+    for (i = 1; i < (int)PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES; ++i)
+        step(&f, in);
+    in.stick_y = y;
+    for (i = 0; i <= (int)PIKACHU_SOURCE_QUICK_ATTACK_SECOND_AIM_FRAMES; ++i)
+        step(&f, in);
+    return f.state == PK_QUICK_ATTACK_ZIP2;
 }
 
 static void quick_attack_second_zip_motion_vector(void)
@@ -310,6 +344,12 @@ static void quick_attack_source_velocity_and_two_point_vectors(void)
     CHECK(f.state == PK_QUICK_ATTACK_ZIP1);
     CHECK_NEAR(m.requested_dx, 330.0 / sqrt(2.0));
     CHECK_NEAR(m.requested_dy, 330.0 / sqrt(2.0));
+
+    /* Literal source threshold: atan(900/1000) is 41.987° and must fail;
+     * atan(901/1000) is 42.013° and must pass. The old cos² approximation
+     * accepted/rejected a different boundary. */
+    CHECK(!quick_attack_second_at_raw_angle_y(900));
+    CHECK(quick_attack_second_at_raw_angle_y(901));
 
     /* The source's low-stick fallback is UP, not logical facing. Holding
      * Right only for the second decision therefore forms a valid 90-degree

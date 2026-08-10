@@ -1,0 +1,91 @@
+LOG pikachu-quick-attack-streaming-qa
+
+# Direct page/ring stress fixture. The durable owner slot05 is in World 1-2's
+# live high-route scroll band (CurrentPage/CurrentPageLoc are already active),
+# so this does not manufacture a stale buffer by writing RAM. Dumps bracket
+# the complete first zip, its compulsory nine-frame parser-credit window, and
+# recovery.
+LOAD_STATE F:/Projects/nesrecomp/_wt-falcon-smb/build_falcon/Release/savestates/slot05.sav
+WAIT 4
+ASSERT_RAM8 000E 08
+DUMP_RAM 06D0 B0
+
+# Follow the owner's legal warp-zone route to the page-local $B0 marker. The
+# 80px first burst from there crosses Player_PageLoc $0A->$0B, so the test
+# exercises both of SMB1's alternating 16-column block buffers without
+# inventing coordinates or block contents.
+HOLD RIGHT
+HOLD UP
+WAIT_RAM8 0086 B0
+RELEASE UP
+
+# Up+B starts SpecialHi. Right+Up remains held through its twentieth source
+# aim sample: its normalized diagonal keeps the legal high-route from landing
+# during the burst while each axis remains capped at 16px. It crosses
+# Player_PageLoc $0B->$0C, exercising the buffer hand-off. Releasing it before
+# the 9-frame end decision suppresses ZIP2.
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 18
+DUMP_RAM 06D0 B0
+WAIT 2
+# Save/load during an admitted ZIP1. The v9 adapter record must restore the
+# exact 16px plan rather than sampling parser debt again in the middle.
+SAVE_STATE C:/temp/pikachu_quick_admitted_midzip.sav
+WAIT 2
+LOAD_STATE C:/temp/pikachu_quick_admitted_midzip.sav
+WAIT 1
+DUMP_RAM 06D0 B0
+WAIT 3
+DUMP_RAM 06D0 B0
+RELEASE RIGHT
+RELEASE UP
+WAIT 9
+DUMP_RAM 06D0 B0
+WAIT 32
+DUMP_RAM 06D0 B0
+ASSERT_RAM8 000E 08
+# The crossing trace reaches Player_PageLoc $0C while camera Page=$0B and the
+# parser's CurrentPageLoc=$0C.  After recovery, the live ring remains in that
+# aligned one-page-ahead relationship and the signed parser debt is $01.
+ASSERT_RAM8 071A 0B live camera page remains behind the parsed ring page
+ASSERT_RAM8 0725 0C parsed ring page remains one page ahead
+ASSERT_RAM8 073D 01 parser debt remains safely below signed $A0
+
+# Rejected branch: force a deliberately over-budget ZIP1 admission snapshot
+# immediately before its final aim samples.  The $1F/$20 equality boundary is
+# unit-tested; this direct fixture uses $7F so the normal parser service during
+# those samples cannot accidentally make the result admissible. The profile must
+# select its conservative 4px plan, save it, and restore that exact plan rather
+# than sampling the post-load debt.  The final fixed RAM assertions below are
+# the no-load future recorded for this controlled branch.
+LOAD_STATE F:/Projects/nesrecomp/_wt-falcon-smb/build_falcon/Release/savestates/slot05.sav
+WAIT 4
+HOLD RIGHT
+HOLD UP
+WAIT_RAM8 0086 B0
+RELEASE UP
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 17
+WRITE_RAM8 073D 7F
+WAIT 5
+SAVE_STATE C:/temp/pikachu_quick_rejected_midzip.sav
+WAIT 2
+LOAD_STATE C:/temp/pikachu_quick_rejected_midzip.sav
+WAIT 5
+RELEASE RIGHT
+RELEASE UP
+WAIT 41
+DUMP_RAM 06D0 B0
+ASSERT_RAM8 000E 08
+# Equal to the independently executed rejected no-load future: confirms that
+# the mid-ZIP v9 restore retained its already-rejected 4px plan.
+ASSERT_RAM8 071A 0B
+ASSERT_RAM8 0725 0C
+ASSERT_RAM8 073D 1F
+EXIT 0

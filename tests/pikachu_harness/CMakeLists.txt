@@ -6,12 +6,18 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 add_executable(pikachu_harness
     pikachu_harness.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../mods/smash64/ssb_ported/pikachu_locomotion.c)
+add_executable(pikachu_host_burst_plan_test
+    pikachu_host_burst_plan_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../game_smash64_fighter_profile.c)
 if(MSVC)
     target_compile_definitions(pikachu_harness PRIVATE _CRT_SECURE_NO_WARNINGS)
     target_compile_options(pikachu_harness PRIVATE /W4 /WX)
+    target_compile_options(pikachu_host_burst_plan_test PRIVATE /W4 /WX)
 else()
     target_compile_options(pikachu_harness PRIVATE -Wall -Wextra -Werror)
+    target_compile_options(pikachu_host_burst_plan_test PRIVATE -Wall -Wextra -Werror)
     target_link_libraries(pikachu_harness PRIVATE m)
 endif()
 enable_testing()
 add_test(NAME pikachu_behavior_vectors COMMAND pikachu_harness)
+add_test(NAME pikachu_host_burst_plan COMMAND pikachu_host_burst_plan_test)
