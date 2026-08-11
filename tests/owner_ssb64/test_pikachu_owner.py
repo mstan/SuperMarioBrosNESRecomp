@@ -125,6 +125,38 @@ class PikachuRecipeTests(unittest.TestCase):
         self.assertIn("normal_gameplay", tint)
         self.assertIn("nes_voxel_mesh_set_color_overlay", source)
 
+    def test_quick_attack_uses_static_start_zip_and_end_local_clock(self):
+        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        animations = {name: file_id for file_id, name, _count
+                      in pikachu.ANIM_SPECS}
+        self.assertEqual(animations["UpSpecialAirEnd"], 2089)
+        mapping = source[source.index("static const char *animation_for_state"):
+                         source.index("static float pikachu_source_animation_frame")]
+        self.assertIn('case PK_QUICK_ATTACK_ZIP2: return "UpSpecialAirEnd";',
+                      mapping)
+        self.assertIn('case PK_QUICK_ATTACK_RECOVERY: return "UpSpecialAirEnd";',
+                      mapping)
+        sampler = source[source.index("static float pikachu_source_animation_frame"):
+                         source.index("static float presentation_animation_frame")]
+        for state in ("PK_QUICK_ATTACK_START", "PK_QUICK_ATTACK_ZIP1",
+                      "PK_QUICK_ATTACK_ZIP2"):
+            self.assertIn(f"case {state}:", sampler)
+        for state in ("PK_QUICK_ATTACK_WINDOW", "PK_QUICK_ATTACK_RECOVERY"):
+            self.assertIn(f"case {state}:", sampler)
+        self.assertIn("game_smash64_pikachu_quick_animation_frame(1", sampler)
+        self.assertIn("game_smash64_pikachu_quick_animation_frame(0", sampler)
+        # Ripple's former whole-action 25/39 gates must not survive the
+        # bridge's source End-local public clock.
+        quick_fx = source[source.index("static void draw_pikachu_quick_attack_effect"):
+                          source.index("static void draw_pikachu_landing_effect")]
+        self.assertIn("frame < 8u", quick_fx)
+        self.assertNotIn("frame >= 25u", quick_fx)
+        self.assertNotIn("frame >= 39u", quick_fx)
+        pose = source[source.index("static void apply_pikachu_quick_attack_pose"):
+                      source.index("static void draw_pikachu_quick_attack_effect")]
+        self.assertIn("state->state != PK_QUICK_ATTACK_ZIP1", pose)
+        self.assertIn("state->state != PK_QUICK_ATTACK_ZIP2", pose)
+
     def test_joint_attachment_api_is_current_pose_not_last_draw(self):
         header = (ROOT / "game_smash64_assets.h").read_text(encoding="utf-8")
         source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")

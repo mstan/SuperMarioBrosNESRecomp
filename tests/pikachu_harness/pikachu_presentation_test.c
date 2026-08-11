@@ -25,6 +25,12 @@ int main(void)
     assert(game_smash64_pikachu_thunder_color_overlay(0, 1, 0, 0u) == 0u);
     assert(game_smash64_pikachu_thunder_color_overlay(0, 0, 1, 0u) == 0u);
 
+    /* SpecialHi Start/Zip are source speed-zero; End restarts locally. */
+    assert(game_smash64_pikachu_quick_animation_frame(1, 0u) == 0.0f);
+    assert(game_smash64_pikachu_quick_animation_frame(1, 19u) == 0.0f);
+    assert(game_smash64_pikachu_quick_animation_frame(0, 0u) == 0.0f);
+    assert(game_smash64_pikachu_quick_animation_frame(0, 8u) == 8.0f);
+
     puts("pikachu_presentation_test: PASS");
     return 0;
 }

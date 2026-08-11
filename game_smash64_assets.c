@@ -792,10 +792,15 @@ static const char *animation_for_state(const ForeignState *state)
         case PK_FALL_SPECIAL_LANDING: return "LandingAirX";
         case PK_THUNDER_JOLT_GROUND: return "NeutralSpecialGround";
         case PK_THUNDER_JOLT_AIR: return "NeutralSpecialAir";
+        /* Source SpecialHi Start and both zip statuses have motion speed 0.
+         * They deliberately sample End's source-safe frame zero. End begins
+         * anew after a zip; WINDOW/RECOVERY publish its local clock (with
+         * Recovery continuing at 9 when Window rejects point two), not the
+         * former whole-action counter. */
         case PK_QUICK_ATTACK_START:
         case PK_QUICK_ATTACK_ZIP1:
+        case PK_QUICK_ATTACK_ZIP2: return "UpSpecialAirEnd";
         case PK_QUICK_ATTACK_WINDOW:
-        case PK_QUICK_ATTACK_ZIP2:
         case PK_QUICK_ATTACK_RECOVERY: return "UpSpecialAirEnd";
         /* Down-B has a complete source status family: 2090/91/92 ground and
          * 2093/94/95 air. Legacy serialized states keep their prior
@@ -984,6 +989,15 @@ static float pikachu_source_animation_frame(const ForeignState *state)
 {
     if (!state) return 0.0f;
     switch (state->state) {
+    case PK_QUICK_ATTACK_START:
+    case PK_QUICK_ATTACK_ZIP1:
+    case PK_QUICK_ATTACK_ZIP2:
+        return game_smash64_pikachu_quick_animation_frame(1,
+                                                            state->state_frame);
+    case PK_QUICK_ATTACK_WINDOW:
+    case PK_QUICK_ATTACK_RECOVERY:
+        return game_smash64_pikachu_quick_animation_frame(0,
+                                                            state->state_frame);
     case PK_LANDING_AIR_NULL: return (float)state->state_frame * 0.5f;
     case PK_FALL_SPECIAL_LANDING: return (float)state->state_frame * 0.4f;
     case PK_WALK:
@@ -1488,7 +1502,11 @@ static void apply_pikachu_quick_attack_pose(const ForeignState *state,
      * joint-4 subtree by ArcTan2(vx, vy) * lr - 90deg and uses exactly
      * {0.8, 0.8, 1.2}.  The bridge exposes the same source velocity/facing,
      * so this is a skeletal transform rather than a screen-space squash. */
-    if (!state || !pikachu_quick_state(state->state) ||
+    /* ftPikachuSpecialHiUpdateModelPitchScale is installed only while the
+     * fighter is actively zipping. Start/Window/Recovery keep their source
+     * motion pose and must not inherit the joint-4 velocity transform. */
+    if (!state || (state->state != PK_QUICK_ATTACK_ZIP1 &&
+                   state->state != PK_QUICK_ATTACK_ZIP2) ||
         s_model.joint_count <= 4u)
         return;
     r[4][0] = atan2f((float)state->vx, (float)state->vy) * state->facing -
@@ -1537,13 +1555,13 @@ static void draw_pikachu_quick_attack_effect(const ForeignState *state,
         }
         return;
     }
-    /* Controller emits Ripple precisely at action frame 25 / 39, then
-     * changes state. Preserve an eight-frame expanding residual ring without
-     * needing a mutable particle pool in the authoritative gameplay code. */
-    if ((state->state == PK_QUICK_ATTACK_WINDOW && frame >= 25u && frame < 33u) ||
-        (state->state == PK_QUICK_ATTACK_RECOVERY && frame >= 39u && frame < 47u)) {
-        const unsigned first = state->state == PK_QUICK_ATTACK_WINDOW ? 25u : 39u;
-        const float phase = (float)(frame - first);
+    /* Controller emits Ripple at the old whole-action frame 25 / 39. A zip
+     * starts End at local zero, so WINDOW and a fresh RECOVERY expose that
+     * eight-frame residual at 0..7. Recovery reached by a rejected Window
+     * continues at 9 and therefore correctly emits no duplicate ripple. */
+    if ((state->state == PK_QUICK_ATTACK_WINDOW ||
+         state->state == PK_QUICK_ATTACK_RECOVERY) && frame < 8u) {
+        const float phase = (float)frame;
         const float radius = (3.0f + phase * 1.1f) * unit;
         nes_voxel_mesh_bind_texture(s_pikachu_spark_color, 1, 1, 1,
                                     0.80f - phase * 0.075f, 0);

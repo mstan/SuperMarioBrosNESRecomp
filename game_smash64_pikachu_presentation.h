@@ -33,3 +33,14 @@ static inline uint32_t game_smash64_pikachu_thunder_color_overlay(
     }
     return 0u;
 }
+
+/* ftPikachu SpecialHi's Start and both zip motions run at source speed 0.
+ * Its End motion restarts at local frame 0 after each zip. The bridge
+ * publishes its End-local counter only for WINDOW/RECOVERY; Recovery can
+ * continue at frame 9 after Window rejects a second point. Keeping this seam
+ * boolean avoids borrowing the prior full-action clock. */
+static inline float game_smash64_pikachu_quick_animation_frame(
+    int static_source_motion, unsigned phase_frame)
+{
+    return static_source_motion ? 0.0f : (float)phase_frame;
+}
