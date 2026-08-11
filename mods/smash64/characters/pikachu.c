@@ -10,6 +10,26 @@
 /* The sole mutable fighter instance behind the generic controller ABI. */
 static PikachuFighter s_fighter;
 
+static int pk_thunder_kinetic_pair(int before, int after)
+{
+    return (before == PK_THUNDER_START &&
+            after == PK_THUNDER_AIR_START) ||
+           (before == PK_THUNDER_AIR_START &&
+            after == PK_THUNDER_START) ||
+           (before == PK_THUNDER_LOOP &&
+            after == PK_THUNDER_AIR_LOOP) ||
+           (before == PK_THUNDER_AIR_LOOP &&
+            after == PK_THUNDER_LOOP) ||
+           (before == PK_THUNDER_SELF_HIT &&
+            after == PK_THUNDER_AIR_SELF_HIT) ||
+           (before == PK_THUNDER_AIR_SELF_HIT &&
+            after == PK_THUNDER_SELF_HIT) ||
+           (before == PK_THUNDER_END &&
+            after == PK_THUNDER_AIR_END) ||
+           (before == PK_THUNDER_AIR_END &&
+            after == PK_THUNDER_END);
+}
+
 static void push_audio(ForeignMoveResult *out, uint32_t cue)
 {
     ForeignAudioEvent *event;
@@ -204,8 +224,9 @@ static void pk_resolve(ForeignState *state, const ForeignCollisionResult *hit)
     /* Resolve may change both status and its local motion clock (landing,
      * Thunder ground/air map conversion). Publish them atomically so the
      * renderer never observes a new status with the prior status' frame. */
-    if (s_fighter.state != private_state_before ||
-        s_fighter.action_frame != private_frame_before)
+    if (!pk_thunder_kinetic_pair(private_state_before, s_fighter.state) &&
+        (s_fighter.state != private_state_before ||
+         s_fighter.action_frame != private_frame_before))
         state->state_frame = s_fighter.action_frame;
 }
 

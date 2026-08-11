@@ -243,7 +243,9 @@ int main(void)
         hit.grounded = 1;
         registered->resolve(&state, &hit);
         CHECK(state.state == PK_THUNDER_START);
-        CHECK(state.state_frame == 10u);
+        /* Ten ticks publish source frames 0..9. The paired map switch keeps
+         * public frame 9 even though the private next-tick clock is 10. */
+        CHECK(state.state_frame == 9u);
     }
 
     if (failures) return 1;

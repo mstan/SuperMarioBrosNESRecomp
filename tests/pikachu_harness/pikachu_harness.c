@@ -710,6 +710,47 @@ static void quick_attack_source_velocity_and_two_point_vectors(void)
     CHECK(!m.attack.active);
 }
 
+static void source_action_end_clock_vectors(void)
+{
+    PikachuFighter f;
+    PikachuInputRaw in;
+    PikachuMotion m;
+#define CHECK_ACTION_END(action_state, end_frame, is_ground, next_state) do { \
+    pikachu_reset(&f); \
+    f.state = (action_state); \
+    f.grounded = (is_ground); \
+    f.action_frame = (end_frame) - 1u; \
+    memset(&in, 0, sizeof(in)); \
+    m = step(&f, in); \
+    CHECK(f.state == (action_state)); \
+    m = step(&f, in); \
+    CHECK(f.state == (next_state)); \
+    (void)m; \
+} while (0)
+
+    CHECK_ACTION_END(PK_JAB, PIKACHU_SOURCE_JAB_FRAMES, 1,
+                     PK_GROUND_WAIT);
+    CHECK_ACTION_END(PK_FTILT, PIKACHU_SOURCE_FTILT_FRAMES, 1,
+                     PK_GROUND_WAIT);
+    CHECK_ACTION_END(PK_NAIR, PIKACHU_SOURCE_NAIR_FRAMES, 0, PK_AIR_FALL);
+    CHECK_ACTION_END(PK_FAIR, PIKACHU_SOURCE_FAIR_FRAMES, 0, PK_AIR_FALL);
+    CHECK_ACTION_END(PK_BAIR, PIKACHU_SOURCE_BAIR_FRAMES, 0, PK_AIR_FALL);
+    CHECK_ACTION_END(PK_DAIR, PIKACHU_SOURCE_DAIR_FRAMES, 0, PK_AIR_FALL);
+    CHECK_ACTION_END(PK_DASH_ATTACK, PIKACHU_SOURCE_DASH_ATTACK_FRAMES, 1,
+                     PK_GROUND_WAIT);
+    CHECK_ACTION_END(PK_UTILT, PIKACHU_SOURCE_UTILT_FRAMES, 1,
+                     PK_GROUND_WAIT);
+    CHECK_ACTION_END(PK_DTILT, PIKACHU_SOURCE_DTILT_FRAMES, 1,
+                     PK_GROUND_WAIT);
+    CHECK_ACTION_END(PK_UAIR, PIKACHU_SOURCE_UAIR_FRAMES, 0, PK_AIR_FALL);
+    CHECK_ACTION_END(PK_THUNDER_JOLT_GROUND,
+                     PIKACHU_SOURCE_THUNDER_JOLT_FRAMES, 1,
+                     PK_GROUND_WAIT);
+    CHECK_ACTION_END(PK_THUNDER_JOLT_AIR,
+                     PIKACHU_SOURCE_THUNDER_JOLT_FRAMES, 0, PK_AIR_FALL);
+#undef CHECK_ACTION_END
+}
+
 int main(void)
 {
     selection_vectors(); timing_and_projectile_vectors(); aerial_normal_motion_vectors();
@@ -719,6 +760,7 @@ int main(void)
     quick_attack_and_save_vectors(); quick_attack_source_recovery_vector();
     quick_attack_second_zip_motion_vector();
     quick_attack_source_velocity_and_two_point_vectors();
+    source_action_end_clock_vectors();
     if (failures) { fprintf(stderr, "pikachu_harness: %d failures\n", failures); return 1; }
     puts("pikachu_harness: PASS behavior_vectors.json"); return 0;
 }

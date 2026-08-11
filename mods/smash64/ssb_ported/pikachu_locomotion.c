@@ -263,19 +263,21 @@ static void normal_schedule(PikachuFighter *f, PikachuMotion *out)
     case PK_JAB:
         if (n == 2) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_S);
         if (n >= 2 && n < 6) set_attack(out, 45, 40, 65, 55, 4, 1);
-        if (n >= 20) enter(f, f->grounded ? PK_GROUND_WAIT : PK_AIR_FALL);
+        if (n >= PIKACHU_SOURCE_JAB_FRAMES)
+            enter(f, f->grounded ? PK_GROUND_WAIT : PK_AIR_FALL);
         break;
     case PK_FTILT:
         if (n == 5) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_M);
         if (n >= 5 && n < 15) set_attack(out, 55, 42, 75, 55, 10, 1);
-        if (n >= 24) enter(f, f->grounded ? PK_GROUND_WAIT : PK_AIR_FALL);
+        if (n >= PIKACHU_SOURCE_FTILT_FRAMES)
+            enter(f, f->grounded ? PK_GROUND_WAIT : PK_AIR_FALL);
         break;
     case PK_NAIR:
         air_motion(f, out);
         if (n == 3) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_M);
         if (n >= 3 && n < 11) set_attack(out, 0, 48, 100, 100, 14, 1);
         if (n >= 11 && n < 29) set_attack(out, 0, 48, 100, 100, 11, 1);
-        if (n >= 35) enter(f, PK_AIR_FALL);
+        if (n >= PIKACHU_SOURCE_NAIR_FRAMES) enter(f, PK_AIR_FALL);
         break;
     case PK_FAIR:
         air_motion(f, out);
@@ -284,20 +286,20 @@ static void normal_schedule(PikachuFighter *f, PikachuMotion *out)
             if ((n - 7) % 3 == 0) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_SWING_PULSE);
             set_attack(out, 58, 48, 70, 60, 3, 1);
         }
-        if (n >= 34) enter(f, PK_AIR_FALL);
+        if (n >= PIKACHU_SOURCE_FAIR_FRAMES) enter(f, PK_AIR_FALL);
         break;
     case PK_BAIR:
         air_motion(f, out);
         if (n == 10) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_L);
         if (n >= 10 && n < 14) set_attack(out, -50, 50, 70, 60, 16, 1);
         if (n >= 14 && n < 22) set_attack(out, -50, 50, 70, 60, 14, 1);
-        if (n >= 30) enter(f, PK_AIR_FALL);
+        if (n >= PIKACHU_SOURCE_BAIR_FRAMES) enter(f, PK_AIR_FALL);
         break;
     case PK_DAIR:
         air_motion(f, out);
         if (n == 8) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_3);
         if (n >= 8 && n < 26) set_attack(out, 0, -15, 72, 78, 13, 1);
-        if (n >= 34) enter(f, PK_AIR_FALL);
+        if (n >= PIKACHU_SOURCE_DAIR_FRAMES) enter(f, PK_AIR_FALL);
         break;
     case PK_DASH_ATTACK:
         if (n == 4) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_L);
@@ -750,7 +752,8 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
                 out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_5);
         }
         if (n == 21) spawn_jolt(f, out);
-        if (n >= 35) enter(f, f->grounded ? PK_GROUND_WAIT : PK_AIR_FALL);
+        if (n >= PIKACHU_SOURCE_THUNDER_JOLT_FRAMES)
+            enter(f, f->grounded ? PK_GROUND_WAIT : PK_AIR_FALL);
     } else if (f->state == PK_QUICK_ATTACK_START) {
         if (n == 0)
             out->events |= PIKACHU_EVENT_BIT(
