@@ -1,91 +1,127 @@
 LOG pikachu-quick-attack-streaming-qa
+TURBO ON
 
 # Direct page/ring stress fixture. The durable owner slot05 is in World 1-2's
 # live high-route scroll band (CurrentPage/CurrentPageLoc are already active),
-# so this does not manufacture a stale buffer by writing RAM. Dumps bracket
-# the complete first zip, its compulsory nine-frame parser-credit window, and
-# recovery.
+# so this does not manufacture coordinates or block-buffer contents.
 LOAD_STATE F:/Projects/nesrecomp/_wt-falcon-smb/build_falcon/Release/savestates/slot05.sav
 WAIT 4
 ASSERT_RAM8 000E 08
-DUMP_RAM 06D0 B0
 
-# Follow the owner's legal warp-zone route to the page-local $B0 marker. The
-# 80px first burst from there crosses Player_PageLoc $0A->$0B, so the test
-# exercises both of SMB1's alternating 16-column block buffers without
-# inventing coordinates or block contents.
+# Follow the owner's legal warp-zone route to the page-local $B0 marker. Save a
+# current-format baseline once the parser is caught up; both admission branches
+# start from this same live guest/controller state instead of reloading a stale
+# pre-Pikachu external record.
 HOLD RIGHT
 HOLD UP
 WAIT_RAM8 0086 B0
+RELEASE RIGHT
 RELEASE UP
 
-# Up+B starts SpecialHi. Right+Up remains held through its twentieth source
-# aim sample: its normalized diagonal keeps the legal high-route from landing
-# during the burst while each axis remains capped at 16px. It crosses
-# Player_PageLoc $0B->$0C, exercising the buffer hand-off. Releasing it before
-# the 9-frame end decision suppresses ZIP2.
+# Give the bridge one neutral input tick so the following B press is a real
+# edge; the owner fixture is still airborne at this marker.
+WAIT 2
+SAVE_STATE C:/temp/pikachu_quick_stream_baseline.sav
+DUMP_RAM 0060 40
+DUMP_RAM 06D0 B0
+ASSERT_RAM8 006D 0B baseline player page
+ASSERT_RAM8 0086 B4 baseline page-local x
+ASSERT_RAM8 071A 0B baseline camera page
+ASSERT_RAM8 0725 0C baseline parsed ring page
+ASSERT_RAM8 073D 03 baseline settled parser debt
+
+# Admitted 16px/component first zip. The command waits on source phases rather
+# than fixed frame counts: entry pose is frozen for the 20f aim, then the first
+# Zip lasts at most 5f and End opens its 9f direction window. Releasing Up on
+# Start entry leaves a horizontal air aim. This authored corridor has a wall at
+# $0B:D2, so the direct game must stop there rather than pretending that the
+# synthetic clear-corridor 80px host-unit proof also proves local clearance.
+# Neutralizing Right as soon as Zip1 is observed prevents a second point.
+HOLD RIGHT
 HOLD UP
 HOLD B
-WAIT 2
+WAIT_FOREIGN_STATE QUICK_ATTACK_START
 RELEASE B
-WAIT 18
+RELEASE UP
+WAIT_FOREIGN_STATE QUICK_ATTACK_ZIP1
+RELEASE RIGHT
+DUMP_RAM 0060 40
 DUMP_RAM 06D0 B0
-WAIT 2
-# Save/load during an admitted ZIP1. The v9 adapter record must restore the
-# exact 16px plan rather than sampling parser debt again in the middle.
+ASSERT_RAM8 006D 0B admitted midzip player page
+ASSERT_RAM8 0086 C8 admitted midzip page-local x
+ASSERT_RAM8 073D 03 admitted plan sampled below $20
 SAVE_STATE C:/temp/pikachu_quick_admitted_midzip.sav
-WAIT 2
-LOAD_STATE C:/temp/pikachu_quick_admitted_midzip.sav
-WAIT 1
+WAIT_FOREIGN_STATE QUICK_ATTACK_WINDOW 0
+DUMP_RAM 0060 40
 DUMP_RAM 06D0 B0
-WAIT 3
+ASSERT_RAM8 006D 0B admitted wall contact stays in page
+ASSERT_RAM8 0086 D2 admitted wall contact exact x
+WAIT_FOREIGN_STATE QUICK_ATTACK_RECOVERY 9
+WAIT_RAM8 073D 03
+DUMP_RAM 0060 40
 DUMP_RAM 06D0 B0
-RELEASE RIGHT
-RELEASE UP
-WAIT 9
-DUMP_RAM 06D0 B0
-WAIT 32
-DUMP_RAM 06D0 B0
-ASSERT_RAM8 000E 08
-# The crossing trace reaches Player_PageLoc $0C while camera Page=$0B and the
-# parser's CurrentPageLoc=$0C.  After recovery, the live ring remains in that
-# aligned one-page-ahead relationship and the signed parser debt is $01.
-ASSERT_RAM8 071A 0B live camera page remains behind the parsed ring page
-ASSERT_RAM8 0725 0C parsed ring page remains one page ahead
-ASSERT_RAM8 073D 01 parser debt remains safely below signed $A0
+ASSERT_RAM8 071A 0B admitted no-load camera page
+ASSERT_RAM8 0725 0C admitted no-load parsed ring page
+ASSERT_RAM8 073D 03 admitted no-load parser debt
 
-# Rejected branch: force a deliberately over-budget ZIP1 admission snapshot
-# immediately before its final aim samples.  The $1F/$20 equality boundary is
-# unit-tested; this direct fixture uses $7F so the normal parser service during
-# those samples cannot accidentally make the result admissible. The profile must
-# select its conservative 4px plan, save it, and restore that exact plan rather
-# than sampling the post-load debt.  The final fixed RAM assertions below are
-# the no-load future recorded for this controlled branch.
-LOAD_STATE F:/Projects/nesrecomp/_wt-falcon-smb/build_falcon/Release/savestates/slot05.sav
-WAIT 4
+# Replaying the mid-Zip record must produce the same page/ring/debt future. The
+# exact assertions are filled from the independently executed no-load future,
+# not from host-unit assumptions.
+LOAD_STATE C:/temp/pikachu_quick_admitted_midzip.sav
+WAIT_FOREIGN_STATE QUICK_ATTACK_WINDOW 0
+WAIT_FOREIGN_STATE QUICK_ATTACK_RECOVERY 9
+WAIT_RAM8 073D 03
+DUMP_RAM 0060 40
+DUMP_RAM 06D0 B0
+ASSERT_RAM8 006D 0B admitted reload player page future
+ASSERT_RAM8 0086 D2 admitted reload player x future
+ASSERT_RAM8 071A 0B admitted reload camera future
+ASSERT_RAM8 0725 0C admitted reload parsed-ring future
+ASSERT_RAM8 073D 03 admitted reload debt future
+
+# Rejected branch. The late $40 snapshot is phase-anchored 18 frames after
+# Start becomes observable. At most two normal $04 parser-service ticks remain
+# before launch; the live runner shows the exact rejected $20 boundary when
+# Zip1 becomes observable. Unlike the old $7F fixture, this bounded four-column
+# prefetch remains within CurrentPageLoc $0C and far below SMB's signed $A0
+# hazard.
+LOAD_STATE C:/temp/pikachu_quick_stream_baseline.sav
 HOLD RIGHT
 HOLD UP
-WAIT_RAM8 0086 B0
-RELEASE UP
-HOLD UP
 HOLD B
-WAIT 2
+WAIT_FOREIGN_STATE QUICK_ATTACK_START
 RELEASE B
-WAIT 17
-WRITE_RAM8 073D 7F
-WAIT 5
-SAVE_STATE C:/temp/pikachu_quick_rejected_midzip.sav
-WAIT 2
-LOAD_STATE C:/temp/pikachu_quick_rejected_midzip.sav
-WAIT 5
-RELEASE RIGHT
 RELEASE UP
-WAIT 41
+WAIT 19
+WRITE_RAM8 073D 40
+WAIT_FOREIGN_STATE QUICK_ATTACK_ZIP1
+RELEASE RIGHT
+DUMP_RAM 0060 40
 DUMP_RAM 06D0 B0
+ASSERT_RAM8 006D 0B rejected midzip player page
+ASSERT_RAM8 0086 C0 rejected midzip page-local x
+ASSERT_RAM8 0725 0C rejected midzip parsed ring page
+ASSERT_RAM8 073D 20 exact first-zip rejection boundary
+SAVE_STATE C:/temp/pikachu_quick_rejected_midzip.sav
+WAIT_FOREIGN_STATE QUICK_ATTACK_WINDOW 0
+WAIT_FOREIGN_STATE QUICK_ATTACK_RECOVERY 9
+DUMP_RAM 0060 40
+DUMP_RAM 06D0 B0
+ASSERT_RAM8 006D 0B rejected no-load player page
+ASSERT_RAM8 0086 D2 rejected no-load player x
+ASSERT_RAM8 071A 0B rejected no-load camera page
+ASSERT_RAM8 0725 0C rejected no-load parsed ring page
+ASSERT_RAM8 073D 00 rejected no-load repaid parser debt
+
+LOAD_STATE C:/temp/pikachu_quick_rejected_midzip.sav
+WAIT_FOREIGN_STATE QUICK_ATTACK_WINDOW 0
+WAIT_FOREIGN_STATE QUICK_ATTACK_RECOVERY 9
+DUMP_RAM 0060 40
+DUMP_RAM 06D0 B0
+ASSERT_RAM8 006D 0B rejected reload player page future
+ASSERT_RAM8 0086 D2 rejected reload player x future
+ASSERT_RAM8 071A 0B rejected reload camera future
+ASSERT_RAM8 0725 0C rejected reload parsed-ring future
+ASSERT_RAM8 073D 00 rejected reload debt future
 ASSERT_RAM8 000E 08
-# Equal to the independently executed rejected no-load future: confirms that
-# the mid-ZIP v9 restore retained its already-rejected 4px plan.
-ASSERT_RAM8 071A 0B
-ASSERT_RAM8 0725 0C
-ASSERT_RAM8 073D 1F
 EXIT 0
