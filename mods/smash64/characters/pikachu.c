@@ -101,7 +101,14 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
     raw.attack_pressed = input->attack_pressed;
     raw.special_pressed = input->special_pressed;
     raw.down_pressed = input->down_pressed;
-    s_fighter.grounded = state->grounded;
+    /* Host floor contact is resolved after this tick. Importing its new
+     * grounded=true bit here would erase the private airborne edge before
+     * pikachu_resolve() can select Landing/AttackAirLanding. Ledge loss is
+     * different: the controller must switch to air kinetics before producing
+     * this tick's motion, so true->false remains immediate. Same-kinetic
+     * synchronization is unchanged. */
+    if (!state->grounded || s_fighter.grounded)
+        s_fighter.grounded = state->grounded;
     pikachu_tick(&s_fighter, &raw, &s_fighter.last_motion);
     if ((s_fighter.state == PK_QUICK_ATTACK_START ||
          s_fighter.state == PK_QUICK_ATTACK_GROUND_START) &&

@@ -342,6 +342,68 @@ int main(void)
     CHECK(state.state == PK_THUNDER_END);
     CHECK(state.state_frame == 0u);
 
+    /* Production publishes host floor contact before tick, then supplies the
+     * collision to resolve. The bridge must retain the private airborne edge
+     * across that tick so resolve—not ground locomotion—chooses the landing
+     * status. Exercise Jump, Fall, and authored AttackAir landing separately. */
+    registered->reset(&state);
+    memset(&input, 0, sizeof(input)); input.jump_pressed = 1;
+    memset(&move, 0, sizeof(move)); registered->tick(&state, &input, &move);
+    for (tick = 0; tick < 8 && state.state == PK_KNEEBEND; ++tick) {
+        memset(&input, 0, sizeof(input)); memset(&move, 0, sizeof(move));
+        registered->tick(&state, &input, &move);
+    }
+    CHECK(state.state == PK_JUMP_GROUND || state.state == PK_JUMP_GROUND_B);
+    state.grounded = 1; /* host's first floor-contact publication */
+    memset(&input, 0, sizeof(input)); memset(&move, 0, sizeof(move));
+    registered->tick(&state, &input, &move);
+    CHECK(state.state == PK_JUMP_GROUND || state.state == PK_JUMP_GROUND_B);
+    {
+        ForeignCollisionResult floor;
+        memset(&floor, 0, sizeof(floor)); floor.grounded = 1;
+        floor.hit_floor = 1;
+        registered->resolve(&state, &floor);
+    }
+    CHECK(state.state == PK_LANDING && state.state_frame == 0u);
+
+    registered->reset(&state);
+    state.grounded = 0;
+    memset(&input, 0, sizeof(input)); memset(&move, 0, sizeof(move));
+    registered->tick(&state, &input, &move);
+    CHECK(state.state == PK_AIR_FALL);
+    state.grounded = 1;
+    memset(&input, 0, sizeof(input)); memset(&move, 0, sizeof(move));
+    registered->tick(&state, &input, &move);
+    CHECK(state.state == PK_AIR_FALL); /* no unsolicited ground action */
+    {
+        ForeignCollisionResult floor;
+        memset(&floor, 0, sizeof(floor)); floor.grounded = 1;
+        floor.hit_floor = 1;
+        registered->resolve(&state, &floor);
+    }
+    CHECK(state.state == PK_LANDING && state.state_frame == 0u);
+
+    registered->reset(&state);
+    state.grounded = 0;
+    memset(&input, 0, sizeof(input)); input.attack_pressed = 1;
+    memset(&move, 0, sizeof(move)); registered->tick(&state, &input, &move);
+    CHECK(state.state == PK_NAIR);
+    for (tick = 0; tick < 3; ++tick) {
+        memset(&input, 0, sizeof(input)); memset(&move, 0, sizeof(move));
+        registered->tick(&state, &input, &move);
+    }
+    state.grounded = 1;
+    memset(&input, 0, sizeof(input)); memset(&move, 0, sizeof(move));
+    registered->tick(&state, &input, &move);
+    CHECK(state.state == PK_NAIR); /* retain authored aerial before resolve */
+    {
+        ForeignCollisionResult floor;
+        memset(&floor, 0, sizeof(floor)); floor.grounded = 1;
+        floor.hit_floor = 1;
+        registered->resolve(&state, &floor);
+    }
+    CHECK(state.state == PK_LANDING_AIR_NULL && state.state_frame == 0u);
+
     /* Resolve publishes a landing status and its reset phase frame together. */
     registered->reset(&state);
     state.grounded = 0;
