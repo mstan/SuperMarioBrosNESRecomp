@@ -1504,10 +1504,10 @@ static void draw_pikachu_effect_card(unsigned effect, unsigned frame,
         v[i].y = center_y + x[i] * s + y[i] * c;
         v[i].z = z;
     }
-    v[0].u = 0.0f;                 v[0].v = 0.0f;
-    v[1].u = (float)texture_width; v[1].v = 0.0f;
-    v[2].u = (float)texture_width; v[2].v = (float)texture_height;
-    v[3].u = 0.0f;                 v[3].v = (float)texture_height;
+    v[0].u = 0.0f;                 v[0].v = (float)texture_height;
+    v[1].u = (float)texture_width; v[1].v = (float)texture_height;
+    v[2].u = (float)texture_width; v[2].v = 0.0f;
+    v[3].u = 0.0f;                 v[3].v = 0.0f;
     if (effect == SMASH64_PIKACHU_EFFECT_THUNDER_AMP) {
         /* lbParticleDrawTextures is an XLU BILERP texture rectangle. Keep
          * ordinary cards nearest-filtered and opt only this common particle
@@ -1637,7 +1637,6 @@ static void draw_pikachu_thunder_amp(const ForeignState *state,
 {
     unsigned frame;
     const float unit = output_scale > 0.0f ? output_scale : 1.0f;
-    const float middle_y = foot_y + PIKACHU_RENDER_HEIGHT * 0.50f * unit;
     const float z = 3.5f * unit;
     unsigned card;
     float source_y;
@@ -1677,7 +1676,7 @@ static void draw_pikachu_thunder_amp(const ForeignState *state,
         return;
     }
     draw_pikachu_effect_card(SMASH64_PIKACHU_EFFECT_THUNDER_AMP, card,
-                             center_x, middle_y + source_y *
+                             center_x, foot_y + (source_y - 200.0f) *
                                            (PIKACHU_RENDER_HEIGHT /
                                             PIKACHU_BIND_HEIGHT) * unit,
                              source_size * (PIKACHU_RENDER_HEIGHT /

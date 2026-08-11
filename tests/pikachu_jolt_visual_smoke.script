@@ -1,0 +1,31 @@
+LOG pikachu-jolt-visual-smoke
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 90
+
+# Force a known right-facing state before spawning Jolt; this catches sign
+# mistakes that make the visual read as travelling backward.
+HOLD RIGHT
+WAIT_FOREIGN_STATE RUN 0
+WAIT 6
+RELEASE RIGHT
+WAIT 6
+
+# Neutral B should publish a visible Thunder Jolt at the source spawn frame.
+# Use controller-state waits so visual timing remains stable if route timing
+# changes for playtest tuning.
+HOLD B
+WAIT 2
+RELEASE B
+WAIT_FOREIGN_STATE THUNDER_JOLT_GROUND 21
+SCREENSHOT C:/temp/pikachu_jolt_smoke_right_spawn.png
+WAIT 6
+SCREENSHOT C:/temp/pikachu_jolt_smoke_right_travel_06.png
+WAIT 8
+SCREENSHOT C:/temp/pikachu_jolt_smoke_right_travel_14.png
+WAIT 12
+SCREENSHOT C:/temp/pikachu_jolt_smoke_right_travel_26.png
+EXIT 0

@@ -343,17 +343,20 @@ static char s_controller_id[96] = {0};
 static int  s_selected = 0;
 static int  s_announced = 0;
 
+static int selected_controller_is_pikachu(void)
+{
+    return s_profile && strcmp(s_controller_id, SMASH64_PIKACHU_ID) == 0;
+}
+
 /* A projectile's lifetime is host-owned and serializable, whereas the
  * controller's audio event is one tick at source spawn. Reconcile the loop to
  * the actual action slot so a terrain hit, a profile switch, or a save-state
  * restore cannot leave audio running after the Jolt has gone. */
 static void game_smash64_sync_persistent_audio(void)
 {
-    const int pikachu_selected =
-        s_profile && strcmp(s_controller_id, SMASH64_PIKACHU_ID) == 0;
     game_smash64_audio_set_persistent_cue_active(
         PIKACHU_AUDIO_ELECTRIC_LOOP,
-        pikachu_selected &&
+        selected_controller_is_pikachu() &&
         smash64_actions_has_active_kind(PIKACHU_PROJECTILE_JOLT));
 }
 
@@ -921,7 +924,9 @@ static int8_t clamp_xspeed(double smash_units, unsigned state)
     double v = source_units_to_px(smash_units) * SMB1_XSPEED_PER_PX;
     const double limit = state_has_trait(
                              state, SMASH64_STATE_TRAIT_STREAM_LIMIT)
-                             ? SMB1_STREAM_XSPEED_LIMIT
+                             ? (s_profile
+                                    ? s_profile->ordinary_stream_xspeed_limit
+                                    : SMB1_STREAM_XSPEED_LIMIT)
                              : SMB1_XSPEED_FIELD_LIMIT;
 
     if (v >  limit) v =  limit;
@@ -1125,12 +1130,18 @@ void game_smash64_update_input(uint64_t frame_count)
         adapt_coupled_burst_to_host(&move, fs);
         game_smash64_audio_play_events(&move.audio, frame_count);
         s_attack = move.attack;
-        smash64_actions_apply_commands(
-            &move.actions, (double)player_native_x() + 8.0,
-            (double)g_ram[Player_Y_Position] + 32.0,
-            (fs && fs->facing < 0.0f) ? -1.0 : 1.0,
-            s_profile ? s_profile->units_to_smb_px : 0.08,
-            action_resolve_attachment);
+        {
+            double action_facing = (fs && fs->facing < 0.0f) ? -1.0 : 1.0;
+            /* Pikachu's authored +LR is mirrored by the SMB renderer seam.
+             * Persistent action offsets/velocities need the same screen-space
+             * convention or Thunder Jolt visibly travels backward. */
+            if (selected_controller_is_pikachu()) action_facing = -action_facing;
+            smash64_actions_apply_commands(
+                &move.actions, (double)player_native_x() + 8.0,
+                (double)g_ram[Player_Y_Position] + 32.0, action_facing,
+                s_profile ? s_profile->units_to_smb_px : 0.08,
+                action_resolve_attachment);
+        }
         game_smash64_sync_persistent_audio();
         if (move.force_airborne && !s_forced_airborne_pending) {
             /* Generic controller-to-host departure handshake. SetFallS

@@ -17,6 +17,8 @@ static ForeignActionFeedback s_feedback_pending;
 #define SMASH64_ACTION_SAVE_SURFACE_ANIM_MASK  (0xFu << SMASH64_ACTION_SAVE_SURFACE_ANIM_SHIFT)
 #define SMASH64_ACTION_SAVE_FLAGS_MASK    0x00FFFFFFu
 #define SMASH64_ACTION_SURFACE_ANIM_TICKS 15u
+#define SMASH64_ACTION_KIND_PIKACHU_THUNDER 2u
+#define SMASH64_ACTION_VISUAL_AFTER_SELF 2u
 
 static int overlap(double a0, double a1, double b0, double b1)
 {
@@ -246,6 +248,24 @@ static int action_hits_target(const Smash64ActionHost *host,
     return host->defeat_target(left, right, top, bottom);
 }
 
+static void action_self_hit(Smash64ActionSlot *action)
+{
+    feedback(action->instance_id, FOREIGN_ACTION_HIT_SELF);
+    if (action->kind == SMASH64_ACTION_KIND_PIKACHU_THUNDER) {
+        /* BattleShip destroys the damaging Thunder head on self-contact but
+         * leaves a short visual trail/effect. Keep a non-colliding visual slot
+         * for that trail instead of deleting the only renderable action. */
+        action->flags &= ~(FOREIGN_ACTION_HOSTILE |
+                           FOREIGN_ACTION_SELF_CONTACT |
+                           FOREIGN_ACTION_DESTROY_ON_SOLID);
+        action->target_consumed = SMASH64_ACTION_VISUAL_AFTER_SELF;
+        action->age = 0;
+        action->lifetime = 10;
+        return;
+    }
+    action->active = 0;
+}
+
 void smash64_actions_clear(void)
 {
     memset(s_slots, 0, sizeof(s_slots));
@@ -347,10 +367,13 @@ void smash64_actions_step(const Smash64ActionHost *host)
             a->active = 0;
             continue;
         }
+        if (a->target_consumed == SMASH64_ACTION_VISUAL_AFTER_SELF) {
+            ++a->age;
+            continue;
+        }
 
         if (action_hits_self(host, a, a->x, a->y)) {
-            feedback(a->instance_id, FOREIGN_ACTION_HIT_SELF);
-            a->active = 0;
+            action_self_hit(a);
             continue;
         }
         if (action_hits_target(host, a, a->x, a->y)) {
@@ -402,8 +425,7 @@ void smash64_actions_step(const Smash64ActionHost *host)
                 nx = candidate_x;
                 ny = candidate_y;
                 if (action_hits_self(host, a, nx, ny)) {
-                    feedback(a->instance_id, FOREIGN_ACTION_HIT_SELF);
-                    a->active = 0;
+                    action_self_hit(a);
                     break;
                 }
                 if (action_hits_target(host, a, nx, ny)) {
@@ -447,8 +469,7 @@ void smash64_actions_step(const Smash64ActionHost *host)
                 break;
             }
             if (action_hits_self(host, a, candidate_x, candidate_y)) {
-                feedback(a->instance_id, FOREIGN_ACTION_HIT_SELF);
-                a->active = 0;
+                action_self_hit(a);
                 break;
             }
             if (action_hits_target(host, a, candidate_x, candidate_y)) {

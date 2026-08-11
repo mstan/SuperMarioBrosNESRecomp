@@ -58,6 +58,7 @@ static const Smash64FighterProfile kCaptainFalconProfile = {
     "Captain Falcon",
     0x43463634u, /* CF64 */
     0.08,
+    64,
     0x00,
     0,
     0,
@@ -136,6 +137,7 @@ static const Smash64FighterProfile kPikachuProfile = {
     "Pikachu",
     0x504B3634u, /* PK64 */
     PIKACHU_SOURCE_SCALE,
+    48,
     0x0E,
     1,
     1,

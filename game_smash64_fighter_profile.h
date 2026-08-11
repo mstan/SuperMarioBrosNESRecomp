@@ -42,6 +42,10 @@ typedef struct Smash64FighterProfile {
 
     /* Source-space to SMB pixel conversion. */
     double units_to_smb_px;
+    /* Sustained ordinary movement must respect SMB1's area-streamer capacity.
+     * This per-fighter cap preserves relative feel when multiple source runs
+     * would otherwise flatten to the same host maximum. */
+    uint8_t ordinary_stream_xspeed_limit;
 
     /* Stable native collision presentation. These deliberately do not alter
      * PlayerSize itself, which remains SMB1's health/power-up state. */

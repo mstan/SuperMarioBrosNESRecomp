@@ -235,22 +235,53 @@ static void draw_pikachu_jolt_rig(const Smash64ActionSlot *action,
      * previous compact proxy (10px sweep and 7x9px cards) was why Jolt read
      * as a single static speck instead of an articulated slinky. */
     const float source_to_screen = 16.0f / 383.0f;
-    const float root_shift = (-390.0f + 990.0f *
+    const float root_shift = 0.45f * (390.0f - 990.0f *
                               source_frame / 8.0f) *
                              source_to_screen * unit;
     const float card_half_width = 117.0f * 1.5f * source_to_screen * unit;
     const float card_half_height = 218.0f * 1.5f * source_to_screen * unit;
     unsigned joint;
     for (joint = 0; joint < 6u; ++joint) {
+        const float tangent_spread = ((float)joint - 2.5f) * 4.0f * unit;
+        const float normal_spread =
+            ((joint & 1u) ? 3.5f : -3.5f) * unit;
+        const float normal_x = -sinf(heading);
+        const float normal_y = cosf(heading);
         if (!pikachu_jolt_card_visible(joint, phase)) continue;
         draw_persistent_effect_card(
             SMASH64_PIKACHU_EFFECT_THUNDER_JOLT,
             pikachu_jolt_material_frame(joint, phase),
-            center_x + cosf(heading) * root_shift,
-            center_y + sinf(heading) * root_shift,
+            center_x + cosf(heading) * (root_shift + tangent_spread) +
+                normal_x * normal_spread,
+            center_y + sinf(heading) * (root_shift + tangent_spread) +
+                normal_y * normal_spread,
             card_half_width, card_half_height,
             heading + card_angle[joint], 3.0f * unit);
     }
+}
+
+static void draw_pikachu_thunder_trail(const Smash64ActionSlot *action,
+                                       float center_x, float center_y,
+                                       float half_width, float half_height,
+                                       float output_scale)
+{
+    const float unit = output_scale > 0.0f ? output_scale : 1.0f;
+    const float step_y = fmaxf(14.0f * unit, fabsf((float)action->vy) *
+                                             0.45f * unit);
+    unsigned i;
+    for (i = 9u; i > 0u; --i) {
+        draw_persistent_effect_card(SMASH64_PIKACHU_EFFECT_THUNDER,
+                                    action->age + i,
+                                    center_x,
+                                    center_y + step_y * (float)i,
+                                    half_width * 0.65f,
+                                    half_height * 0.65f,
+                                    0.0f, 1.8f * unit);
+    }
+    draw_persistent_effect_card(SMASH64_PIKACHU_EFFECT_THUNDER,
+                                action->age, center_x, center_y,
+                                half_width, half_height,
+                                0.0f, 2.0f * unit);
 }
 
 static void draw_persistent_actions(float output_scale)
@@ -296,12 +327,11 @@ static void draw_persistent_actions(float output_scale)
             draw_pikachu_jolt_rig(action, center_x, center_y, output_scale);
             continue;
         }
-        /* Persistent actions advance at NES cadence.  Source cards are a
-         * short material cycle, so the action age is the exact deterministic
-         * phase key; its physics/save data remains untouched. */
-        draw_persistent_effect_card(effect, action->age, center_x, center_y,
-                                    half_width, half_height, 0.0f,
-                                    2.0f * output_scale);
+        /* Thunder is a falling head plus short-lived trail segments in
+         * BattleShip. Render the current head and its recent vertical samples
+         * instead of a single large collision card. */
+        draw_pikachu_thunder_trail(action, center_x, center_y,
+                                   half_width, half_height, output_scale);
     }
 }
 
