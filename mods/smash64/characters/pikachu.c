@@ -93,9 +93,13 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
         /* ElectricLoop is not a finite source command. The host starts its
          * one persistent voice from the spawned Jolt action and reconciles it
          * against that action's lifetime, including savestate reloads. */
-        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_THUNDER_SPAWN)) {
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_THUNDER)) {
             push_audio(out, PIKACHU_AUDIO_THUNDER);
         }
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LANDING))
+            push_audio(out, PIKACHU_AUDIO_LANDING);
+        if (events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_DEAD_SLAM))
+            push_audio(out, PIKACHU_AUDIO_DEAD_SLAM);
     }
 
     if (s_fighter.last_motion.events &
@@ -105,15 +109,21 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
         event->instance_id = s_fighter.projectile.persistent_action_id;
         event->kind = PIKACHU_PROJECTILE_JOLT;
         event->command = FOREIGN_ACTION_SPAWN;
-        event->flags = FOREIGN_ACTION_HOSTILE | FOREIGN_ACTION_FOLLOW_SURFACES;
-        event->offset_x = 40.0;
-        event->offset_y = 70.0;
+        event->flags = FOREIGN_ACTION_HOSTILE |
+                       FOREIGN_ACTION_FOLLOW_SURFACES |
+                       FOREIGN_ACTION_SURFACE_SPEED;
+        /* ftPikachuSpecialNProcAccessory evaluates joint 11 with no authored
+         * offset. Hosts must resolve this identity or fail the spawn closed. */
+        event->source_joint = 11;
+        event->offset_x = 0.0;
+        event->offset_y = 0.0;
         event->velocity_x = 28.284271;
         event->velocity_y = -28.284271;
+        event->surface_velocity = 55.0;
         event->width = 100.0;
         event->height = 100.0;
         event->damage = 10;
-        event->lifetime_ticks = 180;
+        event->lifetime_ticks = 100;
     }
     if (s_fighter.last_motion.events &
         PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_THUNDER_SPAWN)) {
@@ -124,11 +134,15 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
         event->command = FOREIGN_ACTION_SPAWN;
         event->flags = FOREIGN_ACTION_HOSTILE | FOREIGN_ACTION_SELF_CONTACT |
                        FOREIGN_ACTION_DESTROY_ON_SOLID;
+        /* Source takes X from joint 11, then replaces Y with stage top minus
+         * its authored 500-unit offset. The SMB host owns that top boundary. */
+        event->source_joint = 11;
+        event->offset_y = 500.0;
         event->velocity_y = -450.0;
         event->width = 160.0;
         event->height = 300.0;
         event->damage = 12;
-        event->lifetime_ticks = 60;
+        event->lifetime_ticks = 40;
     }
 
     state->state = s_fighter.state;
@@ -179,6 +193,10 @@ static void pk_resolve(ForeignState *state, const ForeignCollisionResult *hit)
     state->vy = s_fighter.vel_y;
     state->grounded = s_fighter.grounded;
     state->state = s_fighter.state;
+    /* Resolve may change both status and its local motion clock (landing,
+     * Thunder ground/air map conversion). Publish them atomically so the
+     * renderer never observes a new status with the prior status' frame. */
+    state->state_frame = s_fighter.action_frame;
 }
 
 static const char *pk_state_name(ForeignMoveState state)

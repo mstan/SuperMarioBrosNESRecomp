@@ -28,6 +28,21 @@ int main(void)
     CHECK_NEAR(smash64_fighter_profile_coupled_burst_component_px_limit(
                    pikachu, PK_QUICK_ATTACK_WINDOW, 0), 4.0);
 
+    /* ftPikachuSpecialHiInitMiscVars makes Start/aim intangible. Zip entry
+     * uses FTSTATUS_PRESERVE_NONE, so every later phase is damageable. */
+    CHECK((smash64_fighter_profile_state_traits(
+               pikachu, PK_QUICK_ATTACK_START) &
+           SMASH64_STATE_TRAIT_INTANGIBLE) != 0);
+    CHECK((smash64_fighter_profile_state_traits(
+               pikachu, PK_QUICK_ATTACK_ZIP1) &
+           SMASH64_STATE_TRAIT_INTANGIBLE) == 0);
+    CHECK((smash64_fighter_profile_state_traits(
+               pikachu, PK_QUICK_ATTACK_WINDOW) &
+           SMASH64_STATE_TRAIT_INTANGIBLE) == 0);
+    CHECK((smash64_fighter_profile_state_traits(
+               pikachu, PK_QUICK_ATTACK_ZIP2) &
+           SMASH64_STATE_TRAIT_INTANGIBLE) == 0);
+
     /* At frame 46 controller status changes to ordinary FallSpecial. It must
      * retain only normal streamer traits, never a Quick Attack burst plan. */
     {
@@ -35,6 +50,15 @@ int main(void)
             pikachu, PK_FALL_SPECIAL);
         CHECK(fall_special == SMASH64_STATE_TRAIT_STREAM_LIMIT);
     }
+
+    /* Thunder source geometry uses strict <200/<800 bounds after the
+     * profile's 0.08 host projection. Exact boundaries are rejected. */
+    CHECK(smash64_pikachu_thunder_source_contact(
+              15.999, 81.999, -0.5, 0.5, 0.0));
+    CHECK(!smash64_pikachu_thunder_source_contact(
+              16.0, 81.999, -0.5, 0.5, 0.0));
+    CHECK(!smash64_pikachu_thunder_source_contact(
+              15.999, 82.0, -0.5, 0.5, 0.0));
 
     if (failures) return 1;
     puts("pikachu_host_burst_plan_test: PASS");

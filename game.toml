@@ -65,6 +65,12 @@ addr = 0x0714           # CrouchingFlag
 [[ram_read_hook]]
 addr = 0x0754           # PlayerSize
 
+# Foreign fighter intangibility is a read-only injury verdict. The adapter
+# changes this byte only at ChkForPlayerInjury's $D913/$D92C reads, never the
+# native timer itself, so collision and stomp consequences still execute.
+[[ram_read_hook]]
+addr = 0x079E           # InjuryTimer
+
 # SMB inline indexed dispatch: JSR $8E04 pops return address to find a
 # 2-byte LE address table immediately after the JSR. Dispatches via A register.
 [[inline_dispatch]]

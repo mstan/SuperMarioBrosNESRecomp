@@ -10,6 +10,10 @@ static ForeignActionFeedback s_feedback_pending;
 #define SMASH64_ACTION_MAX_SPEED_PX 256.0
 #define SMASH64_ACTION_MAX_EXTENT_PX 1024.0
 #define SMASH64_ACTION_MAX_LIFETIME 3600u
+#define SMASH64_ACTION_SAVE_SURFACE_SHIFT 28u
+#define SMASH64_ACTION_SAVE_SURFACE_MASK  (7u << SMASH64_ACTION_SAVE_SURFACE_SHIFT)
+#define SMASH64_ACTION_SAVE_CONSUMED      0x80000000u
+#define SMASH64_ACTION_SAVE_FLAGS_MASK    0x0FFFFFFFu
 
 static int overlap(double a0, double a1, double b0, double b1)
 {
@@ -54,24 +58,28 @@ static int action_solid(const Smash64ActionHost *host,
 {
     const double half_width = action->width * 0.5;
     const double half_height = action->height * 0.5;
-    const int downward_self_contact_entering_playfield =
+    const int downward_self_contact_above_hud =
         (action->flags & FOREIGN_ACTION_SELF_CONTACT) &&
         action->vy > 0.0 &&
-        center_y - half_height < 32.0 &&
-        center_y + half_height >= 32.0;
+        center_y - half_height < 32.0;
+
+#define ACTION_SOLID_PROBE(px, py) \
+    (downward_self_contact_above_hud && (py) < 32.0 \
+         ? 0 : host->solid_at((px), (py)))
 
     /* Thunder begins above the visible playfield and falls through the HUD
-     * boundary.  Ignore only its two still-offscreen top corners while the
-     * lower half is entering; center/lower probes and every other action keep
-     * the ordinary host collision policy. */
-    return host->solid_at(center_x, center_y) ||
-           (!downward_self_contact_entering_playfield &&
-            (host->solid_at(center_x - half_width,
-                            center_y - half_height) ||
-             host->solid_at(center_x + half_width,
-                            center_y - half_height))) ||
-           host->solid_at(center_x - half_width, center_y + half_height) ||
-           host->solid_at(center_x + half_width, center_y + half_height);
+     * boundary. Ignore each probe only while that probe is still above row32;
+     * the first body point entering gameplay regains ordinary terrain policy. */
+    return ACTION_SOLID_PROBE(center_x, center_y) ||
+           ACTION_SOLID_PROBE(center_x - half_width,
+                              center_y - half_height) ||
+           ACTION_SOLID_PROBE(center_x + half_width,
+                              center_y - half_height) ||
+           ACTION_SOLID_PROBE(center_x - half_width,
+                              center_y + half_height) ||
+           ACTION_SOLID_PROBE(center_x + half_width,
+                              center_y + half_height);
+#undef ACTION_SOLID_PROBE
 }
 
 static void surface_normal_xy(uint32_t normal, double *x, double *y)
@@ -188,7 +196,14 @@ static int action_hits_self(const Smash64ActionHost *host,
                             double center_x, double center_y)
 {
     double left, right, top, bottom;
+    int authored;
     if (!(action->flags & FOREIGN_ACTION_SELF_CONTACT)) return 0;
+    if (host->self_contact) {
+        authored = host->self_contact(
+            action->kind, center_x, center_y, host->fighter_left,
+            host->fighter_right, host->fighter_top, host->fighter_bottom);
+        if (authored >= 0) return authored != 0;
+    }
     action_bounds(action, center_x, center_y,
                   &left, &right, &top, &bottom);
     return overlap(left, right, host->fighter_left, host->fighter_right) &&
@@ -217,7 +232,9 @@ void smash64_actions_apply_commands(const ForeignActionEvents *events,
                                     double fighter_world_x,
                                     double fighter_foot_y,
                                     double facing,
-                                    double units_to_px)
+                                    double units_to_px,
+                                    Smash64ActionAttachmentResolver
+                                        resolve_attachment)
 {
     uint32_t i, count;
     if (!events || !isfinite(fighter_world_x) || !isfinite(fighter_foot_y) ||
@@ -229,6 +246,8 @@ void smash64_actions_apply_commands(const ForeignActionEvents *events,
     for (i = 0; i < count; ++i) {
         const ForeignActionEvent *e = &events->events[i];
         Smash64ActionSlot *slot;
+        double origin_x = fighter_world_x;
+        double origin_y = fighter_foot_y;
         if (e->command == FOREIGN_ACTION_CANCEL_ALL) {
             smash64_actions_clear();
             continue;
@@ -243,6 +262,12 @@ void smash64_actions_apply_commands(const ForeignActionEvents *events,
             !isfinite(e->offset_x) || !isfinite(e->offset_y) ||
             !isfinite(e->velocity_x) || !isfinite(e->velocity_y))
             continue;
+        if (e->source_joint != 0 &&
+            (!resolve_attachment ||
+             !resolve_attachment(e->source_joint, fighter_world_x,
+                                 fighter_foot_y, &origin_x, &origin_y) ||
+             !isfinite(origin_x) || !isfinite(origin_y)))
+            continue;
         if (!slot) slot = free_slot();
         if (!slot) continue;
         memset(slot, 0, sizeof(*slot));
@@ -250,21 +275,26 @@ void smash64_actions_apply_commands(const ForeignActionEvents *events,
         slot->instance_id = e->instance_id;
         slot->kind = e->kind;
         slot->flags = e->flags;
-        slot->x = fighter_world_x + facing * e->offset_x * units_to_px;
+        slot->source_joint = e->source_joint;
+        slot->x = origin_x + facing * e->offset_x * units_to_px;
         slot->y = (e->flags & FOREIGN_ACTION_SELF_CONTACT)
-                      ? 32.0
-                      : fighter_foot_y - e->offset_y * units_to_px;
+                      ? 32.0 - e->offset_y * units_to_px
+                      : origin_y - e->offset_y * units_to_px;
         slot->vx = facing * e->velocity_x * units_to_px;
         slot->vy = -e->velocity_y * units_to_px;
+        slot->surface_speed = e->surface_velocity * units_to_px;
         slot->width = e->width * units_to_px;
         slot->height = e->height * units_to_px;
         slot->damage = e->damage;
         slot->lifetime = e->lifetime_ticks ? e->lifetime_ticks : 180;
         if (!isfinite(slot->x) || !isfinite(slot->y) ||
             !isfinite(slot->vx) || !isfinite(slot->vy) ||
+            !isfinite(slot->surface_speed) ||
             !isfinite(slot->width) || !isfinite(slot->height) ||
             fabs(slot->vx) > SMASH64_ACTION_MAX_SPEED_PX ||
             fabs(slot->vy) > SMASH64_ACTION_MAX_SPEED_PX ||
+            slot->surface_speed < 0.0 ||
+            slot->surface_speed > SMASH64_ACTION_MAX_SPEED_PX ||
             slot->width <= 0.0 || slot->height <= 0.0 ||
             slot->width > SMASH64_ACTION_MAX_EXTENT_PX ||
             slot->height > SMASH64_ACTION_MAX_EXTENT_PX ||
@@ -414,7 +444,10 @@ void smash64_actions_step(const Smash64ActionHost *host)
         a->y = ny;
 
         if (a->flags & FOREIGN_ACTION_FOLLOW_SURFACES) {
-            const double speed = hypot(a->vx, a->vy);
+            const double speed =
+                (a->flags & FOREIGN_ACTION_SURFACE_SPEED) &&
+                a->surface_speed > 0.0
+                    ? a->surface_speed : hypot(a->vx, a->vy);
             const int blocked_x =
                 action_solid(host, a, nx + step_x, ny);
             const int blocked_y =
@@ -435,6 +468,17 @@ void smash64_actions_step(const Smash64ActionHost *host)
             } else {
                 feedback(a->instance_id,
                          FOREIGN_ACTION_HIT_CEILING | FOREIGN_ACTION_EXPIRED);
+                a->active = 0;
+                continue;
+            }
+            /* Smash 64's attached Thunder Jolt has floor, left-wall and
+             * right-wall line states only. An airborne Jolt striking a
+             * ceiling therefore dies instead of inventing an underside line
+             * state. The same rule already applies at a later convex turn. */
+            if (a->surface_normal == SMASH64_ACTION_SURFACE_UP) {
+                feedback(a->instance_id,
+                         FOREIGN_ACTION_HIT_CEILING |
+                         FOREIGN_ACTION_EXPIRED);
                 a->active = 0;
                 continue;
             }
@@ -474,10 +518,13 @@ int smash64_actions_restore(const Smash64ActionSave *saved)
         if (a->active > 1 || a->age > a->lifetime ||
             !isfinite(a->x) || !isfinite(a->y) ||
             !isfinite(a->vx) || !isfinite(a->vy) ||
+            !isfinite(a->surface_speed) ||
             !isfinite(a->width) || !isfinite(a->height) ||
             a->width < 0.0 || a->height < 0.0 ||
             fabs(a->vx) > SMASH64_ACTION_MAX_SPEED_PX ||
             fabs(a->vy) > SMASH64_ACTION_MAX_SPEED_PX ||
+            a->surface_speed < 0.0 ||
+            a->surface_speed > SMASH64_ACTION_MAX_SPEED_PX ||
             a->width > SMASH64_ACTION_MAX_EXTENT_PX ||
             a->height > SMASH64_ACTION_MAX_EXTENT_PX ||
             a->lifetime > SMASH64_ACTION_MAX_LIFETIME ||
@@ -547,7 +594,7 @@ int smash64_actions_serialize(uint8_t *buf, int capacity)
     if (!buf || capacity < required || required > SMASH64_ACTION_SERIALIZED_MAX)
         return -1;
 
-    buf[0] = 3;
+    buf[0] = 4;
     buf[1] = (uint8_t)active_count;
     buf[2] = (uint8_t)s_feedback_pending.count;
     buf[3] = 0;
@@ -559,20 +606,26 @@ int smash64_actions_serialize(uint8_t *buf, int capacity)
         if (!a->active) continue;
         compact_put_u32(&cursor, a->instance_id);
         compact_put_u32(&cursor, a->kind);
-        compact_put_u32(&cursor, a->flags);
-        compact_put_u32(&cursor, a->surface_normal);
+        compact_put_u32(&cursor,
+                        (a->flags & SMASH64_ACTION_SAVE_FLAGS_MASK) |
+                        ((a->surface_normal <<
+                          SMASH64_ACTION_SAVE_SURFACE_SHIFT) &
+                         SMASH64_ACTION_SAVE_SURFACE_MASK) |
+                        (a->target_consumed
+                             ? SMASH64_ACTION_SAVE_CONSUMED : 0u));
+        compact_put_u32(&cursor, a->source_joint);
         if (!compact_put_f32(&cursor, a->x) ||
             !compact_put_f32(&cursor, a->y) ||
             !compact_put_f32(&cursor, a->vx) ||
             !compact_put_f32(&cursor, a->vy) ||
             !compact_put_f32(&cursor, a->width) ||
-            !compact_put_f32(&cursor, a->height))
+            !compact_put_f32(&cursor, a->height) ||
+            !compact_put_f32(&cursor, a->surface_speed))
             return -1;
         memcpy(&damage_bits, &damage, sizeof(damage_bits));
         compact_put_u32(&cursor, damage_bits);
         compact_put_u32(&cursor, a->age);
         compact_put_u32(&cursor, a->lifetime);
-        compact_put_u32(&cursor, a->target_consumed);
     }
     for (i = 0; i < s_feedback_pending.count; ++i) {
         compact_put_u32(&cursor,
@@ -589,7 +642,9 @@ int smash64_actions_deserialize(const uint8_t *buf, int length)
     uint32_t active_count, feedback_count, i;
     int required;
 
-    if (!buf || length < 4 || buf[0] != 3 || buf[3] != 0) return 0;
+    if (!buf || length < 4 || (buf[0] != 3 && buf[0] != 4) ||
+        buf[3] != 0)
+        return 0;
     active_count = buf[1];
     feedback_count = buf[2];
     if (active_count > SMASH64_ACTION_SLOT_CAPACITY ||
@@ -608,20 +663,36 @@ int smash64_actions_deserialize(const uint8_t *buf, int length)
         a->active = 1;
         a->instance_id = compact_get_u32(&cursor);
         a->kind = compact_get_u32(&cursor);
-        a->flags = compact_get_u32(&cursor);
-        a->surface_normal = compact_get_u32(&cursor);
+        if (buf[0] == 4) {
+            const uint32_t packed = compact_get_u32(&cursor);
+            a->flags = packed & SMASH64_ACTION_SAVE_FLAGS_MASK;
+            a->surface_normal =
+                (packed & SMASH64_ACTION_SAVE_SURFACE_MASK) >>
+                SMASH64_ACTION_SAVE_SURFACE_SHIFT;
+            a->target_consumed =
+                (packed & SMASH64_ACTION_SAVE_CONSUMED) != 0;
+            a->source_joint = compact_get_u32(&cursor);
+        } else {
+            a->flags = compact_get_u32(&cursor);
+            a->surface_normal = compact_get_u32(&cursor);
+        }
         a->x = compact_get_f32(&cursor);
         a->y = compact_get_f32(&cursor);
         a->vx = compact_get_f32(&cursor);
         a->vy = compact_get_f32(&cursor);
         a->width = compact_get_f32(&cursor);
         a->height = compact_get_f32(&cursor);
+        if (buf[0] == 4)
+            a->surface_speed = compact_get_f32(&cursor);
         damage_bits = compact_get_u32(&cursor);
         memcpy(&damage, &damage_bits, sizeof(damage));
         a->damage = damage;
         a->age = compact_get_u32(&cursor);
         a->lifetime = compact_get_u32(&cursor);
-        a->target_consumed = compact_get_u32(&cursor);
+        if (buf[0] == 3) {
+            a->target_consumed = compact_get_u32(&cursor);
+            a->surface_speed = hypot(a->vx, a->vy);
+        }
     }
     saved.feedback_pending.count = feedback_count;
     for (i = 0; i < feedback_count; ++i) {

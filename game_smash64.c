@@ -43,6 +43,8 @@
  * ...) so nothing below is a bare literal. */
 #include "generated/super-mario-bros_full_decls.h"
 
+#include <float.h>
+
 _Static_assert(SMASH64_ENEMY_BULLET_BILL_FRENZY == BulletBill_FrenzyVar,
                "Falcon target policy Bullet Bill ID drifted from SMB symbols");
 _Static_assert(SMASH64_ENEMY_PODOBOO == Podoboo,
@@ -205,6 +207,10 @@ static int s_savestate_controller_compatible = 1;
 static const Smash64FighterProfile *s_profile = NULL;
 static void game_smash64_request_savestate_reseed(void);
 static void game_smash64_sync_persistent_audio(void);
+static int action_resolve_attachment(uint32_t source_joint,
+                                     double fighter_world_x,
+                                     double fighter_foot_y,
+                                     double *world_x, double *screen_y);
 
 static void save_write_u32le(uint8_t *dst, uint32_t value)
 {
@@ -1123,7 +1129,8 @@ void game_smash64_update_input(uint64_t frame_count)
             &move.actions, (double)player_native_x() + 8.0,
             (double)g_ram[Player_Y_Position] + 32.0,
             (fs && fs->facing < 0.0f) ? -1.0 : 1.0,
-            s_profile ? s_profile->units_to_smb_px : 0.08);
+            s_profile ? s_profile->units_to_smb_px : 0.08,
+            action_resolve_attachment);
         game_smash64_sync_persistent_audio();
         if (move.force_airborne && !s_forced_airborne_pending) {
             /* Generic controller-to-host departure handshake. SetFallS
@@ -2020,6 +2027,45 @@ static int action_defeat_target(double left, double right,
     return defeat_enemies_in_attack(left, right, top, bottom, 1) > 0;
 }
 
+static int action_self_contact(uint32_t kind, double action_x,
+                               double action_y, double fighter_left,
+                               double fighter_right, double fighter_top,
+                               double fighter_bottom)
+{
+    (void)fighter_top;
+    if (!s_profile || s_profile->savestate_tag != 0x504B3634u ||
+        kind != PIKACHU_PROJECTILE_THUNDER)
+        return -1;
+    /* Keep source self-contact independent of the smaller weapon body used
+     * for terrain/enemy contact. */
+    return smash64_pikachu_thunder_source_contact(
+        action_x, action_y, fighter_left, fighter_right, fighter_bottom);
+}
+
+static int action_resolve_attachment(uint32_t source_joint,
+                                     double fighter_world_x,
+                                     double fighter_foot_y,
+                                     double *world_x, double *screen_y)
+{
+    float resolved_x, resolved_y;
+
+    if (!world_x || !screen_y || !isfinite(fighter_world_x) ||
+        !isfinite(fighter_foot_y) || fabs(fighter_world_x) > FLT_MAX ||
+        fabs(fighter_foot_y) > FLT_MAX)
+        return 0;
+    /* This validates joint < joint_count before indexing and evaluates the
+     * controller's current logical pose without depending on a prior render.
+     * Missing owner-only source data fails the spawn closed instead of
+     * silently moving authored collision to the fighter root. */
+    if (!game_smash64_assets_pikachu_joint_native(
+            source_joint, (float)fighter_world_x, (float)fighter_foot_y,
+            &resolved_x, &resolved_y))
+        return 0;
+    *world_x = (double)resolved_x;
+    *screen_y = (double)resolved_y;
+    return isfinite(*world_x) && isfinite(*screen_y);
+}
+
 static void apply_pending_actions(void)
 {
     Smash64ActionHost host;
@@ -2034,6 +2080,7 @@ static void apply_pending_actions(void)
     host.fighter_right = x + 16.0;
     host.fighter_top = foot - body_height;
     host.fighter_bottom = foot;
+    host.self_contact = action_self_contact;
     smash64_actions_step(&host);
     game_smash64_sync_persistent_audio();
 }
@@ -2288,8 +2335,21 @@ static int bounding_box_core_hook(uint16_t addr)
 
 uint8_t game_smash64_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val)
 {
+    const ForeignState *fs;
+
     if (decide_ownership() != FOREIGN_OWNERSHIP_FOREIGN)
         return val;
+
+    /* ChkForPlayerInjury reads InjuryTimer at $D913 and again at $D92C
+     * immediately before ForceInjury. Returning a transient nonzero verdict
+     * at those two reads preserves native enemy collision/stomp processing
+     * while suppressing only damage. Source Quick Attack does this for its
+     * 20-frame Start/aim status; entering either zip through PRESERVE_NONE
+     * restores normal hit status. No guest timer is written or extended. */
+    fs = nes_foreign_state();
+    if (addr == InjuryTimer && (pc == 0xD913 || pc == 0xD92C) && fs &&
+        state_has_trait(fs->state, SMASH64_STATE_TRAIT_INTANGIBLE))
+        return 1;
 
     /* PlayerBGCollision $DC64: geometry selection only.
      * $DC9A/$DC9F choose BlockBufferAdderData and $DCB1/$DCB4 choose

@@ -50,6 +50,16 @@
 #define PIKACHU_SOURCE_QUICK_ATTACK_FALL_SPECIAL_DRIFT 0.4
 #define PIKACHU_SOURCE_QUICK_ATTACK_FALL_SPECIAL_LANDING_FRAMES 20u
 #define PIKACHU_SOURCE_QUICK_ATTACK_END_ANIMATION_FRAMES 46u
+#define PIKACHU_SOURCE_THUNDER_SPAWN_FRAME 24u
+#define PIKACHU_SOURCE_THUNDER_START_GROUND_CLIP_FRAMES 24u
+#define PIKACHU_SOURCE_THUNDER_START_AIR_CLIP_FRAMES 24u
+#define PIKACHU_SOURCE_THUNDER_LOOP_FRAMES 60u
+#define PIKACHU_SOURCE_THUNDER_HIT_ACTIVE_FRAMES 10u
+#define PIKACHU_SOURCE_THUNDER_HIT_TO_END_FRAMES 30u
+#define PIKACHU_SOURCE_THUNDER_END_GROUND_CLIP_FRAMES 38u
+#define PIKACHU_SOURCE_THUNDER_END_AIR_CLIP_FRAMES 38u
+#define PIKACHU_SOURCE_THUNDER_HIT_GRAVITY 0.5
+#define PIKACHU_SOURCE_THUNDER_HIT_VELOCITY_Y 20.0
 #define PIKACHU_SOURCE_AIR_ACCEL 0.055
 #define PIKACHU_SOURCE_AIR_FRICTION 0.45
 #define PIKACHU_SOURCE_AIR_SPEED_MAX 37.5
@@ -71,6 +81,11 @@ typedef enum {
     /* Append only: failed Z-cancel outcomes selected by the aerial scripts'
      * flag1 windows. Pikachu has authored F/D landings; N/B use AirNull. */
     PK_LANDING_AIR_NULL, PK_LANDING_AIR_F, PK_LANDING_AIR_D,
+    /* Append only: legacy PK_THUNDER_{START,LOOP,SELF_HIT} are the grounded
+     * source statuses. These complete the distinct ground/air status graph
+     * without changing any serialized legacy ordinal. */
+    PK_THUNDER_END, PK_THUNDER_AIR_START, PK_THUNDER_AIR_LOOP,
+    PK_THUNDER_AIR_SELF_HIT, PK_THUNDER_AIR_END,
     PK_STATE_COUNT
 } PikachuState;
 
@@ -91,6 +106,10 @@ typedef enum {
     PIKACHU_EVENT_EFFECT_DUST_HEAVY_DOUBLE,
     PIKACHU_EVENT_EFFECT_IMPACT_WAVE,
     PIKACHU_EVENT_EFFECT_QUAKE_MAG1,
+    PIKACHU_EVENT_EFFECT_THUNDER_HIT_COLOR,
+    /* Append only: source DownSpecialLoop frame-zero FGM. This is distinct
+     * from the frame-24 Start event that creates the Thunder weapon. */
+    PIKACHU_EVENT_FGM_THUNDER,
     PIKACHU_EVENT_COUNT
 } PikachuEvent;
 

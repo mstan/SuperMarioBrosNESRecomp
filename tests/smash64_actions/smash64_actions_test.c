@@ -1,5 +1,8 @@
 #include "game_smash64_actions.h"
+#include "game_smash64_fighter_profile.h"
+#include "mods/smash64/ssb_ported/pikachu_locomotion.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -14,6 +17,46 @@ static int floating_wall_mode;
 static int hud_boundary_mode;
 static int target_box;
 static double target_left, target_right, target_top, target_bottom;
+static int attachment_calls;
+
+static int resolve_attachment(uint32_t source_joint,
+                              double fighter_world_x,
+                              double fighter_foot_y,
+                              double *world_x, double *screen_y)
+{
+    ++attachment_calls;
+    if (source_joint != 11) return 0;
+    *world_x = fighter_world_x;
+    *screen_y = fighter_foot_y;
+    return 1;
+}
+
+static int source_self_contact(uint32_t kind, double action_x,
+                               double action_y, double fighter_left,
+                               double fighter_right, double fighter_top,
+                               double fighter_bottom)
+{
+    (void)fighter_top;
+    if (kind != PIKACHU_PROJECTILE_THUNDER) return -1;
+    return smash64_pikachu_thunder_source_contact(
+        action_x, action_y, fighter_left, fighter_right, fighter_bottom);
+}
+
+static void put_u32(uint8_t **cursor, uint32_t value)
+{
+    (*cursor)[0] = (uint8_t)value;
+    (*cursor)[1] = (uint8_t)(value >> 8);
+    (*cursor)[2] = (uint8_t)(value >> 16);
+    (*cursor)[3] = (uint8_t)(value >> 24);
+    *cursor += 4;
+}
+
+static void put_f32(uint8_t **cursor, float value)
+{
+    uint32_t bits;
+    memcpy(&bits, &value, sizeof(bits));
+    put_u32(cursor, bits);
+}
 
 #define CHECK(x) do { if (!(x)) { \
     fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #x); \
@@ -89,7 +132,7 @@ int main(void)
     commands.count = 1;
     commands.events[0] = spawn(1, FOREIGN_ACTION_HOSTILE |
                                   FOREIGN_ACTION_FOLLOW_SURFACES);
-    smash64_actions_apply_commands(&commands, 50.0, 120.0, 1.0, 0.08);
+    smash64_actions_apply_commands(&commands, 50.0, 120.0, 1.0, 0.08, NULL);
     CHECK(smash64_actions_snapshot(slots, 8) == 1);
     CHECK(smash64_actions_has_active_kind(7));
     CHECK(!smash64_actions_has_active_kind(8));
@@ -105,7 +148,7 @@ int main(void)
     CHECK(feedback.events[0].flags & FOREIGN_ACTION_HIT_TARGET);
 
     commands.events[0] = spawn(2, FOREIGN_ACTION_SELF_CONTACT);
-    smash64_actions_apply_commands(&commands, 8.0, 120.0, 1.0, 0.08);
+    smash64_actions_apply_commands(&commands, 8.0, 120.0, 1.0, 0.08, NULL);
     smash64_actions_step(&host);
     CHECK(smash64_actions_snapshot(slots, 8) == 0);
     smash64_actions_drain_feedback(&feedback);
@@ -113,7 +156,7 @@ int main(void)
     CHECK(feedback.events[0].flags & FOREIGN_ACTION_HIT_SELF);
 
     commands.events[0] = spawn(3, 0);
-    smash64_actions_apply_commands(&commands, 50.0, 120.0, 1.0, 0.08);
+    smash64_actions_apply_commands(&commands, 50.0, 120.0, 1.0, 0.08, NULL);
     smash64_actions_save(&saved);
     smash64_actions_clear();
     CHECK(smash64_actions_restore(&saved));
@@ -124,6 +167,10 @@ int main(void)
     CHECK(smash64_actions_snapshot(slots, 8) == 1);
     bad = saved;
     bad.slots[0].vx = 1.0e300;
+    CHECK(!smash64_actions_restore(&bad));
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    bad = saved;
+    bad.slots[0].surface_speed = -1.0;
     CHECK(!smash64_actions_restore(&bad));
     CHECK(smash64_actions_snapshot(slots, 8) == 1);
 
@@ -141,7 +188,96 @@ int main(void)
     compact[0] = 99;
     CHECK(!smash64_actions_deserialize(compact, compact_len));
     CHECK(smash64_actions_snapshot(slots, 8) == 1);
-    compact[0] = 3;
+    compact[0] = 4;
+
+    /* Version 3 records remain loadable. They lacked attachment identity and
+     * a distinct attached speed, so migration deliberately preserves their
+     * current magnitude rather than reinterpreting an opaque kind. */
+    {
+        uint8_t legacy[60] = { 3, 1, 0, 0 };
+        uint8_t *p = legacy + 4;
+        put_u32(&p, 77); /* instance */
+        put_u32(&p, 7);  /* kind */
+        put_u32(&p, FOREIGN_ACTION_FOLLOW_SURFACES);
+        put_u32(&p, SMASH64_ACTION_SURFACE_DOWN);
+        put_f32(&p, 10.0f);
+        put_f32(&p, 20.0f);
+        put_f32(&p, 3.0f);
+        put_f32(&p, 4.0f);
+        put_f32(&p, 8.0f);
+        put_f32(&p, 8.0f);
+        put_u32(&p, 10);
+        put_u32(&p, 2);
+        put_u32(&p, 100);
+        put_u32(&p, 0);
+        CHECK(p == legacy + sizeof(legacy));
+        CHECK(smash64_actions_deserialize(legacy, sizeof(legacy)));
+        CHECK(smash64_actions_snapshot(slots, 8) == 1);
+        CHECK(slots[0].source_joint == 0);
+        CHECK(slots[0].surface_speed == 5.0);
+    }
+
+    /* Source Thunder Jolt is an airborne 40-unit action until first contact,
+     * then becomes a 55-unit floor/L/R-wall line action while carrying the
+     * same 100-tick lifetime and joint-11 identity. */
+    smash64_actions_clear();
+    commands.events[0] = spawn(78, FOREIGN_ACTION_FOLLOW_SURFACES |
+                                   FOREIGN_ACTION_SURFACE_SPEED);
+    commands.events[0].source_joint = 11;
+    commands.events[0].offset_y = 0.0;
+    commands.events[0].velocity_x = 28.284271;
+    commands.events[0].velocity_y = -28.284271;
+    commands.events[0].surface_velocity = 55.0;
+    commands.events[0].width = 100.0;
+    commands.events[0].height = 100.0;
+    commands.events[0].lifetime_ticks = 100;
+    solid_mode = 1;
+    attachment_calls = 0;
+    smash64_actions_apply_commands(&commands, 50.0, 92.0, 1.0, 0.08,
+                                   resolve_attachment);
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(attachment_calls == 1);
+    CHECK(slots[0].source_joint == 11);
+    CHECK(slots[0].x == 50.0 && slots[0].y == 92.0);
+    CHECK(fabs(hypot(slots[0].vx, slots[0].vy) - 3.2) < 0.0001);
+    smash64_actions_step(&host); /* authored spawn frame */
+    {
+        int i;
+        for (i = 0; i < 4; ++i) {
+            smash64_actions_step(&host);
+            CHECK(smash64_actions_snapshot(slots, 8) == 1);
+            if (slots[0].surface_normal != SMASH64_ACTION_SURFACE_NONE)
+                break;
+        }
+        CHECK(i < 4);
+    }
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].surface_normal == SMASH64_ACTION_SURFACE_DOWN);
+    CHECK(fabs(hypot(slots[0].vx, slots[0].vy) - 4.4) < 0.0001);
+    CHECK(slots[0].lifetime == 100);
+    smash64_actions_drain_feedback(&feedback);
+    CHECK(feedback.count == 1);
+    CHECK(feedback.events[0].flags & FOREIGN_ACTION_HIT_FLOOR);
+    compact_len = smash64_actions_serialize(compact, sizeof(compact));
+    CHECK(compact_len == 60 && compact[0] == 4);
+    smash64_actions_clear();
+    CHECK(smash64_actions_deserialize(compact, compact_len));
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].source_joint == 11);
+    CHECK(fabs(slots[0].surface_speed - 4.4) < 0.0001);
+    solid_mode = 0;
+
+    /* A non-root source attachment must never silently become the fighter
+     * root or index an unchecked joint. Missing/invalid resolvers fail the
+     * spawn closed and leave no persistent action behind. */
+    smash64_actions_clear();
+    commands.events[0].instance_id = 79;
+    smash64_actions_apply_commands(&commands, 50.0, 92.0, 1.0, 0.08, NULL);
+    CHECK(smash64_actions_snapshot(slots, 8) == 0);
+    commands.events[0].source_joint = 12;
+    smash64_actions_apply_commands(&commands, 50.0, 92.0, 1.0, 0.08,
+                                   resolve_attachment);
+    CHECK(smash64_actions_snapshot(slots, 8) == 0);
 
     /* A fast Thunder-sized action must sweep every crossed pixel and its
      * bounds, rather than tunneling through a one-pixel wall. */
@@ -153,7 +289,7 @@ int main(void)
     commands.events[0].width = 1.0;
     commands.events[0].height = 1.0;
     solid_wall = 1;
-    smash64_actions_apply_commands(&commands, 50.0, 80.0, 1.0, 0.08);
+    smash64_actions_apply_commands(&commands, 50.0, 80.0, 1.0, 0.08, NULL);
     smash64_actions_step(&host); /* authored spawn frame */
     smash64_actions_step(&host);
     solid_wall = 0;
@@ -173,7 +309,7 @@ int main(void)
     commands.events[0].width = 1.0;
     commands.events[0].height = 1.0;
     target_strip = 1;
-    smash64_actions_apply_commands(&commands, 50.0, 80.0, 1.0, 0.08);
+    smash64_actions_apply_commands(&commands, 50.0, 80.0, 1.0, 0.08, NULL);
     smash64_actions_step(&host);
     smash64_actions_step(&host);
     target_strip = 0;
@@ -195,7 +331,7 @@ int main(void)
     commands.events[0].height = 12.5;
     commands.events[0].lifetime_ticks = 100;
     perimeter_mode = 1;
-    smash64_actions_apply_commands(&commands, 4.0, 10.5, 1.0, 0.08);
+    smash64_actions_apply_commands(&commands, 4.0, 10.5, 1.0, 0.08, NULL);
     {
         int i, saw_left_wall = 0, saw_top = 0, saw_right_wall = 0;
         for (i = 0; i < 80; ++i) {
@@ -236,7 +372,7 @@ int main(void)
     commands.events[0].width = 12.5;
     commands.events[0].height = 12.5;
     commands.events[0].lifetime_ticks = 100;
-    smash64_actions_apply_commands(&commands, 4.0, 10.5, 1.0, 0.08);
+    smash64_actions_apply_commands(&commands, 4.0, 10.5, 1.0, 0.08, NULL);
     {
         int i;
         for (i = 0; i < 30; ++i) {
@@ -266,15 +402,19 @@ int main(void)
      * deadlock where the body reaches the top edge but never clears the wall
      * far enough to begin the across-pipe leg. */
     smash64_actions_clear();
-    commands.events[0] = spawn(10, FOREIGN_ACTION_FOLLOW_SURFACES);
+    commands.events[0] = spawn(10, FOREIGN_ACTION_FOLLOW_SURFACES |
+                                   FOREIGN_ACTION_SURFACE_SPEED);
     commands.events[0].offset_y = 70.0;
     commands.events[0].velocity_x = 28.284271;
     commands.events[0].velocity_y = -28.284271;
+    commands.events[0].source_joint = 11;
+    commands.events[0].surface_velocity = 55.0;
     commands.events[0].width = 100.0;
     commands.events[0].height = 100.0;
-    commands.events[0].lifetime_ticks = 180;
+    commands.events[0].lifetime_ticks = 100;
     large_perimeter_mode = 1;
-    smash64_actions_apply_commands(&commands, 124.8, 208.0, 1.0, 0.08);
+    smash64_actions_apply_commands(&commands, 124.8, 208.0, 1.0, 0.08,
+                                   resolve_attachment);
     {
         int i, saw_left_wall = 0, saw_top = 0, saw_right_wall = 0;
         for (i = 0; i < 120; ++i) {
@@ -302,14 +442,18 @@ int main(void)
 
     /* The same perimeter must mirror exactly when Pikachu faces left. */
     smash64_actions_clear();
-    commands.events[0] = spawn(11, FOREIGN_ACTION_FOLLOW_SURFACES);
+    commands.events[0] = spawn(11, FOREIGN_ACTION_FOLLOW_SURFACES |
+                                   FOREIGN_ACTION_SURFACE_SPEED);
     commands.events[0].offset_y = 70.0;
     commands.events[0].velocity_x = 28.284271;
     commands.events[0].velocity_y = -28.284271;
+    commands.events[0].source_joint = 11;
+    commands.events[0].surface_velocity = 55.0;
     commands.events[0].width = 100.0;
     commands.events[0].height = 100.0;
-    commands.events[0].lifetime_ticks = 180;
-    smash64_actions_apply_commands(&commands, 300.0, 208.0, -1.0, 0.08);
+    commands.events[0].lifetime_ticks = 100;
+    smash64_actions_apply_commands(&commands, 300.0, 208.0, -1.0, 0.08,
+                                   resolve_attachment);
     {
         int i, saw_right_wall = 0, saw_top = 0, saw_left_wall = 0;
         for (i = 0; i < 140; ++i) {
@@ -338,14 +482,18 @@ int main(void)
     /* Canonicalize a mid-wall compact record, then prove its future path is
      * deterministic rather than merely restoring an active bit. */
     smash64_actions_clear();
-    commands.events[0] = spawn(12, FOREIGN_ACTION_FOLLOW_SURFACES);
+    commands.events[0] = spawn(12, FOREIGN_ACTION_FOLLOW_SURFACES |
+                                   FOREIGN_ACTION_SURFACE_SPEED);
     commands.events[0].offset_y = 70.0;
     commands.events[0].velocity_x = 28.284271;
     commands.events[0].velocity_y = -28.284271;
+    commands.events[0].source_joint = 11;
+    commands.events[0].surface_velocity = 55.0;
     commands.events[0].width = 100.0;
     commands.events[0].height = 100.0;
-    commands.events[0].lifetime_ticks = 180;
-    smash64_actions_apply_commands(&commands, 124.8, 208.0, 1.0, 0.08);
+    commands.events[0].lifetime_ticks = 100;
+    smash64_actions_apply_commands(&commands, 124.8, 208.0, 1.0, 0.08,
+                                   resolve_attachment);
     {
         Smash64ActionSlot future_a, future_b;
         int i;
@@ -383,7 +531,8 @@ int main(void)
     commands.events[0].width = 100.0;
     commands.events[0].height = 100.0;
     commands.events[0].lifetime_ticks = 100;
-    smash64_actions_apply_commands(&commands, 228.8, 184.0, 1.0, 0.08);
+    smash64_actions_apply_commands(&commands, 228.8, 184.0, 1.0, 0.08,
+                                   NULL);
     smash64_actions_save(&saved);
     saved.slots[0].x = 228.8;
     saved.slots[0].y = 184.0;
@@ -417,7 +566,7 @@ int main(void)
     host.fighter_right = 71.0;
     host.fighter_top = 0.0;
     host.fighter_bottom = 64.0;
-    smash64_actions_apply_commands(&commands, 50.0, 80.0, 1.0, 0.08);
+    smash64_actions_apply_commands(&commands, 50.0, 80.0, 1.0, 0.08, NULL);
     smash64_actions_step(&host);
     smash64_actions_step(&host);
     CHECK(smash64_actions_snapshot(slots, 8) == 0);
@@ -440,7 +589,8 @@ int main(void)
     host.fighter_right = 216.0;
     host.fighter_top = 176.0;
     host.fighter_bottom = 208.0;
-    smash64_actions_apply_commands(&commands, 50.0, 208.0, 1.0, 0.08);
+    smash64_actions_apply_commands(&commands, 50.0, 208.0, 1.0, 0.08,
+                                   NULL);
     smash64_actions_step(&host); /* authored spawn frame */
     smash64_actions_step(&host);
     CHECK(smash64_actions_snapshot(slots, 8) == 1);
@@ -449,7 +599,7 @@ int main(void)
     smash64_actions_clear();
     commands.events[0].instance_id = 8;
     commands.events[0].flags = 0;
-    smash64_actions_apply_commands(&commands, 50.0, 40.0, 1.0, 0.08);
+    smash64_actions_apply_commands(&commands, 50.0, 40.0, 1.0, 0.08, NULL);
     smash64_actions_step(&host);
     smash64_actions_step(&host);
     CHECK(smash64_actions_snapshot(slots, 8) == 0);
@@ -458,8 +608,46 @@ int main(void)
     CHECK(feedback.events[0].flags & FOREIGN_ACTION_EXPIRED);
     hud_boundary_mode = 0;
 
+    /* Natural Thunder path: joint11 supplies X, stage-top minus 500 supplies
+     * Y, the 40-tick head enters through the HUD, and source X/Y+225 strict
+     * bounds generate SELF feedback before terrain destroys the action. */
+    smash64_actions_clear();
+    memset(&commands, 0, sizeof(commands));
+    commands.count = 1;
+    commands.events[0] = spawn(
+        15, FOREIGN_ACTION_SELF_CONTACT | FOREIGN_ACTION_DESTROY_ON_SOLID);
+    commands.events[0].kind = PIKACHU_PROJECTILE_THUNDER;
+    commands.events[0].source_joint = 11;
+    commands.events[0].offset_y = 500.0;
+    commands.events[0].velocity_x = 0.0;
+    commands.events[0].velocity_y = -450.0;
+    commands.events[0].width = 160.0;
+    commands.events[0].height = 300.0;
+    commands.events[0].lifetime_ticks = 40;
+    host.fighter_left = 42.0;
+    host.fighter_right = 58.0;
+    host.fighter_top = 32.0;
+    host.fighter_bottom = 64.0;
+    host.self_contact = source_self_contact;
+    hud_boundary_mode = 1;
+    smash64_actions_apply_commands(&commands, 50.0, 64.0, 1.0, 0.08,
+                                   resolve_attachment);
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].x == 50.0 && slots[0].y == -8.0);
+    CHECK(slots[0].source_joint == 11 && slots[0].lifetime == 40);
+    smash64_actions_step(&host); /* source spawn is observable */
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    smash64_actions_step(&host); /* descending head reaches self bounds */
+    CHECK(smash64_actions_snapshot(slots, 8) == 0);
+    smash64_actions_drain_feedback(&feedback);
+    CHECK(feedback.count == 1);
+    CHECK(feedback.events[0].instance_id == 15);
+    CHECK(feedback.events[0].flags & FOREIGN_ACTION_HIT_SELF);
+    host.self_contact = NULL;
+    hud_boundary_mode = 0;
+
     commands.events[0].command = FOREIGN_ACTION_CANCEL_ALL;
-    smash64_actions_apply_commands(&commands, 0, 0, 1, .08);
+    smash64_actions_apply_commands(&commands, 0, 0, 1, .08, NULL);
     CHECK(smash64_actions_snapshot(slots, 8) == 0);
 
     if (failures) return 1;

@@ -71,11 +71,173 @@ static void timing_and_projectile_vectors(void)
     pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = -80;
     m = step(&f, in); CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_LW));
     memset(&in, 0, sizeof(in));
-    for (i = 1; i <= 24; ++i) { m = step(&f, in); if (i == 24) { CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_THUNDER_SPAWN)); CHECK(!m.projectile.can_break_blocks); } }
+    for (i = 1; i <= 24; ++i) { m = step(&f, in); if (i < 24) CHECK((m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_THUNDER)) == 0); if (i == 24) { CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_THUNDER_SPAWN)); CHECK(!m.projectile.can_break_blocks); } }
+    CHECK(f.state == PK_THUNDER_LOOP);
+    CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_THUNDER));
     pikachu_note_thunder_self_contact(&f); m = step(&f, in);
+    CHECK(f.state == PK_THUNDER_SELF_HIT);
     CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_THUNDER_SELF_HIT));
     CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_THUNDER_AMP));
+    CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_DUST_HEAVY_DOUBLE));
+    CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_QUAKE_MAG1));
+    CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_THUNDER_HIT_COLOR));
     CHECK(m.attack.active && !m.attack.break_blocks);
+}
+
+static void thunder_phase_vectors(void)
+{
+    PikachuFighter f, restored;
+    PikachuInputRaw in;
+    PikachuMotion m;
+    PikachuCollision hit;
+    uint8_t blob[1 + sizeof(f)];
+    int i, len;
+    const int phases[] = {
+        PK_THUNDER_START, PK_THUNDER_LOOP, PK_THUNDER_SELF_HIT,
+        PK_THUNDER_END, PK_THUNDER_AIR_START, PK_THUNDER_AIR_LOOP,
+        PK_THUNDER_AIR_SELF_HIT, PK_THUNDER_AIR_END
+    };
+
+    /* Destroy/no-contact feedback chooses End, never Hit. */
+    pikachu_reset(&f);
+    f.state = PK_THUNDER_LOOP;
+    f.action_frame = 7u;
+    f.projectile.kind = PIKACHU_PROJECTILE_THUNDER;
+    f.projectile.active = 1;
+    f.projectile.persistent_action_id = 9u;
+    pikachu_note_projectile_finished(&f, 9u);
+    memset(&in, 0, sizeof(in));
+    m = step(&f, in);
+    CHECK(f.state == PK_THUNDER_END);
+    CHECK((m.events & PIKACHU_EVENT_BIT(
+               PIKACHU_EVENT_PROJECTILE_THUNDER_SELF_HIT)) == 0);
+
+    /* The authored loop flag is another no-contact End path. */
+    pikachu_reset(&f);
+    f.state = PK_THUNDER_LOOP;
+    f.action_frame = PIKACHU_SOURCE_THUNDER_LOOP_FRAMES;
+    f.projectile.kind = PIKACHU_PROJECTILE_THUNDER;
+    f.projectile.active = 1;
+    step(&f, in);
+    CHECK(f.state == PK_THUNDER_END);
+
+    /* Air Hit launches at +20, then applies source 0.5 gravity and native air
+     * X clamp/friction. Landing preserves the Hit phase/frame. */
+    pikachu_reset(&f);
+    f.grounded = 0;
+    f.state = PK_THUNDER_AIR_LOOP;
+    f.action_frame = 3u;
+    f.vel_x = 50.0;
+    f.vel_y = -7.0;
+    f.projectile.kind = PIKACHU_PROJECTILE_THUNDER;
+    f.projectile.active = 1;
+    pikachu_note_thunder_self_contact(&f);
+    m = step(&f, in);
+    CHECK(f.state == PK_THUNDER_AIR_SELF_HIT);
+    CHECK_NEAR(f.vel_y, PIKACHU_SOURCE_THUNDER_HIT_VELOCITY_Y);
+    CHECK(m.attack.active && m.attack.damage == 16);
+    m = step(&f, in);
+    CHECK_NEAR(f.vel_y,
+               PIKACHU_SOURCE_THUNDER_HIT_VELOCITY_Y -
+                   PIKACHU_SOURCE_THUNDER_HIT_GRAVITY);
+    CHECK_NEAR(f.vel_x, PIKACHU_SOURCE_AIR_SPEED_MAX);
+    memset(&hit, 0, sizeof(hit));
+    hit.grounded = 1;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_THUNDER_SELF_HIT && f.vel_y == 0.0);
+
+    /* Paired ground/air animations have identical live-blob end clocks, so
+     * switching kinetics preserves the elapsed source frame unchanged. */
+    pikachu_reset(&f);
+    f.grounded = 0;
+    f.state = PK_THUNDER_AIR_START;
+    f.action_frame = 10u;
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 1;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_THUNDER_START && f.action_frame == 10u);
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 0;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_THUNDER_AIR_START && f.action_frame == 10u);
+
+    pikachu_reset(&f);
+    f.grounded = 0;
+    f.state = PK_THUNDER_AIR_END;
+    f.action_frame = PIKACHU_SOURCE_THUNDER_END_AIR_CLIP_FRAMES;
+    step(&f, in);
+    CHECK(f.state == PK_AIR_FALL);
+
+    /* Every explicit phase survives v2 save/load with its local frame and
+     * projectile lifetime identity intact. Appended ordinals do not migrate
+     * or reinterpret the legacy ground phases. */
+    for (i = 0; i < (int)(sizeof(phases) / sizeof(phases[0])); ++i) {
+        pikachu_reset(&f);
+        f.state = phases[i];
+        f.grounded = phases[i] < PK_THUNDER_AIR_START;
+        f.action_frame = 7u;
+        f.projectile.kind = PIKACHU_PROJECTILE_THUNDER;
+        f.projectile.active = 1;
+        f.projectile.persistent_action_id = 123u;
+        len = pikachu_serialize(&f, blob, (int)sizeof(blob));
+        pikachu_reset(&restored);
+        CHECK(len == (int)sizeof(blob));
+        CHECK(pikachu_deserialize(&restored, blob, len));
+        CHECK(restored.state == f.state);
+        CHECK(restored.action_frame == 7u);
+        CHECK(restored.projectile.active);
+        CHECK(restored.projectile.persistent_action_id == 123u);
+    }
+
+    /* v2 represented airborne Thunder with a ground ordinal plus grounded=0.
+     * v3 migrates all three legacy phases and leaves the destination unchanged
+     * on malformed input. */
+    {
+        const int legacy_states[] = {
+            PK_THUNDER_START, PK_THUNDER_LOOP, PK_THUNDER_SELF_HIT
+        };
+        const int air_states[] = {
+            PK_THUNDER_AIR_START, PK_THUNDER_AIR_LOOP,
+            PK_THUNDER_AIR_SELF_HIT
+        };
+        for (i = 0; i < 3; ++i) {
+            pikachu_reset(&f);
+            f.state = legacy_states[i];
+            f.grounded = 0;
+            f.action_frame = 9u;
+            blob[0] = 2u;
+            memcpy(blob + 1, &f, sizeof(f));
+            pikachu_reset(&restored);
+            CHECK(pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+            CHECK(restored.state == air_states[i]);
+            CHECK(restored.action_frame == 9u);
+        }
+        pikachu_reset(&restored);
+        restored.state = PK_WALK;
+        f = restored;
+        blob[0] = 3u;
+        memcpy(blob + 1, &f, sizeof(f));
+        {
+            int invalid = PK_STATE_COUNT;
+            memcpy(blob + 1 + offsetof(PikachuFighter, state), &invalid,
+                   sizeof(invalid));
+        }
+        CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+        CHECK(restored.state == PK_WALK);
+
+        /* v3 records must not smuggle a phase/kinetics contradiction past
+         * restore; failure is transactional for both directions. */
+        f = restored;
+        f.state = PK_THUNDER_START;
+        f.grounded = 0;
+        blob[0] = 3u;
+        memcpy(blob + 1, &f, sizeof(f));
+        CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+        CHECK(restored.state == PK_WALK);
+        f.state = PK_THUNDER_AIR_LOOP;
+        f.grounded = 1;
+        memcpy(blob + 1, &f, sizeof(f));
+        CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+        CHECK(restored.state == PK_WALK);
+    }
 }
 
 static void aerial_normal_motion_vectors(void)
@@ -328,7 +490,7 @@ static void aerial_landing_vectors(void)
         m = step(&f, in);
     CHECK(f.state == PK_GROUND_WAIT);
 
-    /* All appended states survive the unchanged v2 struct blob; invalid
+    /* All appended states survive the v3 struct blob; invalid
      * future ordinals are rejected by the same validation gate. */
     for (state = PK_LANDING_AIR_NULL; state <= PK_LANDING_AIR_D; ++state) {
         pikachu_reset(&f);
@@ -547,6 +709,7 @@ static void quick_attack_source_velocity_and_two_point_vectors(void)
 int main(void)
 {
     selection_vectors(); timing_and_projectile_vectors(); aerial_normal_motion_vectors();
+    thunder_phase_vectors();
     locomotion_vectors(); jump_fall_vectors(); standard_state_timing_vectors();
     crouch_and_landing_vectors(); aerial_landing_vectors();
     quick_attack_and_save_vectors(); quick_attack_source_recovery_vector();

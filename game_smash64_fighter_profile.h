@@ -22,7 +22,10 @@ typedef enum Smash64FighterStateTrait {
     /* Move both axes through one <=1px DDA. Quick Attack cannot use the
      * ordinary horizontal-then-vertical L-shaped integration without cutting
      * a solid tile corner that its authored diagonal never cleared. */
-    SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP = 1u << 6
+    SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP = 1u << 6,
+    /* Suppress only the host's final injury-timer decision. Collision,
+     * stomps, enemy movement and every non-injury consequence remain native. */
+    SMASH64_STATE_TRAIT_INTANGIBLE = 1u << 7
 } Smash64FighterStateTrait;
 
 /* Return the maximum SMB pixels/tick for one component of a coupled burst.
@@ -67,3 +70,10 @@ uint32_t smash64_fighter_profile_state_traits(
 double smash64_fighter_profile_coupled_burst_component_px_limit(
     const Smash64FighterProfile *profile, unsigned state,
     uint8_t parser_debt);
+
+/* Source-authored Pikachu Thunder self-contact geometry, projected through
+ * the profile scale. The host callback and tests share this strict-boundary
+ * implementation. */
+int smash64_pikachu_thunder_source_contact(
+    double action_x, double action_y, double fighter_left,
+    double fighter_right, double fighter_bottom);

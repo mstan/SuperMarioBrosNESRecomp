@@ -3,6 +3,7 @@
 #include "mods/smash64/characters/captain_falcon.h"
 #include "mods/smash64/characters/pikachu.h"
 
+#include <math.h>
 #include <string.h>
 
 static uint32_t captain_falcon_state_traits(unsigned state)
@@ -73,6 +74,16 @@ static uint32_t pikachu_state_traits(unsigned state)
                           ? SMASH64_STATE_TRAIT_STREAM_LIMIT
                           : SMASH64_STATE_TRAIT_NONE;
     switch (state) {
+    case PK_QUICK_ATTACK_START:
+        /* Source sets every hurt part intangible while the 20-frame aim
+         * status is entered. The following zip uses PRESERVE_NONE, which
+         * resets hit status to normal in ftMainSetStatus. */
+        traits |= SMASH64_STATE_TRAIT_INTANGIBLE |
+                  SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER |
+                  SMASH64_STATE_TRAIT_SUPPRESS_UPWARD_SPEED_ON_CEILING |
+                  SMASH64_STATE_TRAIT_ROOT_BURST |
+                  SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP;
+        break;
     case PK_QUICK_ATTACK_ZIP1:
     case PK_QUICK_ATTACK_ZIP2:
         traits |= SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER |
@@ -80,7 +91,6 @@ static uint32_t pikachu_state_traits(unsigned state)
                   SMASH64_STATE_TRAIT_ROOT_BURST |
                   SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP;
         break;
-    case PK_QUICK_ATTACK_START:
     case PK_QUICK_ATTACK_WINDOW:
     case PK_QUICK_ATTACK_RECOVERY:
         traits |= SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER |
@@ -160,4 +170,18 @@ double smash64_fighter_profile_coupled_burst_component_px_limit(
 {
     if (!profile || !profile->coupled_burst_plan) return 0.0;
     return profile->coupled_burst_plan(state, parser_debt);
+}
+
+int smash64_pikachu_thunder_source_contact(
+    double action_x, double action_y, double fighter_left,
+    double fighter_right, double fighter_bottom)
+{
+    /* ftPikachuSpecialLwCheckCollideThunder compares fighter TopN against
+     * weapon X and weapon Y+225 with strict source thresholds 200/800.
+     * Screen Y points down, hence action_y - 225*scale. */
+    return fabs((fighter_left + fighter_right) * 0.5 - action_x) <
+               200.0 * PIKACHU_SOURCE_SCALE &&
+           fabs(fighter_bottom -
+                (action_y - 225.0 * PIKACHU_SOURCE_SCALE)) <
+               800.0 * PIKACHU_SOURCE_SCALE;
 }
