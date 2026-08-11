@@ -159,9 +159,9 @@ projectiles and never alter SMB blocks.
 | NAir / BAir missed-Z landing | reloc `1976_FTPikachuAnimLandingAirX`; `0x1574` | NAir flag `[3,29)`, BAir flag `[10,22)`; no hitbox | The motion is 8 source animation frames at flag1 `50` percent speed, hence 16 controller ticks. Play Pikachu landing and heavy-double dust at entry. |
 | Fair missed-Z landing | reloc `2031_FTPikachuAnimLandingAirF`; `0x13EC` | selected from Fair flag `[7,27)`; landing hitbox `[0,2)`, 6 | Dedicated 16-frame landing; Pikachu landing sound and heavy-double dust at entry. The hitbox is created by the landing script, not carried over from Fair. |
 | DAir missed-Z landing | reloc `2032_FTPikachuAnimLandingAirD`; `0x1534` | selected from DAir flag `[0,26)`; no landing hitbox | Dedicated 40-frame landing; dead-slam sound, heavy-double dust, impact wave, and magnitude-1 quake at entry. The aerial hitbox is cleared by the status transition/script. |
-| Thunder Jolt | ground `0x15AC`; air `0x15F0` | projectile begins at 21 | `VoicePikachuSpecialN` at entry; air also plays `FGMPikachuElectric5` at entry. Spawn from source joint 11, facing-relative, at -45 degrees with source speed 40. It may defeat eligible enemies once, follows floor/wall surfaces after contact, and expires on unsupported/invalid surfaces. It never changes SMB blocks. |
+| Thunder Jolt | ground `0x15AC`; air `0x15F0` | projectile begins at 21 | `VoicePikachuSpecialN` at entry; air also plays `FGMPikachuElectric5` at entry. Spawn at source joint 11 with no fixed offset, facing-relative, at -45 degrees with source speed 40 and lifetime 100. Its first floor/left/right contact enters a source surface-line state at speed 55; SMB's orthogonal tiles reproduce 90-degree perimeter turns, while an unsupported underside or invalid surface expires. It may defeat an eligible enemy once and never changes SMB blocks. |
 | Quick Attack | start has no source motion; zip/end `0x1710`, `0x1730` | no hitbox | `FGMPikachuSpecialHiStart` begins the 20-frame intangible aim startup. A first aim at stick length `<=60` is source-defaulted to `(0,80)` (UP), never facing-horizontal; this makes neutral Up+B then Right a valid 90-degree route. Each source zip is normalized `stick * (3 * min(|stick|,80)+90)`, so full cardinal is 330 source units; the second is 0.9x (297). The first is exactly 5 frames; after the end-script's 9-frame direction window, one second 5-frame zip only occurs if stick magnitude is at least 60 and differs by more than 42 degrees. Zip end backs velocity up by 0.2, repeats the 46-frame UpSpecialAirEnd animation, then enters FallSpecial with source 0.4 drift/landing-speed parameters. `VoicePikachuSpecialHi`, `FGMPikachuElectric1`, and sparkle fire on each zip entry; ripple and rumble fire at each zip end. Render the authored 0.8/0.8/1.2 scale/pitch transform on joint 4. |
-| Thunder | start `0x162C`; loop `0x1644`; self-hit `0x1668` | self-hit `[0,10)`, 16 | `VoicePikachuSpecialLw` at entry; spawn a vertical bolt at frame 24 from the gameplay top above Pikachu. While it falls it owns all trail/effect events. On self-contact, consume the bolt, emit ThunderAmp + dust + quake + color event, and give airborne Pikachu source +20 vertical velocity. Pikachu does not take host damage from own Thunder. Thunder may defeat an eligible enemy once but never breaks blocks. |
+| Thunder | ground/air Start `0x162C`; Loop `0x1644`; Hit `0x1668`; End `0x16E4` | self-hit `[0,10)`, 16 | `VoicePikachuSpecialLw` at Start frame 0. On Start frame 24, spawn a 40-tick vertical head at joint-11 X and stage-top minus 500, then enter Loop and emit `FGM_THUNDER` at Loop frame 0 on that same game tick. Destroy/no-contact or Loop flag frame 60 chooses End; self-contact chooses Hit, consumes the head, and emits ThunderAmp + dust + logical quake + color. Source contact is strict `abs(X)<200` and `abs(fighterY-(weaponY+225))<800`. Air Hit launches +20 then applies 0.5 gravity and air-X clamp/friction; Hit flag frame 30 chooses End; End exits at frame 38 (air to Fall). Ground/air map conversions preserve the phase-local frame. Pikachu does not take host damage from own Thunder; the head may defeat one eligible enemy and never breaks blocks. |
 
 The `0x0E34`, `0x0F50`, `0x12E8`, `0x1380`, `0x1420`, and `0x14DC`
 associations are explicitly established by the US `dFTPikachuMotionDescs`
@@ -195,14 +195,17 @@ rather than Mario's fireball slot.
 
 ## Determinism and observable event ABI
 
-The controller must expose a monotonic per-action `action_frame`, a
-`persistent_action_id`, and a bitset/queue of logical events:
+The controller must expose a phase-local `action_frame`, a stable
+`persistent_action_id`, and a bitset/queue of logical events. Quick Attack's
+two zips deliberately share one continuous action clock; Thunder's distinct
+Start/Loop/Hit/End statuses restart their phase-local clock:
 `VOICE_SPECIAL_N`, `VOICE_SPECIAL_HI`, `VOICE_SPECIAL_LW`, `FGM_LIGHT_S`,
 `FGM_LIGHT_M`, `FGM_LIGHT_L`, `FGM_ELECTRIC_1`, `FGM_ELECTRIC_2`,
 `FGM_ELECTRIC_3`, `FGM_ELECTRIC_5`, `FGM_QUICK_ATTACK_START`,
 `EFFECT_SPARKLE`, `EFFECT_RIPPLE`,
-`EFFECT_THUNDER_AMP`, `PROJECTILE_JOLT_SPAWN`, `PROJECTILE_THUNDER_SPAWN`,
-and `PROJECTILE_THUNDER_SELF_HIT`.  Events are emitted once on their listed
+`EFFECT_THUNDER_AMP`, `EFFECT_THUNDER_HIT_COLOR`, `FGM_THUNDER`,
+`PROJECTILE_JOLT_SPAWN`, `PROJECTILE_THUNDER_SPAWN`, and
+`PROJECTILE_THUNDER_SELF_HIT`. Events are emitted once on their listed
 frame and survive save/load exactly once: restoring before an event may emit
 it on the replay; restoring after it may not duplicate it.
 

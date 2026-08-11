@@ -193,7 +193,7 @@
         { "frame": 0, "id": "VOICE_SPECIAL_N" },
         { "frame": 21, "id": "PROJECTILE_JOLT_SPAWN", "angle_deg": -45, "speed_source_units": 40, "joint": 11 }
       ],
-      "projectile": { "can_defeat_enemy_once": true, "can_break_block": false, "follows_surfaces": true }
+      "projectile": { "source_joint": 11, "fixed_offset": [0, 0], "air_speed_source_units": 40, "surface_speed_source_units": 55, "lifetime": 100, "can_defeat_enemy_once": true, "can_break_block": false, "follows_surfaces": ["floor", "left_wall", "right_wall"] }
     },
     {
       "action": "THUNDER_JOLT_AIR",
@@ -204,7 +204,7 @@
         { "frame": 0, "id": "FGM_ELECTRIC_5" },
         { "frame": 21, "id": "PROJECTILE_JOLT_SPAWN", "angle_deg": -45, "speed_source_units": 40, "joint": 11 }
       ],
-      "projectile": { "can_defeat_enemy_once": true, "can_break_block": false, "follows_surfaces": true }
+      "projectile": { "source_joint": 11, "fixed_offset": [0, 0], "air_speed_source_units": 40, "surface_speed_source_units": 55, "lifetime": 100, "can_defeat_enemy_once": true, "can_break_block": false, "follows_surfaces": ["floor", "left_wall", "right_wall"] }
     },
     {
       "action": "QUICK_ATTACK",
@@ -225,11 +225,14 @@
       "windows": [{ "from": 0, "to": 10, "damage": 16, "side": "bolt", "only_after_self_contact": true }],
       "events": [
         { "frame": 0, "id": "VOICE_SPECIAL_LW" },
-        { "frame": 24, "id": "PROJECTILE_THUNDER_SPAWN", "vertical_speed_source_units": -450 },
+        { "phase": "START", "frame": 24, "id": "PROJECTILE_THUNDER_SPAWN", "source_joint_x": 11, "stage_top_offset_y": 500, "vertical_speed_source_units": -450, "lifetime": 40 },
+        { "phase": "LOOP", "frame": 0, "id": "FGM_THUNDER" },
         { "frame": "contact", "id": "PROJECTILE_THUNDER_SELF_HIT" },
         { "frame": "contact", "id": "EFFECT_THUNDER_AMP" }
       ],
-      "self_contact": { "air_vertical_velocity_source_units": 20, "damages_pikachu": false, "can_break_block": false }
+      "phase_clocks": { "start_to_loop": 24, "loop_no_contact_to_end": 60, "hit_active_end": 10, "hit_to_end": 30, "end_to_idle_or_fall": 38 },
+      "self_contact": { "strict_x_source_units": 200, "weapon_y_offset_source_units": 225, "strict_y_source_units": 800, "air_vertical_velocity_source_units": 20, "air_hit_gravity": 0.5, "damages_pikachu": false, "can_break_block": false },
+      "status_graph": ["GROUND_START", "GROUND_LOOP", "GROUND_HIT", "GROUND_END", "AIR_START", "AIR_LOOP", "AIR_HIT", "AIR_END"]
     }
   ],
   "source_status_inventory": [
