@@ -133,7 +133,8 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
         event->kind = PIKACHU_PROJECTILE_THUNDER;
         event->command = FOREIGN_ACTION_SPAWN;
         event->flags = FOREIGN_ACTION_HOSTILE | FOREIGN_ACTION_SELF_CONTACT |
-                       FOREIGN_ACTION_DESTROY_ON_SOLID;
+                       FOREIGN_ACTION_DESTROY_ON_SOLID |
+                       FOREIGN_ACTION_PERSIST_AFTER_TARGET;
         /* Source takes X from joint 11, then replaces Y with stage top minus
          * its authored 500-unit offset. The SMB host owns that top boundary. */
         event->source_joint = 11;
@@ -168,6 +169,8 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
 static void pk_resolve(ForeignState *state, const ForeignCollisionResult *hit)
 {
     PikachuCollision collision;
+    int private_state_before;
+    unsigned private_frame_before;
     uint32_t i;
     memset(&collision, 0, sizeof(collision));
     collision.actual_dx = hit->actual_dx;
@@ -181,11 +184,16 @@ static void pk_resolve(ForeignState *state, const ForeignCollisionResult *hit)
             &hit->action_feedback.events[i];
         if (event->flags & FOREIGN_ACTION_HIT_SELF)
             pikachu_note_thunder_self_contact(&s_fighter);
-        if (event->flags & (FOREIGN_ACTION_HIT_TARGET |
-                            FOREIGN_ACTION_EXPIRED))
+        if (event->flags & FOREIGN_ACTION_EXPIRED)
+            pikachu_note_projectile_finished(&s_fighter,
+                                             event->instance_id);
+        else if ((event->flags & FOREIGN_ACTION_HIT_TARGET) &&
+                 s_fighter.projectile.kind != PIKACHU_PROJECTILE_THUNDER)
             pikachu_note_projectile_finished(&s_fighter,
                                              event->instance_id);
     }
+    private_state_before = s_fighter.state;
+    private_frame_before = s_fighter.action_frame;
     pikachu_resolve(&s_fighter, &collision);
     state->x = s_fighter.pos_x;
     state->y = s_fighter.pos_y;
@@ -196,7 +204,9 @@ static void pk_resolve(ForeignState *state, const ForeignCollisionResult *hit)
     /* Resolve may change both status and its local motion clock (landing,
      * Thunder ground/air map conversion). Publish them atomically so the
      * renderer never observes a new status with the prior status' frame. */
-    state->state_frame = s_fighter.action_frame;
+    if (s_fighter.state != private_state_before ||
+        s_fighter.action_frame != private_frame_before)
+        state->state_frame = s_fighter.action_frame;
 }
 
 static const char *pk_state_name(ForeignMoveState state)

@@ -274,10 +274,38 @@ int main(void)
     commands.events[0].instance_id = 79;
     smash64_actions_apply_commands(&commands, 50.0, 92.0, 1.0, 0.08, NULL);
     CHECK(smash64_actions_snapshot(slots, 8) == 0);
+    smash64_actions_drain_feedback(&feedback);
+    CHECK(feedback.count == 1);
+    CHECK(feedback.events[0].instance_id == 79);
+    CHECK(feedback.events[0].flags & FOREIGN_ACTION_EXPIRED);
     commands.events[0].source_joint = 12;
     smash64_actions_apply_commands(&commands, 50.0, 92.0, 1.0, 0.08,
                                    resolve_attachment);
     CHECK(smash64_actions_snapshot(slots, 8) == 0);
+    smash64_actions_drain_feedback(&feedback);
+    CHECK(feedback.count == 1);
+    CHECK(feedback.events[0].instance_id == 79);
+    CHECK(feedback.events[0].flags & FOREIGN_ACTION_EXPIRED);
+
+    /* Slot exhaustion is also a rejected persistent spawn, not silence. */
+    smash64_actions_clear();
+    for (int slot_index = 0;
+         slot_index < SMASH64_ACTION_SLOT_CAPACITY;
+         ++slot_index) {
+        commands.events[0] = spawn(100u + (uint32_t)slot_index, 0);
+        commands.events[0].offset_y = 0.0;
+        smash64_actions_apply_commands(&commands, 50.0, 92.0, 1.0, 0.08,
+                                       NULL);
+    }
+    CHECK(smash64_actions_snapshot(slots, 8) == 8);
+    commands.events[0] = spawn(108u, 0);
+    commands.events[0].offset_y = 0.0;
+    smash64_actions_apply_commands(&commands, 50.0, 92.0, 1.0, 0.08, NULL);
+    CHECK(smash64_actions_snapshot(slots, 8) == 8);
+    smash64_actions_drain_feedback(&feedback);
+    CHECK(feedback.count == 1);
+    CHECK(feedback.events[0].instance_id == 108u);
+    CHECK(feedback.events[0].flags & FOREIGN_ACTION_EXPIRED);
 
     /* A fast Thunder-sized action must sweep every crossed pixel and its
      * bounds, rather than tunneling through a one-pixel wall. */
@@ -615,7 +643,9 @@ int main(void)
     memset(&commands, 0, sizeof(commands));
     commands.count = 1;
     commands.events[0] = spawn(
-        15, FOREIGN_ACTION_SELF_CONTACT | FOREIGN_ACTION_DESTROY_ON_SOLID);
+        15, FOREIGN_ACTION_HOSTILE | FOREIGN_ACTION_SELF_CONTACT |
+                FOREIGN_ACTION_DESTROY_ON_SOLID |
+                FOREIGN_ACTION_PERSIST_AFTER_TARGET);
     commands.events[0].kind = PIKACHU_PROJECTILE_THUNDER;
     commands.events[0].source_joint = 11;
     commands.events[0].offset_y = 500.0;
@@ -630,13 +660,22 @@ int main(void)
     host.fighter_bottom = 64.0;
     host.self_contact = source_self_contact;
     hud_boundary_mode = 1;
+    target_box = 1;
+    target_left = 49.0;
+    target_right = 51.0;
+    target_top = -9.0;
+    target_bottom = -7.0;
     smash64_actions_apply_commands(&commands, 50.0, 64.0, 1.0, 0.08,
                                    resolve_attachment);
     CHECK(smash64_actions_snapshot(slots, 8) == 1);
     CHECK(slots[0].x == 50.0 && slots[0].y == -8.0);
     CHECK(slots[0].source_joint == 11 && slots[0].lifetime == 40);
-    smash64_actions_step(&host); /* source spawn is observable */
+    smash64_actions_step(&host); /* target hit does not consume Thunder */
     CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    smash64_actions_drain_feedback(&feedback);
+    CHECK(feedback.count == 1);
+    CHECK(feedback.events[0].instance_id == 15);
+    CHECK(feedback.events[0].flags & FOREIGN_ACTION_HIT_TARGET);
     smash64_actions_step(&host); /* descending head reaches self bounds */
     CHECK(smash64_actions_snapshot(slots, 8) == 0);
     smash64_actions_drain_feedback(&feedback);

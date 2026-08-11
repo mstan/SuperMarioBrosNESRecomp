@@ -266,10 +266,15 @@ void smash64_actions_apply_commands(const ForeignActionEvents *events,
             (!resolve_attachment ||
              !resolve_attachment(e->source_joint, fighter_world_x,
                                  fighter_foot_y, &origin_x, &origin_y) ||
-             !isfinite(origin_x) || !isfinite(origin_y)))
+             !isfinite(origin_x) || !isfinite(origin_y))) {
+            feedback(e->instance_id, FOREIGN_ACTION_EXPIRED);
             continue;
+        }
         if (!slot) slot = free_slot();
-        if (!slot) continue;
+        if (!slot) {
+            feedback(e->instance_id, FOREIGN_ACTION_EXPIRED);
+            continue;
+        }
         memset(slot, 0, sizeof(*slot));
         slot->active = 1;
         slot->instance_id = e->instance_id;
@@ -327,8 +332,10 @@ void smash64_actions_step(const Smash64ActionHost *host)
         if (action_hits_target(host, a, a->x, a->y)) {
             a->target_consumed = 1;
             feedback(a->instance_id, FOREIGN_ACTION_HIT_TARGET);
-            a->active = 0;
-            continue;
+            if (!(a->flags & FOREIGN_ACTION_PERSIST_AFTER_TARGET)) {
+                a->active = 0;
+                continue;
+            }
         }
 
         /* Spawn frame is observable at the authored origin. Movement starts
@@ -377,8 +384,11 @@ void smash64_actions_step(const Smash64ActionHost *host)
                 if (action_hits_target(host, a, nx, ny)) {
                     a->target_consumed = 1;
                     feedback(a->instance_id, FOREIGN_ACTION_HIT_TARGET);
-                    a->active = 0;
-                    break;
+                    if (!(a->flags &
+                          FOREIGN_ACTION_PERSIST_AFTER_TARGET)) {
+                        a->active = 0;
+                        break;
+                    }
                 }
                 if (!action_has_support(host, a, nx, ny)) {
                     double normal_x, normal_y;
@@ -419,8 +429,10 @@ void smash64_actions_step(const Smash64ActionHost *host)
             if (action_hits_target(host, a, candidate_x, candidate_y)) {
                 a->target_consumed = 1;
                 feedback(a->instance_id, FOREIGN_ACTION_HIT_TARGET);
-                a->active = 0;
-                break;
+                if (!(a->flags & FOREIGN_ACTION_PERSIST_AFTER_TARGET)) {
+                    a->active = 0;
+                    break;
+                }
             }
             nx = candidate_x;
             ny = candidate_y;

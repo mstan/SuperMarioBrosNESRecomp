@@ -42,6 +42,37 @@ int main(void)
     memset(&state, 0, sizeof(state));
     registered->reset(&state);
 
+    /* Production calls resolve after every tick. A no-op same-ground resolve
+     * must not overwrite the pre-increment presentation frame published by
+     * tick with the private controller's next frame. */
+    memset(&input, 0, sizeof(input));
+    memset(&move, 0, sizeof(move));
+    input.special_pressed = 1;
+    input.stick_y = 1.0f;
+    registered->tick(&state, &input, &move);
+    CHECK(state.state == PK_QUICK_ATTACK_START);
+    CHECK(state.state_frame == 0u);
+    {
+        ForeignCollisionResult hit;
+        memset(&hit, 0, sizeof(hit));
+        hit.grounded = 1;
+        registered->resolve(&state, &hit);
+    }
+    CHECK(state.state_frame == 0u);
+    memset(&input, 0, sizeof(input));
+    memset(&move, 0, sizeof(move));
+    registered->tick(&state, &input, &move);
+    CHECK(state.state_frame == 1u);
+    {
+        ForeignCollisionResult hit;
+        memset(&hit, 0, sizeof(hit));
+        hit.grounded = 1;
+        registered->resolve(&state, &hit);
+    }
+    CHECK(state.state_frame == 1u);
+
+    registered->reset(&state);
+
     for (tick = 0; tick < 40 && !jolt; ++tick) {
         memset(&input, 0, sizeof(input));
         memset(&move, 0, sizeof(move));
@@ -91,12 +122,37 @@ int main(void)
         if (move.actions.count != 0) {
             CHECK(tick == (int)PIKACHU_SOURCE_THUNDER_SPAWN_FRAME);
             CHECK(move.actions.events[0].kind == PIKACHU_PROJECTILE_THUNDER);
+            CHECK((move.actions.events[0].flags &
+                   FOREIGN_ACTION_PERSIST_AFTER_TARGET) != 0);
             thunder_instance_id = move.actions.events[0].instance_id;
+        }
+        {
+            ForeignCollisionResult hit;
+            memset(&hit, 0, sizeof(hit));
+            hit.grounded = 1;
+            registered->resolve(&state, &hit);
+        }
+        if (tick == (int)PIKACHU_SOURCE_THUNDER_SPAWN_FRAME) {
+            CHECK(state.state == PK_THUNDER_LOOP);
+            CHECK(state.state_frame == 0u);
         }
     }
     CHECK(state.state == PK_THUNDER_LOOP);
     CHECK(thunder_audio_count == 1);
     CHECK(thunder_instance_id != 0);
+    {
+        ForeignCollisionResult hit;
+        memset(&hit, 0, sizeof(hit));
+        hit.grounded = 1;
+        hit.action_feedback.count = 1;
+        hit.action_feedback.events[0].instance_id = thunder_instance_id;
+        hit.action_feedback.events[0].flags = FOREIGN_ACTION_HIT_TARGET;
+        registered->resolve(&state, &hit);
+    }
+    memset(&input, 0, sizeof(input));
+    memset(&move, 0, sizeof(move));
+    registered->tick(&state, &input, &move);
+    CHECK(state.state == PK_THUNDER_LOOP);
     {
         ForeignCollisionResult hit;
         memset(&hit, 0, sizeof(hit));
@@ -110,7 +166,47 @@ int main(void)
     memset(&move, 0, sizeof(move));
     registered->tick(&state, &input, &move);
     CHECK(state.state == PK_THUNDER_SELF_HIT);
+    CHECK(state.state_frame == 0u);
     CHECK(move.attack.active && move.attack.damage == 16);
+    {
+        ForeignCollisionResult hit;
+        memset(&hit, 0, sizeof(hit));
+        hit.grounded = 1;
+        registered->resolve(&state, &hit);
+    }
+    CHECK(state.state_frame == 0u);
+
+    /* A syntactically valid host-rejected Thunder spawn reports EXPIRED.
+     * Feeding that public rejection back while Loop begins must choose End on
+     * the next controller tick rather than waiting out the 60-frame loop. */
+    registered->reset(&state);
+    thunder_instance_id = 0;
+    for (tick = 0;
+         tick <= (int)PIKACHU_SOURCE_THUNDER_START_GROUND_CLIP_FRAMES;
+         ++tick) {
+        ForeignCollisionResult hit;
+        memset(&input, 0, sizeof(input));
+        memset(&move, 0, sizeof(move));
+        input.special_pressed = tick == 0;
+        input.stick_y = -1.0f;
+        registered->tick(&state, &input, &move);
+        memset(&hit, 0, sizeof(hit));
+        hit.grounded = 1;
+        if (move.actions.count != 0) {
+            thunder_instance_id = move.actions.events[0].instance_id;
+            hit.action_feedback.count = 1;
+            hit.action_feedback.events[0].instance_id = thunder_instance_id;
+            hit.action_feedback.events[0].flags = FOREIGN_ACTION_EXPIRED;
+        }
+        registered->resolve(&state, &hit);
+    }
+    CHECK(thunder_instance_id != 0);
+    CHECK(state.state == PK_THUNDER_LOOP);
+    memset(&input, 0, sizeof(input));
+    memset(&move, 0, sizeof(move));
+    registered->tick(&state, &input, &move);
+    CHECK(state.state == PK_THUNDER_END);
+    CHECK(state.state_frame == 0u);
 
     /* Resolve publishes a landing status and its reset phase frame together. */
     registered->reset(&state);
