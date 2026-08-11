@@ -31,6 +31,11 @@ int main(void)
     assert(game_smash64_pikachu_quick_animation_frame(0, 0u) == 0.0f);
     assert(game_smash64_pikachu_quick_animation_frame(0, 8u) == 8.0f);
 
+    assert(game_smash64_pikachu_jolt_source_frame(0u) == 0.0f);
+    assert(game_smash64_pikachu_jolt_source_frame(1u) == 0.5f);
+    assert(game_smash64_pikachu_jolt_source_frame(14u) == 7.0f);
+    assert(game_smash64_pikachu_jolt_source_frame(15u) == 0.0f);
+
     puts("pikachu_presentation_test: PASS");
     return 0;
 }

@@ -259,7 +259,7 @@ int main(void)
     CHECK(feedback.count == 1);
     CHECK(feedback.events[0].flags & FOREIGN_ACTION_HIT_FLOOR);
     compact_len = smash64_actions_serialize(compact, sizeof(compact));
-    CHECK(compact_len == 60 && compact[0] == 4);
+    CHECK(compact_len == 60 && compact[0] == 5);
     smash64_actions_clear();
     CHECK(smash64_actions_deserialize(compact, compact_len));
     CHECK(smash64_actions_snapshot(slots, 8) == 1);
@@ -362,9 +362,18 @@ int main(void)
     smash64_actions_apply_commands(&commands, 4.0, 10.5, 1.0, 0.08, NULL);
     {
         int i, saw_left_wall = 0, saw_top = 0, saw_right_wall = 0;
+        uint32_t previous_surface = SMASH64_ACTION_SURFACE_NONE;
+        int surface_restarts = 0;
         for (i = 0; i < 80; ++i) {
             smash64_actions_step(&host);
             CHECK(smash64_actions_snapshot(slots, 8) == 1);
+            if (slots[0].surface_normal != previous_surface) {
+                /* Both convex forward blocks and concave support losses
+                 * reattach GroundAddAnim at its source frame zero. */
+                CHECK(slots[0].surface_anim_age == 0u);
+                previous_surface = slots[0].surface_normal;
+                ++surface_restarts;
+            }
             if (slots[0].surface_normal == SMASH64_ACTION_SURFACE_RIGHT &&
                 slots[0].vy < 0.0)
                 saw_left_wall = 1;
@@ -378,6 +387,7 @@ int main(void)
                 saw_right_wall = 1;
         }
         CHECK(saw_left_wall && saw_top && saw_right_wall);
+        CHECK(surface_restarts >= 4);
         CHECK(slots[0].surface_normal == SMASH64_ACTION_SURFACE_DOWN);
         CHECK(slots[0].vx > 0.0 && slots[0].vy == 0.0);
         compact_len = smash64_actions_serialize(compact, sizeof(compact));
@@ -424,6 +434,57 @@ int main(void)
         CHECK(target_box == 0);
     }
     perimeter_mode = 0;
+
+    /* Ground Jolt's owner motion is a 15-host-tick, 0.5-source-frame clock:
+     * 0, .5, ... 7.0, then a fresh segment frame 0 (never a drifting action
+     * lifetime modulo). */
+    smash64_actions_clear();
+    commands.events[0] = spawn(91, FOREIGN_ACTION_FOLLOW_SURFACES);
+    commands.events[0].offset_y = 0.0;
+    commands.events[0].velocity_x = 25.0;
+    commands.events[0].velocity_y = 0.0;
+    commands.events[0].width = 100.0;
+    commands.events[0].height = 100.0;
+    commands.events[0].lifetime_ticks = 100;
+    solid_mode = 1;
+    smash64_actions_apply_commands(&commands, 50.0, 96.0, 1.0, 0.08, NULL);
+    smash64_actions_save(&saved);
+    /* Begin on an already attached floor segment. This directly exercises
+     * the persistent action slot the renderer snapshots, not a transient
+     * presentation proxy. */
+    saved.slots[0].surface_normal = SMASH64_ACTION_SURFACE_DOWN;
+    saved.slots[0].surface_anim_age = 0u;
+    saved.slots[0].age = 1u;
+    CHECK(smash64_actions_restore(&saved));
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].surface_anim_age == 0u);
+    smash64_actions_step(&host);
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].surface_anim_age == 1u); /* presentation frame 0.5 */
+    {
+        int i;
+        for (i = 0; i < 13; ++i) smash64_actions_step(&host);
+    }
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].surface_anim_age == 14u); /* presentation frame 7.0 */
+    smash64_actions_step(&host);
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].surface_anim_age == 0u); /* reset before source frame 7.5 */
+    compact_len = smash64_actions_serialize(compact, sizeof(compact));
+    CHECK(compact_len > 0 && compact_len <= 512 && compact[0] == 5u);
+    smash64_actions_clear();
+    CHECK(smash64_actions_deserialize(compact, compact_len));
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].surface_anim_age == 0u);
+    /* v4 has no packed surface clock; migration derives a bounded phase from
+     * its retained action age rather than accepting a stale/unbounded value. */
+    compact[0] = 4u;
+    compact[15] &= 0xF0u; /* first slot packed flags byte: clear v5 age nibble */
+    smash64_actions_clear();
+    CHECK(smash64_actions_deserialize(compact, compact_len));
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].surface_anim_age == slots[0].age % 15u);
+    solid_mode = 0;
 
     /* Use the actual 8x8 Jolt box, 2.26px/tick speed, 32px-wide pipe, and
      * SMB floor/pipe rows. Small point-like fixtures can conceal a corner

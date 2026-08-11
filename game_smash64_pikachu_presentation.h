@@ -44,3 +44,12 @@ static inline float game_smash64_pikachu_quick_animation_frame(
 {
     return static_source_motion ? 0.0f : (float)phase_frame;
 }
+
+/* wpPikachuThunderJoltGroundAddAnim advances at half NES cadence and resets
+ * before the 7.5 source-frame boundary. The serialized action owner supplies
+ * the bounded 0..14 host tick clock. */
+static inline float game_smash64_pikachu_jolt_source_frame(
+    unsigned surface_anim_age)
+{
+    return 0.5f * (float)(surface_anim_age % 15u);
+}

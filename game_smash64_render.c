@@ -12,6 +12,7 @@
 
 #include "game_smash64_assets.h"
 #include "game_smash64_actions.h"
+#include "game_smash64_pikachu_presentation.h"
 #include "game_smash64.h"
 #include "nes_runtime.h"
 #include "voxel_renderer.h"
@@ -212,14 +213,16 @@ static void draw_pikachu_jolt_rig(const Smash64ActionSlot *action,
      * 0x1A20 AnimJoint and 0x1AE0 material streams at every surface segment
      * and turn. Joint 1 sweeps -390..600 over 9 frames; joints 2..7 carry
      * the six cards with authored -45,+15,+75,-75,-15,+45 degree rotations.
-     * Evaluate those visibility/material timelines here against saved action
-     * age, keeping physics and deterministic save state entirely separate.
+     * Evaluate those visibility/material timelines here against the serialized
+     * per-surface clock, keeping physics and deterministic save state separate.
      */
     static const float card_angle[6] = {
         -0.785398006f, 0.261799008f, 1.30899704f,
         -1.30899704f, -0.261799008f, 0.785398006f
     };
-    const unsigned phase = action->age % 90u;
+    const float source_frame = game_smash64_pikachu_jolt_source_frame(
+        action->surface_anim_age);
+    const unsigned phase = (unsigned)source_frame;
     const float unit = output_scale > 0.0f ? output_scale : 1.0f;
     const float tangent_x = (float)action->vx;
     const float tangent_y = -(float)action->vy;
@@ -233,7 +236,7 @@ static void draw_pikachu_jolt_rig(const Smash64ActionSlot *action,
      * as a single static speck instead of an articulated slinky. */
     const float source_to_screen = 16.0f / 383.0f;
     const float root_shift = (-390.0f + 990.0f *
-                              (float)(phase % 9u) / 8.0f) *
+                              source_frame / 8.0f) *
                              source_to_screen * unit;
     const float card_half_width = 117.0f * 1.5f * source_to_screen * unit;
     const float card_half_height = 218.0f * 1.5f * source_to_screen * unit;

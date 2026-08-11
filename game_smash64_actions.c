@@ -13,7 +13,10 @@ static ForeignActionFeedback s_feedback_pending;
 #define SMASH64_ACTION_SAVE_SURFACE_SHIFT 28u
 #define SMASH64_ACTION_SAVE_SURFACE_MASK  (7u << SMASH64_ACTION_SAVE_SURFACE_SHIFT)
 #define SMASH64_ACTION_SAVE_CONSUMED      0x80000000u
-#define SMASH64_ACTION_SAVE_FLAGS_MASK    0x0FFFFFFFu
+#define SMASH64_ACTION_SAVE_SURFACE_ANIM_SHIFT 24u
+#define SMASH64_ACTION_SAVE_SURFACE_ANIM_MASK  (0xFu << SMASH64_ACTION_SAVE_SURFACE_ANIM_SHIFT)
+#define SMASH64_ACTION_SAVE_FLAGS_MASK    0x00FFFFFFu
+#define SMASH64_ACTION_SURFACE_ANIM_TICKS 15u
 
 static int overlap(double a0, double a1, double b0, double b1)
 {
@@ -99,6 +102,27 @@ static uint32_t surface_normal_from_xy(double x, double y)
     if (y > 0.0) return SMASH64_ACTION_SURFACE_DOWN;
     if (y < 0.0) return SMASH64_ACTION_SURFACE_UP;
     return SMASH64_ACTION_SURFACE_NONE;
+}
+
+static void action_set_surface_normal(Smash64ActionSlot *action,
+                                      uint32_t normal)
+{
+    if (action->surface_normal == normal) return;
+    action->surface_normal = normal;
+    /* wpPikachuThunderJoltGroundAddAnim reattaches its AnimJoint at every
+     * floor/wall segment, so its independent 0.5-frame source clock begins
+     * at zero on every concave or convex turn. */
+    action->surface_anim_age = 0u;
+}
+
+static void action_advance_surface_anim(Smash64ActionSlot *action)
+{
+    if (!(action->flags & FOREIGN_ACTION_FOLLOW_SURFACES) ||
+        action->surface_normal == SMASH64_ACTION_SURFACE_NONE)
+        return;
+    action->surface_anim_age++;
+    if (action->surface_anim_age >= SMASH64_ACTION_SURFACE_ANIM_TICKS)
+        action->surface_anim_age = 0u;
 }
 
 static int action_has_support(const Smash64ActionHost *host,
@@ -341,6 +365,7 @@ void smash64_actions_step(const Smash64ActionHost *host)
         /* Spawn frame is observable at the authored origin. Movement starts
          * on the following host tick. */
         if (a->age++ == 0) continue;
+        action_advance_surface_anim(a);
         steps = (int)ceil(fmax(fabs(a->vx), fabs(a->vy)));
         if (steps < 1) steps = 1;
         step_x = a->vx / (double)steps;
@@ -365,8 +390,8 @@ void smash64_actions_step(const Smash64ActionHost *host)
                     const double speed = hypot(a->vx, a->vy);
                     surface_normal_xy(a->surface_normal,
                                       &normal_x, &normal_y);
-                    a->surface_normal =
-                        surface_normal_from_xy(tangent_x, tangent_y);
+                    action_set_surface_normal(
+                        a, surface_normal_from_xy(tangent_x, tangent_y));
                     a->vx = -normal_x * speed;
                     a->vy = -normal_y * speed;
                     feedback(a->instance_id,
@@ -401,8 +426,8 @@ void smash64_actions_step(const Smash64ActionHost *host)
                                       &normal_x, &normal_y);
                     a->vx = normal_x * speed;
                     a->vy = normal_y * speed;
-                    a->surface_normal =
-                        surface_normal_from_xy(-tangent_x, -tangent_y);
+                    action_set_surface_normal(
+                        a, surface_normal_from_xy(-tangent_x, -tangent_y));
                     /* Smash 64 Thunder Jolt owns floor and left/right wall
                      * line states, but no ceiling line state. Reaching the
                      * unsupported bottom of a floating wall must expire
@@ -465,15 +490,15 @@ void smash64_actions_step(const Smash64ActionHost *host)
             const int blocked_y =
                 action_solid(host, a, nx, ny + step_y);
             if (blocked_y && !blocked_x) {
-                a->surface_normal = step_y > 0.0
-                    ? SMASH64_ACTION_SURFACE_DOWN
-                    : SMASH64_ACTION_SURFACE_UP;
+                action_set_surface_normal(
+                    a, step_y > 0.0 ? SMASH64_ACTION_SURFACE_DOWN
+                                    : SMASH64_ACTION_SURFACE_UP);
                 a->vy = 0.0;
                 a->vx = (a->vx < 0.0 ? -1.0 : 1.0) * speed;
             } else if (blocked_x || step_x != 0.0) {
-                a->surface_normal = step_x > 0.0
-                    ? SMASH64_ACTION_SURFACE_RIGHT
-                    : SMASH64_ACTION_SURFACE_LEFT;
+                action_set_surface_normal(
+                    a, step_x > 0.0 ? SMASH64_ACTION_SURFACE_RIGHT
+                                    : SMASH64_ACTION_SURFACE_LEFT);
                 a->vx = 0.0;
                 a->vy = (a->vy != 0.0 ? (a->vy < 0.0 ? -1.0 : 1.0)
                                       : -1.0) * speed;
@@ -528,6 +553,7 @@ int smash64_actions_restore(const Smash64ActionSave *saved)
     for (i = 0; i < SMASH64_ACTION_SLOT_CAPACITY; ++i) {
         const Smash64ActionSlot *a = &saved->slots[i];
         if (a->active > 1 || a->age > a->lifetime ||
+            a->surface_anim_age >= SMASH64_ACTION_SURFACE_ANIM_TICKS ||
             !isfinite(a->x) || !isfinite(a->y) ||
             !isfinite(a->vx) || !isfinite(a->vy) ||
             !isfinite(a->surface_speed) ||
@@ -542,7 +568,8 @@ int smash64_actions_restore(const Smash64ActionSave *saved)
             a->lifetime > SMASH64_ACTION_MAX_LIFETIME ||
             a->surface_normal > SMASH64_ACTION_SURFACE_LEFT ||
             (!(a->flags & FOREIGN_ACTION_FOLLOW_SURFACES) &&
-             a->surface_normal != SMASH64_ACTION_SURFACE_NONE) ||
+             (a->surface_normal != SMASH64_ACTION_SURFACE_NONE ||
+              a->surface_anim_age != 0u)) ||
             (a->active && a->lifetime == 0))
             return 0;
     }
@@ -606,7 +633,7 @@ int smash64_actions_serialize(uint8_t *buf, int capacity)
     if (!buf || capacity < required || required > SMASH64_ACTION_SERIALIZED_MAX)
         return -1;
 
-    buf[0] = 4;
+    buf[0] = 5;
     buf[1] = (uint8_t)active_count;
     buf[2] = (uint8_t)s_feedback_pending.count;
     buf[3] = 0;
@@ -620,6 +647,9 @@ int smash64_actions_serialize(uint8_t *buf, int capacity)
         compact_put_u32(&cursor, a->kind);
         compact_put_u32(&cursor,
                         (a->flags & SMASH64_ACTION_SAVE_FLAGS_MASK) |
+                        ((a->surface_anim_age <<
+                          SMASH64_ACTION_SAVE_SURFACE_ANIM_SHIFT) &
+                         SMASH64_ACTION_SAVE_SURFACE_ANIM_MASK) |
                         ((a->surface_normal <<
                           SMASH64_ACTION_SAVE_SURFACE_SHIFT) &
                          SMASH64_ACTION_SAVE_SURFACE_MASK) |
@@ -654,7 +684,7 @@ int smash64_actions_deserialize(const uint8_t *buf, int length)
     uint32_t active_count, feedback_count, i;
     int required;
 
-    if (!buf || length < 4 || (buf[0] != 3 && buf[0] != 4) ||
+    if (!buf || length < 4 || (buf[0] != 3 && buf[0] != 4 && buf[0] != 5) ||
         buf[3] != 0)
         return 0;
     active_count = buf[1];
@@ -675,7 +705,7 @@ int smash64_actions_deserialize(const uint8_t *buf, int length)
         a->active = 1;
         a->instance_id = compact_get_u32(&cursor);
         a->kind = compact_get_u32(&cursor);
-        if (buf[0] == 4) {
+        if (buf[0] == 4 || buf[0] == 5) {
             const uint32_t packed = compact_get_u32(&cursor);
             a->flags = packed & SMASH64_ACTION_SAVE_FLAGS_MASK;
             a->surface_normal =
@@ -684,6 +714,10 @@ int smash64_actions_deserialize(const uint8_t *buf, int length)
             a->target_consumed =
                 (packed & SMASH64_ACTION_SAVE_CONSUMED) != 0;
             a->source_joint = compact_get_u32(&cursor);
+            if (buf[0] == 5)
+                a->surface_anim_age =
+                    (packed & SMASH64_ACTION_SAVE_SURFACE_ANIM_MASK) >>
+                    SMASH64_ACTION_SAVE_SURFACE_ANIM_SHIFT;
         } else {
             a->flags = compact_get_u32(&cursor);
             a->surface_normal = compact_get_u32(&cursor);
@@ -694,7 +728,7 @@ int smash64_actions_deserialize(const uint8_t *buf, int length)
         a->vy = compact_get_f32(&cursor);
         a->width = compact_get_f32(&cursor);
         a->height = compact_get_f32(&cursor);
-        if (buf[0] == 4)
+        if (buf[0] == 4 || buf[0] == 5)
             a->surface_speed = compact_get_f32(&cursor);
         damage_bits = compact_get_u32(&cursor);
         memcpy(&damage, &damage_bits, sizeof(damage));
@@ -705,6 +739,8 @@ int smash64_actions_deserialize(const uint8_t *buf, int length)
             a->target_consumed = compact_get_u32(&cursor);
             a->surface_speed = hypot(a->vx, a->vy);
         }
+        if (buf[0] != 5 && (a->flags & FOREIGN_ACTION_FOLLOW_SURFACES))
+            a->surface_anim_age = a->age % SMASH64_ACTION_SURFACE_ANIM_TICKS;
     }
     saved.feedback_pending.count = feedback_count;
     for (i = 0; i < feedback_count; ++i) {

@@ -5,11 +5,12 @@
 #include <stdint.h>
 
 #define SMASH64_ACTION_SLOT_CAPACITY 8
-/* Version 4 compact record: 4-byte header, eight 56-byte active slots, and
+/* Version 5 compact record: 4-byte header, eight 56-byte active slots, and
  * four 8-byte feedback events. This stays below the mod hook's 512-byte
- * payload ceiling without enlarging that engine-wide safety bound. Version 3
- * records remain readable and migrate with no source-joint identity and their
- * current velocity magnitude as the conservative attached speed. */
+ * payload ceiling without enlarging that engine-wide safety bound. Version 4
+ * records remain readable; their missing surface animation clock is migrated
+ * from action age. Version 3 also has no source-joint identity and derives
+ * its conservative attached speed from current velocity magnitude. */
 #define SMASH64_ACTION_SERIALIZED_MAX 484
 
 typedef enum Smash64ActionSurfaceNormal {
@@ -36,6 +37,9 @@ typedef struct Smash64ActionSlot {
     double height;
     int32_t damage;
     uint32_t age;
+    /* Ground Jolt animation is a 0.5-source-frame host clock. It restarts at
+     * every attached segment/turn, independently of action lifetime. */
+    uint32_t surface_anim_age;
     uint32_t lifetime;
     uint32_t target_consumed;
 } Smash64ActionSlot;
