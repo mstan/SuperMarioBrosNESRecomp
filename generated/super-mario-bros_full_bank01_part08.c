@@ -7796,7 +7796,7 @@ void func_EEE7(void) { /* SwimKickTileNum */
 label_EEE7:; /* SwimKickTileNum */
     /* $EEE7: 31 */ nes_instruction_boundary(0xEEE7, 5); g_cpu.A &= nes_read((nes_read16zp(0x46) + g_cpu.Y) & 0xFFFF); FLAG_NZ(g_cpu.A);
 label_EEE9:; /* PlayerGfxHandler */
-    /* $EEE9: AD */ nes_instruction_boundary(0xEEE9, 4); g_cpu.A = nes_read(0x079E); FLAG_NZ(g_cpu.A);
+    /* $EEE9: AD */ nes_instruction_boundary(0xEEE9, 4); g_cpu.A = nes_read_hooked(0xEEE9, 0x079E); FLAG_NZ(g_cpu.A);
 label_EEEC:;
     /* $EEEC: F0 */ nes_instruction_boundary(0xEEEC, 2); if (g_cpu.Z) { maybe_trigger_vblank(1); goto label_EEF3; }
 label_EEEE:;

@@ -1,0 +1,77 @@
+LOG pikachu-quick-attack-intangibility-qa
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 30
+
+# Stable 1-1 spawn fixture used by the existing direct Falcon/Pikachu QAs.
+ASSERT_RAM8 006D 00
+ASSERT_RAM8 0086 28
+ASSERT_RAM8 00B5 01
+ASSERT_RAM8 00CE B0
+ASSERT_RAM8 0754 01
+SAVE_STATE C:/temp/pikachu_quick_intangibility_base.sav
+
+# Native control: a Goomba in slot 0 at exactly the small player's root takes
+# the ordinary side-contact injury path. This proves that the fixture overlaps.
+WRITE_RAM8 000F 01
+WRITE_RAM8 0016 06
+WRITE_RAM8 001E 00
+WRITE_RAM8 0058 00
+WRITE_RAM8 006E 00
+WRITE_RAM8 0087 28
+WRITE_RAM8 00B6 01
+WRITE_RAM8 00CF B0
+WRITE_RAM8 03D1 00
+WAIT_RAM8 000E 0B
+ASSERT_RAM8 0754 01
+
+# Enter Quick Attack Start before adding the identical overlapping Goomba.
+# START is source-intangible and must not kill/shrink Pikachu, begin injury, or
+# write the guest InjuryTimer; all other enemy processing remains native.
+LOAD_STATE C:/temp/pikachu_quick_intangibility_base.sav
+WAIT 2
+HOLD UP
+HOLD B
+WAIT 1
+WRITE_RAM8 000F 01
+WRITE_RAM8 0016 06
+WRITE_RAM8 001E 00
+WRITE_RAM8 0058 00
+WRITE_RAM8 006E 00
+WRITE_RAM8 0087 28
+WRITE_RAM8 00B6 01
+WRITE_RAM8 00CF B0
+WRITE_RAM8 03D1 00
+WAIT 4
+RELEASE B
+RELEASE UP
+ASSERT_RAM8 000E 08
+ASSERT_RAM8 0754 01
+ASSERT_RAM8 079E 00
+
+# ZIP is deliberately vulnerable. Aim upward without a target, then place the
+# same Goomba one 16px host burst above Pikachu immediately before launch. The
+# overlap must take the same native small-player death path as the first control.
+LOAD_STATE C:/temp/pikachu_quick_intangibility_base.sav
+WAIT 2
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 17
+WRITE_RAM8 000F 01
+WRITE_RAM8 0016 06
+WRITE_RAM8 001E 00
+WRITE_RAM8 0058 00
+WRITE_RAM8 006E 00
+WRITE_RAM8 0087 28
+WRITE_RAM8 00B6 01
+WRITE_RAM8 00CF A0
+WRITE_RAM8 03D1 00
+WAIT_RAM8 000E 0B
+ASSERT_RAM8 0754 01
+EXIT 0
