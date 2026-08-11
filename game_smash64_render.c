@@ -459,7 +459,7 @@ void game_smash64_render_post_render(uint32_t *framebuffer) {
     float x0, x1, y0, y1, z0, z1;
     NesVoxelMeshVertex a, b, c, d, e, f, g, h;
 
-    if (!framebuffer) return;
+    if (!framebuffer || !game_smash64_falcon_selected()) return;
     death_active = game_smash64_death_presentation_active();
     still_active = game_smash64_still_presentation_active();
     swim_active = game_smash64_swim_presentation_active();

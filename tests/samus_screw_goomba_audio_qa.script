@@ -1,0 +1,28 @@
+WAIT 120
+HOLD START
+WAIT 2
+RELEASE START
+WAIT 180
+
+# A defeated Goomba must produce one Metroid EnemyHit cue, not one cue per
+# overlapping Screw frame, and ShellOrBlockDefeat's SMB $08 smack must not
+# remain queued beneath it.
+WRITE_RAM8 013 01
+WRITE_RAM8 01A 06
+WRITE_RAM8 022 00
+WRITE_RAM8 05C 00
+WRITE_RAM8 072 00
+WRITE_RAM8 08B 2A
+WRITE_RAM8 0A4 00
+WRITE_RAM8 0BA 01
+WRITE_RAM8 0D3 B0
+HOLD RIGHT
+HOLD A
+WAIT 4
+RELEASE A
+RELEASE RIGHT
+WAIT 4
+ASSERT_RAM8 022 22 screw_defeats_goomba
+DUMP_RAM 0FF 01
+WAIT 120
+EXIT 0

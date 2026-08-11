@@ -1,0 +1,75 @@
+LOG samus-block-slot-vram-qa-world-1-2
+WAIT 60
+WRITE_RAM8 075F 00
+WRITE_RAM8 075C 01
+WRITE_RAM8 0760 01
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 120
+
+# At the native 1-2 entrance Samus is at world X=$28, Y=$B0. Put one
+# breakable metatile at column 3 / Y=$A0 ($0583), six missile frames above
+# her cannon. Keep both of SMB's asynchronous block-object slots live while
+# the missile crosses it. The target must remain intact: reusing either slot
+# would replace its saved VRAM address mid-animation.
+WRITE_RAM8 0583 52
+HOLD SELECT
+WAIT 2
+RELEASE SELECT
+WAIT 2
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+WRITE_RAM8 0026 01
+WRITE_RAM8 0027 01
+WAIT 1
+WRITE_RAM8 0026 01
+WRITE_RAM8 0027 01
+WAIT 1
+WRITE_RAM8 0026 01
+WRITE_RAM8 0027 01
+WAIT 1
+WRITE_RAM8 0026 01
+WRITE_RAM8 0027 01
+WAIT 1
+WRITE_RAM8 0026 01
+WRITE_RAM8 0027 01
+WAIT 1
+WRITE_RAM8 0026 01
+WRITE_RAM8 0027 01
+WAIT 1
+WRITE_RAM8 0026 01
+WRITE_RAM8 0027 01
+WAIT 1
+WRITE_RAM8 0026 01
+WRITE_RAM8 0027 01
+WAIT 1
+WRITE_RAM8 0026 01
+WRITE_RAM8 0027 01
+WAIT 1
+WRITE_RAM8 0026 01
+WRITE_RAM8 0027 01
+WAIT 1
+ASSERT_RAM8 0583 52 busy_slots_preserve_target_and_vram_address
+
+# Once the live slots drain, the same missile contact must still perform one
+# ordinary native brick shatter. This also pins the one-block missile limit.
+WRITE_RAM8 0026 00
+WRITE_RAM8 0027 00
+WRITE_RAM8 03EC 00
+WRITE_RAM8 03ED 00
+WAIT 90
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 12
+RELEASE UP
+ASSERT_RAM8 0583 00 free_slot_allows_one_native_shatter
+ASSERT_RAM8 0582 00 adjacent_cell_unchanged
+ASSERT_RAM8 0584 00 adjacent_cell_unchanged
+SCREENSHOT F:/Projects/nesrecomp/_wt-samus-smb/build_samus/qa-samus-block-slot-vram.png
+WAIT 2
+EXIT 0

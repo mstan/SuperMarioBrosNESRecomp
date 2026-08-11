@@ -33,6 +33,7 @@
 #include "game_smash64_fighter_profile.h"
 
 #include "mods/smash64/characters/pikachu.h"
+#include "mods/metroid/samus_controller.h"
 
 #include "foreign_controller.h"
 #include "mod_function_hooks.h"
@@ -361,6 +362,12 @@ static void game_smash64_sync_persistent_audio(void)
 }
 
 static uint8_t  s_prev_buttons = 0;
+
+static int samus_selected(void)
+{
+    return s_selected &&
+           strcmp(s_controller_id, METROID_SAMUS_CONTROLLER_ID) == 0;
+}
 /* NES keyboard/controller events can place B one VBlank ahead of the d-pad
  * direction the player intended to press with it. Defer only a directionless
  * B edge for one frame; simultaneous and direction-first specials remain
@@ -563,6 +570,7 @@ static void game_smash64_request_savestate_reseed(void)
  */
 static uint8_t block_adder_index(void)
 {
+    if (samus_selected() && metroid_samus_is_morphed()) return 0x0e;
     return s_profile ? s_profile->block_adder_index : 0x00;
 }
 
@@ -836,7 +844,7 @@ static ForeignOwnership decide_ownership(void)
      * found no other absolute store), so gating the whole level is exact,
      * not an approximation.
      */
-    if (g_ram[SwimmingFlag])
+    if (g_ram[SwimmingFlag] && !samus_selected())
         return FOREIGN_OWNERSHIP_SCRIPTED;
 
     /*
@@ -882,6 +890,19 @@ static void sample_input(ForeignInput *out)
     /* Opposing directions cancel, matching how the pad is read. */
     out->stick_x = (float)((right ? 1 : 0) - (left ? 1 : 0));
     out->stick_y = (float)((up ? 1 : 0) - (down ? 1 : 0));
+
+    if (samus_selected()) {
+        /* NES Metroid mapping: A jumps, B fires/lays a bomb, Select changes
+         * beam/missile mode in the Samus gameplay layer. */
+        out->jump_pressed = (pressed & PAD_A) != 0;
+        out->jump_held = (b & PAD_A) != 0;
+        out->attack_pressed = (pressed & PAD_B) != 0;
+        out->down_pressed = (pressed & PAD_DOWN) != 0;
+        out->raw_buttons = b;
+        s_special_grace_pending = 0;
+        s_prev_buttons = b;
+        return;
+    }
 
     /* Smash's primary attack and special are distinct inputs. On the NES pad,
      * A is the primary attack and B is the special. Jump remains available
@@ -1003,6 +1024,7 @@ void game_smash64_update_input(uint64_t frame_count)
     ForeignCollisionResult hit;
     ForeignState *fs;
     int wall;
+    int samus_was_morphed;
 
     s_frame = frame_count;
     s_friction_ran = 0;
@@ -1070,6 +1092,7 @@ void game_smash64_update_input(uint64_t frame_count)
     }
 
     fs = nes_foreign_state();
+    samus_was_morphed = samus_selected() && metroid_samus_is_morphed();
     if (fs) {
         /*
          * SMB1 is the authority on standing on ground, and on how we left it.
@@ -1128,6 +1151,14 @@ void game_smash64_update_input(uint64_t frame_count)
     s_coupled_motion_valid = 0;
     if (nes_foreign_tick(frame_count, &fin, &move)) {
         adapt_coupled_burst_to_host(&move, fs);
+        if (samus_was_morphed && !metroid_samus_is_morphed() &&
+            g_ram[Player_Y_HighPos] == 1 &&
+            smb1_solid_at(g_ram[Player_Y_Position], 0, 1)) {
+            /* Morph Ball may not expand into a 16px tunnel. The controller
+             * asks; SMB's own block buffer remains the authority. */
+            metroid_samus_force_morph();
+            if (fs) move.state = fs->state;
+        }
         game_smash64_audio_play_events(&move.audio, frame_count);
         s_attack = move.attack;
         {
@@ -2096,6 +2127,12 @@ static void apply_pending_actions(void)
     game_smash64_sync_persistent_audio();
 }
 
+int game_smash64_defeat_enemies(double left, double right,
+                                double top, double bottom, int max_hits)
+{
+    return defeat_enemies_in_attack(left, right, top, bottom, max_hits);
+}
+
 static int break_smb1_brick(int world_col, int tile_top)
 {
     CPU6502State save_cpu = g_cpu;
@@ -2112,6 +2149,7 @@ static int break_smb1_brick(int world_col, int tile_top)
     uint16_t base;
     uint16_t addr;
     uint8_t tile;
+    int block_slot;
     int broke;
 
     if (world_col < 0 || anchor_x < 0 ||
@@ -2122,6 +2160,23 @@ static int break_smb1_brick(int world_col, int tile_top)
     /* $51/$52 are the ordinary breakable bricks. Question, coin, invisible,
      * scenery, pipe, and castle metatiles never enter the native shatter path. */
     if (tile != 0x51 && tile != 0x52) return 0;
+
+    /* PlayerHeadCollision does not allocate a block object: it trusts
+     * SprDataOffset_Ctrl and overwrites that slot before toggling to the
+     * other one. Native Mario reaches this path slowly enough for the two
+     * asynchronous slots to drain. Foreign attacks can overlap fresh bricks
+     * on consecutive frames, so never replace a slot whose debris or deferred
+     * metatile update is still live. Overwriting its saved row/pointer makes
+     * BlockObjMT_Updater emit a malformed VRAM command later. */
+    block_slot = g_ram[SprDataOffset_Ctrl] & 1;
+    if (g_ram[Block_State + block_slot] ||
+        g_ram[Block_RepFlag + block_slot]) {
+        block_slot ^= 1;
+        if (g_ram[Block_State + block_slot] ||
+            g_ram[Block_RepFlag + block_slot])
+            return 0;
+        g_ram[SprDataOffset_Ctrl] = (uint8_t)block_slot;
+    }
 
     memcpy(save_scratch, &g_ram[0x00], sizeof save_scratch);
     g_ram[0x02] = (uint8_t)row;
@@ -2164,7 +2219,8 @@ static int break_smb1_brick(int world_col, int tile_top)
 }
 
 static int break_bricks_in_attack(double left, double right,
-                                  double top, double bottom)
+                                  double top, double bottom,
+                                  int max_blocks)
 {
     int first_col = (int)(left / 16.0);
     int last_col = (int)((right - 0.001) / 16.0);
@@ -2172,17 +2228,30 @@ static int break_bricks_in_attack(double left, double right,
     int last_row = (int)((bottom - 0.001) / 16.0);
     int broken = 0;
 
+    if (max_blocks < 1) return 0;
+    if (max_blocks > 2) max_blocks = 2;
+
     for (int row = first_row; row <= last_row; ++row) {
         int tile_top = row * 16;
         for (int col = first_col; col <= last_col; ++col) {
             broken += break_smb1_brick(col, tile_top);
-            /* SMB1 has exactly two block-object slots. Do not overwrite one
-             * before BlockObjMT_Updater consumes it later this frame; an
-             * active multi-frame attack can take the next pair next frame. */
-            if (broken >= 2) return broken;
+            if (broken >= max_blocks) return broken;
         }
     }
     return broken;
+}
+
+int game_smash64_break_bricks(double left, double right,
+                              double top, double bottom)
+{
+    return break_bricks_in_attack(left, right, top, bottom, 2);
+}
+
+int game_smash64_break_bricks_limited(double left, double right,
+                                      double top, double bottom,
+                                      int max_blocks)
+{
+    return break_bricks_in_attack(left, right, top, bottom, max_blocks);
 }
 
 static void apply_pending_attack(void)
@@ -2212,7 +2281,7 @@ static void apply_pending_attack(void)
         (s_attack.flags & FOREIGN_ATTACK_CONTACT_ONLY) ? 1 : 0);
     if (!(s_attack.flags & FOREIGN_ATTACK_CONTACT_ONLY) &&
         (s_attack.flags & FOREIGN_ATTACK_BREAK_BLOCKS))
-        blocks = break_bricks_in_attack(left, right, top, bottom);
+        blocks = break_bricks_in_attack(left, right, top, bottom, 2);
     if (enemies) nes_foreign_trace_note_flags(SMASH64_CF_ENEMY_DEFEATED);
     if (blocks) nes_foreign_trace_note_flags(SMASH64_CF_BLOCK_BROKEN);
     if (enemies || blocks) {
@@ -2280,6 +2349,19 @@ static int jumpsquat_hook(uint16_t addr)
     fs = nes_foreign_state();
     if (!fs) return 0;
 
+    if (samus_selected()) {
+        /* Both face buttons belong to Samus. Her controller publishes a
+         * one-frame LAUNCH handshake, so SMB receives A only on that frame;
+         * B never leaks into run/fireball handling. */
+        g_ram[A_B_Buttons] &=
+            (uint8_t)~(SMB1_A_BUTTON_BIT | SMB1_B_BUTTON_BIT);
+        if (fs->jump_phase == FOREIGN_JUMP_LAUNCH) {
+            g_ram[A_B_Buttons] |= SMB1_A_BUTTON_BIT;
+            s_launch_frames++;
+        }
+        return 0;
+    }
+
     /* B belongs to Falcon combat while the foreign controller owns the
      * player. Mask it before SMB1's run-speed and fireball readers, then apply
      * the attack once in the guest's own execution context. */
@@ -2339,8 +2421,11 @@ static int bounding_box_core_hook(uint16_t addr)
 {
     (void)addr;
     if (g_cpu.X == 0 && g_cpu.Y == 0 &&
-        decide_ownership() == FOREIGN_OWNERSHIP_FOREIGN && s_profile)
+        decide_ownership() == FOREIGN_OWNERSHIP_FOREIGN && s_profile) {
         g_ram[Player_BoundBoxCtrl] = s_profile->player_bbox_ctrl;
+        if (samus_selected() && metroid_samus_is_morphed())
+            g_ram[Player_BoundBoxCtrl] = 1;
+    }
     return 0;
 }
 
@@ -2369,6 +2454,14 @@ uint8_t game_smash64_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val)
      * one tile too low. The earlier consequence reads in PlayerHeadCollision
      * remain native, so small Falcon still bumps a brick instead of shattering
      * it. */
+    if (samus_selected() && metroid_samus_is_morphed()) {
+        if (addr == CrouchingFlag &&
+            (pc == 0xDC9A || pc == 0xDCB4 || pc == 0xBD57))
+            return 1;
+        if (addr == PlayerSize &&
+            (pc == 0xDC9F || pc == 0xDCB1 || pc == 0xBD5C))
+            return 1;
+    }
     if (!s_profile) return val;
     if (addr == CrouchingFlag &&
         (pc == 0xDC9A || pc == 0xDCB4 || pc == 0xBD57))
@@ -2850,7 +2943,8 @@ int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
                 "contact bounds may follow hidden Mario size\n");
     }
     s_enabled = 1;
-    if (!game_smash64_audio_set_enabled(1)) {
+    if (samus_selected()) game_smash64_audio_set_enabled(0);
+    if (!samus_selected() && !game_smash64_audio_set_enabled(1)) {
         game_smash64_set_mod_enabled(0, NULL);
         return 0;
     }
@@ -2861,6 +2955,16 @@ int game_smash64_active(void)
 {
     return s_enabled && s_selected &&
            nes_foreign_ownership() == FOREIGN_OWNERSHIP_FOREIGN;
+}
+
+int game_smash64_falcon_selected(void)
+{
+    return s_enabled && s_selected && !samus_selected();
+}
+
+int game_smash64_samus_selected(void)
+{
+    return s_enabled && samus_selected();
 }
 
 int game_smash64_death_presentation_active(void)
@@ -2921,8 +3025,12 @@ void game_smash64_init(void)
                ctl && ctl->name ? ctl->name : "?", s_controller_id);
     }
     /* ASCII only: the Windows console codepage mangles non-ASCII here. */
-    printf("[Smash64] Controls: A normal, B special, Up jump (4-frame "
-           "jumpsquat). SMB1 keeps all collision and scripted sequences.\n");
+    if (samus_selected())
+        printf("[Metroid] Controls: A jump, B fire/bomb, Select beam/missile, "
+               "Down morph. SMB1 keeps world collision and progression.\n");
+    else
+        printf("[Smash64] Controls: A normal, B special, Up jump (4-frame "
+               "jumpsquat). SMB1 keeps all collision and scripted sequences.\n");
     printf("[Smash64] Traces: TCP 'ftring', or NESRECOMP_FTRING_DUMP=<path>.\n");
 }
 
@@ -2935,7 +3043,7 @@ void game_smash64_update(uint64_t frame_count)
         const ForeignController *ctl = nes_foreign_active();
         const ForeignState *fs = nes_foreign_state();
         s_announced = 1;
-        printf("[Smash64] %s has the wheel (state %s, X_Speed %d = %.2f "
+        printf("[%s] Player replacement active (state %s, X_Speed %d = %.2f "
                "px/frame; Mario's own max run is 40 = 2.50)\n",
                s_profile && s_profile->display_name
                    ? s_profile->display_name : "Fighter",

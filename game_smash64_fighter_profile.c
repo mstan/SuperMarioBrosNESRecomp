@@ -2,6 +2,7 @@
 
 #include "mods/smash64/characters/captain_falcon.h"
 #include "mods/smash64/characters/pikachu.h"
+#include "mods/metroid/samus_controller.h"
 
 #include <math.h>
 #include <string.h>
@@ -148,9 +149,42 @@ static const Smash64FighterProfile kPikachuProfile = {
     pikachu_state_traits
 };
 
+static uint32_t samus_state_traits(unsigned state)
+{
+    switch (state) {
+    case METROID_SAMUS_STAND:
+    case METROID_SAMUS_RUN:
+    case METROID_SAMUS_JUMP:
+    case METROID_SAMUS_SPIN:
+    case METROID_SAMUS_MORPH:
+    case METROID_SAMUS_ROLL:
+    case METROID_SAMUS_HURT:
+        return SMASH64_STATE_TRAIT_STREAM_LIMIT;
+    default:
+        return SMASH64_STATE_TRAIT_NONE;
+    }
+}
+
+static const Smash64FighterProfile kSamusProfile = {
+    METROID_SAMUS_CONTROLLER_ID,
+    "Samus",
+    0x534D5553u, /* SMUS */
+    0.08,
+    40,
+    0x00,
+    0,
+    0,
+    0,
+    0x20,
+    0,
+    NULL,
+    samus_state_traits
+};
+
 static const Smash64FighterProfile *const kProfiles[] = {
     &kCaptainFalconProfile,
-    &kPikachuProfile
+    &kPikachuProfile,
+    &kSamusProfile
 };
 
 const Smash64FighterProfile *smash64_fighter_profile_find(

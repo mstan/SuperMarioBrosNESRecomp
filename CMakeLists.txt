@@ -28,11 +28,15 @@ add_executable(SuperMarioBrosRecomp
     game_smash64_audio.c
     game_smash64_assets.c
     game_smash64_render.c
+    game_samus.c
+    game_samus_audio.c
     mods/widescreen_plugin.c
     mods/voxel_plugin.c
     mods/smash64_player_plugin.c
+    mods/metroid_player_plugin.c
     mods/smash64_owner_assets.c
     mods/smash64/characters/captain_falcon.c
+    mods/metroid/samus_controller.c
     mods/smash64/ssb_ported/falcon_locomotion.c
     mods/smash64/characters/pikachu.c
     mods/smash64/ssb_ported/pikachu_locomotion.c

@@ -1210,6 +1210,7 @@ void func_E949(void) { /* DrawBowser */
 }
 
 void func_D92C(void) { /* InjurePlayer */
+    if (nes_mod_function_entry(0xD92Cu)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_D92C");
 #endif
@@ -7409,6 +7410,7 @@ label_D84C:; /* NoPUp */
 }
 
 void func_D800(void) { /* HandlePowerUpCollision */
+    if (nes_mod_function_entry(0xD800u)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_D800");
 #endif

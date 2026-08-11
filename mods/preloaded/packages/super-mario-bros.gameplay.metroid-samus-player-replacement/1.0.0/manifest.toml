@@ -1,0 +1,35 @@
+format_version = 1
+id = "super-mario-bros.gameplay.metroid-samus-player-replacement"
+version = "1.0.0"
+name = "Metroid Samus Player Replacement"
+author = "NESRecomp contributors"
+description = "Play Super Mario Bros. as faithful NES Metroid Samus with her complete loadout. The stock SMB and Metroid ROMs are not modified or redistributed."
+license = "MIT (implementation only; owner-ROM assets remain Nintendo property)"
+resolver = "declarative"
+save_compatibility = "mod-specific"
+
+[[target]]
+game_id = "super-mario-bros-world"
+rom_crc32 = "d445f698"
+
+[[feature]]
+id = "metroid-samus-player"
+name = "Samus Player Replacement"
+description = "Replaces Mario with NES Metroid Samus: Metroid movement, 99 energy, bomb boosts, owner-ROM-backed sound effects, combined Long/Wave/Ice beam, infinite missiles and Screw Attack. Starman contact defeats enemies; SMB worlds, music and progression remain native."
+group = "Gameplay"
+exclusive_group = "player-controller"
+default_enabled = false
+
+[[external_rom]]
+feature = "metroid-samus-player"
+id = "metroid-us-prg0"
+label = "Metroid (USA PRG0 or Europe) ROM"
+description = "Select a legally owned canonical Metroid USA PRG0 or Europe NES ROM. Headered iNES and headerless PRG images are normalized before verification."
+format = "nes"
+identity = "Metroid (USA PRG0 / Europe)"
+size = 131072
+normalized_sha1 = ["fdbfc7871962f72a1ef57e5a7e456164fb93430b", "68a55eafcefa3014a4771cb7983d7db42f80456a"]
+
+[[plugin]]
+feature = "metroid-samus-player"
+id = "super-mario-bros.metroid.samus"
