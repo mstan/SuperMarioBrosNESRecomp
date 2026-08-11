@@ -19,16 +19,16 @@ import pikachu_owner
 
 
 FORMAT = "smb1-smash64-pikachu-owner-cache"
-RECIPE_VERSION = 11
+RECIPE_VERSION = 12
 RUNTIME_FILENAME = "pikachu_runtime.bin"
 # Source-derived runtime hashes are intentionally updated with the cache
 # recipe whenever the binary layout changes. These were regenerated from the
 # accepted US v1.0 owner ROM after the presentation-animation expansion.
 RUNTIME_HASHES = {
-    0: "e396d8d19cc17b470c03d33e528b3790465e63225d1e8a135cd2fd6b2e758734",
-    1: "4e51bb1943abc3b69ab44f231dd8e20557168abe4426c159e2adcf07adb4c84c",
-    2: "869cb1be48da28abad4a089f99ba27ad7a7f4b988d9e41caa651f143929d3d28",
-    3: "b5d5a20b9233ff9298a65e95be2ac900791d8f6b5843faf528ee0b687d83e1c3",
+    0: "08968239e0f76da15c47fbe6b457c17dd5df9b59c992f215f23f99c1dbb94d21",
+    1: "63b4075c1a6b41a8d4b28b130ead766bb0cde9a3e3bd4cc9746242328ad16c83",
+    2: "7d1c454b2b610bb40753e5a7eea02d6c5624ef14e60012856366a56c471d4cae",
+    3: "f4070de73114c4f5f06db04fabff06defc21a7e613c7b62850b5af3f5a62a05d",
 }
 
 

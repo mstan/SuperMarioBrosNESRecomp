@@ -23,7 +23,7 @@ import bake_falcon_runtime as common
 
 MAGIC = common.MAGIC
 VERSION = common.VERSION
-PIKACHU_RUNTIME_VERSION = 9
+PIKACHU_RUNTIME_VERSION = 10
 LOOPS = {"Idle", "Walk1", "Walk2", "Walk3", "Run", "CrouchIdle"}
 BODY_COLORS = (0xFFFFD933, 0xFFE8A828, 0xFFFFD933, 0xFFC8C828)
 ACCESSORY_COLORS = (0x00000000, 0xFFFF5B79, 0xFFFFFFFF, 0xFFB1FF24)
@@ -364,6 +364,26 @@ def effect_ia8_particle_env(raw: bytes, name: str) -> tuple[str, int, int, bytes
     return name, 64, 64, bytes(pixels)
 
 
+def effect_ia8_thunder_trail(raw: bytes, width: int, height: int,
+                             name: str) -> tuple[str, int, int, bytes]:
+    needed = width * height
+    if len(raw) < needed:
+        raise ValueError(f"invalid owner IA8 texture length for {name}")
+    pixels = bytearray()
+    for value in raw[:needed]:
+        intensity = (value >> 4) * 17
+        tex_alpha = (value & 0x0F) * 17
+        # ThunderTrailMObjSub uses white PRIM and yellow ENV (FF FF 66).
+        # Bake the same RGB lerp into the owner texture, while keeping IA's
+        # texture alpha as coverage.
+        red = 255
+        green = 255
+        blue = 102 + (153 * intensity + 127) // 255
+        pixels += struct.pack("<I", (tex_alpha << 24) | (red << 16) |
+                              (green << 8) | blue)
+    return name, width, height, bytes(pixels)
+
+
 def collect_effect_textures(root: Path) -> list[tuple[str, int, int, bytes]]:
     """Return source-owned Jolt, Thunder, Thunder Shock and ThunderAmp cards.
 
@@ -376,6 +396,7 @@ def collect_effect_textures(root: Path) -> list[tuple[str, int, int, bytes]]:
     effect_root = root / "effects"
     jolt = (effect_root / "PikachuSpecial3.bin").read_bytes()
     thunder = (effect_root / "PikachuSpecial2.bin").read_bytes()
+    texture_root = effect_root / "texture_storage"
     return [
         effect_ci4(jolt, 0x1C70, 0x1C98, "pikachu_jolt_0"),
         effect_ci4(jolt, 0x1C70, 0x1EA0, "pikachu_jolt_1"),
@@ -401,6 +422,22 @@ def collect_effect_textures(root: Path) -> list[tuple[str, int, int, bytes]]:
         effect_ia8_particle_env((effect_root / "texture_storage" /
                                  "efcommon_46_thunder_amp_2.ia8").read_bytes(),
                                 "pikachu_thunder_amp_2"),
+        # Thunder's falling bolt/trail is authored in the Pikachu model reloc
+        # (341), not in PikachuSpecial2's impact cards.  Keep it distinct so
+        # runtime presentation does not repeat the blue Thunder head card and
+        # call that a source trail.
+        effect_ia8_thunder_trail(
+            (texture_root / "341_8408_thunder_trail_0.bin").read_bytes(),
+            32, 32, "pikachu_thunder_trail_0"),
+        effect_ia8_thunder_trail(
+            (texture_root / "341_8810_thunder_trail_1.bin").read_bytes(),
+            32, 32, "pikachu_thunder_trail_1"),
+        effect_ia8_thunder_trail(
+            (texture_root / "341_8c18_thunder_trail_2.bin").read_bytes(),
+            32, 32, "pikachu_thunder_trail_2"),
+        effect_ia8_thunder_trail(
+            (texture_root / "341_9020_thunder_trail_3.bin").read_bytes(),
+            32, 32, "pikachu_thunder_trail_3"),
     ]
 
 

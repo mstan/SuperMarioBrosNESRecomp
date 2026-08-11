@@ -136,10 +136,12 @@ static void draw_cube_face(NesVoxelMeshVertex p0, NesVoxelMeshVertex p1,
     nes_voxel_mesh_triangle(p0, p2, p3);
 }
 
-static void draw_persistent_effect_card(unsigned effect, unsigned frame,
-                                        float center_x, float center_y,
-                                        float half_width, float half_height,
-                                        float rotation, float z)
+static void draw_persistent_effect_card_tinted(unsigned effect, unsigned frame,
+                                               float center_x, float center_y,
+                                               float half_width,
+                                               float half_height,
+                                               float rotation, float z,
+                                               uint32_t color_overlay)
 {
     const unsigned int *pixels;
     int texture_width, texture_height;
@@ -156,10 +158,11 @@ static void draw_persistent_effect_card(unsigned effect, unsigned frame,
         v[i] = mesh_vertex(center_x + x[i] * c - y[i] * s,
                            center_y + x[i] * s + y[i] * c, z);
     }
-    v[0].u = 0.0f;                 v[0].v = 0.0f;
-    v[1].u = (float)texture_width; v[1].v = 0.0f;
-    v[2].u = (float)texture_width; v[2].v = (float)texture_height;
-    v[3].u = 0.0f;                 v[3].v = (float)texture_height;
+    v[0].u = 0.0f;                 v[0].v = (float)texture_height;
+    v[1].u = (float)texture_width; v[1].v = (float)texture_height;
+    v[2].u = (float)texture_width; v[2].v = 0.0f;
+    v[3].u = 0.0f;                 v[3].v = 0.0f;
+    nes_voxel_mesh_set_color_overlay(color_overlay);
     nes_voxel_mesh_bind_texture(pixels, texture_width, texture_height,
                                 texture_width, 1.0f, 1);
     /* The source cards are submitted once to an XLU display list.  The host
@@ -168,6 +171,17 @@ static void draw_persistent_effect_card(unsigned effect, unsigned frame,
      * texture border read as a dark rectangle). */
     nes_voxel_mesh_triangle(v[0], v[1], v[2]);
     nes_voxel_mesh_triangle(v[0], v[2], v[3]);
+    nes_voxel_mesh_set_color_overlay(0u);
+}
+
+static void draw_persistent_effect_card(unsigned effect, unsigned frame,
+                                        float center_x, float center_y,
+                                        float half_width, float half_height,
+                                        float rotation, float z)
+{
+    draw_persistent_effect_card_tinted(effect, frame, center_x, center_y,
+                                       half_width, half_height, rotation, z,
+                                       0u);
 }
 
 static unsigned pikachu_jolt_material_frame(unsigned joint, unsigned phase)
@@ -260,6 +274,24 @@ static void draw_pikachu_jolt_rig(const Smash64ActionSlot *action,
     }
 }
 
+static void draw_pikachu_jolt_air_ball(const Smash64ActionSlot *action,
+                                       float center_x, float center_y,
+                                       float output_scale)
+{
+    const float unit = output_scale > 0.0f ? output_scale : 1.0f;
+    const unsigned phase = action->age % 9u;
+    const float pulse = (phase < 3u) ? 1.15f :
+                        (phase < 5u) ? 0.95f : 1.05f;
+    draw_persistent_effect_card(SMASH64_PIKACHU_EFFECT_THUNDER_JOLT,
+                                pikachu_jolt_material_frame(1u, phase),
+                                center_x, center_y,
+                                7.5f * pulse * unit,
+                                7.5f * pulse * unit,
+                                atan2f((float)action->vy,
+                                       (float)action->vx),
+                                3.0f * unit);
+}
+
 static void draw_pikachu_thunder_trail(const Smash64ActionSlot *action,
                                        float center_x, float center_y,
                                        float half_width, float half_height,
@@ -270,18 +302,15 @@ static void draw_pikachu_thunder_trail(const Smash64ActionSlot *action,
                                              0.45f * unit);
     unsigned i;
     for (i = 9u; i > 0u; --i) {
-        draw_persistent_effect_card(SMASH64_PIKACHU_EFFECT_THUNDER,
-                                    action->age + i,
-                                    center_x,
-                                    center_y + step_y * (float)i,
-                                    half_width * 0.65f,
-                                    half_height * 0.65f,
-                                    0.0f, 1.8f * unit);
+        draw_persistent_effect_card_tinted(
+            SMASH64_PIKACHU_EFFECT_THUNDER_TRAIL, action->age + i,
+            center_x, center_y + step_y * (float)i,
+            half_width * 0.65f, half_height * 0.65f,
+            0.0f, 1.8f * unit, 0u);
     }
-    draw_persistent_effect_card(SMASH64_PIKACHU_EFFECT_THUNDER,
-                                action->age, center_x, center_y,
-                                half_width, half_height,
-                                0.0f, 2.0f * unit);
+    draw_persistent_effect_card_tinted(
+        SMASH64_PIKACHU_EFFECT_THUNDER_TRAIL, action->age, center_x, center_y,
+        half_width, half_height, 0.0f, 2.0f * unit, 0u);
 }
 
 static void draw_persistent_actions(float output_scale)
@@ -323,6 +352,11 @@ static void draw_persistent_actions(float output_scale)
                     center_x = joint_x;
                     center_y = joint_y;
                 }
+            }
+            if (action->surface_normal == 0u) {
+                draw_pikachu_jolt_air_ball(action, center_x, center_y,
+                                           output_scale);
+                continue;
             }
             draw_pikachu_jolt_rig(action, center_x, center_y, output_scale);
             continue;

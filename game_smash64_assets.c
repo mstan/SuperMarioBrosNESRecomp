@@ -23,6 +23,7 @@
 #define SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V2 7u
 #define SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V3 8u
 #define SMASH64_BLOB_VERSION_PIKACHU_LANDING 9u
+#define SMASH64_BLOB_VERSION_PIKACHU_THUNDER_TRAIL 10u
 #define SMASH64_MAX_JOINTS 32u
 #define FALCON_JOINT_COUNT 26u
 #define FALCON_RENDER_HEIGHT 32.0f
@@ -57,10 +58,12 @@
 #define PIKACHU_EFFECT_TEXTURES_V1      5u
 #define PIKACHU_EFFECT_TEXTURES_V2      7u
 #define PIKACHU_EFFECT_TEXTURES         10u
+#define PIKACHU_EFFECT_TEXTURES_V4      14u
 #define PIKACHU_JOLT_EFFECT_TEXTURES    2u
 #define PIKACHU_THUNDER_EFFECT_TEXTURES 3u
 #define PIKACHU_THUNDER_SHOCK_TEXTURES  2u
 #define PIKACHU_THUNDER_AMP_TEXTURES    3u
+#define PIKACHU_THUNDER_TRAIL_TEXTURES  4u
 
 typedef struct FalconAssetJoint {
     int parent;
@@ -390,7 +393,8 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
         version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS &&
         version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V2 &&
         version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V3 &&
-        version != SMASH64_BLOB_VERSION_PIKACHU_LANDING)
+        version != SMASH64_BLOB_VERSION_PIKACHU_LANDING &&
+        version != SMASH64_BLOB_VERSION_PIKACHU_THUNDER_TRAIL)
         return 0;
 
     model->joint_count = read_u32(&reader);
@@ -438,6 +442,13 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
         ((version == SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V3 ||
           version == SMASH64_BLOB_VERSION_PIKACHU_LANDING) &&
          (model->punch_effect_texture_count != PIKACHU_EFFECT_TEXTURES ||
+          !range_is_safe(model->punch_effect_texture_first,
+                         model->punch_effect_texture_count,
+                         model->texture_count) ||
+          model->punch_effect_texture_first +
+                  model->punch_effect_texture_count != model->texture_count)) ||
+        (version == SMASH64_BLOB_VERSION_PIKACHU_THUNDER_TRAIL &&
+         (model->punch_effect_texture_count != PIKACHU_EFFECT_TEXTURES_V4 ||
           !range_is_safe(model->punch_effect_texture_first,
                          model->punch_effect_texture_count,
                          model->texture_count) ||
@@ -595,6 +606,14 @@ int game_smash64_assets_pikachu_effect_texture(
                  PIKACHU_THUNDER_EFFECT_TEXTURES +
                  PIKACHU_THUNDER_SHOCK_TEXTURES;
         count = PIKACHU_THUNDER_AMP_TEXTURES;
+    } else if (effect == SMASH64_PIKACHU_EFFECT_THUNDER_TRAIL) {
+        if (s_model.punch_effect_texture_count < PIKACHU_EFFECT_TEXTURES_V4)
+            return 0;
+        first += PIKACHU_JOLT_EFFECT_TEXTURES +
+                 PIKACHU_THUNDER_EFFECT_TEXTURES +
+                 PIKACHU_THUNDER_SHOCK_TEXTURES +
+                 PIKACHU_THUNDER_AMP_TEXTURES;
+        count = PIKACHU_THUNDER_TRAIL_TEXTURES;
     } else {
         return 0;
     }

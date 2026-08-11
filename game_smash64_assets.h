@@ -28,6 +28,8 @@ enum {
     SMASH64_PIKACHU_EFFECT_THUNDER_SHOCK = 2,
     /* Generic common-particle script 0x74's texture-46 card sequence. */
     SMASH64_PIKACHU_EFFECT_THUNDER_AMP = 3,
+    /* Yellow/white ThunderTrail cards from PikachuModel reloc 341. */
+    SMASH64_PIKACHU_EFFECT_THUNDER_TRAIL = 4,
 };
 int game_smash64_assets_pikachu_effect_texture(
     unsigned effect, unsigned frame, const unsigned int **pixels,

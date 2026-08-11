@@ -316,10 +316,10 @@ class PikachuOwnerRomIntegrationTests(unittest.TestCase):
 
     def test_runtime_baker_supports_hidden_costume_proof(self):
         expected = {
-            0: (671480, "e396d8d19cc17b470c03d33e528b3790465e63225d1e8a135cd2fd6b2e758734"),
-            1: (674172, "4e51bb1943abc3b69ab44f231dd8e20557168abe4426c159e2adcf07adb4c84c"),
-            2: (674172, "869cb1be48da28abad4a089f99ba27ad7a7f4b988d9e41caa651f143929d3d28"),
-            3: (674184, "b5d5a20b9233ff9298a65e95be2ac900791d8f6b5843faf528ee0b687d83e1c3"),
+            0: (687896, "08968239e0f76da15c47fbe6b457c17dd5df9b59c992f215f23f99c1dbb94d21"),
+            1: (690588, "63b4075c1a6b41a8d4b28b130ead766bb0cde9a3e3bd4cc9746242328ad16c83"),
+            2: (690588, "7d1c454b2b610bb40753e5a7eea02d6c5624ef14e60012856366a56c471d4cae"),
+            3: (690600, "f4070de73114c4f5f06db04fabff06defc21a7e613c7b62850b5af3f5a62a05d"),
         }
         with tempfile.TemporaryDirectory(prefix="pikachu-runtime-") as temporary:
             outputs = []
@@ -331,13 +331,13 @@ class PikachuOwnerRomIntegrationTests(unittest.TestCase):
                 magic, version, joints, triangles, textures, animations = \
                     struct.unpack_from("<8s5I", payload, 0)
                 self.assertEqual((magic, version, joints, animations),
-                                 (b"FLCN64B\0", 9, 27, 43))
+                                 (b"FLCN64B\0", 10, 27, 43))
                 self.assertEqual((len(payload), hashlib.sha256(payload).hexdigest()),
                                  expected[costume])
                 outputs.append((triangles, textures))
             self.assertEqual(outputs[0][0], 317)
             self.assertEqual([item[0] for item in outputs[1:]], [326, 326, 326])
-            self.assertEqual([item[1] for item in outputs], [16, 19, 19, 20])
+            self.assertEqual([item[1] for item in outputs], [20, 23, 23, 24])
 
     def test_audio_inventory_and_no_rom_leak(self):
         audio = json.loads((self.cache / "intermediate" / "audio" /
