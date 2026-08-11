@@ -1,0 +1,135 @@
+LOG pikachu-jump-aerial-parity-qa
+# Set NESRECOMP_FTRING_DUMP to retain the numeric movement oracle. Captures
+# are written to C:/temp so the repository stays clean.
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 30
+
+# Stable 1-1 spawn fixture. Remove all native enemies before saving so every
+# branch measures only Pikachu's authored movement and SMB terrain contacts.
+ASSERT_RAM8 006D 00
+ASSERT_RAM8 0086 28
+ASSERT_RAM8 00B5 01
+ASSERT_RAM8 00CE B0
+WRITE_RAM8 000F 00
+WRITE_RAM8 0010 00
+WRITE_RAM8 0011 00
+WRITE_RAM8 0012 00
+WRITE_RAM8 0013 00
+# Move the fixture far enough right that backward-jump drift remains visible.
+WRITE_RAM8 0086 40
+WAIT 2
+SAVE_STATE C:/temp/pikachu_jump_aerial_base.sav
+
+# Ordinary mapped stick-jump: three source KneeBend ticks, the full-strength
+# 90.6 launch, normal aerial drift and a light landing that retains horizontal
+# carry. The trace is the numeric oracle; screenshots make the authored
+# KneeBend/JumpF/LandingLight poses directly reviewable.
+HOLD RIGHT
+HOLD UP
+WAIT_FOREIGN_STATE KNEEBEND 1
+SCREENSHOT C:/temp/pikachu_jump_kneebend.png
+WAIT_FOREIGN_STATE JUMP_GROUND 0
+RELEASE UP
+WAIT_FOREIGN_STATE JUMP_GROUND 5
+SCREENSHOT C:/temp/pikachu_jump_ascent.png
+WAIT_FOREIGN_STATE JUMP_GROUND 30
+SCREENSHOT C:/temp/pikachu_jump_apex.png
+WAIT_FOREIGN_STATE AIR_FALL 0
+WRITE_RAM8 000F 00
+WRITE_RAM8 0010 00
+WRITE_RAM8 0011 00
+WRITE_RAM8 0012 00
+WRITE_RAM8 0013 00
+WAIT_FOREIGN_STATE LANDING
+SCREENSHOT C:/temp/pikachu_jump_light_landing.png
+WAIT 12
+RELEASE RIGHT
+
+# Equal-strength aerial jump: take the ordinary jump, then issue one fresh Up
+# edge in the air. Both paths set the same 90.6 source launch; the aerial
+# path's first public trace row is 87.6 after source-ordered gravity. After
+# JumpAerialF's authored 60 ticks presentation must become FallAerial.
+LOAD_STATE C:/temp/pikachu_jump_aerial_base.sav
+WAIT 2
+HOLD UP
+WAIT_FOREIGN_STATE KNEEBEND 1
+WAIT_FOREIGN_STATE JUMP_GROUND 0
+RELEASE UP
+WAIT_FOREIGN_STATE JUMP_GROUND 4
+SCREENSHOT C:/temp/pikachu_double_before.png
+HOLD UP
+WAIT_FOREIGN_STATE JUMP_AERIAL 0
+RELEASE UP
+SCREENSHOT C:/temp/pikachu_double_launch.png
+WAIT_FOREIGN_STATE JUMP_AERIAL 30
+SCREENSHOT C:/temp/pikachu_double_apex.png
+WAIT_FOREIGN_STATE AIR_FALL_AERIAL 0
+SCREENSHOT C:/temp/pikachu_fall_aerial.png
+WRITE_RAM8 000F 00
+WRITE_RAM8 0010 00
+WRITE_RAM8 0011 00
+WRITE_RAM8 0012 00
+WRITE_RAM8 0013 00
+WAIT_FOREIGN_STATE LANDING
+SCREENSHOT C:/temp/pikachu_double_light_landing.png
+WAIT 12
+
+# Backward jump and midair drift must not turn logical facing. Starting from
+# right-facing Wait, Left chooses JumpB; changing the held direction bends X
+# velocity through common air acceleration while Pikachu keeps facing right.
+LOAD_STATE C:/temp/pikachu_jump_aerial_base.sav
+WAIT 2
+HOLD LEFT
+HOLD UP
+WAIT_FOREIGN_STATE KNEEBEND 1
+WAIT_FOREIGN_STATE JUMP_GROUND_B 0
+RELEASE UP
+WAIT_FOREIGN_STATE JUMP_GROUND_B 8
+SCREENSHOT C:/temp/pikachu_jump_back_left_drift.png
+RELEASE LEFT
+HOLD RIGHT
+WAIT_FOREIGN_STATE JUMP_GROUND_B 24
+SCREENSHOT C:/temp/pikachu_jump_back_right_drift.png
+RELEASE RIGHT
+WAIT_FOREIGN_STATE AIR_FALL 0
+WRITE_RAM8 000F 00
+WRITE_RAM8 0010 00
+WRITE_RAM8 0011 00
+WRITE_RAM8 0012 00
+WRITE_RAM8 0013 00
+WAIT_FOREIGN_STATE LANDING
+WAIT 12
+
+# Buffered fast-fall: press Down just before the apex and let the source
+# tap-age buffer trigger only once vertical velocity becomes negative.
+# Keep horizontal carry through the -83 descent; heavy landing must transfer
+# that X velocity and decay it with traction instead of zeroing it.
+LOAD_STATE C:/temp/pikachu_jump_aerial_base.sav
+WAIT 2
+HOLD RIGHT
+HOLD UP
+WAIT_FOREIGN_STATE KNEEBEND 1
+WAIT_FOREIGN_STATE JUMP_GROUND 0
+RELEASE UP
+WAIT_FOREIGN_STATE JUMP_GROUND 29
+HOLD DOWN
+WAIT_FOREIGN_STATE JUMP_GROUND 32
+SCREENSHOT C:/temp/pikachu_fastfall_buffered.png
+WRITE_RAM8 000F 00
+WRITE_RAM8 0010 00
+WRITE_RAM8 0011 00
+WRITE_RAM8 0012 00
+WRITE_RAM8 0013 00
+WAIT_FOREIGN_STATE LANDING_HEAVY
+RELEASE DOWN
+RELEASE RIGHT
+SCREENSHOT C:/temp/pikachu_heavy_landing.png
+WAIT 18
+
+ASSERT_RAM8 000E 08
+ASSERT_RAM8 0754 01
+EXIT 0
