@@ -1,0 +1,61 @@
+LOG pikachu-smoke
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 100
+SCREENSHOT C:/temp/pikachu_idle.png
+
+# A remains the normal button.
+HOLD A
+WAIT 2
+RELEASE A
+WAIT 3
+SCREENSHOT C:/temp/pikachu_jab.png
+WAIT 24
+
+# Neutral B enters Thunder Jolt and spawns its persistent action at frame 21.
+HOLD B
+WAIT 2
+RELEASE B
+WAIT 24
+SCREENSHOT C:/temp/pikachu_jolt.png
+SAVE_STATE C:/temp/pikachu_jolt.sav
+WAIT 4
+SCREENSHOT C:/temp/pikachu_jolt_travel.png
+LOAD_STATE C:/temp/pikachu_jolt.sav
+WAIT 2
+SCREENSHOT C:/temp/pikachu_jolt_reload.png
+WAIT 30
+
+# Up+B enters Quick Attack; the first zip defaults forward if the stick is
+# released before its frame-20 aim sample.
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 20
+SCREENSHOT C:/temp/pikachu_quick_attack.png
+WAIT 45
+
+# Down+B produces the Thunder bolt and self-hit effect.
+HOLD DOWN
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE DOWN
+WAIT 22
+SCREENSHOT C:/temp/pikachu_thunder_spawn.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_fall_01.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_fall_02.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_fall_03.png
+WAIT 2
+SCREENSHOT C:/temp/pikachu_thunder_contact.png
+WAIT 2
+WAIT 48
+EXIT 0

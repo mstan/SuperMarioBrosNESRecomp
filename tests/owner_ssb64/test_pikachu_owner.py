@@ -1,4 +1,4 @@
-"""Dependency-free tests for the direct-owner-ROM Pikachu prototype cache."""
+"""Dependency-free tests for the direct-owner-ROM Pikachu intermediate cache."""
 
 from __future__ import annotations
 

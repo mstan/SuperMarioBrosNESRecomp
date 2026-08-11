@@ -94,7 +94,7 @@ static void activate_pikachu(void) {
         costume_env[1] == '\0')
         costume = costume_env[0] - '0';
     report_selected_character("pikachu");
-    fprintf(stderr, "[Smash64] Pikachu prototype costume %d\n", costume);
+    fprintf(stderr, "[Smash64] Pikachu costume %d\n", costume);
     activate_character("pikachu", SMASH64_PIKACHU_ID, "Pikachu", costume);
 }
 
@@ -106,7 +106,7 @@ NES_MOD_CONSTRUCTOR(register_smash64_player_plugin) {
                 "[Mods] Failed to register the Captain Falcon controller\n");
     if (!smash64_pikachu_register())
         fprintf(stderr,
-                "[Mods] Failed to register the Pikachu prototype controller\n");
+                "[Mods] Failed to register the Pikachu controller\n");
 
     /* The trusted 6502 function-entry hook that takes over SMB1's horizontal
      * velocity integrator. Registered DISABLED, so registration alone cannot

@@ -45,7 +45,7 @@ label = "Captain Falcon"
 
 [[option.choice]]
 value = "pikachu"
-label = "Pikachu (prototype)"
+label = "Pikachu"
 
 # One trusted plugin per character, selected by the dropdown above. Adding a
 # fighter means adding an [[option.choice]] and a conditioned [[plugin]] — no
