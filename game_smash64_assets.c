@@ -787,13 +787,20 @@ static const char *animation_for_state(const ForeignState *state)
         case PK_QUICK_ATTACK_WINDOW:
         case PK_QUICK_ATTACK_ZIP2:
         case PK_QUICK_ATTACK_RECOVERY: return "UpSpecialAirEnd";
-        /* Ground Thunder has four distinct ftdata motions.  In particular
-         * GettingThundered carries the 0x1644 loop and 0x1668 self-hit
-         * submotions; mapping either phase to the airborne end pose loses
-         * the authored grounded silhouette. */
-        case PK_THUNDER_START: return "DownSpecialStart";
+        /* Down-B has a separate ground/air motion family in the owner
+         * animation bank: 2090/2091/2092 for ground and 2093/2094/2095 for
+         * air.  The controller's compact status intentionally shares the
+         * start/loop/self-hit values, so groundness is the source-visible
+         * discriminator here.  In particular, mapping airborne self-hit to
+         * GettingThundered makes the whole move snap to the grounded pose
+         * precisely when Thunder gives Pikachu its vertical boost. */
+        case PK_THUNDER_START:
+            return state->grounded ? "DownSpecialStart" :
+                                     "DownSpecialStartAir";
         case PK_THUNDER_LOOP:
-        case PK_THUNDER_SELF_HIT: return "GettingThundered";
+        case PK_THUNDER_SELF_HIT:
+            return state->grounded ? "GettingThundered" :
+                                     "DownSpecialThunderedAir";
         default: return "Idle";
         }
     }

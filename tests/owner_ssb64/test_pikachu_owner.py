@@ -47,6 +47,31 @@ class PikachuRecipeTests(unittest.TestCase):
         self.assertEqual(set(pikachu.FGM_SOURCE_WAVES),
                          {1, 7, 12, 25, 28, 35, 40})
 
+    def test_down_special_air_motion_family_is_allowlisted(self):
+        """Keep the presentation seam tied to the owner motion table.
+
+        Pikachu's Down-B does not reuse the grounded pose in air: owner file
+        IDs 2093--2095 are the three explicit air submotions.  This test is
+        intentionally independent of an owner ROM so a later cache rewrite
+        cannot quietly drop the assets required by the state-to-motion map.
+        """
+        animations = {name: file_id for file_id, name, _count
+                      in pikachu.ANIM_SPECS}
+        self.assertEqual({name: animations[name] for name in (
+            "DownSpecialStart", "GettingThundered", "DownSpecialEnd",
+            "DownSpecialStartAir", "DownSpecialThunderedAir",
+            "DownSpecialEndAir",
+        )}, {
+            "DownSpecialStart": 2090, "GettingThundered": 2091,
+            "DownSpecialEnd": 2092, "DownSpecialStartAir": 2093,
+            "DownSpecialThunderedAir": 2094, "DownSpecialEndAir": 2095,
+        })
+        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        self.assertIn('state->grounded ? "DownSpecialStart" :', source)
+        self.assertIn('"DownSpecialStartAir"', source)
+        self.assertIn('state->grounded ? "GettingThundered" :', source)
+        self.assertIn('"DownSpecialThunderedAir"', source)
+
     def test_rejects_repository_cache_output(self):
         with self.assertRaises(ValueError):
             pikachu._external(ROOT / "assets_ssb64" / "pikachu")
