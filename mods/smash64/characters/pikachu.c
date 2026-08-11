@@ -182,14 +182,15 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
         event->command = FOREIGN_ACTION_SPAWN;
         event->flags = FOREIGN_ACTION_HOSTILE |
                        FOREIGN_ACTION_FOLLOW_SURFACES |
-                       FOREIGN_ACTION_SURFACE_SPEED;
+                       FOREIGN_ACTION_SURFACE_SPEED |
+                       FOREIGN_ACTION_ORIENTED_VELOCITY;
         /* ftPikachuSpecialNProcAccessory evaluates joint 11 with no authored
          * offset. Hosts must resolve this identity or fail the spawn closed. */
         event->source_joint = 11;
         event->offset_x = 0.0;
         event->offset_y = 0.0;
-        event->velocity_x = 28.284271;
-        event->velocity_y = -28.284271;
+        event->velocity_x = s_fighter.projectile.speed_x;
+        event->velocity_y = s_fighter.projectile.speed_y;
         event->surface_velocity = 55.0;
         event->width = 100.0;
         event->height = 100.0;

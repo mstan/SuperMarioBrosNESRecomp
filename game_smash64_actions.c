@@ -329,7 +329,9 @@ void smash64_actions_apply_commands(const ForeignActionEvents *events,
         slot->y = (e->flags & FOREIGN_ACTION_SELF_CONTACT)
                       ? 32.0 - e->offset_y * units_to_px
                       : origin_y - e->offset_y * units_to_px;
-        slot->vx = facing * e->velocity_x * units_to_px;
+        slot->vx = ((e->flags & FOREIGN_ACTION_ORIENTED_VELOCITY)
+                        ? e->velocity_x
+                        : facing * e->velocity_x) * units_to_px;
         slot->vy = -e->velocity_y * units_to_px;
         slot->surface_speed = e->surface_velocity * units_to_px;
         slot->width = e->width * units_to_px;

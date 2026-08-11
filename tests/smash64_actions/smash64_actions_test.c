@@ -174,6 +174,22 @@ int main(void)
     CHECK(!smash64_actions_restore(&bad));
     CHECK(smash64_actions_snapshot(slots, 8) == 1);
 
+    smash64_actions_clear();
+    commands.events[0] = spawn(4, 0);
+    smash64_actions_apply_commands(&commands, 50.0, 120.0, -1.0, 0.08,
+                                   NULL);
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].vx < 0.0);
+    smash64_actions_clear();
+    commands.events[0] = spawn(5, FOREIGN_ACTION_ORIENTED_VELOCITY);
+    commands.events[0].velocity_x = 40.0;
+    smash64_actions_apply_commands(&commands, 50.0, 120.0, -1.0, 0.08,
+                                   NULL);
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].vx > 0.0);
+    smash64_actions_clear();
+    CHECK(smash64_actions_restore(&saved));
+
     compact_len = smash64_actions_serialize(compact, sizeof(compact));
     CHECK(compact_len > 0);
     CHECK(compact_len <= 512);
@@ -738,7 +754,9 @@ int main(void)
     CHECK(feedback.events[0].instance_id == 15);
     CHECK(feedback.events[0].flags & FOREIGN_ACTION_HIT_TARGET);
     smash64_actions_step(&host); /* descending head reaches self bounds */
-    CHECK(smash64_actions_snapshot(slots, 8) == 0);
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(!(slots[0].flags & FOREIGN_ACTION_HOSTILE));
+    CHECK(!(slots[0].flags & FOREIGN_ACTION_SELF_CONTACT));
     smash64_actions_drain_feedback(&feedback);
     CHECK(feedback.count == 1);
     CHECK(feedback.events[0].instance_id == 15);

@@ -1132,6 +1132,10 @@ void game_smash64_update_input(uint64_t frame_count)
         s_attack = move.attack;
         {
             double action_facing = (fs && fs->facing < 0.0f) ? -1.0 : 1.0;
+            /* Pikachu's rendered LR is mirrored at the SMB seam. Ordinary
+             * action offsets/velocities use that screen-space convention;
+             * source-preoriented projectiles opt out per event flag. */
+            if (selected_controller_is_pikachu()) action_facing = -action_facing;
             smash64_actions_apply_commands(
                 &move.actions, (double)player_native_x() + 8.0,
                 (double)g_ram[Player_Y_Position] + 32.0, action_facing,
