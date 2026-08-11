@@ -23,6 +23,14 @@
     "turn_run_animation_frames": 18,
     "crouch_animation_frames": 4,
     "landing_animation_frames": 8,
+    "landing_heavy_frames": 16,
+    "kneebend_frames": 3,
+    "air_speed_max_source_units": 37.5,
+    "air_accel_per_stick_unit": 0.055,
+    "air_friction_source_units": 0.45,
+    "air_overcap_deceleration_source_units": 1,
+    "fast_fall_velocity_source_units": -83,
+    "fast_fall_tap_buffer_ticks": 4,
     "attack_air_skip_landing_velocity_y": -20,
     "landing_air_null_frames": 16,
     "landing_air_f_frames": 16,
@@ -41,6 +49,9 @@
     "quick_attack_second_aim_frames": 9,
     "quick_attack_speed_formula": "normalized(stick) * (3 * min(length(stick), 80) + 90); second_zip *= 0.9",
     "quick_attack_neutral_first_direction": [0, 80],
+    "quick_attack_ground_first_min_stick_inclusive": 60,
+    "quick_attack_ground_floor_compatible_y_max": 0,
+    "quick_attack_surface_halt_angle_deg_strict": 135,
     "quick_attack_full_cardinal_speed_source_units": 330,
     "quick_attack_second_cardinal_speed_source_units": 297,
     "quick_attack_second_zip_min_stick": 60,
@@ -224,7 +235,7 @@
         { "frame": 25, "id": "EFFECT_RIPPLE" },
         { "frame": 34, "id": "SECOND_ZIP_WINDOW_OPEN" }
       ],
-      "zip": { "first": [20, 25], "second": [34, 39], "requires_changed_direction": true, "model_scale": [0.8, 0.8, 1.2], "hitbox": false }
+      "zip": { "first": [20, 25], "second": [34, 39], "end_wait_frames_each": 9, "maximum_points": 2, "requires_changed_direction": true, "model_scale": [0.8, 0.8, 1.2], "hitbox": false }
     },
     {
       "action": "THUNDER",
@@ -245,8 +256,8 @@
   "source_status_inventory": [
     {
       "group": "standard_locomotion",
-      "implemented": ["Wait", "WalkSlow/Middle/Fast", "Dash", "Run", "RunBrake", "TurnRun", "KneeBend/JumpF/JumpB", "JumpAerialF/JumpAerialB", "Fall/FallAerial", "Squat/SquatWait/SquatRv", "LandingLight(8 ticks at 1.0)", "FallSpecial/LandingFallSpecial"],
-      "missing": ["WalkEnd", "Turn", "LandingHeavy(16 ticks at 0.5; no fast-fall latch)", "GuardKneeBend", "Pass/GuardPass", "OttottoWait/Ottotto"],
+      "implemented": ["Wait", "WalkSlow/Middle/Fast", "Dash", "Run", "RunBrake", "TurnRun", "KneeBend(3 ticks)/JumpF/JumpB", "JumpAerialF/JumpAerialB", "Fall/FallAerial", "Squat/SquatWait/SquatRv", "LandingLight(8 ticks at 1.0)", "LandingHeavy(16 ticks at 0.5)", "FallSpecial/LandingFallSpecial"],
+      "missing": ["WalkEnd", "Turn", "GuardKneeBend", "Pass/GuardPass", "OttottoWait/Ottotto"],
       "asset_gap": ["LandingLight", "LandingHeavy", "Pass", "GuardPass", "OttottoWait", "Ottotto"]
     },
     {
@@ -279,6 +290,12 @@
     { "name": "quick_attack_host_admission_boundaries", "setup": "ZIP1 debt $1F/$20; ZIP2 debt $6B/$6C", "expect": ["16_then_4_px_component", "14.4_then_4_px_component"] },
     { "name": "quick_attack_host_midzip_save", "setup": "admitted and rejected ZIP1 save/load", "expect": ["selected_plan_restored", "no_live_debt_redecision", "current_page_and_block_ring_remain_aligned"] },
     { "name": "quick_attack_second_angle_boundary", "setup": "41.987 and 42.013 degree second inputs", "expect": ["reject_at_or_below_42", "accept_above_42"] },
+    { "name": "quick_attack_ground_kinetics", "setup": "flat ground first aim at exact stick 60, then upward 60", "expect": ["horizontal_remains_grounded", "upward_switches_air", "ground_end_waits", "air_end_fall_special"] },
+    { "name": "quick_attack_surface_angle_boundary", "setup": "air zip floor/wall/ceiling vectors at and just beyond 135 degrees", "expect": ["at_135_preserves_zip", "beyond_135_enters_matching_end"] },
+    { "name": "quick_attack_second_end", "setup": "finish or collide during ZIP2, then hold a third direction", "expect": ["nine_frame_end_wait", "serialized_subsequent_latch", "no_third_zip"] },
+    { "name": "quick_attack_air_end_landing", "setup": "floor contact at Air End local frame 0 and 8", "expect": ["landing_fall_special_immediately", "horizontal_carry_preserved", "no_second_zip"] },
+    { "name": "common_landing_interrupts", "setup": "attack at LandingLight 3/4, LandingHeavy 7/8, and every LandingFallSpecial tick", "expect": ["light_opens_4", "heavy_opens_8", "fall_special_locked_20"] },
+    { "name": "fast_fall_buffer_save", "setup": "down tap ages 1 through 3 while descending, save/load", "expect": ["age_replays", "held_down_enters_minus_83", "age_4_rejected"] },
     { "name": "jolt_brick", "setup": "ordinary brick intersects projectile", "expect": ["brick_unchanged", "projectile_resolved"] },
     { "name": "thunder_brick", "setup": "ordinary brick intersects bolt", "expect": ["brick_unchanged", "bolt_resolved"] },
     { "name": "two_block_gap", "setup": "walk right through a two-block-high gap", "expect": ["native_x_advances", "no_crouch_or_step_down_required"] },

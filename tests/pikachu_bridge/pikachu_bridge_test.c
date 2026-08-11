@@ -6,6 +6,8 @@
 #include <string.h>
 
 static const ForeignController *registered;
+static ForeignControllerPrivateStateGet private_get;
+static ForeignControllerPrivateStateSet private_set;
 static int failures;
 
 #define CHECK(expr) do { if (!(expr)) { \
@@ -24,6 +26,8 @@ int nes_foreign_register_private_state(const char *controller_id,
                                        ForeignControllerPrivateStateGet get,
                                        ForeignControllerPrivateStateSet set)
 {
+    private_get = get;
+    private_set = set;
     return controller_id != NULL && get != NULL && set != NULL;
 }
 
@@ -91,12 +95,66 @@ int main(void)
     {
         ForeignCollisionResult hit;
         memset(&hit, 0, sizeof(hit));
-        hit.hit_wall = 1;
+        hit.hit_ceiling = 1;
         hit.grounded = 0;
         registered->resolve(&state, &hit);
     }
-    CHECK(state.state == PK_QUICK_ATTACK_RECOVERY);
+    CHECK(state.state == PK_QUICK_ATTACK_WINDOW);
     CHECK(state.state_frame == 0u);
+
+    /* Ground Quick uses the same phase-local public clock without being
+     * mislabeled as the air graph. */
+    registered->reset(&state);
+    memset(&input, 0, sizeof(input)); input.special_pressed = 1;
+    input.stick_y = 1.0f; memset(&move, 0, sizeof(move));
+    registered->tick(&state, &input, &move);
+    CHECK(state.state == PK_QUICK_ATTACK_GROUND_START);
+    CHECK(state.state_frame == 0u && state.grounded);
+
+    /* The bridge must publish the host's down edge into the private buffered
+     * fast-fall input and mirror the resulting latch back to ForeignState. */
+    registered->reset(&state);
+    state.grounded = 0;
+    memset(&input, 0, sizeof(input)); input.stick_y = -1.0f;
+    input.down_pressed = 1; memset(&move, 0, sizeof(move));
+    registered->tick(&state, &input, &move);
+    CHECK(!state.fast_fall);
+    input.down_pressed = 0; memset(&move, 0, sizeof(move));
+    registered->tick(&state, &input, &move);
+    CHECK(state.fast_fall && move.vy == -PIKACHU_SOURCE_FAST_FALL_VELOCITY);
+
+    /* FallAerial is append-only and therefore cannot rely on an ordinal
+     * `state < PK_JAB` shortcut for presentation time. Its generic clock and
+     * private controller state resume together across save/load. */
+    {
+        ForeignState saved_state;
+        uint8_t private_blob[512];
+        int private_len;
+        registered->reset(&state);
+        state.grounded = 0;
+        memset(&input, 0, sizeof(input)); input.jump_pressed = 1;
+        input.stick_x = -1.0f; memset(&move, 0, sizeof(move));
+        registered->tick(&state, &input, &move);
+        for (tick = 0; tick < (int)PIKACHU_SOURCE_JUMP_AERIAL_FRAMES + 2 &&
+                        state.state != PK_AIR_FALL_AERIAL; ++tick) {
+            memset(&input, 0, sizeof(input)); memset(&move, 0, sizeof(move));
+            registered->tick(&state, &input, &move);
+        }
+        CHECK(state.state == PK_AIR_FALL_AERIAL && state.state_frame == 0u);
+        memset(&move, 0, sizeof(move)); registered->tick(&state, &input, &move);
+        CHECK(state.state_frame == 1u);
+        memset(&move, 0, sizeof(move)); registered->tick(&state, &input, &move);
+        CHECK(state.state_frame == 2u);
+        saved_state = state;
+        private_len = private_get(&state, private_blob,
+                                  (int)sizeof(private_blob));
+        registered->reset(&state);
+        state = saved_state;
+        CHECK(private_len > 0 &&
+              private_set(&state, private_blob, private_len));
+        memset(&move, 0, sizeof(move)); registered->tick(&state, &input, &move);
+        CHECK(state.state == PK_AIR_FALL_AERIAL && state.state_frame == 3u);
+    }
 
     registered->reset(&state);
 

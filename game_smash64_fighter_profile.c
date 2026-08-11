@@ -75,6 +75,7 @@ static uint32_t pikachu_state_traits(unsigned state)
                           : SMASH64_STATE_TRAIT_NONE;
     switch (state) {
     case PK_QUICK_ATTACK_START:
+    case PK_QUICK_ATTACK_GROUND_START:
         /* Source sets every hurt part intangible while the 20-frame aim
          * status is entered. The following zip uses PRESERVE_NONE, which
          * resets hit status to normal in ftMainSetStatus. */
@@ -86,6 +87,8 @@ static uint32_t pikachu_state_traits(unsigned state)
         break;
     case PK_QUICK_ATTACK_ZIP1:
     case PK_QUICK_ATTACK_ZIP2:
+    case PK_QUICK_ATTACK_GROUND_ZIP1:
+    case PK_QUICK_ATTACK_GROUND_ZIP2:
         traits |= SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER |
                   SMASH64_STATE_TRAIT_SUPPRESS_UPWARD_SPEED_ON_CEILING |
                   SMASH64_STATE_TRAIT_ROOT_BURST |
@@ -93,6 +96,8 @@ static uint32_t pikachu_state_traits(unsigned state)
         break;
     case PK_QUICK_ATTACK_WINDOW:
     case PK_QUICK_ATTACK_RECOVERY:
+    case PK_QUICK_ATTACK_GROUND_WINDOW:
+    case PK_QUICK_ATTACK_GROUND_RECOVERY:
         traits |= SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER |
                   SMASH64_STATE_TRAIT_SUPPRESS_UPWARD_SPEED_ON_CEILING |
                   SMASH64_STATE_TRAIT_ROOT_BURST |
@@ -114,8 +119,10 @@ static double pikachu_coupled_burst_plan(unsigned state, uint8_t parser_debt)
 {
     switch (state) {
     case PK_QUICK_ATTACK_ZIP1:
+    case PK_QUICK_ATTACK_GROUND_ZIP1:
         return parser_debt < 0x20u ? 16.0 : 4.0;
     case PK_QUICK_ATTACK_ZIP2:
+    case PK_QUICK_ATTACK_GROUND_ZIP2:
         return parser_debt < 0x6Cu ? 14.4 : 4.0;
     default:
         /* Start/window/recovery carry only residual motion. Keeping that

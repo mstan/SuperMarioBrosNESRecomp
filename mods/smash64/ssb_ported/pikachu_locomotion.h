@@ -22,9 +22,9 @@
 #define PIKACHU_SOURCE_TURN_RUN_FRAMES 18u
 #define PIKACHU_SOURCE_CROUCH_FRAMES 4u
 #define PIKACHU_SOURCE_CROUCH_END_FRAMES 8u
-/* Common LandingLight is 8 ticks at 1.0. LandingHeavy is 16 at 0.5, but the
- * current raw controller ABI has no trustworthy fast-fall latch to select it. */
 #define PIKACHU_SOURCE_LANDING_FRAMES 8u
+#define PIKACHU_SOURCE_LANDING_HEAVY_FRAMES 16u
+#define PIKACHU_SOURCE_KNEEBEND_FRAMES 3u
 #define PIKACHU_SOURCE_ATTACK_AIR_SKIP_LANDING_VEL_Y (-20.0)
 #define PIKACHU_SOURCE_LANDING_AIR_NULL_FRAMES 16u
 #define PIKACHU_SOURCE_LANDING_AIR_F_FRAMES 16u
@@ -72,6 +72,10 @@
 #define PIKACHU_SOURCE_AIR_ACCEL 0.055
 #define PIKACHU_SOURCE_AIR_FRICTION 0.45
 #define PIKACHU_SOURCE_AIR_SPEED_MAX 37.5
+#define PIKACHU_SOURCE_AIR_STICK_MIN 8
+#define PIKACHU_SOURCE_AIR_OVERCAP_DECEL 1.0
+#define PIKACHU_SOURCE_FAST_FALL_VELOCITY 83.0
+#define PIKACHU_SOURCE_FAST_FALL_TAP_MAX 4u
 
 typedef enum {
     PK_GROUND_WAIT, PK_WALK, PK_DASH, PK_RUN, PK_JUMP_GROUND, PK_JUMP_AERIAL,
@@ -95,6 +99,12 @@ typedef enum {
      * without changing any serialized legacy ordinal. */
     PK_THUNDER_END, PK_THUNDER_AIR_START, PK_THUNDER_AIR_LOOP,
     PK_THUNDER_AIR_SELF_HIT, PK_THUNDER_AIR_END,
+    /* Append only: source-distinct common locomotion states. */
+    PK_KNEEBEND, PK_LANDING_HEAVY, PK_JUMP_GROUND_B,
+    PK_JUMP_AERIAL_B, PK_AIR_FALL_AERIAL,
+    PK_QUICK_ATTACK_GROUND_START, PK_QUICK_ATTACK_GROUND_ZIP1,
+    PK_QUICK_ATTACK_GROUND_WINDOW, PK_QUICK_ATTACK_GROUND_ZIP2,
+    PK_QUICK_ATTACK_GROUND_RECOVERY,
     PK_STATE_COUNT
 } PikachuState;
 
@@ -128,7 +138,9 @@ typedef enum { PIKACHU_PROJECTILE_NONE, PIKACHU_PROJECTILE_JOLT,
                PIKACHU_PROJECTILE_THUNDER } PikachuProjectileKind;
 
 typedef struct { int stick_x, stick_y, jump_pressed, jump_held, attack_pressed,
-                 special_pressed; } PikachuInputRaw;
+                 special_pressed;
+                 /* Append-only v5 input edge used by common fast-fall. */
+                 int down_pressed; } PikachuInputRaw;
 typedef struct { double actual_dx, actual_dy; int grounded, hit_ceiling,
                  hit_floor, hit_wall; } PikachuCollision;
 /* Read-only host collision callback. A Quick Attack path is sampled at no
@@ -160,6 +172,12 @@ typedef struct {
     int quick_fall_special;
     /* Append-only v4 field: Attack11's asynchronous frame-10 repeat latch. */
     int jab_repeat_pending;
+    /* Append-only v5 field: common fast-fall status flag. */
+    int fast_fall;
+    unsigned down_tap_age;
+    /* Append-only v6 latch: the second zip's End waits the same nine source
+     * frames as the first End, but must never accept a third direction. */
+    int quick_is_subsequent;
 } PikachuFighter;
 
 const char *pikachu_state_name(int state);

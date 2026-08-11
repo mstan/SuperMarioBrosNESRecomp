@@ -43,11 +43,15 @@ static void selection_vectors(void)
     pikachu_reset(&f); f.grounded = 0; memset(&in, 0, sizeof(in)); in.attack_pressed = 1; in.stick_y = 80; step(&f, in); CHECK(f.state == PK_UAIR);
     pikachu_reset(&f); f.state = PK_RUN; f.vel_x = PIKACHU_SOURCE_RUN_SPEED; memset(&in, 0, sizeof(in)); in.attack_pressed = 1; in.stick_x = 80; step(&f, in); CHECK(f.state == PK_DASH_ATTACK);
     pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_x = 80; step(&f, in); CHECK(f.state == PK_THUNDER_JOLT_GROUND);
-    pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = 80; step(&f, in); CHECK(f.state == PK_QUICK_ATTACK_START);
+    pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = 80; step(&f, in); CHECK(f.state == PK_QUICK_ATTACK_GROUND_START);
     pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = -80; step(&f, in); CHECK(f.state == PK_THUNDER_START);
     pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.attack_pressed = in.special_pressed = 1; step(&f, in); CHECK(f.state == PK_THUNDER_JOLT_GROUND);
-    pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.jump_pressed = 1; step(&f, in); CHECK(f.state == PK_JUMP_GROUND && f.jumps_used == 1);
-    memset(&in, 0, sizeof(in)); step(&f, in); in.jump_pressed = 1; step(&f, in); CHECK(f.state == PK_JUMP_AERIAL && f.jumps_used == 2);
+    pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.jump_pressed = 1;
+    step(&f, in); CHECK(f.state == PK_KNEEBEND && f.jumps_used == 0);
+    memset(&in, 0, sizeof(in)); step(&f, in); step(&f, in); step(&f, in);
+    CHECK(f.state == PK_JUMP_GROUND && f.jumps_used == 1);
+    in.jump_pressed = 1; step(&f, in);
+    CHECK(f.state == PK_JUMP_AERIAL && f.jumps_used == 2);
 }
 
 static void timing_and_projectile_vectors(void)
@@ -133,6 +137,21 @@ static void jab_repeat_vectors(void)
     CHECK(f.state == PK_JAB && f.action_frame == 1u);
     CHECK(m.action_frame == 0u && !f.jab_repeat_pending);
     CHECK(f.persistent_action_id != first_action);
+
+    /* The source followup timer is tested before decrement: frame 24 still
+     * accepts a repeat, while frame 25 no longer can. */
+    pikachu_reset(&f); f.state = PK_JAB; f.action_frame = 24u;
+    first_action = f.persistent_action_id;
+    memset(&in, 0, sizeof(in)); in.attack_pressed = 1;
+    m = step(&f, in);
+    CHECK(f.action_frame == 1u && m.action_frame == 0u);
+    CHECK(f.persistent_action_id != first_action);
+    pikachu_reset(&f); f.state = PK_JAB; f.action_frame = 25u;
+    first_action = f.persistent_action_id;
+    m = step(&f, in);
+    CHECK(f.state == PK_JAB && f.action_frame == 26u);
+    CHECK(m.action_frame == 25u &&
+          f.persistent_action_id == first_action);
     pikachu_reset(&f);
     f.state = PK_JAB;
     f.action_frame = 11u;
@@ -156,6 +175,20 @@ static void jab_repeat_vectors(void)
     f = restored;
     f.jab_repeat_pending = 2;
     blob[0] = 4u;
+    memcpy(blob + 1, &f, sizeof(f));
+    CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+    CHECK(memcmp(&restored, &unchanged, sizeof(restored)) == 0);
+    f = restored;
+    f.state = PK_GROUND_WAIT;
+    f.jab_repeat_pending = 1;
+    f.action_frame = 5u;
+    memcpy(blob + 1, &f, sizeof(f));
+    CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+    CHECK(memcmp(&restored, &unchanged, sizeof(restored)) == 0);
+    f = restored;
+    f.state = PK_JAB;
+    f.jab_repeat_pending = 1;
+    f.action_frame = 11u;
     memcpy(blob + 1, &f, sizeof(f));
     CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
     CHECK(memcmp(&restored, &unchanged, sizeof(restored)) == 0);
@@ -330,11 +363,11 @@ static void aerial_normal_motion_vectors(void)
     memset(&in, 0, sizeof(in)); in.attack_pressed = 1;
     m = step(&f, in);
     CHECK(f.state == PK_NAIR);
-    CHECK(m.requested_dx == 17.0 && m.requested_dy == 9.0);
-    CHECK(f.vel_x == 17.0 && f.vel_y == 9.0);
+    CHECK_NEAR(m.requested_dx, 16.55); CHECK_NEAR(m.requested_dy, 9.0);
+    CHECK_NEAR(f.vel_x, 16.55); CHECK_NEAR(f.vel_y, 9.0);
     memset(&in, 0, sizeof(in));
     m = step(&f, in);
-    CHECK(m.requested_dx == 17.0 && m.requested_dy == 6.0);
+    CHECK_NEAR(m.requested_dx, 16.10); CHECK_NEAR(m.requested_dy, 6.0);
 }
 
 static void locomotion_vectors(void)
@@ -388,34 +421,369 @@ static void locomotion_vectors(void)
 
 static void jump_fall_vectors(void)
 {
-    PikachuFighter f; PikachuInputRaw in; PikachuMotion m; unsigned i;
-    double ground_peak = 0.0, aerial_peak = 0.0;
-    pikachu_reset(&f); memset(&in, 0, sizeof(in)); in.jump_pressed = 1;
-    in.stick_x = 80;
-    m = step(&f, in); CHECK(f.state == PK_JUMP_GROUND);
-    CHECK(f.vel_y == PIKACHU_SOURCE_JUMP_LAUNCH_VELOCITY - PIKACHU_SOURCE_GRAVITY);
-    CHECK(f.vel_x == 80.0 * PIKACHU_SOURCE_JUMP_HORIZONTAL_MULTIPLIER);
-    ground_peak += m.requested_dy;
-    memset(&in, 0, sizeof(in));
-    for (i = 1; i < PIKACHU_SOURCE_JUMP_GROUND_FRAMES; ++i) {
-        m = step(&f, in); if (m.requested_dy > 0.0) ground_peak += m.requested_dy;
-        CHECK(f.state == PK_JUMP_GROUND);
-    }
-    step(&f, in); CHECK(f.state == PK_AIR_FALL);
+    PikachuFighter f, restored, unchanged;
+    PikachuInputRaw in;
+    PikachuMotion m;
+    PikachuCollision hit;
+    uint8_t blob[1 + sizeof(f)];
+    uint8_t v4[1 + 280u];
+    unsigned i;
+    int len;
 
+    /* Button jump owns exactly three grounded KneeBend ticks. Direction is
+     * selected at launch from the source -10 facing-relative threshold. */
+    pikachu_reset(&f); memset(&in, 0, sizeof(in));
+    in.jump_pressed = 1; in.stick_x = 80;
+    m = step(&f, in);
+    CHECK(f.state == PK_KNEEBEND && f.grounded && f.jumps_used == 0);
+    CHECK(m.requested_dx == 0.0 && m.requested_dy == 0.0);
+    len = pikachu_serialize(&f, blob, (int)sizeof(blob));
+    pikachu_reset(&restored);
+    CHECK(len == (int)sizeof(blob));
+    CHECK(pikachu_deserialize(&restored, blob, len));
+    memset(&in, 0, sizeof(in)); in.stick_x = 80;
+    step(&restored, in); step(&restored, in);
+    CHECK(restored.state == PK_KNEEBEND && restored.grounded);
+    m = step(&restored, in);
+    CHECK(restored.state == PK_JUMP_GROUND && !restored.grounded);
+    CHECK(restored.jumps_used == 1 && m.force_airborne);
+    CHECK_NEAR(restored.vel_y, PIKACHU_SOURCE_JUMP_LAUNCH_VELOCITY);
+    CHECK_NEAR(restored.vel_x,
+               80.0 * PIKACHU_SOURCE_JUMP_HORIZONTAL_MULTIPLIER);
+
+    pikachu_reset(&f); memset(&in, 0, sizeof(in));
+    in.jump_pressed = 1; in.stick_x = -80; step(&f, in);
+    memset(&in, 0, sizeof(in)); in.stick_x = -80;
+    step(&f, in); step(&f, in); step(&f, in);
+    CHECK(f.state == PK_JUMP_GROUND_B && f.lr == 1);
+
+    /* The second jump keeps its own F/B status and exhausts into FallAerial. */
     pikachu_reset(&f); f.grounded = 0; f.state = PK_AIR_FALL;
     memset(&in, 0, sizeof(in)); in.jump_pressed = 1; in.stick_x = -80;
-    m = step(&f, in); CHECK(f.state == PK_JUMP_AERIAL);
-    CHECK(f.vel_y == PIKACHU_SOURCE_JUMP_LAUNCH_VELOCITY - PIKACHU_SOURCE_GRAVITY);
-    CHECK(f.vel_x == -80.0 * PIKACHU_SOURCE_JUMP_HORIZONTAL_MULTIPLIER);
-    aerial_peak += m.requested_dy;
+    m = step(&f, in);
+    CHECK(f.state == PK_JUMP_AERIAL_B && f.lr == 1 && f.jumps_used == 1);
+    CHECK_NEAR(f.vel_y,
+               PIKACHU_SOURCE_JUMP_LAUNCH_VELOCITY -
+                   PIKACHU_SOURCE_GRAVITY);
     memset(&in, 0, sizeof(in));
-    for (i = 1; i < PIKACHU_SOURCE_JUMP_AERIAL_FRAMES; ++i) {
-        m = step(&f, in); if (m.requested_dy > 0.0) aerial_peak += m.requested_dy;
-        CHECK(f.state == PK_JUMP_AERIAL);
+    for (i = 0; i < PIKACHU_SOURCE_JUMP_AERIAL_FRAMES + 2u &&
+                f.state != PK_AIR_FALL_AERIAL; ++i)
+        step(&f, in);
+    CHECK(f.state == PK_AIR_FALL_AERIAL);
+
+    /* Common ftphysics first decays over-cap velocity by exactly one. Under
+     * cap, stick acceleration/clamp runs before the unconditional .45 drag. */
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_AIR_FALL;
+    f.vel_x = 50.0; f.vel_y = 0.0; f.lr = 1;
+    memset(&in, 0, sizeof(in)); in.stick_x = -80;
+    m = step(&f, in);
+    CHECK_NEAR(f.vel_x, 49.0); CHECK_NEAR(m.requested_dx, 49.0);
+    CHECK(f.lr == 1);
+    f.vel_x = 0.0; in.stick_x = 80; m = step(&f, in);
+    CHECK_NEAR(f.vel_x, 3.95);
+    for (i = 0; i < 40u; ++i) m = step(&f, in);
+    CHECK_NEAR(f.vel_x, 37.05);
+    in.stick_x = -80;
+    for (i = 0; i < 20u && f.vel_x >= 0.0; ++i) step(&f, in);
+    CHECK(f.vel_x < 0.0 && f.lr == 1);
+    in.attack_pressed = 1; m = step(&f, in);
+    CHECK(f.state == PK_BAIR && f.lr == 1);
+
+    /* Fast-fall can be entered only by the fast variant while descending.
+     * AttackAir preserves an existing latch but its normal variant cannot set
+     * a new one. The latch and future -83 velocity survive save/load. */
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_AIR_FALL;
+    f.vel_y = 4.0; memset(&in, 0, sizeof(in));
+    in.down_pressed = 1; in.stick_y = -80;
+    step(&f, in); CHECK(!f.fast_fall && f.vel_y == 1.0);
+    in.down_pressed = 0; step(&f, in);
+    CHECK(!f.fast_fall && f.vel_y == -2.0);
+    step(&f, in);
+    CHECK(f.fast_fall && f.vel_y == -PIKACHU_SOURCE_FAST_FALL_VELOCITY);
+    len = pikachu_serialize(&f, blob, (int)sizeof(blob));
+    pikachu_reset(&restored);
+    CHECK(len == (int)sizeof(blob));
+    CHECK(pikachu_deserialize(&restored, blob, len));
+    CHECK(restored.fast_fall &&
+          restored.vel_y == -PIKACHU_SOURCE_FAST_FALL_VELOCITY);
+    memset(&in, 0, sizeof(in)); in.attack_pressed = 1;
+    m = step(&restored, in);
+    CHECK(restored.state == PK_NAIR && restored.fast_fall);
+    CHECK(m.requested_dy == -PIKACHU_SOURCE_FAST_FALL_VELOCITY);
+
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_NAIR; f.vel_y = -1.0;
+    memset(&in, 0, sizeof(in)); in.down_pressed = 1;
+    step(&f, in); CHECK(!f.fast_fall && f.vel_y == -4.0);
+
+    /* A fast-fall contact chooses the distinct 16-tick heavy landing. */
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_AIR_FALL;
+    f.fast_fall = 1; f.vel_y = -PIKACHU_SOURCE_FAST_FALL_VELOCITY;
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 1;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_LANDING_HEAVY && !f.fast_fall);
+    memset(&in, 0, sizeof(in));
+    for (i = 0; i < PIKACHU_SOURCE_LANDING_HEAVY_FRAMES; ++i) {
+        step(&f, in); CHECK(f.state == PK_LANDING_HEAVY);
     }
-    step(&f, in); CHECK(f.state == PK_AIR_FALL);
-    CHECK(ground_peak > 1200.0 && ground_peak == aerial_peak);
+    step(&f, in); CHECK(f.state == PK_GROUND_WAIT);
+
+    /* v4 predates fast-fall and migrates it clear. Impossible grounded v6
+     * latches reject transactionally. */
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_AIR_FALL;
+    memset(v4, 0xA5, sizeof(v4));
+    v4[0] = 4u;
+    memcpy(v4 + 1, &f, offsetof(PikachuFighter, fast_fall));
+    CHECK(pikachu_deserialize(&restored, v4, (int)sizeof(v4)));
+    CHECK(!restored.fast_fall);
+    unchanged = restored;
+    f = restored; f.grounded = 1; f.state = PK_GROUND_WAIT; f.fast_fall = 1;
+    blob[0] = 6u; memcpy(blob + 1, &f, sizeof(f));
+    CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+    CHECK(memcmp(&restored, &unchanged, sizeof(restored)) == 0);
+
+    /* Buffered tap age, not an edge-only shortcut, owns fast-fall entry. A
+     * tap during AttackAir remains live when that action hands off to Fall. */
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_NAIR;
+    f.action_frame = PIKACHU_SOURCE_NAIR_FRAMES; f.vel_y = -4.0;
+    memset(&in, 0, sizeof(in)); in.down_pressed = 1; in.stick_y = -80;
+    step(&f, in);
+    CHECK(f.state == PK_AIR_FALL && !f.fast_fall && f.down_tap_age == 1u);
+    in.down_pressed = 0; step(&f, in);
+    CHECK(f.fast_fall && f.down_tap_age == 2u);
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_AIR_FALL;
+    f.vel_y = -4.0; f.down_tap_age = 3u;
+    memset(&in, 0, sizeof(in)); in.stick_y = -80;
+    step(&f, in);
+    CHECK(!f.fast_fall && f.down_tap_age == 4u && f.vel_y == -7.0);
+    for (i = 1; i <= 3u; ++i) {
+        pikachu_reset(&f); f.grounded = 0; f.state = PK_AIR_FALL;
+        f.vel_y = -4.0; f.down_tap_age = i;
+        len = pikachu_serialize(&f, blob, (int)sizeof(blob));
+        pikachu_reset(&restored);
+        CHECK(pikachu_deserialize(&restored, blob, len));
+        CHECK(restored.down_tap_age == i);
+    }
+}
+
+static void special_air_and_ground_quick_vectors(void)
+{
+    PikachuFighter f, restored, unchanged;
+    PikachuInputRaw in;
+    PikachuMotion m;
+    PikachuCollision hit;
+    uint8_t blob[1 + sizeof(f)];
+    uint8_t v4[1 + 280u];
+    int i;
+
+    /* SpecialAirN uses AirVelFriction for all 64 frames; ground SpecialN
+     * uses ground friction. Their map pair preserves the local action clock. */
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_AIR_FALL;
+    f.vel_x = 50.0; f.vel_y = 10.0;
+    memset(&in, 0, sizeof(in)); in.special_pressed = 1;
+    m = step(&f, in);
+    CHECK(f.state == PK_THUNDER_JOLT_AIR);
+    CHECK_NEAR(m.requested_dx, 49.0); CHECK_NEAR(m.requested_dy, 7.0);
+    f.action_frame = 12u;
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 1;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_THUNDER_JOLT_GROUND && f.action_frame == 12u);
+    CHECK(f.jumps_used == 0);
+    f.vel_x = 10.0; memset(&in, 0, sizeof(in)); m = step(&f, in);
+    CHECK_NEAR(m.requested_dx, 8.0);
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 0;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_THUNDER_JOLT_AIR && f.action_frame == 13u);
+    CHECK(f.jumps_used == 1);
+
+    /* Thunder Air Start/Loop/End use the same gravity/friction helper; only
+     * the Hit status substitutes its authored 0.5 gravity. */
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_AIR_FALL;
+    f.vel_x = 10.0; f.vel_y = 9.0;
+    memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = -80;
+    m = step(&f, in);
+    CHECK(f.state == PK_THUNDER_AIR_START);
+    CHECK_NEAR(m.requested_dx, 9.55); CHECK_NEAR(m.requested_dy, 6.0);
+    f.state = PK_THUNDER_AIR_LOOP; f.action_frame = 1u;
+    f.projectile.kind = PIKACHU_PROJECTILE_THUNDER;
+    f.projectile.active = 1; memset(&in, 0, sizeof(in)); m = step(&f, in);
+    CHECK_NEAR(m.requested_dy, 3.0);
+    f.state = PK_THUNDER_AIR_END; f.action_frame = 1u;
+    m = step(&f, in); CHECK_NEAR(m.requested_dy, 0.0);
+
+    /* Air Quick Start clears incoming velocity and then applies its source
+     * 0.8 gravity. Ground Start remains grounded and friction-only. */
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_AIR_FALL;
+    f.vel_x = 30.0; f.vel_y = 20.0;
+    memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = 80;
+    m = step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_START && !f.grounded);
+    CHECK_NEAR(m.requested_dx, 0.0); CHECK_NEAR(m.requested_dy, -0.8);
+
+    pikachu_reset(&f); memset(&in, 0, sizeof(in));
+    in.special_pressed = 1; in.stick_y = 80; step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_GROUND_START && f.grounded);
+    memset(&in, 0, sizeof(in)); in.stick_x = 60;
+    for (i = 1; i <= (int)PIKACHU_SOURCE_QUICK_ATTACK_AIM_FRAMES; ++i)
+        m = step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_GROUND_ZIP1 && f.grounded);
+    CHECK_NEAR(m.requested_dx, 270.0); CHECK_NEAR(m.requested_dy, 0.0);
+    CHECK(!m.force_airborne);
+    for (i = 0; i < (int)PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES; ++i)
+        m = step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_GROUND_WINDOW);
+    CHECK_NEAR(f.vel_x, 54.0);
+    memset(&in, 0, sizeof(in));
+    for (i = 0; i < 8; ++i) {
+        m = step(&f, in);
+        CHECK(f.state == PK_QUICK_ATTACK_GROUND_WINDOW);
+        CHECK_NEAR(m.requested_dx, 54.0);
+    }
+    m = step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_GROUND_RECOVERY);
+    CHECK_NEAR(m.requested_dx, 54.0);
+    m = step(&f, in); CHECK_NEAR(m.requested_dx, 52.0);
+
+    /* Exactly-60 is valid for grounded first aim; an upward vector cannot
+     * use ground kinetics and becomes the paired air zip. */
+    pikachu_reset(&f); memset(&in, 0, sizeof(in));
+    in.special_pressed = 1; in.stick_y = 80; step(&f, in);
+    memset(&in, 0, sizeof(in)); in.stick_y = 60;
+    for (i = 1; i <= (int)PIKACHU_SOURCE_QUICK_ATTACK_AIM_FRAMES; ++i)
+        m = step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_ZIP1 && !f.grounded);
+    CHECK_NEAR(m.requested_dy, 270.0); CHECK(m.force_airborne);
+
+    /* Start/zip/end map conversions preserve clocks. Strict 135-degree
+     * boundaries slide/switch; only values just beyond them enter End. */
+    pikachu_reset(&f); f.state = PK_QUICK_ATTACK_GROUND_START;
+    f.action_frame = 7u; f.grounded = 1;
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 0;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_QUICK_ATTACK_START && f.action_frame == 7u);
+    CHECK(f.jumps_used == 1);
+    hit.grounded = 1; pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_QUICK_ATTACK_GROUND_START && f.action_frame == 7u);
+    CHECK(f.jumps_used == 0);
+
+    f.state = PK_QUICK_ATTACK_GROUND_ZIP1; f.action_frame = 22u;
+    f.grounded = 1; f.vel_x = 100.0; f.vel_y = 0.0;
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 0;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_QUICK_ATTACK_ZIP1 && f.action_frame == 22u);
+    CHECK(f.jumps_used == PIKACHU_SOURCE_JUMP_COUNT);
+    f.state = PK_QUICK_ATTACK_GROUND_ZIP1; f.grounded = 1;
+    memset(&hit, 0, sizeof(hit)); hit.hit_wall = 1; hit.grounded = 0;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_QUICK_ATTACK_WINDOW && f.quick_end_frame == 0u);
+    f.state = PK_QUICK_ATTACK_GROUND_ZIP1; f.grounded = 1; f.vel_x = 100.0;
+    memset(&hit, 0, sizeof(hit)); hit.hit_wall = 1; hit.grounded = 1;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_QUICK_ATTACK_GROUND_WINDOW);
+
+    f.state = PK_QUICK_ATTACK_ZIP1; f.grounded = 0;
+    f.vel_x = 10.0; f.vel_y = -10.0;
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 1;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_QUICK_ATTACK_GROUND_ZIP1);
+    CHECK(f.jumps_used == 0);
+    f.state = PK_QUICK_ATTACK_ZIP1; f.grounded = 0;
+    f.vel_x = 10.0; f.vel_y = -10.01;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_QUICK_ATTACK_GROUND_WINDOW);
+
+    f.state = PK_QUICK_ATTACK_ZIP1; f.grounded = 0;
+    f.vel_x = 10.0; f.vel_y = 10.0;
+    memset(&hit, 0, sizeof(hit)); hit.hit_wall = 1; hit.grounded = 0;
+    pikachu_resolve(&f, &hit); CHECK(f.state == PK_QUICK_ATTACK_ZIP1);
+    f.vel_x = 10.01; f.vel_y = 10.0;
+    pikachu_resolve(&f, &hit); CHECK(f.state == PK_QUICK_ATTACK_WINDOW);
+    f.state = PK_QUICK_ATTACK_ZIP1; f.grounded = 0;
+    f.vel_x = 10.0; f.vel_y = 10.0;
+    memset(&hit, 0, sizeof(hit)); hit.hit_ceiling = 1;
+    pikachu_resolve(&f, &hit); CHECK(f.state == PK_QUICK_ATTACK_ZIP1);
+    f.vel_y = 10.01;
+    pikachu_resolve(&f, &hit); CHECK(f.state == PK_QUICK_ATTACK_WINDOW);
+
+    /* Air End maps before the direction flag: floor contact at both local
+     * frame zero and eight enters FallSpecial landing and cannot launch a
+     * second zip. Horizontal carry survives while Y/fast-fall are cleared. */
+    f.state = PK_QUICK_ATTACK_WINDOW; f.grounded = 0;
+    f.quick_end_frame = 0u; f.quick_is_subsequent = 0;
+    f.vel_x = 12.0; f.vel_y = -3.0; f.fast_fall = 1;
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 1;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_FALL_SPECIAL_LANDING);
+    CHECK_NEAR(f.vel_x, 12.0); CHECK_NEAR(f.vel_y, 0.0);
+    CHECK(!f.fast_fall);
+    f.state = PK_QUICK_ATTACK_WINDOW; f.grounded = 0;
+    f.quick_end_frame = 8u; f.quick_is_subsequent = 0;
+    f.vel_x = -7.0; f.vel_y = -2.0;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_FALL_SPECIAL_LANDING);
+    CHECK_NEAR(f.vel_x, -7.0); CHECK_NEAR(f.vel_y, 0.0);
+
+    f.state = PK_QUICK_ATTACK_GROUND_RECOVERY; f.grounded = 1;
+    f.action_frame = 30u; f.quick_end_frame = 12u;
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 0;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_QUICK_ATTACK_RECOVERY &&
+          f.action_frame == 30u && f.quick_end_frame == 12u);
+    hit.grounded = 1; pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_FALL_SPECIAL_LANDING);
+
+    /* Historical v4 Ground Start used the legacy shared ordinal. Its padded
+     * 280-byte wire image migrates to explicit ground kinetics; current
+     * contradictory phase/ground pairs reject without mutation. */
+    pikachu_reset(&f); f.state = PK_QUICK_ATTACK_START; f.grounded = 1;
+    memset(v4, 0xA5, sizeof(v4)); v4[0] = 4u;
+    memcpy(v4 + 1, &f, offsetof(PikachuFighter, fast_fall));
+    pikachu_reset(&restored);
+    CHECK(pikachu_deserialize(&restored, v4, (int)sizeof(v4)));
+    CHECK(restored.state == PK_QUICK_ATTACK_GROUND_START && restored.grounded);
+    /* v5's 288-byte padded image predates the no-third-direction latch. */
+    memset(blob, 0xA5, sizeof(blob)); blob[0] = 5u;
+    memcpy(blob + 1, &restored,
+           offsetof(PikachuFighter, quick_is_subsequent));
+    pikachu_reset(&f);
+    CHECK(pikachu_deserialize(&f, blob, (int)sizeof(blob)));
+    CHECK(!f.quick_is_subsequent &&
+          f.state == PK_QUICK_ATTACK_GROUND_START);
+    restored = f;
+    unchanged = restored;
+    f = restored; f.state = PK_QUICK_ATTACK_START;
+    blob[0] = 6u; memcpy(blob + 1, &f, sizeof(f));
+    CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+    CHECK(memcmp(&restored, &unchanged, sizeof(restored)) == 0);
+    f = restored; f.state = PK_QUICK_ATTACK_GROUND_ZIP1; f.grounded = 0;
+    memcpy(blob + 1, &f, sizeof(f));
+    CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+    CHECK(memcmp(&restored, &unchanged, sizeof(restored)) == 0);
+    f = restored; f.quick_is_subsequent = 1;
+    memcpy(blob + 1, &f, sizeof(f));
+    CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+    CHECK(memcmp(&restored, &unchanged, sizeof(restored)) == 0);
+
+    /* SetAir consumes the ground jump (one aerial jump remains); SetGround
+     * restores both. Active ground zips are the source exception and consume
+     * the entire jump count when they leave the floor. */
+    pikachu_reset(&f);
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 0;
+    pikachu_resolve(&f, &hit);
+    CHECK(!f.grounded && f.jumps_used == 1);
+    memset(&in, 0, sizeof(in)); in.jump_pressed = 1;
+    step(&f, in);
+    CHECK(f.jumps_used == PIKACHU_SOURCE_JUMP_COUNT &&
+          (f.state == PK_JUMP_AERIAL || f.state == PK_JUMP_AERIAL_B));
+    hit.grounded = 1; pikachu_resolve(&f, &hit);
+    CHECK(f.grounded && f.jumps_used == 0);
+
+    pikachu_reset(&f); f.state = PK_KNEEBEND; f.action_frame = 1u;
+    f.vel_x = 10.0;
+    memset(&in, 0, sizeof(in)); m = step(&f, in);
+    CHECK_NEAR(m.requested_dx, 8.0);
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 0;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_AIR_FALL && f.jumps_used == 1);
 }
 
 static void standard_state_timing_vectors(void)
@@ -457,6 +825,44 @@ static void crouch_and_landing_vectors(void)
     }
     m = step(&f, in);
     CHECK(f.state == PK_GROUND_WAIT && m.requested_dx == 0.0);
+
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_AIR_FALL;
+    f.vel_x = 10.0; f.vel_y = -10.0;
+    memset(&hit, 0, sizeof(hit)); hit.grounded = 1;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_LANDING && f.vel_x == 10.0);
+    memset(&in, 0, sizeof(in)); m = step(&f, in);
+    CHECK_NEAR(m.requested_dx, 8.0);
+
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_AIR_FALL;
+    f.fast_fall = 1; f.vel_x = -10.0; f.vel_y = -83.0;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_LANDING_HEAVY && f.vel_x == -10.0);
+    m = step(&f, in); CHECK_NEAR(m.requested_dx, -8.0);
+
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_FALL_SPECIAL;
+    f.vel_x = 10.0; f.vel_y = -10.0;
+    pikachu_resolve(&f, &hit);
+    CHECK(f.state == PK_FALL_SPECIAL_LANDING && f.vel_x == 10.0);
+    m = step(&f, in); CHECK_NEAR(m.requested_dx, 8.0);
+
+    /* Common landing interrupt gates are authored-frame based: light opens
+     * at 4, half-speed heavy at tick 8, and FallSpecial's 20 ticks never do. */
+    pikachu_reset(&f); f.state = PK_LANDING; f.action_frame = 3u;
+    memset(&in, 0, sizeof(in)); in.attack_pressed = 1;
+    step(&f, in); CHECK(f.state == PK_LANDING);
+    step(&f, in); CHECK(f.state == PK_JAB);
+    pikachu_reset(&f); f.state = PK_LANDING_HEAVY; f.action_frame = 7u;
+    step(&f, in); CHECK(f.state == PK_LANDING_HEAVY);
+    step(&f, in); CHECK(f.state == PK_JAB);
+    pikachu_reset(&f); f.state = PK_FALL_SPECIAL_LANDING;
+    for (i = 0;
+         i < (int)PIKACHU_SOURCE_QUICK_ATTACK_FALL_SPECIAL_LANDING_FRAMES;
+         ++i) {
+        step(&f, in);
+        CHECK(f.state == PK_FALL_SPECIAL_LANDING);
+    }
+    step(&f, in); CHECK(f.state == PK_GROUND_WAIT);
 }
 
 static void resolve_aerial_attack_landing(PikachuFighter *f, int state,
@@ -490,9 +896,14 @@ static void aerial_landing_vectors(void)
         PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_DUST_HEAVY_DOUBLE);
 
     /* The new values are append-only after the v2 FallSpecial ordinal. */
-    CHECK(PK_LANDING_AIR_NULL == PK_FALL_SPECIAL + 1);
-    CHECK(PK_LANDING_AIR_F == PK_LANDING_AIR_NULL + 1);
-    CHECK(PK_LANDING_AIR_D == PK_LANDING_AIR_F + 1);
+    {
+        int landing_null = PK_LANDING_AIR_NULL;
+        int landing_f = PK_LANDING_AIR_F;
+        int landing_d = PK_LANDING_AIR_D;
+        CHECK(landing_null == PK_FALL_SPECIAL + 1);
+        CHECK(landing_f == landing_null + 1);
+        CHECK(landing_d == landing_f + 1);
+    }
 
     /* NAir and BAir have no landing-motion assets in Pikachu's motion table;
      * their flag1=50 windows therefore select 8f LandingAirX at 0.5 speed. */
@@ -508,6 +919,16 @@ static void aerial_landing_vectors(void)
     CHECK(f.state == PK_GROUND_WAIT); /* collision velocity -19.9 > -20 */
     resolve_aerial_attack_landing(&f, PK_NAIR, 2, -17.0);
     CHECK(f.state == PK_LANDING); /* collision velocity -20 is not skipped */
+    pikachu_reset(&f); f.grounded = 0; f.state = PK_NAIR;
+    f.action_frame = 2u; f.fast_fall = 1;
+    f.vel_y = -PIKACHU_SOURCE_FAST_FALL_VELOCITY;
+    memset(&in, 0, sizeof(in)); pikachu_tick(&f, &in, &m);
+    {
+        PikachuCollision fast_hit;
+        memset(&fast_hit, 0, sizeof(fast_hit)); fast_hit.grounded = 1;
+        pikachu_resolve(&f, &fast_hit);
+    }
+    CHECK(f.state == PK_LANDING_HEAVY && !f.fast_fall);
     resolve_aerial_attack_landing(&f, PK_BAIR, 9, -30.0);
     CHECK(f.state == PK_LANDING);
     resolve_aerial_attack_landing(&f, PK_BAIR, 10, -30.0);
@@ -530,7 +951,7 @@ static void aerial_landing_vectors(void)
     m = step(&f, in);
     CHECK(m.events == common_events);
     CHECK(m.attack.active && m.attack.damage == 6 && m.attack.break_blocks);
-    CHECK_NEAR(m.requested_dx, 8.0);
+    CHECK_NEAR(m.requested_dx, 7.55);
     m = step(&f, in);
     CHECK(m.attack.active && m.attack.damage == 6 && m.events == 0u);
     m = step(&f, in);
@@ -614,7 +1035,7 @@ static void quick_attack_and_save_vectors(void)
     m = step(&f, in); CHECK((m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_HI)) == 0);
     /* The first solid sampled pixel stops the zip before a host resolve; the
      * probe is read-only, so this cannot mutate a tile. */
-    { PikachuCollision hit; pikachu_sweep_zip(&f, &m, solid_at_twelve, NULL, &hit); CHECK(hit.hit_wall && hit.actual_dx == 0.0); pikachu_resolve(&f, &hit); CHECK(f.state == PK_QUICK_ATTACK_RECOVERY); }
+    { PikachuCollision hit; pikachu_sweep_zip(&f, &m, solid_at_twelve, NULL, &hit); CHECK(hit.hit_wall && hit.actual_dx == 0.0); pikachu_resolve(&f, &hit); CHECK(f.state == PK_QUICK_ATTACK_WINDOW); }
     {
         uint8_t blob[1 + sizeof(f)];
         PikachuMotion replay_motion;
@@ -663,18 +1084,30 @@ static void quick_attack_source_recovery_vector(void)
     CHECK(fall_special_state == special_landing_state + 1);
     pikachu_reset(&f);
     f.grounded = 0;
-    f.state = PK_QUICK_ATTACK_ZIP1;
+    f.state = PK_QUICK_ATTACK_ZIP2;
     f.vel_x = 330.0;
     f.vel_y = 297.0;
     memset(&hit, 0, sizeof(hit));
     hit.hit_wall = 1;
     pikachu_resolve(&f, &hit);
-    CHECK(f.state == PK_QUICK_ATTACK_RECOVERY);
+    CHECK(f.state == PK_QUICK_ATTACK_WINDOW);
     CHECK_NEAR(f.vel_x, 66.0);
     CHECK_NEAR(f.vel_y, 59.4);
-    CHECK(f.quick_end_frame == 0 && !f.quick_fall_special);
+    CHECK(f.quick_end_frame == 0 && f.quick_is_subsequent &&
+          !f.quick_fall_special);
 
+    /* The second zip restarts the same nine-frame End wait, but its
+     * serialized subsequent latch rejects every would-be third direction. */
     memset(&in, 0, sizeof(in));
+    in.stick_x = -80;
+    for (i = 0;
+         i < (int)PIKACHU_SOURCE_QUICK_ATTACK_SECOND_AIM_FRAMES - 1;
+         ++i) {
+        step(&f, in);
+        CHECK(f.state == PK_QUICK_ATTACK_WINDOW && f.quick_is_subsequent);
+    }
+    step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_RECOVERY && !f.quick_is_subsequent);
     for (i = 0; i < (int)PIKACHU_SOURCE_QUICK_ATTACK_END_ANIMATION_FRAMES;
          ++i)
         step(&f, in);
@@ -808,7 +1241,10 @@ static void quick_attack_source_velocity_and_two_point_vectors(void)
     CHECK_NEAR(m.requested_dy, 297.0);
     for (i = 0; i < (int)PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES + 2; ++i)
         m = step(&f, in);
-    CHECK(f.state == PK_QUICK_ATTACK_RECOVERY);
+    CHECK(f.state == PK_QUICK_ATTACK_WINDOW && f.quick_is_subsequent);
+    for (i = 2; i < (int)PIKACHU_SOURCE_QUICK_ATTACK_SECOND_AIM_FRAMES; ++i)
+        m = step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_RECOVERY && !f.quick_is_subsequent);
     CHECK(!m.attack.active);
 }
 
@@ -850,6 +1286,11 @@ static void source_action_end_clock_vectors(void)
                      PK_GROUND_WAIT);
     CHECK_ACTION_END(PK_THUNDER_JOLT_AIR,
                      PIKACHU_SOURCE_THUNDER_JOLT_FRAMES, 0, PK_AIR_FALL);
+    pikachu_reset(&f); f.state = PK_NAIR; f.grounded = 0;
+    f.jumps_used = PIKACHU_SOURCE_JUMP_COUNT;
+    f.action_frame = PIKACHU_SOURCE_NAIR_FRAMES;
+    memset(&in, 0, sizeof(in)); step(&f, in);
+    CHECK(f.state == PK_AIR_FALL_AERIAL);
 #undef CHECK_ACTION_END
 }
 
@@ -859,6 +1300,7 @@ int main(void)
     aerial_normal_motion_vectors();
     thunder_phase_vectors();
     locomotion_vectors(); jump_fall_vectors(); standard_state_timing_vectors();
+    special_air_and_ground_quick_vectors();
     crouch_and_landing_vectors(); aerial_landing_vectors();
     quick_attack_and_save_vectors(); quick_attack_source_recovery_vector();
     quick_attack_second_zip_motion_vector();

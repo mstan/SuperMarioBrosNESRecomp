@@ -26,12 +26,19 @@ int main(void)
     CHECK_NEAR(smash64_fighter_profile_coupled_burst_component_px_limit(
                    pikachu, PK_QUICK_ATTACK_ZIP2, 0x6C), 4.0);
     CHECK_NEAR(smash64_fighter_profile_coupled_burst_component_px_limit(
+                   pikachu, PK_QUICK_ATTACK_GROUND_ZIP1, 0x1F), 16.0);
+    CHECK_NEAR(smash64_fighter_profile_coupled_burst_component_px_limit(
+                   pikachu, PK_QUICK_ATTACK_GROUND_ZIP2, 0x6B), 14.4);
+    CHECK_NEAR(smash64_fighter_profile_coupled_burst_component_px_limit(
                    pikachu, PK_QUICK_ATTACK_WINDOW, 0), 4.0);
 
     /* ftPikachuSpecialHiInitMiscVars makes Start/aim intangible. Zip entry
      * uses FTSTATUS_PRESERVE_NONE, so every later phase is damageable. */
     CHECK((smash64_fighter_profile_state_traits(
                pikachu, PK_QUICK_ATTACK_START) &
+           SMASH64_STATE_TRAIT_INTANGIBLE) != 0);
+    CHECK((smash64_fighter_profile_state_traits(
+               pikachu, PK_QUICK_ATTACK_GROUND_START) &
            SMASH64_STATE_TRAIT_INTANGIBLE) != 0);
     CHECK((smash64_fighter_profile_state_traits(
                pikachu, PK_QUICK_ATTACK_ZIP1) &
@@ -42,6 +49,12 @@ int main(void)
     CHECK((smash64_fighter_profile_state_traits(
                pikachu, PK_QUICK_ATTACK_ZIP2) &
            SMASH64_STATE_TRAIT_INTANGIBLE) == 0);
+    CHECK((smash64_fighter_profile_state_traits(
+               pikachu, PK_QUICK_ATTACK_GROUND_ZIP1) &
+           SMASH64_STATE_TRAIT_ROOT_BURST) != 0);
+    CHECK((smash64_fighter_profile_state_traits(
+               pikachu, PK_QUICK_ATTACK_GROUND_ZIP2) &
+           SMASH64_STATE_TRAIT_COUPLED_2D_SWEEP) != 0);
 
     /* At frame 46 controller status changes to ordinary FallSpecial. It must
      * retain only normal streamer traits, never a Quick Attack burst plan. */

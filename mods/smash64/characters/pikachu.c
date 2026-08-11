@@ -10,6 +10,23 @@
 /* The sole mutable fighter instance behind the generic controller ABI. */
 static PikachuFighter s_fighter;
 
+static int pk_uses_generic_locomotion_clock(int state)
+{
+    switch (state) {
+    case PK_GROUND_WAIT:
+    case PK_WALK:
+    case PK_DASH:
+    case PK_RUN:
+    case PK_JUMP_GROUND:
+    case PK_JUMP_AERIAL:
+    case PK_AIR_FALL:
+    case PK_AIR_FALL_AERIAL:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
 static int pk_thunder_kinetic_pair(int before, int after)
 {
     return (before == PK_THUNDER_START &&
@@ -34,10 +51,15 @@ static unsigned pk_public_action_frame(const PikachuFighter *fighter)
 {
     if (fighter->state == PK_QUICK_ATTACK_START ||
         fighter->state == PK_QUICK_ATTACK_ZIP1 ||
-        fighter->state == PK_QUICK_ATTACK_ZIP2)
+        fighter->state == PK_QUICK_ATTACK_ZIP2 ||
+        fighter->state == PK_QUICK_ATTACK_GROUND_START ||
+        fighter->state == PK_QUICK_ATTACK_GROUND_ZIP1 ||
+        fighter->state == PK_QUICK_ATTACK_GROUND_ZIP2)
         return 0u;
     if (fighter->state == PK_QUICK_ATTACK_WINDOW ||
-        fighter->state == PK_QUICK_ATTACK_RECOVERY)
+        fighter->state == PK_QUICK_ATTACK_RECOVERY ||
+        fighter->state == PK_QUICK_ATTACK_GROUND_WINDOW ||
+        fighter->state == PK_QUICK_ATTACK_GROUND_RECOVERY)
         return fighter->quick_end_frame;
     return fighter->action_frame;
 }
@@ -78,6 +100,7 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
     raw.jump_held = input->jump_held;
     raw.attack_pressed = input->attack_pressed;
     raw.special_pressed = input->special_pressed;
+    raw.down_pressed = input->down_pressed;
     s_fighter.grounded = state->grounded;
     pikachu_tick(&s_fighter, &raw, &s_fighter.last_motion);
 
@@ -179,7 +202,7 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
     }
 
     state->state = s_fighter.state;
-    if (s_fighter.state < PK_JAB) {
+    if (pk_uses_generic_locomotion_clock(s_fighter.state)) {
         /* Keep presentation time in the generic state so locomotion poses do
          * not freeze. The private timer separately owns source transitions
          * such as Dash-to-Run and Jump-to-Fall. ForeignState is already saved
@@ -193,6 +216,7 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
     }
     state->facing = (float)s_fighter.lr;
     state->grounded = s_fighter.grounded;
+    state->fast_fall = s_fighter.fast_fall;
     state->vx = out->vx;
     state->vy = out->vy;
     state->jump_phase = FOREIGN_JUMP_NONE;
@@ -232,6 +256,7 @@ static void pk_resolve(ForeignState *state, const ForeignCollisionResult *hit)
     state->vx = s_fighter.vel_x;
     state->vy = s_fighter.vel_y;
     state->grounded = s_fighter.grounded;
+    state->fast_fall = s_fighter.fast_fall;
     state->state = s_fighter.state;
     /* Resolve may change both status and its local motion clock (landing,
      * Thunder ground/air map conversion). Publish them atomically so the
