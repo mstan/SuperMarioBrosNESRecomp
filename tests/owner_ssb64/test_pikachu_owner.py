@@ -100,6 +100,28 @@ class PikachuRecipeTests(unittest.TestCase):
         ):
             self.assertIn(f'case {state}: return "{motion}";', source)
 
+    def test_appended_common_jump_states_use_cached_source_motions(self):
+        animations = {name: file_id for file_id, name, _count
+                      in pikachu.ANIM_SPECS}
+        self.assertEqual({name: animations[name] for name in (
+            "LandingAirX", "JumpB", "JumpAerialB", "FallAerial",
+        )}, {
+            "LandingAirX": 1976, "JumpB": 1968,
+            "JumpAerialB": 1970, "FallAerial": 1972,
+        })
+        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        for state, motion in (
+            ("PK_KNEEBEND", "LandingAirX"),
+            ("PK_LANDING_HEAVY", "LandingAirX"),
+            ("PK_JUMP_GROUND_B", "JumpB"),
+            ("PK_JUMP_AERIAL_B", "JumpAerialB"),
+            ("PK_AIR_FALL_AERIAL", "FallAerial"),
+        ):
+            self.assertIn(f'case {state}: return "{motion}";', source)
+        sampler = source[source.index("static float pikachu_source_animation_frame"):
+                         source.index("static float presentation_animation_frame")]
+        self.assertIn("case PK_LANDING_HEAVY: return (float)state->state_frame * 0.5f", sampler)
+
     def test_landing_events_have_explicit_bounded_host_visuals(self):
         source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
         landing = source[source.index("static void draw_pikachu_landing_effect"):
@@ -136,12 +158,22 @@ class PikachuRecipeTests(unittest.TestCase):
                       mapping)
         self.assertIn('case PK_QUICK_ATTACK_RECOVERY: return "UpSpecialAirEnd";',
                       mapping)
+        self.assertEqual(animations["UpSpecialEnd"], 2088)
+        self.assertIn('case PK_QUICK_ATTACK_GROUND_ZIP2: return "UpSpecialEnd";',
+                      mapping)
+        self.assertIn('case PK_QUICK_ATTACK_GROUND_RECOVERY: return "UpSpecialEnd";',
+                      mapping)
         sampler = source[source.index("static float pikachu_source_animation_frame"):
                          source.index("static float presentation_animation_frame")]
         for state in ("PK_QUICK_ATTACK_START", "PK_QUICK_ATTACK_ZIP1",
-                      "PK_QUICK_ATTACK_ZIP2"):
+                      "PK_QUICK_ATTACK_ZIP2",
+                      "PK_QUICK_ATTACK_GROUND_START",
+                      "PK_QUICK_ATTACK_GROUND_ZIP1",
+                      "PK_QUICK_ATTACK_GROUND_ZIP2"):
             self.assertIn(f"case {state}:", sampler)
-        for state in ("PK_QUICK_ATTACK_WINDOW", "PK_QUICK_ATTACK_RECOVERY"):
+        for state in ("PK_QUICK_ATTACK_WINDOW", "PK_QUICK_ATTACK_RECOVERY",
+                      "PK_QUICK_ATTACK_GROUND_WINDOW",
+                      "PK_QUICK_ATTACK_GROUND_RECOVERY"):
             self.assertIn(f"case {state}:", sampler)
         self.assertIn("game_smash64_pikachu_quick_animation_frame(1", sampler)
         self.assertIn("game_smash64_pikachu_quick_animation_frame(0", sampler)

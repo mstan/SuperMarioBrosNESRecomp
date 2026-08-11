@@ -767,10 +767,18 @@ static const char *animation_for_state(const ForeignState *state)
         case PK_CROUCH: return "Crouch";
         case PK_CROUCH_WAIT: return "CrouchIdle";
         case PK_CROUCH_END: return "CrouchEnd";
+        /* Pikachu's common KneeBend/LandingHeavy share the cached AirNull
+         * reloc. KneeBend exposes only its first three source ticks; heavy
+         * landing advances that eight-frame motion at 0.5. */
+        case PK_KNEEBEND: return "LandingAirX";
         case PK_LANDING: return "LandingAirX";
+        case PK_LANDING_HEAVY: return "LandingAirX";
         case PK_JUMP_GROUND: return "JumpF";
+        case PK_JUMP_GROUND_B: return "JumpB";
         case PK_JUMP_AERIAL: return "JumpAerialF";
+        case PK_JUMP_AERIAL_B: return "JumpAerialB";
         case PK_AIR_FALL: return "Fall";
+        case PK_AIR_FALL_AERIAL: return "FallAerial";
         case PK_JAB: return "Jab1";
         case PK_DASH_ATTACK: return "DashAttack";
         case PK_FTILT: return "AttackS3";
@@ -802,6 +810,14 @@ static const char *animation_for_state(const ForeignState *state)
         case PK_QUICK_ATTACK_ZIP2: return "UpSpecialAirEnd";
         case PK_QUICK_ATTACK_WINDOW:
         case PK_QUICK_ATTACK_RECOVERY: return "UpSpecialAirEnd";
+        /* Ground SpecialHi owns the ground End submotion (2088), not the
+         * aerial 2089 clip. Its Start/Zips are source speed zero and its End
+         * phases publish the same local End clock as the aerial graph. */
+        case PK_QUICK_ATTACK_GROUND_START:
+        case PK_QUICK_ATTACK_GROUND_ZIP1:
+        case PK_QUICK_ATTACK_GROUND_ZIP2: return "UpSpecialEnd";
+        case PK_QUICK_ATTACK_GROUND_WINDOW:
+        case PK_QUICK_ATTACK_GROUND_RECOVERY: return "UpSpecialEnd";
         /* Down-B has a complete source status family: 2090/91/92 ground and
          * 2093/94/95 air. Legacy serialized states keep their prior
          * groundness discriminator; all newly emitted states are explicit so
@@ -992,13 +1008,19 @@ static float pikachu_source_animation_frame(const ForeignState *state)
     case PK_QUICK_ATTACK_START:
     case PK_QUICK_ATTACK_ZIP1:
     case PK_QUICK_ATTACK_ZIP2:
+    case PK_QUICK_ATTACK_GROUND_START:
+    case PK_QUICK_ATTACK_GROUND_ZIP1:
+    case PK_QUICK_ATTACK_GROUND_ZIP2:
         return game_smash64_pikachu_quick_animation_frame(1,
                                                             state->state_frame);
     case PK_QUICK_ATTACK_WINDOW:
     case PK_QUICK_ATTACK_RECOVERY:
+    case PK_QUICK_ATTACK_GROUND_WINDOW:
+    case PK_QUICK_ATTACK_GROUND_RECOVERY:
         return game_smash64_pikachu_quick_animation_frame(0,
                                                             state->state_frame);
     case PK_LANDING_AIR_NULL: return (float)state->state_frame * 0.5f;
+    case PK_LANDING_HEAVY: return (float)state->state_frame * 0.5f;
     case PK_FALL_SPECIAL_LANDING: return (float)state->state_frame * 0.4f;
     case PK_WALK:
         /* Cached Figatree endpoints are 45/30/24 while source walk phases
@@ -1490,7 +1512,10 @@ static void draw_pikachu_spark(float center_x, float center_y, float z,
 
 static int pikachu_quick_state(unsigned state)
 {
-    return state >= PK_QUICK_ATTACK_START && state <= PK_QUICK_ATTACK_RECOVERY;
+    return (state >= PK_QUICK_ATTACK_START &&
+            state <= PK_QUICK_ATTACK_RECOVERY) ||
+           (state >= PK_QUICK_ATTACK_GROUND_START &&
+            state <= PK_QUICK_ATTACK_GROUND_RECOVERY);
 }
 
 static void apply_pikachu_quick_attack_pose(const ForeignState *state,
@@ -1506,7 +1531,9 @@ static void apply_pikachu_quick_attack_pose(const ForeignState *state,
      * fighter is actively zipping. Start/Window/Recovery keep their source
      * motion pose and must not inherit the joint-4 velocity transform. */
     if (!state || (state->state != PK_QUICK_ATTACK_ZIP1 &&
-                   state->state != PK_QUICK_ATTACK_ZIP2) ||
+                   state->state != PK_QUICK_ATTACK_ZIP2 &&
+                   state->state != PK_QUICK_ATTACK_GROUND_ZIP1 &&
+                   state->state != PK_QUICK_ATTACK_GROUND_ZIP2) ||
         s_model.joint_count <= 4u)
         return;
     r[4][0] = atan2f((float)state->vx, (float)state->vy) * state->facing -
@@ -1531,7 +1558,8 @@ static void draw_pikachu_quick_attack_effect(const ForeignState *state,
      * colour animation throughout startup/zip/end. The host has no fighter
      * colour-animation API, so show a bounded owner-card halo instead of
      * silently omitting that visible status. */
-    if (state->state == PK_QUICK_ATTACK_START) {
+    if (state->state == PK_QUICK_ATTACK_START ||
+        state->state == PK_QUICK_ATTACK_GROUND_START) {
         const float pulse = 5.0f + 1.5f * sinf((float)frame * 0.7f);
         draw_pikachu_effect_card(SMASH64_PIKACHU_EFFECT_THUNDER_SHOCK, frame,
                                  center_x, middle_y, pulse * unit,
@@ -1539,7 +1567,9 @@ static void draw_pikachu_quick_attack_effect(const ForeignState *state,
         return;
     }
     if (state->state == PK_QUICK_ATTACK_ZIP1 ||
-        state->state == PK_QUICK_ATTACK_ZIP2) {
+        state->state == PK_QUICK_ATTACK_ZIP2 ||
+        state->state == PK_QUICK_ATTACK_GROUND_ZIP1 ||
+        state->state == PK_QUICK_ATTACK_GROUND_ZIP2) {
         const float direction = atan2f((float)state->vy, (float)state->vx);
         const float forward_x = cosf(direction), forward_y = sinf(direction);
         nes_voxel_mesh_bind_texture(s_pikachu_spark_color, 1, 1, 1, 0.92f, 0);
@@ -1560,7 +1590,9 @@ static void draw_pikachu_quick_attack_effect(const ForeignState *state,
      * eight-frame residual at 0..7. Recovery reached by a rejected Window
      * continues at 9 and therefore correctly emits no duplicate ripple. */
     if ((state->state == PK_QUICK_ATTACK_WINDOW ||
-         state->state == PK_QUICK_ATTACK_RECOVERY) && frame < 8u) {
+         state->state == PK_QUICK_ATTACK_RECOVERY ||
+         state->state == PK_QUICK_ATTACK_GROUND_WINDOW ||
+         state->state == PK_QUICK_ATTACK_GROUND_RECOVERY) && frame < 8u) {
         const float phase = (float)frame;
         const float radius = (3.0f + phase * 1.1f) * unit;
         nes_voxel_mesh_bind_texture(s_pikachu_spark_color, 1, 1, 1,
