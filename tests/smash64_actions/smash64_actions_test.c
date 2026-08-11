@@ -188,6 +188,40 @@ int main(void)
     CHECK(smash64_actions_snapshot(slots, 8) == 1);
     CHECK(slots[0].vx > 0.0);
     smash64_actions_clear();
+    commands.events[0] = spawn(
+        6, FOREIGN_ACTION_FOLLOW_SURFACES |
+               FOREIGN_ACTION_SURFACE_SPEED |
+               FOREIGN_ACTION_ORIENTED_VELOCITY);
+    commands.events[0].velocity_x = 55.0;
+    commands.events[0].velocity_y = 0.0;
+    commands.events[0].offset_y = 0.0;
+    commands.events[0].surface_velocity = 55.0;
+    smash64_actions_apply_commands(&commands, 50.0, 120.0, -1.0, 0.08,
+                                   NULL);
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].surface_normal == SMASH64_ACTION_SURFACE_DOWN);
+    CHECK(slots[0].y == 116.0);
+    CHECK(slots[0].vx > 0.0);
+    CHECK(slots[0].vy == 0.0);
+    CHECK(slots[0].surface_anim_age == 0);
+    smash64_actions_clear();
+    commands.events[0] = spawn(
+        7, FOREIGN_ACTION_FOLLOW_SURFACES |
+               FOREIGN_ACTION_SURFACE_SPEED |
+               FOREIGN_ACTION_ORIENTED_VELOCITY);
+    commands.events[0].velocity_x = -55.0;
+    commands.events[0].velocity_y = 0.0;
+    commands.events[0].offset_y = 0.0;
+    commands.events[0].surface_velocity = 55.0;
+    smash64_actions_apply_commands(&commands, 50.0, 120.0, 1.0, 0.08,
+                                   NULL);
+    CHECK(smash64_actions_snapshot(slots, 8) == 1);
+    CHECK(slots[0].surface_normal == SMASH64_ACTION_SURFACE_DOWN);
+    CHECK(slots[0].y == 116.0);
+    CHECK(slots[0].vx < 0.0);
+    CHECK(slots[0].vy == 0.0);
+    CHECK(slots[0].surface_anim_age == 0);
+    smash64_actions_clear();
     CHECK(smash64_actions_restore(&saved));
 
     compact_len = smash64_actions_serialize(compact, sizeof(compact));

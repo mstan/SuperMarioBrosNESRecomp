@@ -176,6 +176,7 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
     if (s_fighter.last_motion.events &
         PIKACHU_EVENT_BIT(PIKACHU_EVENT_PROJECTILE_JOLT_SPAWN)) {
         ForeignActionEvent *event = &out->actions.events[out->actions.count++];
+        const int ground_jolt = s_fighter.state == PK_THUNDER_JOLT_GROUND;
         memset(event, 0, sizeof(*event));
         event->instance_id = s_fighter.projectile.persistent_action_id;
         event->kind = PIKACHU_PROJECTILE_JOLT;
@@ -184,13 +185,17 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
                        FOREIGN_ACTION_FOLLOW_SURFACES |
                        FOREIGN_ACTION_SURFACE_SPEED |
                        FOREIGN_ACTION_ORIENTED_VELOCITY;
-        /* ftPikachuSpecialNProcAccessory evaluates joint 11 with no authored
-         * offset. Hosts must resolve this identity or fail the spawn closed. */
-        event->source_joint = 11;
-        event->offset_x = 0.0;
+        /* Air Jolt can use source joint 11 directly. In grounded Wait/Run
+         * poses, the current host joint-11 projection resolves behind the
+         * rendered Pikachu body; use an equivalent front-of-body root offset
+         * until the full effect hierarchy/joint-space seam is replaced. */
+        event->source_joint = ground_jolt ? 0u : 11u;
+        event->offset_x = ground_jolt ? -240.0 : 0.0;
         event->offset_y = 0.0;
-        event->velocity_x = s_fighter.projectile.speed_x;
-        event->velocity_y = s_fighter.projectile.speed_y;
+        event->velocity_x = ground_jolt
+            ? (s_fighter.projectile.speed_x < 0.0 ? -55.0 : 55.0)
+            : s_fighter.projectile.speed_x;
+        event->velocity_y = ground_jolt ? 0.0 : s_fighter.projectile.speed_y;
         event->surface_velocity = 55.0;
         event->width = 100.0;
         event->height = 100.0;

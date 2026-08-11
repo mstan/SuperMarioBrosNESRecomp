@@ -336,6 +336,16 @@ void smash64_actions_apply_commands(const ForeignActionEvents *events,
         slot->surface_speed = e->surface_velocity * units_to_px;
         slot->width = e->width * units_to_px;
         slot->height = e->height * units_to_px;
+        if ((slot->flags & FOREIGN_ACTION_FOLLOW_SURFACES) &&
+            (slot->flags & FOREIGN_ACTION_SURFACE_SPEED) &&
+            fabs(e->velocity_y) < 0.0001 &&
+            slot->surface_speed > 0.0) {
+            action_set_surface_normal(slot, SMASH64_ACTION_SURFACE_DOWN);
+            slot->y -= slot->height * 0.5;
+            slot->vy = 0.0;
+            slot->vx = slot->vx < 0.0 ? -slot->surface_speed
+                                      : slot->surface_speed;
+        }
         slot->damage = e->damage;
         slot->lifetime = e->lifetime_ticks ? e->lifetime_ticks : 180;
         if (!isfinite(slot->x) || !isfinite(slot->y) ||
