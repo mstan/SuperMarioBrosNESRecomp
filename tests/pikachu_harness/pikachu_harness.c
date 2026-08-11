@@ -573,6 +573,7 @@ static void special_air_and_ground_quick_vectors(void)
     PikachuCollision hit;
     uint8_t blob[1 + sizeof(f)];
     uint8_t v4[1 + 280u];
+    uint8_t v5[1 + 288u];
     int i;
 
     /* SpecialAirN uses AirVelFriction for all 64 frames; ground SpecialN
@@ -741,11 +742,11 @@ static void special_air_and_ground_quick_vectors(void)
     CHECK(pikachu_deserialize(&restored, v4, (int)sizeof(v4)));
     CHECK(restored.state == PK_QUICK_ATTACK_GROUND_START && restored.grounded);
     /* v5's 288-byte padded image predates the no-third-direction latch. */
-    memset(blob, 0xA5, sizeof(blob)); blob[0] = 5u;
-    memcpy(blob + 1, &restored,
+    memset(v5, 0xA5, sizeof(v5)); v5[0] = 5u;
+    memcpy(v5 + 1, &restored,
            offsetof(PikachuFighter, quick_is_subsequent));
     pikachu_reset(&f);
-    CHECK(pikachu_deserialize(&f, blob, (int)sizeof(blob)));
+    CHECK(pikachu_deserialize(&f, v5, (int)sizeof(v5)));
     CHECK(!f.quick_is_subsequent &&
           f.state == PK_QUICK_ATTACK_GROUND_START);
     restored = f;
@@ -1051,6 +1052,42 @@ static void quick_attack_and_save_vectors(void)
         CHECK(saved.quick_end_frame == f.quick_end_frame);
     }
     CHECK(saved.persistent_action_id == f.persistent_action_id);
+
+    /* Motion -1 freezes the pre-Start private pose; the production bridge
+     * replaces its clock with the exact public locomotion clock. Controller
+     * save v7 retains both fields without replaying entry. */
+    pikachu_reset(&f); f.state = PK_RUN; f.action_frame = 13u;
+    memset(&in, 0, sizeof(in)); in.special_pressed = 1; in.stick_y = 80;
+    step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_GROUND_START);
+    CHECK(f.quick_entry_state == PK_RUN && f.quick_entry_frame == 13u);
+    {
+        uint8_t blob[1 + sizeof(f)]; int len;
+        len = pikachu_serialize(&f, blob, (int)sizeof(blob));
+        pikachu_reset(&f);
+        CHECK(len > 0 && pikachu_deserialize(&f, blob, len));
+        CHECK(f.quick_entry_state == PK_RUN && f.quick_entry_frame == 13u);
+    }
+
+    /* v6 had no entry presentation. Its historical 288-byte image migrates
+     * active ground/air Start to deterministic neutral frame-zero poses. */
+    {
+        uint8_t v6[1 + 288u];
+        pikachu_reset(&saved); saved.state = PK_QUICK_ATTACK_START;
+        saved.grounded = 0;
+        memset(v6, 0, sizeof(v6)); v6[0] = 6u;
+        memcpy(v6 + 1, &saved, 288u);
+        CHECK(pikachu_deserialize(&f, v6, (int)sizeof(v6)));
+        CHECK(f.quick_entry_state == PK_AIR_FALL &&
+              f.quick_entry_frame == 0u);
+        pikachu_reset(&saved); saved.state = PK_QUICK_ATTACK_START;
+        saved.grounded = 1;
+        memcpy(v6 + 1, &saved, 288u);
+        CHECK(pikachu_deserialize(&f, v6, (int)sizeof(v6)));
+        CHECK(f.state == PK_QUICK_ATTACK_GROUND_START);
+        CHECK(f.quick_entry_state == PK_GROUND_WAIT &&
+              f.quick_entry_frame == 0u);
+    }
 
     /* v1 records ended before End/FallSpecial bookkeeping. Non-Quick states
      * retain their prefix, but active Quick phases must reject rather than

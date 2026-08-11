@@ -103,6 +103,15 @@ static void pk_tick(ForeignState *state, const ForeignInput *input,
     raw.down_pressed = input->down_pressed;
     s_fighter.grounded = state->grounded;
     pikachu_tick(&s_fighter, &raw, &s_fighter.last_motion);
+    if ((s_fighter.state == PK_QUICK_ATTACK_START ||
+         s_fighter.state == PK_QUICK_ATTACK_GROUND_START) &&
+        previous_state != s_fighter.state) {
+        /* Locomotion's private action clock owns transitions, while the
+         * engine ForeignState owns the exact visible cycle. Motion -1 needs
+         * the latter, including its save/load-stable Run/Wait/Fall phase. */
+        s_fighter.quick_entry_state = previous_state;
+        s_fighter.quick_entry_frame = previous_frame;
+    }
 
     out->requested_dx = s_fighter.last_motion.requested_dx;
     out->requested_dy = s_fighter.last_motion.requested_dy;
@@ -301,3 +310,14 @@ int smash64_pikachu_register(void)
 
 const PikachuMotion *smash64_pikachu_last_motion(void) { return &s_fighter.last_motion; }
 void smash64_pikachu_thunder_self_contact(void) { pikachu_note_thunder_self_contact(&s_fighter); }
+int smash64_pikachu_quick_entry_pose(int active_state, int *entry_state,
+                                     unsigned *entry_frame)
+{
+    if (!entry_state || !entry_frame || active_state != s_fighter.state ||
+        (active_state != PK_QUICK_ATTACK_START &&
+         active_state != PK_QUICK_ATTACK_GROUND_START))
+        return 0;
+    *entry_state = s_fighter.quick_entry_state;
+    *entry_frame = s_fighter.quick_entry_frame;
+    return 1;
+}

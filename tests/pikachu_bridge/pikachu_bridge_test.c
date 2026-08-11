@@ -111,6 +111,55 @@ int main(void)
     CHECK(state.state == PK_QUICK_ATTACK_GROUND_START);
     CHECK(state.state_frame == 0u && state.grounded);
 
+    /* SpecialHi Start's source motion is -1: freeze the exact public entry
+     * pose rather than substituting an End pose. Exercise three distinct
+     * locomotion clocks and replay the captured Wait pose from private save. */
+    {
+        uint8_t private_blob[512];
+        ForeignState saved_state;
+        int entry_state;
+        unsigned entry_frame;
+        int private_len;
+        registered->reset(&state);
+        state.state = PK_GROUND_WAIT; state.state_frame = 37u;
+        memset(&input, 0, sizeof(input)); input.special_pressed = 1;
+        input.stick_y = 1.0f; memset(&move, 0, sizeof(move));
+        registered->tick(&state, &input, &move);
+        CHECK(smash64_pikachu_quick_entry_pose(
+            state.state, &entry_state, &entry_frame));
+        CHECK(entry_state == PK_GROUND_WAIT && entry_frame == 37u);
+        saved_state = state;
+        private_len = private_get(&state, private_blob,
+                                  (int)sizeof(private_blob));
+        CHECK(private_len > 0);
+        memset(&input, 0, sizeof(input)); memset(&move, 0, sizeof(move));
+        registered->tick(&state, &input, &move);
+        state = saved_state;
+        CHECK(private_set(&state, private_blob, private_len));
+        CHECK(smash64_pikachu_quick_entry_pose(
+            state.state, &entry_state, &entry_frame));
+        CHECK(entry_state == PK_GROUND_WAIT && entry_frame == 37u);
+
+        registered->reset(&state);
+        state.state = PK_RUN; state.state_frame = 23u;
+        memset(&input, 0, sizeof(input)); input.special_pressed = 1;
+        input.stick_y = 1.0f; memset(&move, 0, sizeof(move));
+        registered->tick(&state, &input, &move);
+        CHECK(smash64_pikachu_quick_entry_pose(
+            state.state, &entry_state, &entry_frame));
+        CHECK(entry_state == PK_RUN && entry_frame == 23u);
+
+        registered->reset(&state);
+        state.state = PK_AIR_FALL; state.state_frame = 11u;
+        state.grounded = 0;
+        memset(&input, 0, sizeof(input)); input.special_pressed = 1;
+        input.stick_y = 1.0f; memset(&move, 0, sizeof(move));
+        registered->tick(&state, &input, &move);
+        CHECK(smash64_pikachu_quick_entry_pose(
+            state.state, &entry_state, &entry_frame));
+        CHECK(entry_state == PK_AIR_FALL && entry_frame == 11u);
+    }
+
     /* The bridge must publish the host's down edge into the private buffered
      * fast-fall input and mirror the resulting latch back to ForeignState. */
     registered->reset(&state);

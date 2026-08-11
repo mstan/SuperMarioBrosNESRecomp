@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#define PIKACHU_SAVE_VERSION 6u
+#define PIKACHU_SAVE_VERSION 7u
 
 static void enter(PikachuFighter *f, int state)
 {
@@ -573,6 +573,11 @@ static void choose_action(PikachuFighter *f, const PikachuInputRaw *in)
          * common fast-fall flag on entry. */
         f->fast_fall = 0;
         if (in->stick_y >= 20) {
+            /* SpecialHi Start has motion id -1. Preserve the entering pose;
+             * the Foreign bridge replaces this private clock with its exact
+             * public presentation clock before publishing the first tick. */
+            f->quick_entry_state = f->state;
+            f->quick_entry_frame = f->action_frame;
             f->vel_x = 0.0;
             f->vel_y = 0.0;
             enter(f, air ? PK_QUICK_ATTACK_START
@@ -1511,7 +1516,13 @@ static int valid(const PikachuFighter *f)
         (!f->fast_fall || !f->grounded) &&
         f->down_tap_age <= PIKACHU_SOURCE_FAST_FALL_TAP_MAX &&
         f->quick_is_subsequent >= 0 && f->quick_is_subsequent <= 1 &&
-        (!f->quick_is_subsequent || quick_is_window(f->state));
+        (!f->quick_is_subsequent || quick_is_window(f->state)) &&
+        f->quick_entry_state >= 0 && f->quick_entry_state < PK_STATE_COUNT &&
+        !quick_is_start(f->quick_entry_state) &&
+        !quick_is_zip1(f->quick_entry_state) &&
+        !quick_is_window(f->quick_entry_state) &&
+        !quick_is_zip2(f->quick_entry_state) &&
+        !quick_is_recovery(f->quick_entry_state);
 }
 int pikachu_serialize(const PikachuFighter *f, uint8_t *buf, int cap)
 {
@@ -1527,6 +1538,8 @@ int pikachu_deserialize(PikachuFighter *f, const uint8_t *buf, int len)
     const size_t v4_wire_size = 280u;
     const size_t v5_size = offsetof(PikachuFighter, quick_is_subsequent);
     const size_t v5_wire_size = 288u;
+    const size_t v6_size = offsetof(PikachuFighter, quick_entry_state);
+    const size_t v6_wire_size = 288u;
     int legacy_thunder_variant = 0;
     int legacy_record = 0;
     if (!f || !buf) return 0;
@@ -1534,6 +1547,9 @@ int pikachu_deserialize(PikachuFighter *f, const uint8_t *buf, int len)
     if (buf[0] == PIKACHU_SAVE_VERSION &&
         len == (int)(1 + sizeof(candidate))) {
         memcpy(&candidate, buf + 1, sizeof(candidate));
+    } else if (buf[0] == 6u && len == (int)(1 + v6_wire_size)) {
+        memcpy(&candidate, buf + 1, v6_size);
+        legacy_record = 1;
     } else if (buf[0] == 5u && len == (int)(1 + v5_wire_size)) {
         memcpy(&candidate, buf + 1, v5_size);
         legacy_record = 1;
@@ -1568,6 +1584,14 @@ int pikachu_deserialize(PikachuFighter *f, const uint8_t *buf, int len)
             quick_is_recovery(candidate.state))
             return 0;
     } else return 0;
+    if (legacy_record) {
+        /* Pre-v7 saves did not retain the entry pose. A neutral ground/air
+         * pose is deterministic and safe; never infer a mid-animation frame
+         * or re-decide gameplay state during load. */
+        candidate.quick_entry_state = candidate.grounded
+            ? PK_GROUND_WAIT : PK_AIR_FALL;
+        candidate.quick_entry_frame = 0u;
+    }
     /* v1/v2 had one set of Thunder ordinals and relied on grounded as an
      * implicit presentation/physics variant. Preserve their airborne future
      * by migrating those three statuses to the appended explicit air graph. */

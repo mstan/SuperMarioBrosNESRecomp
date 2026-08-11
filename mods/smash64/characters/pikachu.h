@@ -31,3 +31,7 @@ int smash64_pikachu_register(void);
 /* Controller-local event/projectile interface until the SMB host ABI consumes it. */
 const PikachuMotion *smash64_pikachu_last_motion(void);
 void smash64_pikachu_thunder_self_contact(void);
+/* SpecialHi Start's source motion id is -1. Query the serialized pose frozen
+ * on entry; succeeds only while `active_state` is the matching Start phase. */
+int smash64_pikachu_quick_entry_pose(int active_state, int *entry_state,
+                                     unsigned *entry_frame);

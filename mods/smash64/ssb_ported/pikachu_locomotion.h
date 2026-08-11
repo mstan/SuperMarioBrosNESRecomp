@@ -178,6 +178,10 @@ typedef struct {
     /* Append-only v6 latch: the second zip's End waits the same nine source
      * frames as the first End, but must never accept a third direction. */
     int quick_is_subsequent;
+    /* Append-only v7 presentation latch. SpecialHi Start has motion id -1:
+     * it freezes the exact pose that was active on entry for all 20 ticks. */
+    int quick_entry_state;
+    unsigned quick_entry_frame;
 } PikachuFighter;
 
 const char *pikachu_state_name(int state);
