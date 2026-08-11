@@ -158,6 +158,8 @@ typedef struct {
      * accepts pre-clock v1 records with these fields cleared. */
     unsigned quick_end_frame;
     int quick_fall_special;
+    /* Append-only v4 field: Attack11's asynchronous frame-10 repeat latch. */
+    int jab_repeat_pending;
 } PikachuFighter;
 
 const char *pikachu_state_name(int state);

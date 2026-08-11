@@ -146,11 +146,11 @@ projectiles and never alter SMB blocks.
 
 | Move | Source animation + motion script | Active frame(s), source damage | Required event(s) and host result |
 |---|---|---|---|
-| Jab | reloc `2016_FTPikachuAnimJab1`; `0x0E34` | `[2,6)`, 4 | `FGMLightSwingS` at 2; one forward union; no root travel. |
+| Jab | reloc `2016_FTPikachuAnimJab1`; `0x0E34` | `[2,6)`, 4 | `FGMLightSwingS` at 2; one forward union; no root travel. Motion flag 1 opens asynchronously at frame 10: an earlier A edge is latched until 10, while an edge at or after 10 repeats immediately. |
 | Forward tilt | reloc `2019_FTPikachuAnimFTilt`; `0x0F50` | `[5,15)`, 10 | `FGMLightSwingM` at 5; one forward union; no root travel. |
 | Dash attack | reloc `2017_FTPikachuAnimDashAttack`; `0x0E80` | `[4,23)`, 12 | `FGMLightSwingL` at 4; one forward union; no root travel. Regression rule: source macros are `(aid,gid,jid,damage,...,kbb)`; the record's 40 is KBB, not damage. |
 | Up tilt | reloc `2021_FTPikachuAnimUTilt`; `0x0FF0` | `[5,15)`, 11 | `FGMLightSwingM` at 5; upward union; no root travel. The same fourth-argument rule prevents regressing this to 10. |
-| Down tilt | reloc `2022_FTPikachuAnimDTilt`; `0x103C` | `[6,14)`, 12 | `FGMLightSwingM` at 6; low forward union; no root travel. |
+| Down tilt | reloc `2022_FTPikachuAnimDTilt`; `0x103C` | `[6,14)`, 12 | `FGMLightSwingM` at 6; low forward union; no root travel; returns to Crouch Wait. |
 | Neutral air | reloc `2026_FTPikachuAnimAttackAirN`; `0x12E8` | `[3,11)`, 14 then `[11,29)`, 11 | `FGMLightSwingM` at 3; body union follows the pose; physical contact may break eligible bricks. |
 | Forward air | reloc `2027_FTPikachuAnimAttackAirF`; `0x1380`, `TRANSN_JOINT` | `[7,9)`, `[10,12)`, `[13,15)`, `[16,18)`, `[19,21)`, `[22,24)`, `[25,27)`, each 3 | `FGMPikachuElectric2` at 7, then `FGMMarioUnkSwing2` for each pulse; show electric color/effect on the attack side. |
 | Back air | reloc `2028_FTPikachuAnimAttackAirB`; `0x1420` | `[10,14)`, 16 then `[14,22)`, 14 | `FGMLightSwingL` at 10; union is behind logical facing. |

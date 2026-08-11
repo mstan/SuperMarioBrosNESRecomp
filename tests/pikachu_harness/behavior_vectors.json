@@ -28,6 +28,10 @@
     "landing_air_f_frames": 16,
     "landing_air_d_frames": 40,
     "source_action_end_frames": { "jab": 34, "ftilt": 30, "nair": 37, "fair": 40, "bair": 42, "dair": 45, "dash_attack": 57, "utilt": 26, "dtilt": 26, "uair": 34, "thunder_jolt_ground_air": 64 },
+    "jab_repeat_flag_frame": 10,
+    "jab_repeat_before_flag": "latch_then_restart_at_frame_10",
+    "jab_repeat_at_or_after_flag": "restart_immediately",
+    "dtilt_end_state": "CROUCH_WAIT",
     "held_full_direction_persists_run": true,
     "visual_height_px": 16,
     "quick_attack_has_hitbox": false,
@@ -78,7 +82,8 @@
       "action": "JAB",
       "motion": "2016_FTPikachuAnimJab1 / 0x0E34",
       "windows": [{ "from": 2, "to": 6, "damage": 4, "side": "forward" }],
-      "events": [{ "frame": 2, "id": "FGM_LIGHT_S" }]
+      "events": [{ "frame": 2, "id": "FGM_LIGHT_S" }],
+      "repeat": { "flag_frame": 10, "early_edge": "latched", "open_edge": "immediate_restart" }
     },
     {
       "action": "FTILT",
@@ -143,7 +148,8 @@
       "action": "DTILT",
       "motion": "2022_FTPikachuAnimDTilt / 0x103C",
       "windows": [{ "from": 6, "to": 14, "damage": 12, "side": "forward_low" }],
-      "events": [{ "frame": 6, "id": "FGM_LIGHT_M" }]
+      "events": [{ "frame": 6, "id": "FGM_LIGHT_M" }],
+      "end_state": "CROUCH_WAIT"
     },
     {
       "action": "UAIR",

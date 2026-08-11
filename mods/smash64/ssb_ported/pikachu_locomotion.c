@@ -4,12 +4,15 @@
 #include <stddef.h>
 #include <string.h>
 
-#define PIKACHU_SAVE_VERSION 3u
+#define PIKACHU_SAVE_VERSION 4u
 
 static void enter(PikachuFighter *f, int state)
 {
     f->state = state;
     f->action_frame = 0;
+    /* Attack11's repeat request is status-local. Every ordinary status entry,
+     * including a fresh or repeated Jab, starts with a clean latch. */
+    f->jab_repeat_pending = 0;
     f->persistent_action_id = ++f->next_action_id;
 }
 
@@ -256,15 +259,35 @@ static void landing_air_motion(PikachuFighter *f, PikachuMotion *out)
     out->requested_dx = f->vel_x;
 }
 
-static void normal_schedule(PikachuFighter *f, PikachuMotion *out)
+static void normal_schedule(PikachuFighter *f, const PikachuInputRaw *in,
+                            PikachuMotion *out)
 {
     unsigned n = f->action_frame;
     switch (f->state) {
     case PK_JAB:
+        /* Attack11's asynchronous flag1 opens at frame 10. A repeat edge
+         * before it is remembered, then restarts exactly when the flag opens;
+         * an edge at/after 10 restarts immediately. The selecting frame-zero
+         * A edge is not itself a repeat request. */
+        if (in->attack_pressed && n > 0u) {
+            if (n < 10u) {
+                f->jab_repeat_pending = 1;
+            } else {
+                f->jab_repeat_pending = 0;
+                enter(f, PK_JAB);
+                n = 0u;
+            }
+        } else if (n >= 10u && f->jab_repeat_pending) {
+            f->jab_repeat_pending = 0;
+            enter(f, PK_JAB);
+            n = 0u;
+        }
         if (n == 2) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_S);
         if (n >= 2 && n < 6) set_attack(out, 45, 40, 65, 55, 4, 1);
-        if (n >= PIKACHU_SOURCE_JAB_FRAMES)
+        if (n >= PIKACHU_SOURCE_JAB_FRAMES) {
+            f->jab_repeat_pending = 0;
             enter(f, f->grounded ? PK_GROUND_WAIT : PK_AIR_FALL);
+        }
         break;
     case PK_FTILT:
         if (n == 5) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_M);
@@ -320,7 +343,7 @@ static void normal_schedule(PikachuFighter *f, PikachuMotion *out)
         if (n == 6) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_M);
         if (n >= 6 && n < 14) set_attack(out, 85, 18, 145, 58, 12, 1);
         if (n >= PIKACHU_SOURCE_DTILT_FRAMES)
-            enter(f, f->grounded ? PK_GROUND_WAIT : PK_AIR_FALL);
+            enter(f, f->grounded ? PK_CROUCH_WAIT : PK_AIR_FALL);
         break;
     case PK_UAIR:
         air_motion(f, out);
@@ -741,7 +764,7 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
                f->state == PK_LANDING_AIR_NULL ||
                f->state == PK_LANDING_AIR_F ||
                f->state == PK_LANDING_AIR_D) {
-        normal_schedule(f, out);
+        normal_schedule(f, in, out);
     } else if (f->state == PK_THUNDER_JOLT_GROUND || f->state == PK_THUNDER_JOLT_AIR) {
         if (n == 0) {
             /* PikachuMainMotion plays only the voice on grounded SpecialN;
@@ -1060,7 +1083,8 @@ static int valid(const PikachuFighter *f)
         f->projectile.kind >= PIKACHU_PROJECTILE_NONE &&
         f->projectile.kind <= PIKACHU_PROJECTILE_THUNDER &&
         f->quick_end_frame <= PIKACHU_SOURCE_QUICK_ATTACK_END_ANIMATION_FRAMES &&
-        f->quick_fall_special >= 0 && f->quick_fall_special <= 1;
+        f->quick_fall_special >= 0 && f->quick_fall_special <= 1 &&
+        f->jab_repeat_pending >= 0 && f->jab_repeat_pending <= 1;
 }
 int pikachu_serialize(const PikachuFighter *f, uint8_t *buf, int cap)
 {
@@ -1071,14 +1095,17 @@ int pikachu_deserialize(PikachuFighter *f, const uint8_t *buf, int len)
 {
     PikachuFighter candidate;
     const size_t v1_size = offsetof(PikachuFighter, quick_end_frame);
+    const size_t v3_size = offsetof(PikachuFighter, jab_repeat_pending);
     int legacy_thunder_variant = 0;
     if (!f || !buf) return 0;
     memset(&candidate, 0, sizeof(candidate));
     if (buf[0] == PIKACHU_SAVE_VERSION &&
         len == (int)(1 + sizeof(candidate))) {
         memcpy(&candidate, buf + 1, sizeof(candidate));
-    } else if (buf[0] == 2u && len == (int)(1 + sizeof(candidate))) {
-        memcpy(&candidate, buf + 1, sizeof(candidate));
+    } else if (buf[0] == 3u && len == (int)(1 + v3_size)) {
+        memcpy(&candidate, buf + 1, v3_size);
+    } else if (buf[0] == 2u && len == (int)(1 + v3_size)) {
+        memcpy(&candidate, buf + 1, v3_size);
         legacy_thunder_variant = 1;
     } else if (buf[0] == 1u && len == (int)(1 + v1_size)) {
         /* v1 ended immediately after quick_first_{x,y}. Its new End/Fall

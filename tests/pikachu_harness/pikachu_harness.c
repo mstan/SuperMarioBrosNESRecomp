@@ -84,6 +84,83 @@ static void timing_and_projectile_vectors(void)
     CHECK(m.attack.active && !m.attack.break_blocks);
 }
 
+static void jab_repeat_vectors(void)
+{
+    PikachuFighter f, restored, unchanged;
+    PikachuInputRaw in;
+    PikachuMotion m;
+    uint8_t blob[1 + sizeof(f)];
+    uint8_t v3[1 + offsetof(PikachuFighter, jab_repeat_pending)];
+    uint32_t first_action;
+    int len;
+
+    /* An A edge before Attack11's asynchronous frame-10 flag latches but
+     * cannot restart the motion early. The latch is part of save state and
+     * replays the same restart exactly at frame 10 after restore. */
+    pikachu_reset(&f);
+    memset(&in, 0, sizeof(in));
+    in.attack_pressed = 1;
+    m = step(&f, in);
+    first_action = f.persistent_action_id;
+    CHECK(f.state == PK_JAB && f.action_frame == 1u);
+    CHECK(!f.jab_repeat_pending && m.action_frame == 0u);
+    memset(&in, 0, sizeof(in));
+    while (f.action_frame < 5u) step(&f, in);
+    in.attack_pressed = 1;
+    m = step(&f, in);
+    CHECK(f.state == PK_JAB && f.action_frame == 6u);
+    CHECK(f.jab_repeat_pending && m.action_frame == 5u);
+    len = pikachu_serialize(&f, blob, (int)sizeof(blob));
+    pikachu_reset(&restored);
+    CHECK(len == (int)sizeof(blob));
+    CHECK(pikachu_deserialize(&restored, blob, len));
+    CHECK(restored.jab_repeat_pending && restored.action_frame == 6u);
+    memset(&in, 0, sizeof(in));
+    while (restored.action_frame < 10u) step(&restored, in);
+    CHECK(restored.state == PK_JAB && restored.jab_repeat_pending);
+    m = step(&restored, in);
+    CHECK(restored.state == PK_JAB && restored.action_frame == 1u);
+    CHECK(!restored.jab_repeat_pending && m.action_frame == 0u);
+    CHECK(restored.persistent_action_id != first_action);
+
+    /* At and after the frame-10 flag, a fresh edge restarts immediately. */
+    pikachu_reset(&f);
+    f.state = PK_JAB;
+    f.action_frame = 10u;
+    first_action = f.persistent_action_id;
+    memset(&in, 0, sizeof(in)); in.attack_pressed = 1;
+    m = step(&f, in);
+    CHECK(f.state == PK_JAB && f.action_frame == 1u);
+    CHECK(m.action_frame == 0u && !f.jab_repeat_pending);
+    CHECK(f.persistent_action_id != first_action);
+    pikachu_reset(&f);
+    f.state = PK_JAB;
+    f.action_frame = 11u;
+    first_action = f.persistent_action_id;
+    m = step(&f, in);
+    CHECK(f.state == PK_JAB && f.action_frame == 1u);
+    CHECK(m.action_frame == 0u && f.persistent_action_id != first_action);
+
+    /* v3 predates the latch and therefore migrates it cleared. Current v4
+     * rejects an invalid latch transactionally. */
+    pikachu_reset(&f);
+    f.state = PK_JAB;
+    f.action_frame = 6u;
+    v3[0] = 3u;
+    memcpy(v3 + 1, &f, offsetof(PikachuFighter, jab_repeat_pending));
+    pikachu_reset(&restored);
+    CHECK(pikachu_deserialize(&restored, v3, (int)sizeof(v3)));
+    CHECK(restored.state == PK_JAB && restored.action_frame == 6u);
+    CHECK(!restored.jab_repeat_pending);
+    unchanged = restored;
+    f = restored;
+    f.jab_repeat_pending = 2;
+    blob[0] = 4u;
+    memcpy(blob + 1, &f, sizeof(f));
+    CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+    CHECK(memcmp(&restored, &unchanged, sizeof(restored)) == 0);
+}
+
 static void thunder_phase_vectors(void)
 {
     PikachuFighter f, restored;
@@ -92,6 +169,7 @@ static void thunder_phase_vectors(void)
     PikachuCollision hit;
     uint8_t blob[1 + sizeof(f)];
     int i, len;
+    const size_t v3_size = offsetof(PikachuFighter, jab_repeat_pending);
     const int phases[] = {
         PK_THUNDER_START, PK_THUNDER_LOOP, PK_THUNDER_SELF_HIT,
         PK_THUNDER_END, PK_THUNDER_AIR_START, PK_THUNDER_AIR_LOOP,
@@ -166,7 +244,7 @@ static void thunder_phase_vectors(void)
     step(&f, in);
     CHECK(f.state == PK_AIR_FALL);
 
-    /* Every explicit phase survives v2 save/load with its local frame and
+    /* Every explicit phase survives current save/load with its local frame and
      * projectile lifetime identity intact. Appended ordinals do not migrate
      * or reinterpret the legacy ground phases. */
     for (i = 0; i < (int)(sizeof(phases) / sizeof(phases[0])); ++i) {
@@ -204,9 +282,10 @@ static void thunder_phase_vectors(void)
             f.grounded = 0;
             f.action_frame = 9u;
             blob[0] = 2u;
-            memcpy(blob + 1, &f, sizeof(f));
+            memcpy(blob + 1, &f, v3_size);
             pikachu_reset(&restored);
-            CHECK(pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+            CHECK(pikachu_deserialize(&restored, blob,
+                                      (int)(1 + v3_size)));
             CHECK(restored.state == air_states[i]);
             CHECK(restored.action_frame == 9u);
         }
@@ -214,13 +293,14 @@ static void thunder_phase_vectors(void)
         restored.state = PK_WALK;
         f = restored;
         blob[0] = 3u;
-        memcpy(blob + 1, &f, sizeof(f));
+        memcpy(blob + 1, &f, v3_size);
         {
             int invalid = PK_STATE_COUNT;
             memcpy(blob + 1 + offsetof(PikachuFighter, state), &invalid,
                    sizeof(invalid));
         }
-        CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+        CHECK(!pikachu_deserialize(&restored, blob,
+                                   (int)(1 + v3_size)));
         CHECK(restored.state == PK_WALK);
 
         /* v3 records must not smuggle a phase/kinetics contradiction past
@@ -229,13 +309,15 @@ static void thunder_phase_vectors(void)
         f.state = PK_THUNDER_START;
         f.grounded = 0;
         blob[0] = 3u;
-        memcpy(blob + 1, &f, sizeof(f));
-        CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+        memcpy(blob + 1, &f, v3_size);
+        CHECK(!pikachu_deserialize(&restored, blob,
+                                   (int)(1 + v3_size)));
         CHECK(restored.state == PK_WALK);
         f.state = PK_THUNDER_AIR_LOOP;
         f.grounded = 1;
-        memcpy(blob + 1, &f, sizeof(f));
-        CHECK(!pikachu_deserialize(&restored, blob, (int)sizeof(blob)));
+        memcpy(blob + 1, &f, v3_size);
+        CHECK(!pikachu_deserialize(&restored, blob,
+                                   (int)(1 + v3_size)));
         CHECK(restored.state == PK_WALK);
     }
 }
@@ -761,7 +843,7 @@ static void source_action_end_clock_vectors(void)
     CHECK_ACTION_END(PK_UTILT, PIKACHU_SOURCE_UTILT_FRAMES, 1,
                      PK_GROUND_WAIT);
     CHECK_ACTION_END(PK_DTILT, PIKACHU_SOURCE_DTILT_FRAMES, 1,
-                     PK_GROUND_WAIT);
+                     PK_CROUCH_WAIT);
     CHECK_ACTION_END(PK_UAIR, PIKACHU_SOURCE_UAIR_FRAMES, 0, PK_AIR_FALL);
     CHECK_ACTION_END(PK_THUNDER_JOLT_GROUND,
                      PIKACHU_SOURCE_THUNDER_JOLT_FRAMES, 1,
@@ -773,7 +855,8 @@ static void source_action_end_clock_vectors(void)
 
 int main(void)
 {
-    selection_vectors(); timing_and_projectile_vectors(); aerial_normal_motion_vectors();
+    selection_vectors(); timing_and_projectile_vectors(); jab_repeat_vectors();
+    aerial_normal_motion_vectors();
     thunder_phase_vectors();
     locomotion_vectors(); jump_fall_vectors(); standard_state_timing_vectors();
     crouch_and_landing_vectors(); aerial_landing_vectors();
