@@ -23,6 +23,10 @@
     "turn_run_animation_frames": 18,
     "crouch_animation_frames": 4,
     "landing_animation_frames": 16,
+    "attack_air_skip_landing_velocity_y": -20,
+    "landing_air_null_frames": 16,
+    "landing_air_f_frames": 16,
+    "landing_air_d_frames": 40,
     "held_full_direction_persists_run": true,
     "visual_height_px": 16,
     "quick_attack_has_hitbox": false,
@@ -147,6 +151,41 @@
       "events": [{ "frame": 3, "id": "FGM_LIGHT_M" }]
     },
     {
+      "action": "LANDING_AIR_NULL",
+      "motion": "1976_FTPikachuAnimLandingAirX / 0x1574 / 8 frames at flag1 50 percent speed",
+      "selected_from": [
+        { "action": "NAIR", "from": 3, "to": 29 },
+        { "action": "BAIR", "from": 10, "to": 22 }
+      ],
+      "windows": [],
+      "events": [
+        { "frame": 0, "id": "FGM_LANDING" },
+        { "frame": 0, "id": "EFFECT_DUST_HEAVY_DOUBLE" }
+      ]
+    },
+    {
+      "action": "LANDING_AIR_F",
+      "motion": "2031_FTPikachuAnimLandingAirF / 0x13EC / 16 frames",
+      "selected_from": [{ "action": "FAIR", "from": 7, "to": 27 }],
+      "windows": [{ "from": 0, "to": 2, "damage": 6, "side": "forward" }],
+      "events": [
+        { "frame": 0, "id": "FGM_LANDING" },
+        { "frame": 0, "id": "EFFECT_DUST_HEAVY_DOUBLE" }
+      ]
+    },
+    {
+      "action": "LANDING_AIR_D",
+      "motion": "2032_FTPikachuAnimLandingAirD / 0x1534 / 40 frames",
+      "selected_from": [{ "action": "DAIR", "from": 0, "to": 26 }],
+      "windows": [],
+      "events": [
+        { "frame": 0, "id": "FGM_DEAD_SLAM" },
+        { "frame": 0, "id": "EFFECT_DUST_HEAVY_DOUBLE" },
+        { "frame": 0, "id": "EFFECT_IMPACT_WAVE" },
+        { "frame": 0, "id": "EFFECT_QUAKE_MAG1" }
+      ]
+    },
+    {
       "action": "THUNDER_JOLT_GROUND",
       "motion": "0x15AC",
       "windows": [],
@@ -193,7 +232,36 @@
       "self_contact": { "air_vertical_velocity_source_units": 20, "damages_pikachu": false, "can_break_block": false }
     }
   ],
+  "source_status_inventory": [
+    {
+      "group": "standard_locomotion",
+      "implemented": ["Wait", "WalkSlow/Middle/Fast", "Dash", "Run", "RunBrake", "TurnRun", "KneeBend/JumpF/JumpB", "JumpAerialF/JumpAerialB", "Fall/FallAerial", "Squat/SquatWait/SquatRv", "LandingLight/Heavy", "FallSpecial/LandingFallSpecial"],
+      "missing": ["WalkEnd", "Turn", "GuardKneeBend", "Pass/GuardPass", "OttottoWait/Ottotto"],
+      "asset_gap": ["LandingLight", "LandingHeavy", "Pass", "GuardPass", "OttottoWait", "Ottotto"]
+    },
+    {
+      "group": "attacks_and_smashes",
+      "implemented": ["Attack11", "AttackDash", "AttackS3", "AttackHi3", "AttackLw3", "AttackAirN/F/B/Hi/Lw", "LandingAirNull/F/Lw"],
+      "missing": ["AttackS3Hi", "AttackS3Lw", "AttackS4", "AttackHi4", "AttackLw4"],
+      "abi_blocker": "Smash selection needs stick-tap/hold or C-button history; exact angles and knockback need combat fields absent from PikachuAttack.",
+      "asset_gap": ["AttackS3Hi", "AttackS3Lw", "AttackS4", "AttackHi4", "AttackLw4", "LandingAirF", "LandingAirLw"]
+    },
+    {
+      "group": "grab_throw_shield_dodge_taunt",
+      "implemented": [],
+      "missing": ["Catch", "CatchPull", "CatchWait", "ThrowF", "ThrowB", "GuardOn", "Guard", "GuardOff", "GuardSetOff", "EscapeF", "EscapeB", "Appeal"],
+      "abi_blocker": "PikachuInputRaw has no grab, shield, dodge, or taunt control and the bridge has no opponent capture/throw contract."
+    },
+    {
+      "group": "damage_tech_ledge_death_respawn",
+      "implemented": ["native SMB scripted handoff only"],
+      "missing": ["DamageHi/N/Lw/Air/E", "DamageFlyHi/N/Lw/Top/Roll", "WallDamage", "DamageFall", "DownBounce/Wait/Stand/Forward/Back/Attack", "Passive/PassiveStandF/PassiveStandB", "Rebound", "CliffCatch/Wait/Quick/Slow/Climb/Attack/Escape", "DeadDown/LeftRight/UpStar/UpFall", "Entry", "RebirthDown/Stand/Wait"],
+      "abi_blocker": "The controller receives no percent, hitstun/launch vector, attacker, wall/ground tech input, ledge identity, stocks, blast-zone, or respawn-platform lifecycle."
+    }
+  ],
   "adversarial_vectors": [
+    { "name": "landing_air_flag_boundaries", "setup": "land one frame before, on, and after each flag1 interval", "expect": ["N/B_to_AirNull_only_in_window", "F_to_dedicated_landing_only_in_window", "D_to_dedicated_landing_only_before_26", "U_never_special_landing"] },
+    { "name": "landing_air_save", "setup": "save on LandingAirF entry and reload", "expect": ["same_append_only_state", "frame_zero_events_once", "two_frame_six_damage_hitbox"] },
     { "name": "quick_attack_ceiling", "setup": "solid ceiling one pixel above zip path", "expect": ["stops_at_first_solid_pixel", "no_tile_mutation", "recovery"] },
     { "name": "quick_attack_wall", "setup": "solid wall in zip path", "expect": ["stops_at_first_solid_pixel", "no_camera_desync", "recovery"] },
     { "name": "quick_attack_save_before_zip_event", "setup": "save at frame 19; load; advance 2", "expect": ["VOICE_SPECIAL_HI_once", "FGM_QUICK_ATTACK_START_once", "EFFECT_SPARKLE_once"] },

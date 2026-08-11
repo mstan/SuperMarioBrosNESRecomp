@@ -42,6 +42,9 @@ const char *pikachu_state_name(int state)
     case PK_DTILT: return "DTILT"; case PK_UAIR: return "UAIR";
     case PK_FALL_SPECIAL_LANDING: return "FALL_SPECIAL_LANDING";
     case PK_FALL_SPECIAL: return "FALL_SPECIAL";
+    case PK_LANDING_AIR_NULL: return "LANDING_AIR_NULL";
+    case PK_LANDING_AIR_F: return "LANDING_AIR_F";
+    case PK_LANDING_AIR_D: return "LANDING_AIR_D";
     default: return "INVALID";
     }
 }
@@ -64,6 +67,8 @@ static int is_action(int state)
     case PK_QUICK_ATTACK_WINDOW: case PK_QUICK_ATTACK_ZIP2:
     case PK_QUICK_ATTACK_RECOVERY: case PK_THUNDER_START: case PK_THUNDER_LOOP:
     case PK_THUNDER_SELF_HIT: case PK_FALL_SPECIAL:
+    case PK_LANDING_AIR_NULL: case PK_LANDING_AIR_F:
+    case PK_LANDING_AIR_D:
         return 1;
     default:
         return 0;
@@ -85,6 +90,26 @@ static int is_standard_air_state(int state)
         return 1;
     default:
         return 0;
+    }
+}
+
+static int is_aerial_attack_state(int state)
+{
+    return state == PK_NAIR || state == PK_FAIR || state == PK_BAIR ||
+           state == PK_UAIR || state == PK_DAIR;
+}
+
+/* 242_PikachuMainMotion.c sets flag1 only over these intervals. On a missed
+ * Z-cancel, ftCommonAttackAirProcMap selects the authored landing motion (or
+ * LandingAirNull when the motion table entry is null) while the flag is set. */
+static int aerial_landing_flag_active(int state, unsigned frame)
+{
+    switch (state) {
+    case PK_NAIR: return frame >= 3u && frame < 29u;
+    case PK_FAIR: return frame >= 7u && frame < 27u;
+    case PK_BAIR: return frame >= 10u && frame < 22u;
+    case PK_DAIR: return frame < 26u;
+    default: return 0; /* Pikachu's UAir never sets flag1. */
     }
 }
 
@@ -134,6 +159,18 @@ static void air_motion(PikachuFighter *f, PikachuMotion *out)
         f->vel_y = -PIKACHU_SOURCE_TERMINAL_VELOCITY;
     out->requested_dx = f->vel_x;
     out->requested_dy = f->vel_y;
+}
+
+static void landing_air_motion(PikachuFighter *f, PikachuMotion *out)
+{
+    if (f->vel_x > 0.0) {
+        f->vel_x -= PIKACHU_SOURCE_TRACTION;
+        if (f->vel_x < 0.0) f->vel_x = 0.0;
+    } else if (f->vel_x < 0.0) {
+        f->vel_x += PIKACHU_SOURCE_TRACTION;
+        if (f->vel_x > 0.0) f->vel_x = 0.0;
+    }
+    out->requested_dx = f->vel_x;
 }
 
 static void normal_schedule(PikachuFighter *f, PikachuMotion *out)
@@ -205,6 +242,38 @@ static void normal_schedule(PikachuFighter *f, PikachuMotion *out)
         if (n == 3) out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LIGHT_M);
         if (n >= 3 && n < 11) set_attack(out, 0, 145, 150, 120, 10, 1);
         if (n >= PIKACHU_SOURCE_UAIR_FRAMES) enter(f, PK_AIR_FALL);
+        break;
+    case PK_LANDING_AIR_NULL:
+        landing_air_motion(f, out);
+        if (n == 0) {
+            out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LANDING) |
+                PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_DUST_HEAVY_DOUBLE);
+        }
+        if (n >= PIKACHU_SOURCE_LANDING_AIR_NULL_FRAMES)
+            enter(f, PK_GROUND_WAIT);
+        break;
+    case PK_LANDING_AIR_F:
+        landing_air_motion(f, out);
+        if (n == 0) {
+            out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LANDING) |
+                PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_DUST_HEAVY_DOUBLE);
+        }
+        /* LandingAirF creates its source joint-11 electric hitbox at entry;
+         * the bridge exposes one conservative union, as it does for Fair. */
+        if (n < 2) set_attack(out, 58, 48, 70, 60, 6, 1);
+        if (n >= PIKACHU_SOURCE_LANDING_AIR_F_FRAMES)
+            enter(f, PK_GROUND_WAIT);
+        break;
+    case PK_LANDING_AIR_D:
+        landing_air_motion(f, out);
+        if (n == 0) {
+            out->events |= PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_DEAD_SLAM) |
+                PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_DUST_HEAVY_DOUBLE) |
+                PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_IMPACT_WAVE) |
+                PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_QUAKE_MAG1);
+        }
+        if (n >= PIKACHU_SOURCE_LANDING_AIR_D_FRAMES)
+            enter(f, PK_GROUND_WAIT);
         break;
     default: break;
     }
@@ -534,7 +603,10 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
                f->state == PK_NAIR || f->state == PK_FAIR ||
                f->state == PK_BAIR || f->state == PK_DAIR ||
                f->state == PK_DASH_ATTACK || f->state == PK_UTILT ||
-               f->state == PK_DTILT || f->state == PK_UAIR) {
+               f->state == PK_DTILT || f->state == PK_UAIR ||
+               f->state == PK_LANDING_AIR_NULL ||
+               f->state == PK_LANDING_AIR_F ||
+               f->state == PK_LANDING_AIR_D) {
         normal_schedule(f, out);
     } else if (f->state == PK_THUNDER_JOLT_GROUND || f->state == PK_THUNDER_JOLT_AIR) {
         if (n == 0) {
@@ -667,6 +739,9 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
 void pikachu_resolve(PikachuFighter *f, const PikachuCollision *hit)
 {
     const int was_grounded = f->grounded;
+    const int resolved_state = f->state;
+    const unsigned resolved_frame = f->action_frame == 0u
+        ? 0u : f->action_frame - 1u;
     f->pos_x += hit->actual_dx; f->pos_y += hit->actual_dy;
     if (hit->hit_wall && (f->state == PK_QUICK_ATTACK_ZIP1 || f->state == PK_QUICK_ATTACK_ZIP2)) {
         quick_attack_begin_end(f);
@@ -676,9 +751,25 @@ void pikachu_resolve(PikachuFighter *f, const PikachuCollision *hit)
     f->grounded = hit->grounded;
     if (hit->grounded) {
         f->jumps_used = 0;
-        if (!was_grounded && is_standard_air_state(f->state)) {
-            f->state = PK_LANDING;
-            f->action_frame = 0;
+        if (!was_grounded && is_aerial_attack_state(resolved_state)) {
+            if (aerial_landing_flag_active(resolved_state, resolved_frame)) {
+                if (resolved_state == PK_FAIR)
+                    enter(f, PK_LANDING_AIR_F);
+                else if (resolved_state == PK_DAIR)
+                    enter(f, PK_LANDING_AIR_D);
+                else
+                    enter(f, PK_LANDING_AIR_NULL);
+            } else if (f->vel_y >
+                       PIKACHU_SOURCE_ATTACK_AIR_SKIP_LANDING_VEL_Y) {
+                /* ftCommonAttackAirProcMap skips the ordinary landing motion
+                 * above -20 when no attack-air landing flag is active. */
+                enter(f, PK_GROUND_WAIT);
+            } else {
+                enter(f, PK_LANDING);
+            }
+            f->vel_y = 0.0;
+        } else if (!was_grounded && is_standard_air_state(f->state)) {
+            enter(f, PK_LANDING);
             f->vel_x = 0.0;
             f->vel_y = 0.0;
         } else if (f->state == PK_QUICK_ATTACK_RECOVERY ||

@@ -211,6 +211,142 @@ static void crouch_and_landing_vectors(void)
     CHECK(f.state == PK_GROUND_WAIT && m.requested_dx == 0.0);
 }
 
+static void resolve_aerial_attack_landing(PikachuFighter *f, int state,
+                                          unsigned frame, double vel_y)
+{
+    PikachuInputRaw in;
+    PikachuMotion motion;
+    PikachuCollision hit;
+    pikachu_reset(f);
+    f->grounded = 0;
+    f->state = state;
+    f->action_frame = frame;
+    f->vel_x = 10.0;
+    f->vel_y = vel_y;
+    memset(&in, 0, sizeof(in));
+    pikachu_tick(f, &in, &motion);
+    memset(&hit, 0, sizeof(hit));
+    hit.grounded = 1;
+    pikachu_resolve(f, &hit);
+}
+
+static void aerial_landing_vectors(void)
+{
+    PikachuFighter f;
+    PikachuInputRaw in;
+    PikachuMotion m;
+    uint8_t blob[1 + sizeof(f)];
+    int i, len, state;
+    const uint32_t common_events =
+        PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_LANDING) |
+        PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_DUST_HEAVY_DOUBLE);
+
+    /* The new values are append-only after the v2 FallSpecial ordinal. */
+    CHECK(PK_LANDING_AIR_NULL == PK_FALL_SPECIAL + 1);
+    CHECK(PK_LANDING_AIR_F == PK_LANDING_AIR_NULL + 1);
+    CHECK(PK_LANDING_AIR_D == PK_LANDING_AIR_F + 1);
+
+    /* NAir and BAir have no landing-motion assets in Pikachu's motion table;
+     * their flag1=50 windows therefore select 8f LandingAirX at 0.5 speed. */
+    resolve_aerial_attack_landing(&f, PK_NAIR, 2, -30.0);
+    CHECK(f.state == PK_LANDING);
+    resolve_aerial_attack_landing(&f, PK_NAIR, 3, -30.0);
+    CHECK(f.state == PK_LANDING_AIR_NULL);
+    resolve_aerial_attack_landing(&f, PK_NAIR, 28, -30.0);
+    CHECK(f.state == PK_LANDING_AIR_NULL);
+    resolve_aerial_attack_landing(&f, PK_NAIR, 29, -30.0);
+    CHECK(f.state == PK_LANDING);
+    resolve_aerial_attack_landing(&f, PK_NAIR, 2, -16.9);
+    CHECK(f.state == PK_GROUND_WAIT); /* collision velocity -19.9 > -20 */
+    resolve_aerial_attack_landing(&f, PK_NAIR, 2, -17.0);
+    CHECK(f.state == PK_LANDING); /* collision velocity -20 is not skipped */
+    resolve_aerial_attack_landing(&f, PK_BAIR, 9, -30.0);
+    CHECK(f.state == PK_LANDING);
+    resolve_aerial_attack_landing(&f, PK_BAIR, 10, -30.0);
+    CHECK(f.state == PK_LANDING_AIR_NULL);
+    resolve_aerial_attack_landing(&f, PK_BAIR, 21, -30.0);
+    CHECK(f.state == PK_LANDING_AIR_NULL);
+    resolve_aerial_attack_landing(&f, PK_BAIR, 22, -30.0);
+    CHECK(f.state == PK_LANDING);
+
+    /* Fair and DAir own dedicated source landing motions. */
+    resolve_aerial_attack_landing(&f, PK_FAIR, 6, -30.0);
+    CHECK(f.state == PK_LANDING);
+    resolve_aerial_attack_landing(&f, PK_FAIR, 7, -30.0);
+    CHECK(f.state == PK_LANDING_AIR_F);
+    len = pikachu_serialize(&f, blob, (int)sizeof(blob));
+    pikachu_reset(&f);
+    CHECK(len == (int)sizeof(blob) && pikachu_deserialize(&f, blob, len));
+    CHECK(f.state == PK_LANDING_AIR_F && f.action_frame == 0u);
+    memset(&in, 0, sizeof(in));
+    m = step(&f, in);
+    CHECK(m.events == common_events);
+    CHECK(m.attack.active && m.attack.damage == 6 && m.attack.break_blocks);
+    CHECK_NEAR(m.requested_dx, 8.0);
+    m = step(&f, in);
+    CHECK(m.attack.active && m.attack.damage == 6 && m.events == 0u);
+    m = step(&f, in);
+    CHECK(!m.attack.active);
+    for (i = 3; i <= (int)PIKACHU_SOURCE_LANDING_AIR_F_FRAMES; ++i)
+        m = step(&f, in);
+    CHECK(f.state == PK_GROUND_WAIT);
+
+    resolve_aerial_attack_landing(&f, PK_FAIR, 26, -30.0);
+    CHECK(f.state == PK_LANDING_AIR_F);
+    resolve_aerial_attack_landing(&f, PK_FAIR, 27, -30.0);
+    CHECK(f.state == PK_LANDING);
+    resolve_aerial_attack_landing(&f, PK_DAIR, 0, -30.0);
+    CHECK(f.state == PK_LANDING_AIR_D);
+    memset(&in, 0, sizeof(in));
+    m = step(&f, in);
+    CHECK(m.events ==
+          (PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_DEAD_SLAM) |
+           PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_DUST_HEAVY_DOUBLE) |
+           PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_IMPACT_WAVE) |
+           PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_QUAKE_MAG1)));
+    CHECK(!m.attack.active);
+    for (i = 1; i <= (int)PIKACHU_SOURCE_LANDING_AIR_D_FRAMES; ++i)
+        m = step(&f, in);
+    CHECK(f.state == PK_GROUND_WAIT);
+    resolve_aerial_attack_landing(&f, PK_DAIR, 25, -30.0);
+    CHECK(f.state == PK_LANDING_AIR_D);
+    resolve_aerial_attack_landing(&f, PK_DAIR, 26, -30.0);
+    CHECK(f.state == PK_LANDING);
+
+    /* UAir has no flag1 command. With no active flag the common map callback
+     * skips landing above -20 and uses ordinary landing at or below it. */
+    resolve_aerial_attack_landing(&f, PK_UAIR, 3, 0.0);
+    CHECK(f.state == PK_GROUND_WAIT);
+    resolve_aerial_attack_landing(&f, PK_UAIR, 3, -20.0);
+    CHECK(f.state == PK_LANDING);
+
+    resolve_aerial_attack_landing(&f, PK_NAIR, 3, -30.0);
+    memset(&in, 0, sizeof(in));
+    m = step(&f, in);
+    CHECK(m.events == common_events && !m.attack.active);
+    for (i = 1; i <= (int)PIKACHU_SOURCE_LANDING_AIR_NULL_FRAMES; ++i)
+        m = step(&f, in);
+    CHECK(f.state == PK_GROUND_WAIT);
+
+    /* All appended states survive the unchanged v2 struct blob; invalid
+     * future ordinals are rejected by the same validation gate. */
+    for (state = PK_LANDING_AIR_NULL; state <= PK_LANDING_AIR_D; ++state) {
+        pikachu_reset(&f);
+        f.state = state;
+        f.action_frame = 7u;
+        len = pikachu_serialize(&f, blob, (int)sizeof(blob));
+        pikachu_reset(&f);
+        CHECK(len == (int)sizeof(blob) && pikachu_deserialize(&f, blob, len));
+        CHECK(f.state == state && f.action_frame == 7u);
+    }
+    {
+        int invalid_state = PK_STATE_COUNT;
+        memcpy(blob + 1 + offsetof(PikachuFighter, state), &invalid_state,
+               sizeof(invalid_state));
+        CHECK(!pikachu_deserialize(&f, blob, (int)sizeof(blob)));
+    }
+}
+
 static void quick_attack_and_save_vectors(void)
 {
     PikachuFighter f, saved; PikachuInputRaw in; PikachuMotion m; int i;
@@ -412,7 +548,7 @@ int main(void)
 {
     selection_vectors(); timing_and_projectile_vectors(); aerial_normal_motion_vectors();
     locomotion_vectors(); jump_fall_vectors(); standard_state_timing_vectors();
-    crouch_and_landing_vectors();
+    crouch_and_landing_vectors(); aerial_landing_vectors();
     quick_attack_and_save_vectors(); quick_attack_source_recovery_vector();
     quick_attack_second_zip_motion_vector();
     quick_attack_source_velocity_and_two_point_vectors();

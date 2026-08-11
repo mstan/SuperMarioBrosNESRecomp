@@ -23,6 +23,10 @@
 #define PIKACHU_SOURCE_CROUCH_FRAMES 4u
 #define PIKACHU_SOURCE_CROUCH_END_FRAMES 8u
 #define PIKACHU_SOURCE_LANDING_FRAMES 16u
+#define PIKACHU_SOURCE_ATTACK_AIR_SKIP_LANDING_VEL_Y (-20.0)
+#define PIKACHU_SOURCE_LANDING_AIR_NULL_FRAMES 16u
+#define PIKACHU_SOURCE_LANDING_AIR_F_FRAMES 16u
+#define PIKACHU_SOURCE_LANDING_AIR_D_FRAMES 40u
 #define PIKACHU_SOURCE_DASH_ATTACK_FRAMES 57u
 #define PIKACHU_SOURCE_UTILT_FRAMES 30u
 #define PIKACHU_SOURCE_DTILT_FRAMES 49u
@@ -63,7 +67,11 @@ typedef enum {
     PK_UAIR, PK_FALL_SPECIAL_LANDING,
     /* Append only: source Quick Attack's 46f EndProc hands off to this
      * ordinary aerial FallSpecial before any special landing animation. */
-    PK_FALL_SPECIAL, PK_STATE_COUNT
+    PK_FALL_SPECIAL,
+    /* Append only: failed Z-cancel outcomes selected by the aerial scripts'
+     * flag1 windows. Pikachu has authored F/D landings; N/B use AirNull. */
+    PK_LANDING_AIR_NULL, PK_LANDING_AIR_F, PK_LANDING_AIR_D,
+    PK_STATE_COUNT
 } PikachuState;
 
 typedef enum {
@@ -78,6 +86,11 @@ typedef enum {
     PIKACHU_EVENT_PROJECTILE_JOLT_SPAWN,
     PIKACHU_EVENT_PROJECTILE_THUNDER_SPAWN,
     PIKACHU_EVENT_PROJECTILE_THUNDER_SELF_HIT,
+    PIKACHU_EVENT_FGM_LANDING,
+    PIKACHU_EVENT_FGM_DEAD_SLAM,
+    PIKACHU_EVENT_EFFECT_DUST_HEAVY_DOUBLE,
+    PIKACHU_EVENT_EFFECT_IMPACT_WAVE,
+    PIKACHU_EVENT_EFFECT_QUAKE_MAG1,
     PIKACHU_EVENT_COUNT
 } PikachuEvent;
 

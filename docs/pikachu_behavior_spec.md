@@ -1,10 +1,11 @@
 # Pikachu behavior contract for SMB1
 
 This document is the implementation contract for the first Pikachu release.
-It covers the standard-state tranche: locomotion, Run Brake/Turn Run, crouch,
-landing, Jab, dash/forward/up/down tilts, neutral/forward/back/up/down aerials,
-Thunder Jolt, Quick Attack, and Thunder. It is not a promise to port every
-SSB64 action state.
+It covers the implemented standard-state tranche: locomotion, Run Brake/Turn
+Run, crouch, ordinary and attack-air landing, Jab, dash/forward/up/down tilts,
+neutral/forward/back/up/down aerials, Thunder Jolt, Quick Attack, and Thunder.
+It is not full roster parity; the inventory below names every major missing
+source family and the ABI that prevents a faithful controller state today.
 
 The authoritative behavioral reference is the local BattleShip checkout, not
 the shipped game or this document:
@@ -21,6 +22,32 @@ the shipped game or this document:
   `src\wp\wppikachu\wppikachuthunderjolt.c`, and
   `src\wp\wppikachu\wppikachuthunder.c` define projectile and Thunder
   ownership/lifetime behavior.
+
+## Source status and motion inventory
+
+The common status/motion order is authoritative in
+`src/ft/ftdef.h:296-500,505-764`; Pikachu's actual non-null motion entries are
+in `src/ft/ftdata.c:10881-11375`. A common status existing in the enum does not
+mean Pikachu owns a distinct motion for it. In particular, Pikachu's NAir and
+BAir landing-motion entries are null and route to `LandingAirNull`, while Fair
+and DAir own relocations 2031 and 2032. The executable coverage companion is
+`tests/pikachu_harness/behavior_vectors.json#source_status_inventory`.
+
+| Source family | Controller coverage | Missing source statuses / motions | Faithful-port blocker |
+|---|---|---|---|
+| Standard locomotion | Wait; WalkSlow/Middle/Fast; Dash; Run; RunBrake; TurnRun; KneeBend and both Jump directions; both JumpAerial directions; Fall/FallAerial; Squat/Wait/Rv; LandingLight/Heavy; FallSpecial/LandingFallSpecial | WalkEnd, common Turn, GuardKneeBend, Pass/GuardPass, OttottoWait/Ottotto | The NES input has no analog tier history, platform-drop surface, edge-balance geometry, or shield-jump chord. Walk direction tiers are deterministic projections, not a claim that a D-pad recreates analog input. |
+| Ground attacks and smashes | Attack11, AttackDash, neutral AttackS3, AttackHi3, AttackLw3 | AttackS3Hi (reloc 2018), AttackS3Lw (2020), AttackS4 (2023), AttackHi4 (2024), AttackLw4 (2025) | `PikachuInputRaw` has no stick-tap age, held-A duration, or C-button edge, so tilt-versus-smash selection cannot match `hold_stick_{x,y}`. `PikachuAttack` also lacks angle, base/set/growth knockback, hitlag, element, and per-joint hitboxes. Damage values alone must not be presented as combat parity. |
+| Aerial attacks and landings | AttackAirN/F/B/Hi/Lw; LandingAirNull, LandingAirF, LandingAirLw | Successful smooth landing / Z-cancel | The input ABI has no Z-trigger edge or `tics_since_last_z`. This controller therefore implements the source's missed-Z branch only; it does not substitute jump, attack, or special as an invented Z input. |
+| Grab and throws | None | Catch, CatchPull, CatchWait, ThrowF, ThrowB and all capture/thrown counterparts | No grab input, opponent object, capture ownership, throw victim transform, percent, or launch contract exists. |
+| Shield, dodge, and shield break | None | GuardOn/Guard/GuardOff/GuardSetOff, EscapeF/EscapeB, ShieldBreakFly/Fall/Down/Stand, FuraFura/FuraSleep | No shield pressure/button, shield health, intangibility/hurtbox, or roll collision contract exists. |
+| Taunt | None | Appeal (reloc 1997, motion 0x0E1C) | No taunt input edge is exposed. |
+| Damage, knockdown, and tech | Native SMB handoff only | DamageHi/N/Lw/Air/E, DamageFlyHi/N/Lw/Top/Roll, WallDamage, DamageFall, DownBounce/Wait/Stand/Forward/Back/Attack, Passive/PassiveStandF/PassiveStandB, Rebound | No percent, attacker, launch vector, hitstun, tumble, wall/ground tech input, or surface-normal contract exists. |
+| Ledge | None | CliffCatch/Wait/Quick/Slow and all CliffClimb/Attack/Escape variants | SMB collision exposes neither ledge identity nor ledge occupancy, hang offset, ledge invulnerability, or get-up choice. |
+| Death, entry, and respawn | Native SMB death/respawn ownership with Pikachu presentation fallback | DeadDown/LeftRight/UpStar/UpFall, Entry, RebirthDown/Stand/Wait; Pikachu Appear1/Appear2 motions 2081/2082 | The controller has no stocks, blast zones, camera-death route, respawn platform, or lifecycle authority. Replacing native SMB timing locally would create two competing death systems. |
+
+Item pickup/throw, Hammer, pipe, tornado, capture, and other stage/item common
+statuses are likewise outside the fighter-only ABI. They are intentionally not
+silently mapped to Wait.
 
 No source asset is copied by this specification.  Models, animations, sound,
 and effects must be generated only from the launcher-verified owner ROM into
@@ -49,9 +76,14 @@ the external cache, following the Captain Falcon asset gate.
   returns to Run at frame 18. This follows the frame-13 flags in `0x00E4`;
   it is distinct from the separate common Turn used to reverse during Dash.
 - Down without an A edge enters 4-frame Crouch, then Crouch Wait; release
-  plays the 8-frame Crouch End. Standard aerial landings play the 16-frame
-  LandingAirX pause before Ground Wait. These state values are append-only in
-  savestates; all pre-existing state ordinals remain unchanged.
+  plays the 8-frame Crouch End. Attack-air collision follows
+  `ftCommonAttackAirProcMap`: when the move's flag1 window is active, NAir and
+  BAir use the 8-frame LandingAirX motion at flag1's 50% speed (16 ticks), Fair
+  uses its 16-frame authored landing, and DAir uses its 40-frame authored
+  landing. UAir never sets flag1. Outside a flag window, vertical velocity
+  above `-20` skips the ordinary landing motion; `-20` itself does not. These
+  state values are append-only in savestates; all pre-existing state ordinals
+  remain unchanged.
 - The default presentation is a side-on approximately 16-pixel-tall Pikachu,
   with a stable
   small-player collision profile.  It must fit every normal two-block SMB
@@ -124,6 +156,9 @@ projectiles and never alter SMB blocks.
 | Back air | reloc `2028_FTPikachuAnimAttackAirB`; `0x1420` | `[10,14)`, 16 then `[14,22)`, 14 | `FGMLightSwingL` at 10; union is behind logical facing. |
 | Down air | reloc `2030_FTPikachuAnimAttackAirD`; `0x14DC`, `TRANSN_JOINT` | `[8,26)`, 13 | `FGMPikachuElectric3` and electric effect at 8; downward union only; physical contact may break eligible bricks. |
 | Up air | reloc `2029_FTPikachuAnimAttackAirU`; `0x1490`, `TRANSN_JOINT` | `[3,11)`, 10 | `FGMLightSwingM` at 3; upward union follows the pose; physical contact may break eligible bricks. |
+| NAir / BAir missed-Z landing | reloc `1976_FTPikachuAnimLandingAirX`; `0x1574` | NAir flag `[3,29)`, BAir flag `[10,22)`; no hitbox | The motion is 8 source animation frames at flag1 `50` percent speed, hence 16 controller ticks. Play Pikachu landing and heavy-double dust at entry. |
+| Fair missed-Z landing | reloc `2031_FTPikachuAnimLandingAirF`; `0x13EC` | selected from Fair flag `[7,27)`; landing hitbox `[0,2)`, 6 | Dedicated 16-frame landing; Pikachu landing sound and heavy-double dust at entry. The hitbox is created by the landing script, not carried over from Fair. |
+| DAir missed-Z landing | reloc `2032_FTPikachuAnimLandingAirD`; `0x1534` | selected from DAir flag `[0,26)`; no landing hitbox | Dedicated 40-frame landing; dead-slam sound, heavy-double dust, impact wave, and magnitude-1 quake at entry. The aerial hitbox is cleared by the status transition/script. |
 | Thunder Jolt | ground `0x15AC`; air `0x15F0` | projectile begins at 21 | `VoicePikachuSpecialN` at entry; air also plays `FGMPikachuElectric5` at entry. Spawn from source joint 11, facing-relative, at -45 degrees with source speed 40. It may defeat eligible enemies once, follows floor/wall surfaces after contact, and expires on unsupported/invalid surfaces. It never changes SMB blocks. |
 | Quick Attack | start has no source motion; zip/end `0x1710`, `0x1730` | no hitbox | `FGMPikachuSpecialHiStart` begins the 20-frame intangible aim startup. A first aim at stick length `<=60` is source-defaulted to `(0,80)` (UP), never facing-horizontal; this makes neutral Up+B then Right a valid 90-degree route. Each source zip is normalized `stick * (3 * min(|stick|,80)+90)`, so full cardinal is 330 source units; the second is 0.9x (297). The first is exactly 5 frames; after the end-script's 9-frame direction window, one second 5-frame zip only occurs if stick magnitude is at least 60 and differs by more than 42 degrees. Zip end backs velocity up by 0.2, repeats the 46-frame UpSpecialAirEnd animation, then enters FallSpecial with source 0.4 drift/landing-speed parameters. `VoicePikachuSpecialHi`, `FGMPikachuElectric1`, and sparkle fire on each zip entry; ripple and rumble fire at each zip end. Render the authored 0.8/0.8/1.2 scale/pitch transform on joint 4. |
 | Thunder | start `0x162C`; loop `0x1644`; self-hit `0x1668` | self-hit `[0,10)`, 16 | `VoicePikachuSpecialLw` at entry; spawn a vertical bolt at frame 24 from the gameplay top above Pikachu. While it falls it owns all trail/effect events. On self-contact, consume the bolt, emit ThunderAmp + dust + quake + color event, and give airborne Pikachu source +20 vertical velocity. Pikachu does not take host damage from own Thunder. Thunder may defeat an eligible enemy once but never breaks blocks. |
@@ -170,6 +205,9 @@ The controller must expose a monotonic per-action `action_frame`, a
 and `PROJECTILE_THUNDER_SELF_HIT`.  Events are emitted once on their listed
 frame and survive save/load exactly once: restoring before an event may emit
 it on the replay; restoring after it may not duplicate it.
+
+Attack-air landings additionally expose `FGM_LANDING`, `FGM_DEAD_SLAM`,
+`EFFECT_DUST_HEAVY_DOUBLE`, `EFFECT_IMPACT_WAVE`, and `EFFECT_QUAKE_MAG1`.
 
 `tests/pikachu_harness/behavior_vectors.json` is the normative machine-readable
 companion.  A future harness must reject a controller that selects a different
