@@ -86,6 +86,8 @@ static void timing_and_projectile_vectors(void)
     CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_QUAKE_MAG1));
     CHECK(m.events & PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_THUNDER_HIT_COLOR));
     CHECK(m.attack.active && !m.attack.break_blocks);
+    CHECK_NEAR(m.attack.width, 600.0);
+    CHECK_NEAR(m.attack.height, 240.0);
 }
 
 static void jab_repeat_vectors(void)

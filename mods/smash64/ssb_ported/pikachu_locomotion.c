@@ -299,6 +299,15 @@ static void set_attack(PikachuMotion *out, double x, double y, double w,
     out->attack.active = 1;
 }
 
+static void set_thunder_self_hit_attack(PikachuMotion *out)
+{
+    /* The source Thunder self-hit surrounds Pikachu. In SMB scale, Pikachu's
+     * 16px body is 200 source units wide; this 600-unit box covers the body
+     * plus roughly one player width to each side so nearby enemies are beaten
+     * before native contact can kill the player. */
+    set_attack(out, 0, 80, 600, 240, 16, 0);
+}
+
 static void spawn_jolt(PikachuFighter *f, PikachuMotion *out)
 {
     f->projectile.kind = PIKACHU_PROJECTILE_JOLT;
@@ -1248,7 +1257,7 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
                 PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_QUAKE_MAG1) |
                 PIKACHU_EVENT_BIT(
                     PIKACHU_EVENT_EFFECT_THUNDER_HIT_COLOR);
-            set_attack(out, 0, 90, 80, 180, 16, 0);
+            set_thunder_self_hit_attack(out);
         } else if (!f->projectile.active ||
                    n >= PIKACHU_SOURCE_THUNDER_LOOP_FRAMES) {
             thunder_phase(f, was_air ? PK_THUNDER_AIR_END
@@ -1260,7 +1269,7 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
         if (was_air) thunder_air_physics(f, out, 1);
         else thunder_ground_physics(f, out);
         if (n < PIKACHU_SOURCE_THUNDER_HIT_ACTIVE_FRAMES)
-            set_attack(out, 0, 90, 80, 180, 16, 0);
+            set_thunder_self_hit_attack(out);
         if (n >= PIKACHU_SOURCE_THUNDER_HIT_TO_END_FRAMES)
             thunder_phase(f, was_air ? PK_THUNDER_AIR_END
                                      : PK_THUNDER_END);

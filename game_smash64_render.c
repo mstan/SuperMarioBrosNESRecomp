@@ -243,22 +243,20 @@ static void draw_pikachu_jolt_rig(const Smash64ActionSlot *action,
     const float length = sqrtf(tangent_x * tangent_x + tangent_y * tangent_y);
     const float heading = length > 0.0001f ? atan2f(tangent_y, tangent_x) : 0.0f;
     /* DObj 1 begins at -390 source units and its AnimJoint interpolates to
-     * +600 over nine frames. Each of the six owner cards is a 234x435
-     * source-unit triangle pair at exactly {1.5,1.5,1.0}. Convert those
-     * authored transforms through Pikachu's 16px / 383-unit bind scale; the
-     * previous compact proxy (10px sweep and 7x9px cards) was why Jolt read
-     * as a single static speck instead of an articulated slinky. */
+     * +600 over nine frames. The exact source is an 8-DObj hierarchy; until
+     * that hierarchy is baked/evaluated in the host, keep this proxy compact
+     * and directional rather than drawing six oversized cards as one blob. */
     const float source_to_screen = 16.0f / 383.0f;
-    const float root_shift = 0.45f * (390.0f - 990.0f *
+    const float root_shift = 0.60f * (390.0f - 990.0f *
                               source_frame / 8.0f) *
                              source_to_screen * unit;
-    const float card_half_width = 117.0f * 1.5f * source_to_screen * unit;
-    const float card_half_height = 218.0f * 1.5f * source_to_screen * unit;
+    const float card_half_width = 117.0f * 0.95f * source_to_screen * unit;
+    const float card_half_height = 218.0f * 0.95f * source_to_screen * unit;
     unsigned joint;
     for (joint = 0; joint < 6u; ++joint) {
-        const float tangent_spread = ((float)joint - 2.5f) * 4.0f * unit;
+        const float tangent_spread = ((float)joint - 2.5f) * 2.6f * unit;
         const float normal_spread =
-            ((joint & 1u) ? 3.5f : -3.5f) * unit;
+            ((joint & 1u) ? 1.8f : -1.8f) * unit;
         const float normal_x = -sinf(heading);
         const float normal_y = cosf(heading);
         if (!pikachu_jolt_card_visible(joint, phase)) continue;

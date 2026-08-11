@@ -1695,7 +1695,8 @@ static void draw_pikachu_thunder_amp(const ForeignState *state,
         return;
     }
     draw_pikachu_effect_card(SMASH64_PIKACHU_EFFECT_THUNDER_AMP, card,
-                             center_x, foot_y + (source_y - 200.0f) *
+                             center_x, foot_y + 4.0f * unit +
+                                           (source_y - 200.0f) *
                                            (PIKACHU_RENDER_HEIGHT /
                                             PIKACHU_BIND_HEIGHT) * unit,
                              source_size * (PIKACHU_RENDER_HEIGHT /
