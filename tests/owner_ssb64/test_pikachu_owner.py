@@ -80,6 +80,12 @@ class PikachuRecipeTests(unittest.TestCase):
         self.assertIn("animation_for_state(state)", source)
         self.assertIn("apply_pikachu_quick_attack_pose(state, r, s)", source)
         self.assertIn("240.0f - foot_y", source)
+        native_body = source[source.index(
+            "int game_smash64_assets_pikachu_joint_native("):source.index(
+                "static int draw_model", source.index(
+                    "int game_smash64_assets_pikachu_joint_native("))]
+        self.assertIn("1.0f, 0, &render_x", native_body)
+        self.assertNotIn("env_", native_body)
 
     def test_rejects_repository_cache_output(self):
         with self.assertRaises(ValueError):

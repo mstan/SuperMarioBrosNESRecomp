@@ -1644,6 +1644,7 @@ static NesVoxelMeshVertex render_death_vertex(
  * the renderer's +Y-up plane. */
 static int evaluate_pikachu_joint_render(unsigned joint, float center_x,
                                          float anchor_y, float output_scale,
+                                         int presentation_debug,
                                          float *x, float *y)
 {
     const ForeignState *state;
@@ -1669,7 +1670,11 @@ static int evaluate_pikachu_joint_render(unsigned joint, float center_x,
         memcpy(s[i], s_model.joints[i].scale, sizeof(s[i]));
     }
     animation = find_animation(&s_model, animation_for_state(state));
-    if (!env_enabled("NESRECOMP_FALCON_BIND_POSE"))
+    /* Gameplay attachments must be source-authored and deterministic.  The
+     * visual-debug knobs remain useful for framing screenshots, but allowing
+     * them to steer a Jolt collision origin would make the simulation depend
+     * on a renderer-only environment setting. */
+    if (!presentation_debug || !env_enabled("NESRECOMP_FALCON_BIND_POSE"))
         apply_animation(&s_model, animation, presentation_animation_frame(state),
                         t, r, s);
     apply_pikachu_quick_attack_pose(state, r, s);
@@ -1678,11 +1683,15 @@ static int evaluate_pikachu_joint_render(unsigned joint, float center_x,
     reference_height = s_model.bounds_max[1] - s_model.bounds_min[1];
     if (!(reference_height > 0.0f)) return 0;
     if (output_scale <= 0.0f) output_scale = 1.0f;
-    model_scale = env_float("NESRECOMP_PIKACHU_RENDER_HEIGHT",
-                            PIKACHU_RENDER_HEIGHT) * output_scale /
+    model_scale = (presentation_debug
+                       ? env_float("NESRECOMP_PIKACHU_RENDER_HEIGHT",
+                                   PIKACHU_RENDER_HEIGHT)
+                       : PIKACHU_RENDER_HEIGHT) * output_scale /
                   reference_height;
     facing = state->facing < 0.0f ? 1.0f : -1.0f;
-    yaw_rad = env_float("NESRECOMP_PIKACHU_YAW_DEG", PIKACHU_YAW_DEG) *
+    yaw_rad = (presentation_debug
+                   ? env_float("NESRECOMP_PIKACHU_YAW_DEG", PIKACHU_YAW_DEG)
+                   : PIKACHU_YAW_DEG) *
         (3.14159265358979323846f / 180.0f);
     c = cosf(yaw_rad);
     yaw_sin = sinf(yaw_rad);
@@ -1699,9 +1708,9 @@ int game_smash64_assets_pikachu_joint_native(unsigned joint,
                                              float *x, float *y)
 {
     float render_x, render_y;
-    if (!isfinite(foot_y) ||
+    if (!isfinite(center_x) || !isfinite(foot_y) ||
         !evaluate_pikachu_joint_render(joint, center_x, 240.0f - foot_y,
-                                       1.0f, &render_x, &render_y))
+                                       1.0f, 0, &render_x, &render_y))
         return 0;
     if (x) *x = render_x;
     if (y) *y = 240.0f - render_y;
@@ -1816,7 +1825,7 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
     if (active_is_pikachu() && !death_mode && !still_mode &&
         !animation_override)
         s_pikachu_joint11_valid = evaluate_pikachu_joint_render(
-            11u, center_x, anchor_y, output_scale, &s_pikachu_joint11_x,
+            11u, center_x, anchor_y, output_scale, 1, &s_pikachu_joint11_x,
             &s_pikachu_joint11_y);
 
     for (i = 0; i < s_model.triangle_count; ++i) {
