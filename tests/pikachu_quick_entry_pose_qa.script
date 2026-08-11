@@ -1,0 +1,52 @@
+LOG pikachu-quick-entry-pose-qa
+
+# Direct visual matrix for ftPikachu SpecialHi Start (source motion -1).
+# Each image is taken in the 20-tick aim phase: the renderer must retain the
+# serialized predecessor pose rather than substitute UpSpecialEnd frame zero.
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 30
+SAVE_STATE C:/temp/pikachu_quick_entry_base.sav
+
+# Wait entry.
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 8
+SCREENSHOT C:/temp/pikachu_quick_entry_wait.png
+
+# Run entry. Keep Right held through the B sample so the bridge latches Run.
+LOAD_STATE C:/temp/pikachu_quick_entry_base.sav
+WAIT 2
+HOLD RIGHT
+WAIT 42
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 8
+SCREENSHOT C:/temp/pikachu_quick_entry_run.png
+RELEASE RIGHT
+
+# Fall entry. Start a real jump, wait beyond the apex, then enter SpecialHi.
+LOAD_STATE C:/temp/pikachu_quick_entry_base.sav
+WAIT 2
+HOLD UP
+WAIT 2
+RELEASE UP
+WAIT 27
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+RELEASE UP
+WAIT 8
+SCREENSHOT C:/temp/pikachu_quick_entry_fall.png
+WAIT 24
+EXIT 0

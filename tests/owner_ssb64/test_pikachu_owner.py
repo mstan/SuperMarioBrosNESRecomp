@@ -189,6 +189,27 @@ class PikachuRecipeTests(unittest.TestCase):
         self.assertIn("state->state != PK_QUICK_ATTACK_ZIP1", pose)
         self.assertIn("state->state != PK_QUICK_ATTACK_ZIP2", pose)
 
+    def test_quick_start_freezes_serialized_wait_run_fall_entry_pose(self):
+        """Source SpecialHi Start uses motion -1, not End frame zero."""
+        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        entry = source[source.index("static int pikachu_quick_start_entry_sample"):
+                       source.index("static int evaluate_pikachu_joint_render")]
+        self.assertIn("smash64_pikachu_quick_entry_pose", entry)
+        self.assertIn("entry.state = entry_state", entry)
+        self.assertIn("entry.state_frame = entry_frame", entry)
+        self.assertIn("animation_for_state(&entry)", entry)
+        self.assertIn("pikachu_source_animation_frame(&entry)", entry)
+        # Table of source-safe entry motions which must remain reachable at
+        # their captured local frame for the whole Start status.
+        source_motions = {
+            "PK_GROUND_WAIT": "Idle", "PK_RUN": "Run",
+            "PK_AIR_FALL": "Fall",
+        }
+        mapping = source[source.index("static const char *animation_for_state"):
+                         source.index("static float pikachu_source_animation_frame")]
+        for state, motion in source_motions.items():
+            self.assertIn(f'case {state}: return "{motion}";', mapping)
+
     def test_joint_attachment_api_is_current_pose_not_last_draw(self):
         header = (ROOT / "game_smash64_assets.h").read_text(encoding="utf-8")
         source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")

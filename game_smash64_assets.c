@@ -1054,6 +1054,31 @@ static float presentation_animation_frame(const ForeignState *state)
     return (float)state->state_frame;
 }
 
+/* SpecialHi Start uses source motion -1: it does not select End frame zero.
+ * The controller serializes the entering foreign state/frame before Start so
+ * a save/load retains the exact Wait, Run, or Fall source pose for all 20
+ * aim ticks. ZIP still deliberately samples its End motion at zero; only the
+ * two Start statuses reach this resolver. */
+static int pikachu_quick_start_entry_sample(const ForeignState *state,
+                                            const char **animation_name,
+                                            float *animation_frame)
+{
+    ForeignState entry;
+    int entry_state;
+    unsigned entry_frame;
+
+    if (!state || !animation_name || !animation_frame || !active_is_pikachu() ||
+        !smash64_pikachu_quick_entry_pose(state->state, &entry_state,
+                                          &entry_frame))
+        return 0;
+    entry = *state;
+    entry.state = entry_state;
+    entry.state_frame = entry_frame;
+    *animation_name = animation_for_state(&entry);
+    *animation_frame = pikachu_source_animation_frame(&entry);
+    return 1;
+}
+
 static NesVoxelMeshVertex render_vertex(const FalconAssetModel *model,
                                         Mat4 matrix,
                                         const FalconAssetVertex *vertex,
@@ -1800,7 +1825,14 @@ static int evaluate_pikachu_joint_render(unsigned joint, float center_x,
         memcpy(r[i], s_model.joints[i].rotate, sizeof(r[i]));
         memcpy(s[i], s_model.joints[i].scale, sizeof(s[i]));
     }
-    animation = find_animation(&s_model, animation_for_state(state));
+    {
+        const char *animation_name = animation_for_state(state);
+        float sampled_frame = animation_frame;
+        (void)pikachu_quick_start_entry_sample(state, &animation_name,
+                                                &sampled_frame);
+        animation = find_animation(&s_model, animation_name);
+        animation_frame = sampled_frame;
+    }
     if (!bind_pose)
         apply_animation(&s_model, animation, animation_frame, t, r, s);
     apply_pikachu_quick_attack_pose(state, r, s);
@@ -1872,14 +1904,21 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
      * tumble (FallAerial), then the host applies the status' whole-body spin.
      * Prefer DamageFlyTop automatically when a fuller local extraction adds
      * it to the blob. */
-    animation = death_mode
-        ? find_animation(&s_model, "DamageFlyTop")
-        : find_animation(&s_model,
-                         animation_override
-                             ? animation_override
-                             : (still_mode ? (active_is_pikachu()
-                                                  ? "Idle" : "Wait")
-                                           : animation_for_state(state)));
+    if (death_mode) {
+        animation = find_animation(&s_model, "DamageFlyTop");
+    } else if (animation_override) {
+        animation = find_animation(&s_model, animation_override);
+    } else if (still_mode) {
+        animation = find_animation(&s_model, active_is_pikachu()
+                                                ? "Idle" : "Wait");
+    } else {
+        const char *animation_name = animation_for_state(state);
+        float sampled_frame = presentation_animation_frame(state);
+        (void)pikachu_quick_start_entry_sample(state, &animation_name,
+                                                &sampled_frame);
+        animation = find_animation(&s_model, animation_name);
+        animation_frame = sampled_frame;
+    }
     if (death_mode && !animation)
         animation = find_animation(&s_model, "FallAerial");
     if (!env_enabled("NESRECOMP_FALCON_BIND_POSE"))
@@ -1891,7 +1930,7 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
                                          FALCON_WAIT_GROUNDED_SPAN * 0.5f
                                    : (still_mode
                                           ? 0.0f
-                                          : presentation_animation_frame(state))),
+                                          : animation_frame)),
                         t, r, s);
     if (active_is_pikachu() && !death_mode && !still_mode &&
         !animation_override)
