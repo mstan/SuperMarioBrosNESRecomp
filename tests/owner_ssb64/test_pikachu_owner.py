@@ -72,6 +72,15 @@ class PikachuRecipeTests(unittest.TestCase):
         self.assertIn('state->grounded ? "GettingThundered" :', source)
         self.assertIn('"DownSpecialThunderedAir"', source)
 
+    def test_joint_attachment_api_is_current_pose_not_last_draw(self):
+        header = (ROOT / "game_smash64_assets.h").read_text(encoding="utf-8")
+        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        self.assertIn("game_smash64_assets_pikachu_joint_native", header)
+        self.assertIn("evaluate_pikachu_joint_render", source)
+        self.assertIn("animation_for_state(state)", source)
+        self.assertIn("apply_pikachu_quick_attack_pose(state, r, s)", source)
+        self.assertIn("240.0f - foot_y", source)
+
     def test_rejects_repository_cache_output(self):
         with self.assertRaises(ValueError):
             pikachu._external(ROOT / "assets_ssb64" / "pikachu")

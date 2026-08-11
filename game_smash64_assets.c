@@ -1636,6 +1636,78 @@ static NesVoxelMeshVertex render_death_vertex(
     return out;
 }
 
+/* The action bridge needs the same source attachment that the renderer uses,
+ * but it must not borrow a cached coordinate from a previous drawn frame:
+ * game simulation can advance while presentation is skipped, supersampled, or
+ * restored from a save.  Keep this evaluator free of mesh calls and static
+ * writes.  Its public wrapper converts between SMB/action +Y-down rows and
+ * the renderer's +Y-up plane. */
+static int evaluate_pikachu_joint_render(unsigned joint, float center_x,
+                                         float anchor_y, float output_scale,
+                                         float *x, float *y)
+{
+    const ForeignState *state;
+    const FalconAssetAnimation *animation;
+    float t[SMASH64_MAX_JOINTS][3];
+    float r[SMASH64_MAX_JOINTS][3];
+    float s[SMASH64_MAX_JOINTS][3];
+    Mat4 world[SMASH64_MAX_JOINTS];
+    float pose_min[3], pose_max[3];
+    float reference_height, model_scale, facing, yaw_rad;
+    float origin[3] = { 0.0f, 0.0f, 0.0f }, point[3];
+    float c, yaw_sin;
+    uint32_t i;
+
+    if (!active_is_pikachu() || !ensure_loaded() || joint >= s_model.joint_count ||
+        !isfinite(center_x) || !isfinite(anchor_y) || !isfinite(output_scale))
+        return 0;
+    state = nes_foreign_state();
+    if (!state) return 0;
+    for (i = 0; i < s_model.joint_count; ++i) {
+        memcpy(t[i], s_model.joints[i].translate, sizeof(t[i]));
+        memcpy(r[i], s_model.joints[i].rotate, sizeof(r[i]));
+        memcpy(s[i], s_model.joints[i].scale, sizeof(s[i]));
+    }
+    animation = find_animation(&s_model, animation_for_state(state));
+    if (!env_enabled("NESRECOMP_FALCON_BIND_POSE"))
+        apply_animation(&s_model, animation, presentation_animation_frame(state),
+                        t, r, s);
+    apply_pikachu_quick_attack_pose(state, r, s);
+    build_matrices(&s_model, t, r, s, world);
+    compute_world_bounds(&s_model, world, pose_min, pose_max);
+    reference_height = s_model.bounds_max[1] - s_model.bounds_min[1];
+    if (!(reference_height > 0.0f)) return 0;
+    if (output_scale <= 0.0f) output_scale = 1.0f;
+    model_scale = env_float("NESRECOMP_PIKACHU_RENDER_HEIGHT",
+                            PIKACHU_RENDER_HEIGHT) * output_scale /
+                  reference_height;
+    facing = state->facing < 0.0f ? 1.0f : -1.0f;
+    yaw_rad = env_float("NESRECOMP_PIKACHU_YAW_DEG", PIKACHU_YAW_DEG) *
+        (3.14159265358979323846f / 180.0f);
+    c = cosf(yaw_rad);
+    yaw_sin = sinf(yaw_rad);
+    mat_point(world[joint], origin, point);
+    point[0] = (point[0] - (pose_min[0] + pose_max[0]) * 0.5f) * facing;
+    point[2] = (point[2] - (pose_min[2] + pose_max[2]) * 0.5f) * facing;
+    if (x) *x = center_x + (point[0] * c - point[2] * yaw_sin) * model_scale;
+    if (y) *y = anchor_y + (point[1] - pose_min[1]) * model_scale;
+    return 1;
+}
+
+int game_smash64_assets_pikachu_joint_native(unsigned joint,
+                                             float center_x, float foot_y,
+                                             float *x, float *y)
+{
+    float render_x, render_y;
+    if (!isfinite(foot_y) ||
+        !evaluate_pikachu_joint_render(joint, center_x, 240.0f - foot_y,
+                                       1.0f, &render_x, &render_y))
+        return 0;
+    if (x) *x = render_x;
+    if (y) *y = 240.0f - render_y;
+    return 1;
+}
+
 static int draw_model(float center_x, float anchor_y, float output_scale,
                       int death_mode, int still_mode,
                       const char *animation_override,
@@ -1738,18 +1810,14 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
     }
 
     s_pikachu_joint11_valid = 0;
-    if (active_is_pikachu() && s_model.joint_count > 11u) {
-        float origin[3] = { 0.0f, 0.0f, 0.0f }, point[3];
-        const float c = cosf(yaw_rad), yaw_sin = sinf(yaw_rad);
-        mat_point(world[11], origin, point);
-        point[0] = (point[0] - (pose_min[0] + pose_max[0]) * 0.5f) * facing;
-        point[2] = (point[2] - (pose_min[2] + pose_max[2]) * 0.5f) * facing;
-        s_pikachu_joint11_x = center_x +
-            (point[0] * c - point[2] * yaw_sin) * model_scale;
-        s_pikachu_joint11_y = anchor_y +
-            (point[1] - pose_min[1]) * model_scale;
-        s_pikachu_joint11_valid = 1;
-    }
+    /* Persistent gameplay actions are only rendered during ordinary foreign
+     * control.  Do not publish a current-state attachment while a native
+     * swim/script/death draw intentionally substitutes another pose. */
+    if (active_is_pikachu() && !death_mode && !still_mode &&
+        !animation_override)
+        s_pikachu_joint11_valid = evaluate_pikachu_joint_render(
+            11u, center_x, anchor_y, output_scale, &s_pikachu_joint11_x,
+            &s_pikachu_joint11_y);
 
     for (i = 0; i < s_model.triangle_count; ++i) {
         const FalconAssetTriangle *triangle = &s_model.triangles[i];

@@ -39,6 +39,16 @@ int game_smash64_assets_pikachu_effect_texture(
  * ownership stays in the persistent-action bridge. */
 int game_smash64_assets_pikachu_joint11_screen(float *x, float *y);
 
+/* Evaluate an active Pikachu source joint without drawing or retaining any
+ * presentation state.  Inputs and outputs use the native SMB/action space:
+ * +X right, +Y down, ``center_x`` is the fighter centre and ``foot_y`` its
+ * authoritative foot row.  This is the deterministic gameplay counterpart
+ * to the last-draw joint11 helper above; projectile ownership must use this
+ * API rather than a prior rendered frame. */
+int game_smash64_assets_pikachu_joint_native(unsigned joint,
+                                             float center_x, float foot_y,
+                                             float *x, float *y);
+
 int game_smash64_assets_draw(float center_x, float foot_y,
                              float output_scale);
 
