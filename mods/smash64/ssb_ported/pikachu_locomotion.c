@@ -927,7 +927,19 @@ void pikachu_tick(PikachuFighter *f, const PikachuInputRaw *in, PikachuMotion *o
     }
     out->projectile = f->projectile;
     out->persistent_action_id = f->persistent_action_id;
-    out->action_frame = f->action_frame;
+    /* Presentation time follows the source motion statuses, not Quick
+     * Attack's deliberately continuous internal decision clock. Start and
+     * both zips are speed-0/static; each End motion restarts quick_end_frame
+     * at zero and carries it through Window/Recovery. */
+    if (f->state == PK_QUICK_ATTACK_START ||
+        f->state == PK_QUICK_ATTACK_ZIP1 ||
+        f->state == PK_QUICK_ATTACK_ZIP2)
+        out->action_frame = 0;
+    else if (f->state == PK_QUICK_ATTACK_WINDOW ||
+             f->state == PK_QUICK_ATTACK_RECOVERY)
+        out->action_frame = f->quick_end_frame;
+    else
+        out->action_frame = f->action_frame;
     if (is_action(f->state) || is_timed_ground_state(f->state) ||
         f->state == PK_JUMP_GROUND || f->state == PK_JUMP_AERIAL)
         f->action_frame++;

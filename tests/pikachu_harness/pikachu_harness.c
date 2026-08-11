@@ -520,10 +520,12 @@ static void quick_attack_and_save_vectors(void)
     m = step(&f, in);
     CHECK(m.events == PIKACHU_EVENT_BIT(
               PIKACHU_EVENT_FGM_QUICK_ATTACK_START));
+    CHECK(m.action_frame == 0u);
     memset(&in, 0, sizeof(in)); in.stick_x = 80;
     for (i = 1; i <= 20; ++i) m = step(&f, in);
     CHECK(m.events == (PIKACHU_EVENT_BIT(PIKACHU_EVENT_VOICE_SPECIAL_HI) | PIKACHU_EVENT_BIT(PIKACHU_EVENT_FGM_ELECTRIC_1) | PIKACHU_EVENT_BIT(PIKACHU_EVENT_EFFECT_SPARKLE)));
     CHECK(!m.attack.active && m.requested_dx > 0.0);
+    CHECK(m.action_frame == 0u);
     CHECK(!f.grounded && f.vel_x == m.requested_dx && f.vel_y == m.requested_dy);
     saved = f;
     { uint8_t blob[1 + sizeof(f)]; int len = pikachu_serialize(&f, blob, sizeof(blob)); pikachu_reset(&f); CHECK(len > 0 && pikachu_deserialize(&f, blob, len)); }
@@ -531,6 +533,20 @@ static void quick_attack_and_save_vectors(void)
     /* The first solid sampled pixel stops the zip before a host resolve; the
      * probe is read-only, so this cannot mutate a tile. */
     { PikachuCollision hit; pikachu_sweep_zip(&f, &m, solid_at_twelve, NULL, &hit); CHECK(hit.hit_wall && hit.actual_dx == 0.0); pikachu_resolve(&f, &hit); CHECK(f.state == PK_QUICK_ATTACK_RECOVERY); }
+    {
+        uint8_t blob[1 + sizeof(f)];
+        PikachuMotion replay_motion;
+        int len;
+        saved = f;
+        len = pikachu_serialize(&f, blob, sizeof(blob));
+        pikachu_reset(&f);
+        CHECK(len > 0 && pikachu_deserialize(&f, blob, len));
+        m = step(&f, in);
+        replay_motion = step(&saved, in);
+        CHECK(m.action_frame == 1u);
+        CHECK(replay_motion.action_frame == m.action_frame);
+        CHECK(saved.quick_end_frame == f.quick_end_frame);
+    }
     CHECK(saved.persistent_action_id == f.persistent_action_id);
 
     /* v1 records ended before End/FallSpecial bookkeeping. Non-Quick states
@@ -680,9 +696,13 @@ static void quick_attack_source_velocity_and_two_point_vectors(void)
     for (i = 1; i < (int)PIKACHU_SOURCE_QUICK_ATTACK_ZIP_FRAMES; ++i)
         m = step(&f, in);
     memset(&in, 0, sizeof(in)); in.stick_x = 80;
-    for (i = 0; i <= (int)PIKACHU_SOURCE_QUICK_ATTACK_SECOND_AIM_FRAMES; ++i)
+    m = step(&f, in);
+    CHECK(f.state == PK_QUICK_ATTACK_WINDOW);
+    CHECK(m.action_frame == 0u);
+    for (i = 1; i <= (int)PIKACHU_SOURCE_QUICK_ATTACK_SECOND_AIM_FRAMES; ++i)
         m = step(&f, in);
     CHECK(f.state == PK_QUICK_ATTACK_ZIP2);
+    CHECK(m.action_frame == 0u);
     CHECK_NEAR(m.requested_dx, 297.0); CHECK_NEAR(m.requested_dy, 0.0);
 
     /* The five-tick first point finishes before the nine-tick direction

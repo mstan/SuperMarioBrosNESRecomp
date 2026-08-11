@@ -30,6 +30,18 @@ static int pk_thunder_kinetic_pair(int before, int after)
             after == PK_THUNDER_END);
 }
 
+static unsigned pk_public_action_frame(const PikachuFighter *fighter)
+{
+    if (fighter->state == PK_QUICK_ATTACK_START ||
+        fighter->state == PK_QUICK_ATTACK_ZIP1 ||
+        fighter->state == PK_QUICK_ATTACK_ZIP2)
+        return 0u;
+    if (fighter->state == PK_QUICK_ATTACK_WINDOW ||
+        fighter->state == PK_QUICK_ATTACK_RECOVERY)
+        return fighter->quick_end_frame;
+    return fighter->action_frame;
+}
+
 static void push_audio(ForeignMoveResult *out, uint32_t cue)
 {
     ForeignAudioEvent *event;
@@ -227,7 +239,7 @@ static void pk_resolve(ForeignState *state, const ForeignCollisionResult *hit)
     if (!pk_thunder_kinetic_pair(private_state_before, s_fighter.state) &&
         (s_fighter.state != private_state_before ||
          s_fighter.action_frame != private_frame_before))
-        state->state_frame = s_fighter.action_frame;
+        state->state_frame = pk_public_action_frame(&s_fighter);
 }
 
 static const char *pk_state_name(ForeignMoveState state)

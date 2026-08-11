@@ -48,9 +48,8 @@ int main(void)
     memset(&input, 0, sizeof(input));
     memset(&move, 0, sizeof(move));
     input.special_pressed = 1;
-    input.stick_y = 1.0f;
     registered->tick(&state, &input, &move);
-    CHECK(state.state == PK_QUICK_ATTACK_START);
+    CHECK(state.state == PK_THUNDER_JOLT_GROUND);
     CHECK(state.state_frame == 0u);
     {
         ForeignCollisionResult hit;
@@ -70,6 +69,34 @@ int main(void)
         registered->resolve(&state, &hit);
     }
     CHECK(state.state_frame == 1u);
+
+    /* Quick's source Start/zip motions are static. A collision that enters
+     * End/Recovery restarts its public motion at local frame zero even though
+     * the private decision clock remains continuous and serialized. */
+    registered->reset(&state);
+    state.grounded = 0;
+    memset(&input, 0, sizeof(input));
+    input.special_pressed = 1;
+    input.stick_y = 1.0f;
+    memset(&move, 0, sizeof(move));
+    registered->tick(&state, &input, &move);
+    CHECK(state.state == PK_QUICK_ATTACK_START && state.state_frame == 0u);
+    memset(&input, 0, sizeof(input));
+    for (tick = 1; tick <= (int)PIKACHU_SOURCE_QUICK_ATTACK_AIM_FRAMES;
+         ++tick) {
+        memset(&move, 0, sizeof(move));
+        registered->tick(&state, &input, &move);
+    }
+    CHECK(state.state == PK_QUICK_ATTACK_ZIP1 && state.state_frame == 0u);
+    {
+        ForeignCollisionResult hit;
+        memset(&hit, 0, sizeof(hit));
+        hit.hit_wall = 1;
+        hit.grounded = 0;
+        registered->resolve(&state, &hit);
+    }
+    CHECK(state.state == PK_QUICK_ATTACK_RECOVERY);
+    CHECK(state.state_frame == 0u);
 
     registered->reset(&state);
 
