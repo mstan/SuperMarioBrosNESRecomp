@@ -21,6 +21,7 @@
 #define SMASH64_BLOB_VERSION_PIKACHU_EFFECTS 6u
 #define SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V2 7u
 #define SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V3 8u
+#define SMASH64_BLOB_VERSION_PIKACHU_LANDING 9u
 #define SMASH64_MAX_JOINTS 32u
 #define FALCON_JOINT_COUNT 26u
 #define FALCON_RENDER_HEIGHT 32.0f
@@ -148,8 +149,6 @@ static float s_pikachu_joint11_x, s_pikachu_joint11_y;
 /* The controller deliberately preserves one action clock across Thunder's
  * start/loop/self-hit phases.  Presentation needs the self-hit-local clock
  * for effects authored at source frame zero. */
-static int s_pikachu_thunder_self_hit_active;
-static unsigned s_pikachu_thunder_self_hit_start_frame;
 static const uint32_t s_fallback_color[1] = { 0xFF3060C8u };
 
 static int active_is_pikachu(void)
@@ -389,7 +388,8 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
         version != SMASH64_BLOB_VERSION_SKINNED &&
         version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS &&
         version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V2 &&
-        version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V3)
+        version != SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V3 &&
+        version != SMASH64_BLOB_VERSION_PIKACHU_LANDING)
         return 0;
 
     model->joint_count = read_u32(&reader);
@@ -434,7 +434,8 @@ static int parse_blob(const uint8_t *data, size_t size, FalconAssetModel *model)
                          model->texture_count) ||
           model->punch_effect_texture_first +
                   model->punch_effect_texture_count != model->texture_count)) ||
-        (version == SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V3 &&
+        ((version == SMASH64_BLOB_VERSION_PIKACHU_EFFECTS_V3 ||
+          version == SMASH64_BLOB_VERSION_PIKACHU_LANDING) &&
          (model->punch_effect_texture_count != PIKACHU_EFFECT_TEXTURES ||
           !range_is_safe(model->punch_effect_texture_first,
                          model->punch_effect_texture_count,
@@ -728,7 +729,6 @@ void game_smash64_assets_clear(void)
     memset(&s_model, 0, sizeof(s_model));
     s_load_attempted = 0;
     s_pikachu_joint11_valid = 0;
-    s_pikachu_thunder_self_hit_active = 0;
 }
 
 static int pikachu_walk_tier(const ForeignState *state)
@@ -780,6 +780,15 @@ static const char *animation_for_state(const ForeignState *state)
         case PK_BAIR: return "AttackAirB";
         case PK_UAIR: return "AttackAirHi";
         case PK_DAIR: return "AttackAirD";
+        /* ftPikachu's N/B landing route selects common LandingAirX; its F/D
+         * routes have their own owner motion entries 2031/2032. */
+        case PK_LANDING_AIR_NULL: return "LandingAirX";
+        case PK_LANDING_AIR_F: return "LandingAirF";
+        case PK_LANDING_AIR_D: return "LandingAirD";
+        /* Quick Attack's post-End air control and its 0.4-rate landing use
+         * the common FallSpecial / LandingAirX clips, not an Idle proxy. */
+        case PK_FALL_SPECIAL: return "FallSpecial";
+        case PK_FALL_SPECIAL_LANDING: return "LandingAirX";
         case PK_THUNDER_JOLT_GROUND: return "NeutralSpecialGround";
         case PK_THUNDER_JOLT_AIR: return "NeutralSpecialAir";
         case PK_QUICK_ATTACK_START:
@@ -787,13 +796,10 @@ static const char *animation_for_state(const ForeignState *state)
         case PK_QUICK_ATTACK_WINDOW:
         case PK_QUICK_ATTACK_ZIP2:
         case PK_QUICK_ATTACK_RECOVERY: return "UpSpecialAirEnd";
-        /* Down-B has a separate ground/air motion family in the owner
-         * animation bank: 2090/2091/2092 for ground and 2093/2094/2095 for
-         * air.  The controller's compact status intentionally shares the
-         * start/loop/self-hit values, so groundness is the source-visible
-         * discriminator here.  In particular, mapping airborne self-hit to
-         * GettingThundered makes the whole move snap to the grounded pose
-         * precisely when Thunder gives Pikachu its vertical boost. */
+        /* Down-B has a complete source status family: 2090/91/92 ground and
+         * 2093/94/95 air. Legacy serialized states keep their prior
+         * groundness discriminator; all newly emitted states are explicit so
+         * no end phase can silently render as Idle. */
         case PK_THUNDER_START:
             return state->grounded ? "DownSpecialStart" :
                                      "DownSpecialStartAir";
@@ -801,6 +807,11 @@ static const char *animation_for_state(const ForeignState *state)
         case PK_THUNDER_SELF_HIT:
             return state->grounded ? "GettingThundered" :
                                      "DownSpecialThunderedAir";
+        case PK_THUNDER_END: return "DownSpecialEnd";
+        case PK_THUNDER_AIR_START: return "DownSpecialStartAir";
+        case PK_THUNDER_AIR_LOOP:
+        case PK_THUNDER_AIR_SELF_HIT: return "DownSpecialThunderedAir";
+        case PK_THUNDER_AIR_END: return "DownSpecialEndAir";
         default: return "Idle";
         }
     }
@@ -964,12 +975,35 @@ static void apply_animation(const FalconAssetModel *model,
     }
 }
 
+/* Source state frames are host ticks, while the source's common landing
+ * motions advance at their own rates. This is deliberately free of render
+ * environment overrides so gameplay attachments share the exact authored
+ * pose that ordinary non-debug Pikachu presentation uses. */
+static float pikachu_source_animation_frame(const ForeignState *state)
+{
+    if (!state) return 0.0f;
+    switch (state->state) {
+    case PK_LANDING_AIR_NULL: return (float)state->state_frame * 0.5f;
+    case PK_FALL_SPECIAL_LANDING: return (float)state->state_frame * 0.4f;
+    case PK_WALK:
+        /* Cached Figatree endpoints are 45/30/24 while source walk phases
+         * are 60/30/30; preserve cadence before sampling the owner pose. */
+        switch (pikachu_walk_tier(state)) {
+        case 1: return (float)state->state_frame * (45.0f / 60.0f);
+        case 3: return (float)state->state_frame * (24.0f / 30.0f);
+        default: return (float)state->state_frame;
+        }
+    default: return (float)state->state_frame;
+    }
+}
+
 static float presentation_animation_frame(const ForeignState *state)
 {
     const char *forced = SDL_getenv("NESRECOMP_FALCON_ANIM_FRAME");
     if (forced && *forced)
         return env_float("NESRECOMP_FALCON_ANIM_FRAME",
                          (float)state->state_frame);
+    if (active_is_pikachu()) return pikachu_source_animation_frame(state);
     if (!active_is_pikachu() && state->state == FL_WAIT) {
         const float extent = FALCON_WAIT_GROUNDED_SPAN * 2.0f;
         float phase = fmodf((float)state->state_frame * FALCON_WAIT_RATE,
@@ -980,16 +1014,6 @@ static float presentation_animation_frame(const ForeignState *state)
     }
     if (!active_is_pikachu() && state->state == FL_FALCON_DIVE_LANDING)
         return (float)state->state_frame * 0.65f;
-    if (active_is_pikachu() && state->state == PK_WALK) {
-        /* The cached Figatree timelines end at 45/30/24, while Pikachu's
-         * source walk phase lengths are 60/30/30. Preserve the source cycle
-         * cadence instead of making the fast clip skate 20% too quickly. */
-        switch (pikachu_walk_tier(state)) {
-        case 1: return (float)state->state_frame * (45.0f / 60.0f);
-        case 3: return (float)state->state_frame * (24.0f / 30.0f);
-        default: break;
-        }
-    }
     return (float)state->state_frame;
 }
 
@@ -1543,21 +1567,14 @@ static void draw_pikachu_thunder_amp(const ForeignState *state,
     float source_y;
     float source_size;
 
-    if (state->state != PK_THUNDER_SELF_HIT) {
-        s_pikachu_thunder_self_hit_active = 0;
+    if (state->state != PK_THUNDER_SELF_HIT &&
+        state->state != PK_THUNDER_AIR_SELF_HIT) {
         return;
     }
-    /* PK_THUNDER_SELF_HIT does not reset ForeignState::state_frame: source
-     * motion 0x1668 starts at zero but the compact controller keeps the
-     * complete Down-B action time. Latch the transition solely for rendering.
-     * A savestate restore makes that counter go backwards, which is likewise
-     * a new local presentation epoch. */
-    if (!s_pikachu_thunder_self_hit_active ||
-        state->state_frame < s_pikachu_thunder_self_hit_start_frame) {
-        s_pikachu_thunder_self_hit_active = 1;
-        s_pikachu_thunder_self_hit_start_frame = state->state_frame;
-    }
-    frame = state->state_frame - s_pikachu_thunder_self_hit_start_frame;
+    /* The controller resets state_frame at every source Down-B phase
+     * transition, so this is the exact local frame for both 2091 and 2094;
+     * no renderer-owned transition latch may drift across a save restore. */
+    frame = state->state_frame;
     /* Exact nEFKindThunderAmp common particle script 0x74: texture 46,
      * base size 100, then its source bytecode emits 200/210 at f0 and runs
      * the [400/420 (two frames), 300/315 (one frame)] card cycle twice.
@@ -1606,6 +1623,71 @@ static void draw_pikachu_thunder_amp(const ForeignState *state,
     }
 }
 
+/* LandingAirNull/F emits DustHeavyDouble; LandingAirD adds ImpactWave. These
+ * are generic efCommon effects, so the host cannot bind an owner card or
+ * reproduce N64 particle-manager state. The bounded quads below deliberately
+ * represent only their named source events at entry, never a substitute for
+ * another Pikachu texture. QuakeMag1 remains unavailable: no host camera API
+ * exists and it is not implied by this local dust/impact adaptation. */
+static void draw_pikachu_landing_effect(const ForeignState *state,
+                                        float center_x, float foot_y,
+                                        float output_scale)
+{
+    const unsigned frame = state->state_frame;
+    const float unit = output_scale > 0.0f ? output_scale : 1.0f;
+    const float z = 3.25f * unit;
+    const int impact = state->state == PK_LANDING_AIR_D;
+    unsigned i;
+
+    if (state->state != PK_LANDING_AIR_NULL &&
+        state->state != PK_LANDING_AIR_F && !impact)
+        return;
+    if (frame < 7u) {
+        const float phase = (float)frame;
+        nes_voxel_mesh_bind_texture(s_pikachu_dust_color, 1, 1, 1,
+                                    0.76f - phase * 0.09f, 0);
+        for (i = 0; i < 2u; ++i) {
+            const float side = i ? 1.0f : -1.0f;
+            draw_dive_effect_quad(center_x + side * (2.0f + phase) * unit,
+                                  foot_y + 0.65f * unit, z,
+                                  (1.65f + phase * 0.35f) * unit,
+                                  (0.50f + phase * 0.06f) * unit);
+        }
+    }
+    if (impact && frame < 9u) {
+        const float phase = (float)frame;
+        nes_voxel_mesh_bind_texture(s_dive_white_color, 1, 1, 1,
+                                    0.68f - phase * 0.07f, 0);
+        draw_dive_effect_quad(center_x, foot_y + 0.35f * unit, z,
+                              (2.5f + phase * 1.15f) * unit,
+                              (0.32f + phase * 0.035f) * unit);
+    }
+}
+
+/* PikachuMainMotion's ThunderHitColor is a material-color animation, not an
+ * independent particle. The owner loop flashes blue a90, white a100, clear
+ * in three one-frame steps for 21 frames; End performs white a80, black a80,
+ * then clears over four frames. The mesh overlay path composes this over the
+ * real owner textures without mutating cached material bytes. */
+static uint32_t pikachu_thunder_color_overlay(const ForeignState *state)
+{
+    const unsigned frame = state->state_frame;
+    if (state->state == PK_THUNDER_SELF_HIT ||
+        state->state == PK_THUNDER_AIR_SELF_HIT) {
+        switch (frame % 3u) {
+        case 0u: return 0x5A0064FFu; /* blue, alpha 90 */
+        case 1u: return 0x64FFFFFFu; /* white, alpha 100 */
+        default: return 0u;           /* explicit clear */
+        }
+    }
+    if (state->state == PK_THUNDER_END ||
+        state->state == PK_THUNDER_AIR_END) {
+        if (frame == 0u) return 0x50FFFFFFu; /* white, alpha 80 */
+        if (frame == 1u) return 0x50000000u; /* black, alpha 80 */
+    }
+    return 0u;
+}
+
 static NesVoxelMeshVertex render_death_vertex(
     Mat4 matrix, const FalconAssetVertex *vertex,
     const float pose_min[3], const float pose_max[3],
@@ -1644,7 +1726,10 @@ static NesVoxelMeshVertex render_death_vertex(
  * the renderer's +Y-up plane. */
 static int evaluate_pikachu_joint_render(unsigned joint, float center_x,
                                          float anchor_y, float output_scale,
-                                         int presentation_debug,
+                                         float animation_frame,
+                                         float render_height,
+                                         float yaw_degrees,
+                                         int bind_pose,
                                          float *x, float *y)
 {
     const ForeignState *state;
@@ -1670,29 +1755,17 @@ static int evaluate_pikachu_joint_render(unsigned joint, float center_x,
         memcpy(s[i], s_model.joints[i].scale, sizeof(s[i]));
     }
     animation = find_animation(&s_model, animation_for_state(state));
-    /* Gameplay attachments must be source-authored and deterministic.  The
-     * visual-debug knobs remain useful for framing screenshots, but allowing
-     * them to steer a Jolt collision origin would make the simulation depend
-     * on a renderer-only environment setting. */
-    if (!presentation_debug || !env_enabled("NESRECOMP_FALCON_BIND_POSE"))
-        apply_animation(&s_model, animation, presentation_animation_frame(state),
-                        t, r, s);
+    if (!bind_pose)
+        apply_animation(&s_model, animation, animation_frame, t, r, s);
     apply_pikachu_quick_attack_pose(state, r, s);
     build_matrices(&s_model, t, r, s, world);
     compute_world_bounds(&s_model, world, pose_min, pose_max);
     reference_height = s_model.bounds_max[1] - s_model.bounds_min[1];
     if (!(reference_height > 0.0f)) return 0;
     if (output_scale <= 0.0f) output_scale = 1.0f;
-    model_scale = (presentation_debug
-                       ? env_float("NESRECOMP_PIKACHU_RENDER_HEIGHT",
-                                   PIKACHU_RENDER_HEIGHT)
-                       : PIKACHU_RENDER_HEIGHT) * output_scale /
-                  reference_height;
+    model_scale = render_height * output_scale / reference_height;
     facing = state->facing < 0.0f ? 1.0f : -1.0f;
-    yaw_rad = (presentation_debug
-                   ? env_float("NESRECOMP_PIKACHU_YAW_DEG", PIKACHU_YAW_DEG)
-                   : PIKACHU_YAW_DEG) *
-        (3.14159265358979323846f / 180.0f);
+    yaw_rad = yaw_degrees * (3.14159265358979323846f / 180.0f);
     c = cosf(yaw_rad);
     yaw_sin = sinf(yaw_rad);
     mat_point(world[joint], origin, point);
@@ -1710,7 +1783,12 @@ int game_smash64_assets_pikachu_joint_native(unsigned joint,
     float render_x, render_y;
     if (!isfinite(center_x) || !isfinite(foot_y) ||
         !evaluate_pikachu_joint_render(joint, center_x, 240.0f - foot_y,
-                                       1.0f, 0, &render_x, &render_y))
+                                       1.0f,
+                                       pikachu_source_animation_frame(
+                                           nes_foreign_state()),
+                                       PIKACHU_RENDER_HEIGHT,
+                                       PIKACHU_YAW_DEG, 0,
+                                       &render_x, &render_y))
         return 0;
     if (x) *x = render_x;
     if (y) *y = 240.0f - render_y;
@@ -1825,8 +1903,17 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
     if (active_is_pikachu() && !death_mode && !still_mode &&
         !animation_override)
         s_pikachu_joint11_valid = evaluate_pikachu_joint_render(
-            11u, center_x, anchor_y, output_scale, 1, &s_pikachu_joint11_x,
+            11u, center_x, anchor_y, output_scale,
+            presentation_animation_frame(state),
+            env_float("NESRECOMP_PIKACHU_RENDER_HEIGHT",
+                      PIKACHU_RENDER_HEIGHT),
+            env_float("NESRECOMP_PIKACHU_YAW_DEG", PIKACHU_YAW_DEG),
+            env_enabled("NESRECOMP_FALCON_BIND_POSE"),
+            &s_pikachu_joint11_x,
             &s_pikachu_joint11_y);
+
+    nes_voxel_mesh_set_color_overlay(active_is_pikachu()
+        ? pikachu_thunder_color_overlay(state) : 0u);
 
     for (i = 0; i < s_model.triangle_count; ++i) {
         const FalconAssetTriangle *triangle = &s_model.triangles[i];
@@ -1873,11 +1960,15 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
         }
         nes_voxel_mesh_triangle(a, b, c);
     }
+    /* Do not tint generic landing/spark/ThunderAmp cards emitted after the
+     * fighter mesh; ThunderHitColor owns only Pikachu's material draw. */
+    nes_voxel_mesh_set_color_overlay(0u);
     if (active_is_pikachu() && !death_mode && !still_mode &&
         !animation_override) {
         draw_pikachu_quick_attack_effect(state, center_x, anchor_y,
                                          output_scale);
         draw_pikachu_thunder_amp(state, center_x, anchor_y, output_scale);
+        draw_pikachu_landing_effect(state, center_x, anchor_y, output_scale);
     } else if (!active_is_pikachu() && !death_mode && !still_mode &&
         !animation_override) {
         draw_falcon_punch_effect(&s_model, state, world, pose_min, pose_max,

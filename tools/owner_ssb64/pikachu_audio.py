@@ -29,7 +29,7 @@ import owner_audio
 
 
 FORMAT = "smb1-smash64-pikachu-runtime-audio-cache"
-RECIPE_VERSION = 2
+RECIPE_VERSION = 3
 
 VOICE_CUES = {
     "special_n_voice": ("pikachu_special_n.wav", 540, 393, 268),
@@ -68,12 +68,25 @@ FGM_CUES = {
     "thunder": ("pikachu_thunder.wav", 232, 55, 7,
                 ((0, -80), (64, 0), (192, -120)), 344, 235,
                 ((0, 124), (240, 108), (320, 72))),
+    # Exact common FGM routes used by the newly reachable aerial landing
+    # statuses. The host keeps the same deliberately labeled finite FGM
+    # renderer as the existing cue set; it never aliases these to another
+    # character sound.
+    "landing": ("pikachu_landing.wav", 79, 3, 1,
+                ((0, 700),), 10, 255, ((0, 127),)),
+    "dead_slam": ("pikachu_dead_slam.wav", 294, 187, 28,
+                  ((0, -1100),), 15, 255, ((0, 127),)),
 }
+# These two landing routes have a single source articulation. Pin its initial
+# TBL pitch explicitly so a later curve edit cannot turn their source-derived
+# baseline into an unlabeled proxy; finite decay remains the renderer's
+# documented focused-FGM limitation.
+FGM_INITIAL_ARTICULATION_CENTS = {"landing": 700, "dead_slam": -1100}
 
 EXPECTED_FORKS = {
-    226: (649,), 227: (649,), 229: (649,), 232: (674, 675),
+    226: (649,), 227: (649,), 229: (649,), 232: (674, 675), 294: (287,),
 }
-FORK_ARTICULATIONS = {649: 20, 674: 55, 675: 55}
+FORK_ARTICULATIONS = {287: 187, 649: 20, 674: 55, 675: 55}
 LOOP_EVENT = "electric_loop"
 LOOP_FILE = "pikachu_electric_loop.wav"
 LOOP_ROUTE = 230
@@ -96,8 +109,11 @@ CONTROLLER_BINDINGS = {
     "electric_5": ((9, "PIKACHU_EVENT_FGM_ELECTRIC_5"),),
     # Quick Attack emits this once when its 20-frame charge begins.
     "quick_attack_start": ((10, "PIKACHU_EVENT_FGM_QUICK_ATTACK_START"),),
-    # Current Thunder motion plays this when the projectile spawns.
-    "thunder": ((16, "PIKACHU_EVENT_PROJECTILE_THUNDER_SPAWN"),),
+    # PikachuMainMotion emits FGM232 on the owner Loop status's local f0;
+    # the projectile is deliberately spawned earlier by Start f24.
+    "thunder": ((24, "PIKACHU_EVENT_FGM_THUNDER"),),
+    "landing": ((18, "PIKACHU_EVENT_FGM_LANDING"),),
+    "dead_slam": ((19, "PIKACHU_EVENT_FGM_DEAD_SLAM"),),
     # BattleShip starts ElectricLoop when the Thunder Jolt weapon is created.
     "electric_loop": ((15, "PIKACHU_EVENT_PROJECTILE_JOLT_SPAWN"),),
 }
@@ -120,6 +136,8 @@ APPROVED_CUES = {
     "light_swing_s": (6438, "8192ef6c410e72f48ddecbcc95e0bc75fad49664ae85c9f7df130042464aa59f"),
     "quick_attack_start": (17603, "639dab10e9a22e09a86051e22a295eb2cb4a05cb2b1fb6ee87e6929d460e8d5e"),
     "thunder": (87484, "015518530cebf78fbf508158fb8e581d15fc62c958ce1e61e153242791bd5718"),
+    "landing": (2790, "b76078eaff982a8bea4c07d40dbf02ff53ea41b4bbd3904f8b8d0e7dcb9f5a84"),
+    "dead_slam": (4058, "a5ff0a3ac4819afe2de2d0ae13e23ce764de06429a917ed949dc0f859258dc0a"),
     "electric_loop": (10425, "aedef3eda98f88e756a08848b37953d9b94e5fe94cfc78b31410dcf28df267a3"),
 }
 
@@ -171,17 +189,28 @@ def _validate_routes(rom: bytes) -> dict:
     voice_by_route = {spec[1]: event for event, spec in VOICE_CUES.items()}
     for route, (articulation, wave_id) in sorted(route_specs.items()):
         commands = owner_audio._ucd_commands(ucd[route])
-        if ("articulation", articulation) not in commands:
-            raise ValueError(f"FGM route {route} changed articulation")
         observed_forks = tuple(value for kind, value in commands if kind == "fork")
         if observed_forks != EXPECTED_FORKS.get(route, ()):
             raise ValueError(f"FGM route {route} changed fork closure")
+        # FGM294's root program only forks to 287; preserve that source
+        # topology rather than pretending the terminal articulation lives in
+        # the root like the simpler landing route does.
+        articulation_route = route
+        if ("articulation", articulation) not in commands:
+            candidates = [fork for fork in observed_forks
+                          if ("articulation", articulation) in
+                          owner_audio._ucd_commands(ucd[fork])]
+            if len(candidates) != 1:
+                raise ValueError(f"FGM route {route} changed articulation")
+            articulation_route = candidates[0]
         if owner_audio._tbl_trigger(tbl[articulation]) != wave_id:
             raise ValueError(f"FGM articulation {articulation} changed wave")
         route_info = {"articulation": articulation, "wave_id": wave_id,
                       "commands": commands,
                       "ucd_sha256": hashlib.sha256(ucd[route]).hexdigest(),
                       "tbl_sha256": hashlib.sha256(tbl[articulation]).hexdigest()}
+        if articulation_route != route:
+            route_info["articulation_route"] = articulation_route
         if route in voice_by_route:
             event = voice_by_route[route]
             note_cents = owner_audio._ucd_initial_note_cents(ucd[route])
@@ -196,6 +225,13 @@ def _validate_routes(rom: bytes) -> dict:
                 "initial_total_cents": total_cents,
                 "effective_source_rate": owner_audio.pitched_source_rate(total_cents),
             })
+        fgm_event = next((event for event, spec in FGM_CUES.items()
+                          if spec[1] == route), None)
+        if fgm_event in FGM_INITIAL_ARTICULATION_CENTS:
+            observed_cents = owner_audio._tbl_initial_pitch_cents(tbl[articulation])
+            if observed_cents != FGM_INITIAL_ARTICULATION_CENTS[fgm_event]:
+                raise ValueError(f"Pikachu FGM route {route} changed initial pitch")
+            route_info["initial_articulation_cents"] = observed_cents
         routes[str(route)] = route_info
     for fork, articulation in FORK_ARTICULATIONS.items():
         commands = owner_audio._ucd_commands(ucd[fork])

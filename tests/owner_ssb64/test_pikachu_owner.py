@@ -26,7 +26,7 @@ class PikachuRecipeTests(unittest.TestCase):
         ids = [file_id for file_id, _name, _size in pikachu.RELOC_FILES]
         self.assertEqual(len(ids), len(set(ids)))
         self.assertEqual(ids[:4], [243, 341, 342, 347])
-        self.assertEqual(len(pikachu.ANIM_SPECS), 41)
+        self.assertEqual(len(pikachu.ANIM_SPECS), 43)
         self.assertEqual(pikachu.MODEL_JOINT_COUNT, 27)
         self.assertEqual((pikachu.EF_COMMON_THUNDER_AMP_SCRIPT_ID,
                           pikachu.EF_COMMON_THUNDER_AMP_TEXTURE_ID,
@@ -71,6 +71,55 @@ class PikachuRecipeTests(unittest.TestCase):
         self.assertIn('"DownSpecialStartAir"', source)
         self.assertIn('state->grounded ? "GettingThundered" :', source)
         self.assertIn('"DownSpecialThunderedAir"', source)
+        for state, motion in (
+            ("PK_THUNDER_END", "DownSpecialEnd"),
+            ("PK_THUNDER_AIR_START", "DownSpecialStartAir"),
+            ("PK_THUNDER_AIR_END", "DownSpecialEndAir"),
+        ):
+            self.assertIn(f'case {state}: return "{motion}";', source)
+        self.assertIn("case PK_THUNDER_AIR_LOOP:", source)
+        self.assertIn("case PK_THUNDER_AIR_SELF_HIT: return \"DownSpecialThunderedAir\";", source)
+
+    def test_reachable_landing_and_fallspecial_states_use_owner_motions(self):
+        """Never let an appended controller state silently render as Idle."""
+        animations = {name: file_id for file_id, name, _count
+                      in pikachu.ANIM_SPECS}
+        self.assertEqual({name: animations[name] for name in (
+            "LandingAirX", "FallSpecial", "LandingAirF", "LandingAirD",
+        )}, {
+            "LandingAirX": 1976, "FallSpecial": 1990,
+            "LandingAirF": 2031, "LandingAirD": 2032,
+        })
+        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        for state, motion in (
+            ("PK_FALL_SPECIAL", "FallSpecial"),
+            ("PK_FALL_SPECIAL_LANDING", "LandingAirX"),
+            ("PK_LANDING_AIR_NULL", "LandingAirX"),
+            ("PK_LANDING_AIR_F", "LandingAirF"),
+            ("PK_LANDING_AIR_D", "LandingAirD"),
+        ):
+            self.assertIn(f'case {state}: return "{motion}";', source)
+
+    def test_landing_events_have_explicit_bounded_host_visuals(self):
+        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        landing = source[source.index("static void draw_pikachu_landing_effect"):
+                         source.index("static int evaluate_pikachu_joint_render")]
+        self.assertIn("PK_LANDING_AIR_NULL", landing)
+        self.assertIn("PK_LANDING_AIR_F", landing)
+        self.assertIn("PK_LANDING_AIR_D", landing)
+        self.assertIn("for (i = 0; i < 2u; ++i)", landing)
+        self.assertIn("QuakeMag1 remains unavailable", source)
+        self.assertIn("draw_pikachu_landing_effect(state", source)
+
+    def test_thunder_hit_color_uses_source_tint_sequence(self):
+        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        tint = source[source.index("static uint32_t pikachu_thunder_color_overlay"):
+                      source.index("static int evaluate_pikachu_joint_render")]
+        self.assertIn("0x5A0064FFu", tint)
+        self.assertIn("0x64FFFFFFu", tint)
+        self.assertIn("0x50FFFFFFu", tint)
+        self.assertIn("0x50000000u", tint)
+        self.assertIn("nes_voxel_mesh_set_color_overlay", source)
 
     def test_joint_attachment_api_is_current_pose_not_last_draw(self):
         header = (ROOT / "game_smash64_assets.h").read_text(encoding="utf-8")
@@ -80,12 +129,30 @@ class PikachuRecipeTests(unittest.TestCase):
         self.assertIn("animation_for_state(state)", source)
         self.assertIn("apply_pikachu_quick_attack_pose(state, r, s)", source)
         self.assertIn("240.0f - foot_y", source)
-        native_body = source[source.index(
-            "int game_smash64_assets_pikachu_joint_native("):source.index(
-                "static int draw_model", source.index(
-                    "int game_smash64_assets_pikachu_joint_native("))]
-        self.assertIn("1.0f, 0, &render_x", native_body)
+        native_start = source.index("int game_smash64_assets_pikachu_joint_native(")
+        native_body = source[native_start:source.index(
+            "\n}\n\nstatic int draw_model", native_start) + 2]
+        self.assertIn("pikachu_source_animation_frame(", native_body)
+        self.assertIn("PIKACHU_RENDER_HEIGHT", native_body)
+        self.assertIn("PIKACHU_YAW_DEG, 0", native_body)
         self.assertNotIn("env_", native_body)
+
+    def test_attachment_pose_is_env_invariant_and_landing_rate_is_source_backed(self):
+        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        evaluator = source[source.index("static int evaluate_pikachu_joint_render"):
+                           source.index("int game_smash64_assets_pikachu_joint_native")]
+        self.assertNotIn("env_", evaluator)
+        native = source[source.index("int game_smash64_assets_pikachu_joint_native("):
+                        source.index("static int draw_model", source.index(
+                            "int game_smash64_assets_pikachu_joint_native("))]
+        self.assertIn("pikachu_source_animation_frame(", native)
+        sampler = source[source.index("static float pikachu_source_animation_frame"):
+                         source.index("static float presentation_animation_frame")]
+        self.assertIn("PK_LANDING_AIR_NULL: return (float)state->state_frame * 0.5f", sampler)
+        self.assertIn("PK_FALL_SPECIAL_LANDING: return (float)state->state_frame * 0.4f", sampler)
+        self.assertIn("case PK_WALK:", sampler)
+        self.assertIn("(45.0f / 60.0f)", sampler)
+        self.assertIn("(24.0f / 30.0f)", sampler)
 
     def test_rejects_repository_cache_output(self):
         with self.assertRaises(ValueError):
@@ -120,7 +187,7 @@ class PikachuOwnerRomIntegrationTests(unittest.TestCase):
     def test_canonical_manifest_and_reloc_hashes(self):
         manifest_path = self.cache / "manifest.json"
         self.assertEqual(hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
-                         "144e9ba17090832ce05713fd6bba0d0945563a1d8b399cdbce18cff7f69749dd")
+                         "2c794f84c5556e1d8a545a33f86510c0075e31c0b068b3137c29b01667ccbf62")
         expected = {
             243: "c217452a4a3919d1054e0b42311da68cea09b545aca74b3eb3fa33f5e464f69f",
             341: "0b99946b1e91697503c7f531711edeab18b275bd6ffb519e2599a7e0d18fedb4",
@@ -148,7 +215,7 @@ class PikachuOwnerRomIntegrationTests(unittest.TestCase):
         self.assertEqual([item["accessory"]["enabled"] for item in costumes],
                          [False, True, True, True])
         animations = json.loads((intermediate / "animations" / "manifest.json").read_text())
-        self.assertEqual(len(animations), 41)
+        self.assertEqual(len(animations), 43)
         self.assertEqual(sum(item["joint_count"] == 27 for item in animations), 5)
         effects = json.loads((intermediate / "effects" / "manifest.json").read_text())
         self.assertEqual([item.get("reloc_id") for item in effects[:3]],
@@ -160,10 +227,10 @@ class PikachuOwnerRomIntegrationTests(unittest.TestCase):
 
     def test_runtime_baker_supports_hidden_costume_proof(self):
         expected = {
-            0: (643156, "e63bd596532f8d0ce9d86afdb972c948cac64a31aef5dd4c0c912187e876b36e"),
-            1: (645848, "0bc3eba571a1947c1acfba54a4610a9b98328fe82c267b340ee4fc060832124f"),
-            2: (645848, "9dcf91c1508ae5e4fab7c7f1339742c264eed041e899c879ea6d1614ccdb3f03"),
-            3: (645860, "b8dc578d31f4772ab2a5ed5b3571aa2c96d67d29ab59ad21ebf38abeb69e8e93"),
+            0: (671480, "e396d8d19cc17b470c03d33e528b3790465e63225d1e8a135cd2fd6b2e758734"),
+            1: (674172, "4e51bb1943abc3b69ab44f231dd8e20557168abe4426c159e2adcf07adb4c84c"),
+            2: (674172, "869cb1be48da28abad4a089f99ba27ad7a7f4b988d9e41caa651f143929d3d28"),
+            3: (674184, "b5d5a20b9233ff9298a65e95be2ac900791d8f6b5843faf528ee0b687d83e1c3"),
         }
         with tempfile.TemporaryDirectory(prefix="pikachu-runtime-") as temporary:
             outputs = []
@@ -175,7 +242,7 @@ class PikachuOwnerRomIntegrationTests(unittest.TestCase):
                 magic, version, joints, triangles, textures, animations = \
                     struct.unpack_from("<8s5I", payload, 0)
                 self.assertEqual((magic, version, joints, animations),
-                                 (b"FLCN64B\0", 8, 27, 41))
+                                 (b"FLCN64B\0", 9, 27, 43))
                 self.assertEqual((len(payload), hashlib.sha256(payload).hexdigest()),
                                  expected[costume])
                 outputs.append((triangles, textures))

@@ -30,7 +30,7 @@ import decode_intermediates as falcon_decode
 import owner_audio
 
 
-RECIPE_VERSION = 5
+RECIPE_VERSION = 6
 CACHE_FORMAT = "smb1-smash64-pikachu-prototype-cache"
 MODEL_ID = 341
 MAIN_ID = 243
@@ -73,6 +73,9 @@ ANIM_SPECS = (
     (2026, "AttackAirN", 26), (2027, "AttackAirF", 27),
     (2028, "AttackAirB", 26), (2029, "AttackAirHi", 26),
     (2030, "AttackAirD", 27),
+    # Owner motion table slots 0x47/0x48; only F and D have authored
+    # attack-air landing clips. N/B deliberately use the common AirNull X.
+    (2031, "LandingAirF", 26), (2032, "LandingAirD", 26),
     (2086, "NeutralSpecialGround", 26), (2087, "NeutralSpecialAir", 26),
     (2088, "UpSpecialEnd", 27), (2089, "UpSpecialAirEnd", 27),
     (2090, "DownSpecialStart", 26), (2091, "GettingThundered", 26),
@@ -93,7 +96,7 @@ RELOC_FILES = (
     1972: 1056, 1973: 1152, 1974: 4592, 1975: 1456, 1976: 1904,
     1990: 1008, 2016: 3296, 2017: 6336, 2019: 4448, 2021: 3216,
     2022: 3600, 2026: 2928, 2027: 4112, 2028: 4320, 2029: 2336,
-    2030: 4208, 2086: 5472, 2087: 5936, 2088: 6064,
+    2030: 4208, 2031: 2528, 2032: 3840, 2086: 5472, 2087: 5936, 2088: 6064,
     2089: 3248, 2090: 2464, 2091: 1728, 2092: 2992, 2093: 2544,
     2094: 1408, 2095: 3136,
 }[file_id]) for file_id, name, _count in ANIM_SPECS)

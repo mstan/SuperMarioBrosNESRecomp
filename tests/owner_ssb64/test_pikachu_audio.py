@@ -33,6 +33,8 @@ EXPECTED = {
     "light_swing_s": (6438, "8192ef6c410e72f48ddecbcc95e0bc75fad49664ae85c9f7df130042464aa59f"),
     "quick_attack_start": (17603, "639dab10e9a22e09a86051e22a295eb2cb4a05cb2b1fb6ee87e6929d460e8d5e"),
     "thunder": (87484, "015518530cebf78fbf508158fb8e581d15fc62c958ce1e61e153242791bd5718"),
+    "landing": (2790, "b76078eaff982a8bea4c07d40dbf02ff53ea41b4bbd3904f8b8d0e7dcb9f5a84"),
+    "dead_slam": (4058, "a5ff0a3ac4819afe2de2d0ae13e23ce764de06429a917ed949dc0f859258dc0a"),
     "electric_loop": (10425, "aedef3eda98f88e756a08848b37953d9b94e5fe94cfc78b31410dcf28df267a3"),
 }
 
@@ -55,8 +57,11 @@ class PikachuAudioRecipeTests(unittest.TestCase):
         match = re.search(r"typedef enum \{([^{}]*PIKACHU_EVENT[^{}]*)\}\s*PikachuEvent;", header,
                           re.DOTALL)
         self.assertIsNotNone(match)
+        # The append-only ABI deliberately documents source provenance beside
+        # newly assigned IDs; comments are not enumerator tokens.
+        enum_body = re.sub(r"/\*.*?\*/", "", match.group(1), flags=re.DOTALL)
         names = []
-        for entry in match.group(1).split(","):
+        for entry in enum_body.split(","):
             name = entry.strip().split("=")[0].strip()
             if name:
                 names.append(name)
@@ -79,6 +84,13 @@ class PikachuAudioRecipeTests(unittest.TestCase):
             "PIKACHU_EVENT_PROJECTILE_JOLT_SPAWN",
             "PIKACHU_EVENT_PROJECTILE_THUNDER_SPAWN",
             "PIKACHU_EVENT_PROJECTILE_THUNDER_SELF_HIT",
+            "PIKACHU_EVENT_FGM_LANDING",
+            "PIKACHU_EVENT_FGM_DEAD_SLAM",
+            "PIKACHU_EVENT_EFFECT_DUST_HEAVY_DOUBLE",
+            "PIKACHU_EVENT_EFFECT_IMPACT_WAVE",
+            "PIKACHU_EVENT_EFFECT_QUAKE_MAG1",
+            "PIKACHU_EVENT_EFFECT_THUNDER_HIT_COLOR",
+            "PIKACHU_EVENT_FGM_THUNDER",
             "PIKACHU_EVENT_COUNT",
         ])
         for bindings in pikachu_audio.CONTROLLER_BINDINGS.values():
@@ -95,7 +107,7 @@ class PikachuAudioRecipeTests(unittest.TestCase):
         files += [spec[0] for spec in pikachu_audio.FGM_CUES.values()]
         files.append(pikachu_audio.LOOP_FILE)
         self.assertEqual(len(files), len(set(files)))
-        self.assertEqual(len(files), 13)
+        self.assertEqual(len(files), 15)
         bound = {event: tuple(item[0] for item in bindings)
                  for event, bindings in pikachu_audio.CONTROLLER_BINDINGS.items()}
         self.assertEqual(bound, {
@@ -104,7 +116,8 @@ class PikachuAudioRecipeTests(unittest.TestCase):
             "light_swing_m": (4,), "light_swing_l": (5,),
             "electric_1": (6,), "electric_2": (7,), "electric_3": (8,),
             "electric_5": (9,), "quick_attack_start": (10,),
-            "thunder": (16,), "electric_loop": (15,),
+            "thunder": (24,), "landing": (18,), "dead_slam": (19,),
+            "electric_loop": (15,),
         })
         self.assertEqual(pikachu_audio.UNRESOLVED_CONTROLLER_EVENTS[0]["id"], 11)
         self.assertEqual(pikachu_audio.UNRESOLVED_CONTROLLER_EVENTS[0]["smash_route"], 219)
@@ -135,7 +148,7 @@ class PikachuAudioIntegrationTests(unittest.TestCase):
             self.assertEqual(set(clips), set(EXPECTED))
             self.assertEqual({event: (clip["frames"], clip["pcm_sha256"])
                               for event, clip in clips.items()}, EXPECTED)
-            self.assertEqual(len(manifest["routes"]), 13)
+            self.assertEqual(len(manifest["routes"]), 15)
             self.assertIn("not full UCD/TBL/RSP emulation",
                           manifest["approximation"])
             loop = clips["electric_loop"]
@@ -146,7 +159,11 @@ class PikachuAudioIntegrationTests(unittest.TestCase):
             self.assertEqual(loop["loop"]["source_end_sample"], 7664)
             self.assertEqual(loop["controller_event_ids"], [15])
             self.assertEqual(clips["quick_attack_start"]["controller_event_ids"], [10])
-            self.assertEqual(clips["thunder"]["controller_event_ids"], [16])
+            self.assertEqual(clips["thunder"]["controller_event_ids"], [24])
+            self.assertEqual(clips["landing"]["controller_event_ids"], [18])
+            self.assertEqual(clips["dead_slam"]["controller_event_ids"], [19])
+            self.assertEqual(manifest["routes"]["79"]["initial_articulation_cents"], 700)
+            self.assertEqual(manifest["routes"]["294"]["articulation_route"], 287)
             self.assertEqual(manifest["unresolved_controller_events"][0]["id"], 11)
             expected_voice_playback = {
                 "special_n_voice": (-440, 24818),

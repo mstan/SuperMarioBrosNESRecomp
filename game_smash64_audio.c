@@ -61,6 +61,8 @@ static Smash64AudioAsset s_pikachu_assets[] = {
     { PIKACHU_AUDIO_QUICK_ATTACK_START, "quick-attack-start",
       "pikachu_quick_attack_start.wav", 60, 0 },
     { PIKACHU_AUDIO_THUNDER, "thunder", "pikachu_thunder.wav", 64, 0 },
+    { PIKACHU_AUDIO_LANDING, "landing", "pikachu_landing.wav", 42, 0 },
+    { PIKACHU_AUDIO_DEAD_SLAM, "dead-slam", "pikachu_dead_slam.wav", 42, 0 },
     { PIKACHU_AUDIO_ELECTRIC_LOOP, "electric-loop",
       "pikachu_electric_loop.wav", 52, 0 },
 };
