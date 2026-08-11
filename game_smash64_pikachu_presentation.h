@@ -1,0 +1,35 @@
+#pragma once
+
+#include <stdint.h>
+
+/*
+ * PikachuMainMotion's ThunderHitColor material script.  ``normal_gameplay``
+ * prevents a stale controller special state from tinting SMB-owned death,
+ * water, or scripted presentation.  The arguments are deliberately status
+ * predicates so this source-exact material rule stays independent of the
+ * controller ABI.
+ */
+static inline uint32_t game_smash64_pikachu_thunder_color_overlay(
+    int normal_gameplay, int thunder_self_hit, int thunder_end,
+    unsigned frame)
+{
+    if (!normal_gameplay)
+        return 0u;
+    if (thunder_self_hit) {
+        switch (frame % 3u) {
+        case 0u: return 0x5A0000FFu; /* SetColor1(0, 0, 255, 90) */
+        case 1u: return 0x64FFFFFFu; /* SetColor1(255, 255, 255, 100) */
+        default: return 0u;           /* explicit material clear */
+        }
+    }
+    if (thunder_end) {
+        /* The End script's Goto repeats this four-frame sequence for all
+         * 38 status frames, rather than playing it only once on entry. */
+        switch (frame % 4u) {
+        case 0u: return 0x50FFFFFFu; /* white, alpha 80 */
+        case 1u: return 0x50000000u; /* black, alpha 80 */
+        default: return 0u;           /* two explicit clear frames */
+        }
+    }
+    return 0u;
+}

@@ -1,5 +1,6 @@
 /* Runtime loader and skeletal renderer for one selected owner-cache fighter. */
 #include "game_smash64_assets.h"
+#include "game_smash64_pikachu_presentation.h"
 
 #include "game_smash64.h"
 #include "foreign_controller.h"
@@ -1666,26 +1667,21 @@ static void draw_pikachu_landing_effect(const ForeignState *state,
 
 /* PikachuMainMotion's ThunderHitColor is a material-color animation, not an
  * independent particle. The owner loop flashes blue a90, white a100, clear
- * in three one-frame steps for 21 frames; End performs white a80, black a80,
- * then clears over four frames. The mesh overlay path composes this over the
- * real owner textures without mutating cached material bytes. */
-static uint32_t pikachu_thunder_color_overlay(const ForeignState *state)
+ * in three one-frame steps for 21 frames. End uses its Goto to repeat white
+ * a80, black a80, clear, clear through its full 38-frame status. The mesh
+ * overlay path composes this over real owner textures without mutating cached
+ * material bytes. */
+static uint32_t pikachu_thunder_color_overlay(const ForeignState *state,
+                                               int normal_gameplay)
 {
     const unsigned frame = state->state_frame;
-    if (state->state == PK_THUNDER_SELF_HIT ||
-        state->state == PK_THUNDER_AIR_SELF_HIT) {
-        switch (frame % 3u) {
-        case 0u: return 0x5A0064FFu; /* blue, alpha 90 */
-        case 1u: return 0x64FFFFFFu; /* white, alpha 100 */
-        default: return 0u;           /* explicit clear */
-        }
-    }
-    if (state->state == PK_THUNDER_END ||
-        state->state == PK_THUNDER_AIR_END) {
-        if (frame == 0u) return 0x50FFFFFFu; /* white, alpha 80 */
-        if (frame == 1u) return 0x50000000u; /* black, alpha 80 */
-    }
-    return 0u;
+    return game_smash64_pikachu_thunder_color_overlay(
+        normal_gameplay,
+        state->state == PK_THUNDER_SELF_HIT ||
+            state->state == PK_THUNDER_AIR_SELF_HIT,
+        state->state == PK_THUNDER_END ||
+            state->state == PK_THUNDER_AIR_END,
+        frame);
 }
 
 static NesVoxelMeshVertex render_death_vertex(
@@ -1913,7 +1909,10 @@ static int draw_model(float center_x, float anchor_y, float output_scale,
             &s_pikachu_joint11_y);
 
     nes_voxel_mesh_set_color_overlay(active_is_pikachu()
-        ? pikachu_thunder_color_overlay(state) : 0u);
+        ? pikachu_thunder_color_overlay(state,
+                                        !death_mode && !still_mode &&
+                                        !animation_override)
+        : 0u);
 
     for (i = 0; i < s_model.triangle_count; ++i) {
         const FalconAssetTriangle *triangle = &s_model.triangles[i];

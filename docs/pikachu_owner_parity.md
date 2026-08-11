@@ -15,9 +15,11 @@ exact source effects:
 - `QuakeMag1` on Thunder self-hit is emitted by the source path but has no
   host camera-quake API. It is deliberately unavailable; the extracted
   ThunderAmp card remains visible without claiming to shake the SMB camera.
-- `ThunderHitColor` similarly has no host fighter-material override channel.
-  It is retained as a named controller event for a later render API rather
-  than silently reusing an arbitrary palette effect.
+- `ThunderHitColor` is a source-timed per-mesh overlay: self-hit repeats blue
+  a90, white a100, clear, while End repeats white a80, black a80, clear,
+  clear for its whole status. It composes over the extracted owner textures
+  without mutating the cache and is suppressed while SMB owns death, water,
+  or scripted presentation.
 
 `SparkleWhite` and `Ripple` are generic SSB64 particles. Their present small
 host quads/ring are bounded visual adaptations, not owner-extracted card

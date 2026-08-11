@@ -115,10 +115,14 @@ class PikachuRecipeTests(unittest.TestCase):
         source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
         tint = source[source.index("static uint32_t pikachu_thunder_color_overlay"):
                       source.index("static int evaluate_pikachu_joint_render")]
-        self.assertIn("0x5A0064FFu", tint)
-        self.assertIn("0x64FFFFFFu", tint)
-        self.assertIn("0x50FFFFFFu", tint)
-        self.assertIn("0x50000000u", tint)
+        helper = (ROOT / "game_smash64_pikachu_presentation.h").read_text(
+            encoding="utf-8")
+        self.assertIn("0x5A0000FFu", helper)
+        self.assertIn("0x64FFFFFFu", helper)
+        self.assertIn("0x50FFFFFFu", helper)
+        self.assertIn("0x50000000u", helper)
+        self.assertIn("frame % 4u", helper)
+        self.assertIn("normal_gameplay", tint)
         self.assertIn("nes_voxel_mesh_set_color_overlay", source)
 
     def test_joint_attachment_api_is_current_pose_not_last_draw(self):
