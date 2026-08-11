@@ -238,8 +238,8 @@
   "source_status_inventory": [
     {
       "group": "standard_locomotion",
-      "implemented": ["Wait", "WalkSlow/Middle/Fast", "Dash", "Run", "RunBrake", "TurnRun", "KneeBend/JumpF/JumpB", "JumpAerialF/JumpAerialB", "Fall/FallAerial", "Squat/SquatWait/SquatRv", "LandingLight/Heavy", "FallSpecial/LandingFallSpecial"],
-      "missing": ["WalkEnd", "Turn", "GuardKneeBend", "Pass/GuardPass", "OttottoWait/Ottotto"],
+      "implemented": ["Wait", "WalkSlow/Middle/Fast", "Dash", "Run", "RunBrake", "TurnRun", "KneeBend/JumpF/JumpB", "JumpAerialF/JumpAerialB", "Fall/FallAerial", "Squat/SquatWait/SquatRv", "LandingLight(8 ticks at 1.0)", "FallSpecial/LandingFallSpecial"],
+      "missing": ["WalkEnd", "Turn", "LandingHeavy(16 ticks at 0.5; no fast-fall latch)", "GuardKneeBend", "Pass/GuardPass", "OttottoWait/Ottotto"],
       "asset_gap": ["LandingLight", "LandingHeavy", "Pass", "GuardPass", "OttottoWait", "Ottotto"]
     },
     {

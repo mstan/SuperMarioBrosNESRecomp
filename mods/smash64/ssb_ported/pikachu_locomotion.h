@@ -22,7 +22,9 @@
 #define PIKACHU_SOURCE_TURN_RUN_FRAMES 18u
 #define PIKACHU_SOURCE_CROUCH_FRAMES 4u
 #define PIKACHU_SOURCE_CROUCH_END_FRAMES 8u
-#define PIKACHU_SOURCE_LANDING_FRAMES 16u
+/* Common LandingLight is 8 ticks at 1.0. LandingHeavy is 16 at 0.5, but the
+ * current raw controller ABI has no trustworthy fast-fall latch to select it. */
+#define PIKACHU_SOURCE_LANDING_FRAMES 8u
 #define PIKACHU_SOURCE_ATTACK_AIR_SKIP_LANDING_VEL_Y (-20.0)
 #define PIKACHU_SOURCE_LANDING_AIR_NULL_FRAMES 16u
 #define PIKACHU_SOURCE_LANDING_AIR_F_FRAMES 16u

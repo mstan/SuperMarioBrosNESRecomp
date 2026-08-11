@@ -369,7 +369,11 @@ static void crouch_and_landing_vectors(void)
     memset(&hit, 0, sizeof(hit)); hit.grounded = 1;
     pikachu_resolve(&f, &hit);
     CHECK(f.state == PK_LANDING && f.vel_x == 0.0 && f.vel_y == 0.0);
-    for (i = 0; i < (int)PIKACHU_SOURCE_LANDING_FRAMES + 1; ++i) m = step(&f, in);
+    for (i = 0; i < (int)PIKACHU_SOURCE_LANDING_FRAMES; ++i) {
+        m = step(&f, in);
+        CHECK(f.state == PK_LANDING);
+    }
+    m = step(&f, in);
     CHECK(f.state == PK_GROUND_WAIT && m.requested_dx == 0.0);
 }
 
