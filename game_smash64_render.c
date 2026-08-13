@@ -337,6 +337,7 @@ static void draw_persistent_actions(float output_scale)
         const unsigned effect = action->kind == 2u
                                     ? SMASH64_PIKACHU_EFFECT_THUNDER
                                     : SMASH64_PIKACHU_EFFECT_THUNDER_JOLT;
+        if (action->kind != 1u && action->kind != 2u) continue;
         if (effect == SMASH64_PIKACHU_EFFECT_THUNDER_JOLT) {
             if (action->age == 0u) {
                 float joint_x, joint_y;

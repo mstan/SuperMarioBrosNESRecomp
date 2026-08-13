@@ -132,6 +132,38 @@ int main(void)
     expect(state->state == ZELDA2_LINK_SLASH_ACTIVE,
            "standing slash reaches active frame");
     expect(move.attack.active, "standing slash has active sword hitbox");
+    expect(move.actions.count == 0,
+           "standing slash does not emit a beam without fire flower");
+
+    zelda2_link_set_fire_power(1);
+    for (int i = 0; i < 60 && state->state != ZELDA2_LINK_STAND; ++i) {
+        memset(&input, 0, sizeof(input));
+        move = tick(input);
+        accept(&move, 1);
+    }
+    expect(state->state == ZELDA2_LINK_STAND,
+           "standing slash recovers before fire beam test");
+    memset(&input, 0, sizeof(input));
+    input.special_pressed = 1;
+    move = tick(input);
+    expect(state->state == ZELDA2_LINK_SLASH_START,
+           "fire flower B starts standing sword slash");
+    int beam_seen = 0;
+    for (int i = 0; i < 8; ++i) {
+        memset(&input, 0, sizeof(input));
+        move = tick(input);
+        if (move.actions.count == 1 &&
+            move.actions.events[0].kind == ZELDA2_LINK_ACTION_SWORD_BEAM &&
+            (move.actions.events[0].flags &
+             (FOREIGN_ACTION_HOSTILE | FOREIGN_ACTION_DESTROY_ON_SOLID)) ==
+                (FOREIGN_ACTION_HOSTILE | FOREIGN_ACTION_DESTROY_ON_SOLID) &&
+            move.actions.events[0].velocity_x > 0.0)
+            beam_seen = 1;
+        accept(&move, 1);
+    }
+    expect(state->state == ZELDA2_LINK_SLASH_ACTIVE,
+           "fire flower slash reaches active frame");
+    expect(beam_seen, "fire flower slash emits a forward hostile sword beam");
 
     if (failures) {
         fprintf(stderr, "%d Link controller assertion(s) failed\n", failures);

@@ -8,6 +8,7 @@
 #include "game_link.h"
 
 #include "game_smash64.h"
+#include "game_smash64_actions.h"
 #include "mods/zelda2/link_controller.h"
 
 #include "foreign_controller.h"
@@ -200,9 +201,23 @@ static void draw_sword(uint32_t *fb, int origin_x, int origin_y, int mirror,
     }
     draw_sprite_8x16(fb, tile, origin_x + dx, origin_y + dy, mirror, 0,
                      k_link_palette);
-    if (state->state != ZELDA2_LINK_CROUCH_SLASH) {
-        int tip_dx = mirror ? dx - 7 : dx + 7;
-        draw_sprite_8x16(fb, tile, origin_x + tip_dx, origin_y + dy, mirror, 0,
+}
+
+static void draw_sword_beams(uint32_t *fb)
+{
+    Smash64ActionSlot slots[SMASH64_ACTION_SLOT_CAPACITY];
+    const double screen_left =
+        (double)g_ram[ScreenLeft_PageLoc] * 256.0 +
+        (double)g_ram[ScreenLeft_X_Pos];
+    int count = smash64_actions_snapshot(slots, SMASH64_ACTION_SLOT_CAPACITY);
+    for (int i = 0; i < count; ++i) {
+        const Smash64ActionSlot *action = &slots[i];
+        int screen_x, screen_y, mirror;
+        if (action->kind != ZELDA2_LINK_ACTION_SWORD_BEAM) continue;
+        screen_x = (int)(action->x - screen_left + g_widescreen_left) - 4;
+        screen_y = (int)action->y - 8;
+        mirror = action->vx < 0.0;
+        draw_sprite_8x16(fb, 0x32, screen_x, screen_y, mirror, 0,
                          k_link_palette);
     }
 }
@@ -225,6 +240,7 @@ static void draw_link(uint32_t *fb)
 
     draw_body(fb, x, y, body_mirror, frame);
     draw_sword(fb, x, y, face_left, state);
+    draw_sword_beams(fb);
 }
 
 int game_link_set_enabled(int enabled, const char *owner_rom_path)
@@ -262,12 +278,18 @@ int game_link_register_hooks(void)
 void game_link_update_input(uint64_t frame_count)
 {
     (void)frame_count;
+    zelda2_link_set_fire_power(game_link_active() && g_ram[PlayerStatus] >= 2);
 }
 
 void game_link_update(uint64_t frame_count)
 {
     (void)frame_count;
-    if (game_link_active()) s_present_frame++;
+    if (game_link_active()) {
+        zelda2_link_set_fire_power(g_ram[PlayerStatus] >= 2);
+        s_present_frame++;
+    } else {
+        zelda2_link_set_fire_power(0);
+    }
 }
 
 void game_link_render_post_render(uint32_t *framebuffer)

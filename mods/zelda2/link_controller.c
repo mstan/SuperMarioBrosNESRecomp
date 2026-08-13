@@ -32,6 +32,8 @@
 #define CROUCH_SLASH_TICKS 16u
 
 static int s_jump_held_last;
+static int s_fire_powered;
+static uint32_t s_next_beam_id = 0x5A020000u;
 
 static double approach(double value, double target, double amount)
 {
@@ -95,6 +97,34 @@ static void publish_sword_hitbox(const ForeignState *state,
     }
 }
 
+static void publish_sword_beam(const ForeignMoveState old_state,
+                               const ForeignState *state,
+                               ForeignMoveResult *out)
+{
+    ForeignActionEvent *event;
+    if (!s_fire_powered || !state || !out) return;
+    if (state->state != ZELDA2_LINK_SLASH_ACTIVE ||
+        old_state == ZELDA2_LINK_SLASH_ACTIVE)
+        return;
+    if (out->actions.count >= FOREIGN_ACTION_EVENT_CAPACITY) return;
+
+    event = &out->actions.events[out->actions.count++];
+    memset(event, 0, sizeof(*event));
+    event->instance_id = ++s_next_beam_id;
+    if (event->instance_id == 0) event->instance_id = ++s_next_beam_id;
+    event->kind = ZELDA2_LINK_ACTION_SWORD_BEAM;
+    event->command = FOREIGN_ACTION_SPAWN;
+    event->flags = FOREIGN_ACTION_HOSTILE | FOREIGN_ACTION_DESTROY_ON_SOLID;
+    event->offset_x = U(34.0);
+    event->offset_y = U(24.0);
+    event->velocity_x = U(4.0);
+    event->velocity_y = 0.0;
+    event->width = U(12.0);
+    event->height = U(10.0);
+    event->damage = 1;
+    event->lifetime_ticks = 56;
+}
+
 static void link_reset(ForeignState *state)
 {
     memset(state, 0, sizeof(*state));
@@ -102,6 +132,7 @@ static void link_reset(ForeignState *state)
     state->facing = 1.0f;
     state->grounded = 1;
     s_jump_held_last = 0;
+    s_fire_powered = 0;
 }
 
 static void link_tick(ForeignState *state, const ForeignInput *input,
@@ -182,6 +213,7 @@ static void link_tick(ForeignState *state, const ForeignInput *input,
     out->vy = state->vy;
     out->state = state->state;
     publish_sword_hitbox(state, out);
+    publish_sword_beam(old_state, state, out);
 
     if (state->state == old_state) state->state_frame++;
     else state->state_frame = 0;
@@ -228,8 +260,15 @@ static const char *link_state_name(ForeignMoveState state)
 typedef struct LinkSave {
     unsigned char version;
     unsigned char jump_held_last;
+    uint32_t next_beam_id;
     ForeignState state;
 } LinkSave;
+
+typedef struct LinkSaveV1 {
+    unsigned char version;
+    unsigned char jump_held_last;
+    ForeignState state;
+} LinkSaveV1;
 
 static int link_save_get(unsigned char *buf, int cap)
 {
@@ -237,8 +276,9 @@ static int link_save_get(unsigned char *buf, int cap)
     LinkSave save;
     if (!state || cap < (int)sizeof(save)) return 0;
     memset(&save, 0, sizeof(save));
-    save.version = 1;
+    save.version = 2;
     save.jump_held_last = (unsigned char)(s_jump_held_last ? 1 : 0);
+    save.next_beam_id = s_next_beam_id;
     save.state = *state;
     memcpy(buf, &save, sizeof(save));
     return (int)sizeof(save);
@@ -248,10 +288,24 @@ static int link_save_set(const unsigned char *buf, int len)
 {
     ForeignState *state = nes_foreign_state();
     LinkSave save;
-    if (!state || len != (int)sizeof(save)) return 0;
-    memcpy(&save, buf, sizeof(save));
-    if (save.version != 1) return 0;
+    if (!state) return 0;
+    memset(&save, 0, sizeof(save));
+    if (len == (int)sizeof(save)) {
+        memcpy(&save, buf, sizeof(save));
+        if (save.version != 2) return 0;
+    } else if (len == (int)sizeof(LinkSaveV1)) {
+        LinkSaveV1 old;
+        memcpy(&old, buf, sizeof(old));
+        if (old.version != 1) return 0;
+        save.version = 2;
+        save.jump_held_last = old.jump_held_last;
+        save.next_beam_id = 0x5A020000u;
+        save.state = old.state;
+    } else {
+        return 0;
+    }
     s_jump_held_last = save.jump_held_last != 0;
+    s_next_beam_id = save.next_beam_id ? save.next_beam_id : 0x5A020000u;
     *state = save.state;
     return 1;
 }
@@ -271,6 +325,16 @@ int zelda2_link_controller_register(void)
     ok &= nes_mod_register_savestate_hook(ZELDA2_LINK_CONTROLLER_ID,
                                           link_save_get, link_save_set);
     return ok;
+}
+
+void zelda2_link_set_fire_power(int enabled)
+{
+    s_fire_powered = enabled != 0;
+}
+
+int zelda2_link_fire_powered(void)
+{
+    return s_fire_powered;
 }
 
 int zelda2_link_is_crouching(void)
