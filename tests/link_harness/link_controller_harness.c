@@ -168,6 +168,26 @@ int main(void)
            "fire flower slash reaches active frame");
     expect(beam_seen, "fire flower slash emits a forward hostile sword beam");
 
+    for (int i = 0; i < 60 && state->state != ZELDA2_LINK_STAND; ++i) {
+        memset(&input, 0, sizeof(input));
+        move = tick(input);
+        accept(&move, 1);
+    }
+    expect(state->state == ZELDA2_LINK_STAND,
+           "standing slash recovers before crouch beam test");
+    memset(&input, 0, sizeof(input));
+    input.stick_y = -1.0f;
+    input.special_pressed = 1;
+    move = tick(input);
+    expect(state->state == ZELDA2_LINK_CROUCH_SLASH,
+           "fire flower Down+B starts crouch slash");
+    expect(move.actions.count == 1 &&
+           move.actions.events[0].kind == ZELDA2_LINK_ACTION_SWORD_BEAM &&
+           move.actions.events[0].offset_y < 300.0 &&
+           move.audio.count == 1 &&
+           move.audio.events[0].cue == ZELDA2_LINK_AUDIO_SWORD_BEAM,
+           "fire flower crouch slash emits lower Zelda II sword beam");
+
     if (failures) {
         fprintf(stderr, "%d Link controller assertion(s) failed\n", failures);
         return 1;

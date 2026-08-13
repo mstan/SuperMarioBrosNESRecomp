@@ -102,12 +102,15 @@ static void publish_sword_beam(const ForeignMoveState old_state,
                                ForeignMoveResult *out)
 {
     ForeignActionEvent *event;
+    int crouched;
     if (!s_fire_powered || !state || !out) return;
-    if (state->state != ZELDA2_LINK_SLASH_ACTIVE ||
-        old_state == ZELDA2_LINK_SLASH_ACTIVE)
+    if (state->state != ZELDA2_LINK_SLASH_ACTIVE &&
+        state->state != ZELDA2_LINK_CROUCH_SLASH)
         return;
+    if (state->state == old_state) return;
     if (out->actions.count >= FOREIGN_ACTION_EVENT_CAPACITY) return;
 
+    crouched = state->state == ZELDA2_LINK_CROUCH_SLASH;
     event = &out->actions.events[out->actions.count++];
     memset(event, 0, sizeof(*event));
     event->instance_id = ++s_next_beam_id;
@@ -116,7 +119,7 @@ static void publish_sword_beam(const ForeignMoveState old_state,
     event->command = FOREIGN_ACTION_SPAWN;
     event->flags = FOREIGN_ACTION_HOSTILE | FOREIGN_ACTION_DESTROY_ON_SOLID;
     event->offset_x = U(34.0);
-    event->offset_y = U(24.0);
+    event->offset_y = crouched ? U(14.0) : U(24.0);
     event->velocity_x = U(4.0);
     event->velocity_y = 0.0;
     event->width = U(12.0);
