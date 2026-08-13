@@ -28,19 +28,37 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 2. Extract and run `SuperMarioBrosRecomp.exe`
 3. Select your Super Mario Bros. (World) ROM when prompted — the path is saved for future launches
 
-## Captain Falcon (bundled mod)
+## Character replacements (experimental)
 
-Open **Mods**, select **Smash 64 Player Replacement**, and choose your legally
-owned **Super Smash Bros. (USA), NTSC-U v1.0** ROM. The launcher accepts z64,
-v64, or n64 byte order and verifies normalized SHA-1
+SuperMarioBrosRecomp includes default-off, mutually exclusive character
+replacement mods. They are experimental showcases: expect occasional bugs, and
+use the launcher **Mods** screen to enable only one `player-controller` package
+at a time. Each replacement is backed by a legally owned source ROM that the
+launcher verifies before play; no owner ROM data or generated owner-ROM assets
+are shipped in the release.
+
+| Captain Falcon | Pikachu |
+| --- | --- |
+| ![Captain Falcon in World 1-2](docs/screenshots/character-replacements/captain-falcon.png) | ![Pikachu firing Thunder Jolt in World 1-1](docs/screenshots/character-replacements/pikachu.png) |
+| Samus | Link |
+| ![Samus in World 1-1](docs/screenshots/character-replacements/samus.png) | ![Zelda II Link firing a crouched sword beam in World 1-1](docs/screenshots/character-replacements/link.png) |
+
+## Smash 64 characters (bundled mod)
+
+Open **Mods**, select **Smash 64 Player Replacement**, choose Captain Falcon or
+Pikachu from the Character dropdown, and select your legally owned
+**Super Smash Bros. (USA), NTSC-U v1.0** ROM. The launcher accepts z64, v64, or
+n64 byte order and verifies normalized SHA-1
 `e2929e10fccc0aa84e5776227e798abc07cedabf`. The mod cannot be enabled without
 that exact revision.
 
-On first play, the bundled helper derives Captain Falcon's model, animations,
-effects, and audio into an integrity-checked user cache. Neither the Smash 64
-ROM nor generated Falcon assets are included in the download or copied into
-the game directory. A is Falcon's normal attack, B is his special, and Up is
-his four-frame jump; Up+B is Falcon Dive and Down+B is Falcon Kick.
+On first play, the bundled helper derives the selected fighter's model,
+animations, effects, and audio into an integrity-checked user cache. Neither
+the Smash 64 ROM nor generated fighter assets are included in the download or
+copied into the game directory. A is the fighter's normal attack, B is the
+fighter's special, and Up is the four-frame Smash jump. Captain Falcon has
+Falcon Punch, Falcon Dive, and Falcon Kick; Pikachu has Thunder Jolt, Quick
+Attack, and Thunder.
 
 ## Samus (bundled mod)
 
