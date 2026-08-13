@@ -157,7 +157,10 @@ int main(void)
             (move.actions.events[0].flags &
              (FOREIGN_ACTION_HOSTILE | FOREIGN_ACTION_DESTROY_ON_SOLID)) ==
                 (FOREIGN_ACTION_HOSTILE | FOREIGN_ACTION_DESTROY_ON_SOLID) &&
-            move.actions.events[0].velocity_x > 0.0)
+            move.actions.events[0].velocity_x > 0.0 &&
+            move.audio.count == 1 &&
+            move.audio.events[0].cue == ZELDA2_LINK_AUDIO_SWORD_BEAM &&
+            move.audio.events[0].gain_percent == 100)
             beam_seen = 1;
         accept(&move, 1);
     }

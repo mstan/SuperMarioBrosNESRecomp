@@ -29,6 +29,7 @@ add_executable(SuperMarioBrosRecomp
     game_smash64_assets.c
     game_smash64_render.c
     game_link.c
+    game_link_audio.c
     game_samus.c
     game_samus_audio.c
     mods/widescreen_plugin.c

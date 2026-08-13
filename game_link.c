@@ -7,6 +7,7 @@
  */
 #include "game_link.h"
 
+#include "game_link_audio.h"
 #include "game_smash64.h"
 #include "game_smash64_actions.h"
 #include "mods/zelda2/link_controller.h"
@@ -37,6 +38,15 @@ static int s_draw_behind_background;
 /* Zelda II's side-view sprite palette 0. The source tables use $FF for the
  * transparent slot; the compositor uses the NES universal black entry. */
 static const uint8_t k_link_palette[4] = {0x0F, 0x18, 0x36, 0x2A};
+/* Zelda II draws the flying blade with sprite palette FrameCounter & 3.
+ * These are the four side-view sprite palettes paired with Link's grass-area
+ * palette in the owner ROM. */
+static const uint8_t k_link_beam_palettes[4][4] = {
+    {0x0F, 0x18, 0x36, 0x2A},
+    {0x0F, 0x16, 0x27, 0x30},
+    {0x0F, 0x0F, 0x16, 0x30},
+    {0x0F, 0x0F, 0x2C, 0x30},
+};
 
 /* EB25 body-tile table and EB97 frame-offset table from the byte-exact
  * Zelda II disassembly. $F5 is the hidden-sprite marker. */
@@ -199,7 +209,7 @@ static void draw_sword(uint32_t *fb, int origin_x, int origin_y, int mirror,
         tile = 0x54;
         dy = 16;
     }
-    draw_sprite_8x16(fb, tile, origin_x + dx, origin_y + dy, mirror, 0,
+    draw_sprite_8x16(fb, tile, origin_x + dx, origin_y + dy, !mirror, 0,
                      k_link_palette);
 }
 
@@ -213,12 +223,13 @@ static void draw_sword_beams(uint32_t *fb)
     for (int i = 0; i < count; ++i) {
         const Smash64ActionSlot *action = &slots[i];
         int screen_x, screen_y, mirror;
+        const uint8_t *palette;
         if (action->kind != ZELDA2_LINK_ACTION_SWORD_BEAM) continue;
         screen_x = (int)(action->x - screen_left + g_widescreen_left) - 4;
         screen_y = (int)action->y - 8;
         mirror = action->vx < 0.0;
-        draw_sprite_8x16(fb, 0x32, screen_x, screen_y, mirror, 0,
-                         k_link_palette);
+        palette = k_link_beam_palettes[s_present_frame & 3u];
+        draw_sprite_8x16(fb, 0x32, screen_x, screen_y, !mirror, 0, palette);
     }
 }
 
@@ -248,14 +259,21 @@ int game_link_set_enabled(int enabled, const char *owner_rom_path)
     s_enabled = 0;
     s_assets_ready = 0;
     s_present_frame = 0;
+    game_link_audio_shutdown();
     if (!enabled) return 1;
     if (!load_owner_chr(owner_rom_path)) {
         fprintf(stderr, "[Zelda II] Could not extract Link tiles from the "
                         "verified owner ROM.\n");
         return 0;
     }
+    if (!game_link_audio_prepare(owner_rom_path)) {
+        fprintf(stderr, "[Zelda II] Could not build sound effects from the "
+                        "verified owner ROM.\n");
+        return 0;
+    }
     if (!game_smash64_set_mod_enabled(1, ZELDA2_LINK_CONTROLLER_ID)) {
         game_smash64_set_mod_enabled(0, NULL);
+        game_link_audio_shutdown();
         return 0;
     }
     s_assets_ready = 1;

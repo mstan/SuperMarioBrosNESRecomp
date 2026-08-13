@@ -123,6 +123,12 @@ static void publish_sword_beam(const ForeignMoveState old_state,
     event->height = U(10.0);
     event->damage = 1;
     event->lifetime_ticks = 56;
+
+    if (out->audio.count < FOREIGN_AUDIO_EVENT_CAPACITY) {
+        ForeignAudioEvent *audio = &out->audio.events[out->audio.count++];
+        audio->cue = ZELDA2_LINK_AUDIO_SWORD_BEAM;
+        audio->gain_percent = 100;
+    }
 }
 
 static void link_reset(ForeignState *state)

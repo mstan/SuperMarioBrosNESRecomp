@@ -31,6 +31,7 @@
 #include "game_smash64_actions.h"
 #include "game_smash64_audio.h"
 #include "game_smash64_fighter_profile.h"
+#include "game_link_audio.h"
 
 #include "mods/smash64/characters/pikachu.h"
 #include "mods/metroid/samus_controller.h"
@@ -1168,7 +1169,10 @@ void game_smash64_update_input(uint64_t frame_count)
             metroid_samus_force_morph();
             if (fs) move.state = fs->state;
         }
-        game_smash64_audio_play_events(&move.audio, frame_count);
+        if (link_selected())
+            game_link_audio_play_events(&move.audio, frame_count);
+        else
+            game_smash64_audio_play_events(&move.audio, frame_count);
         s_attack = move.attack;
         {
             double action_facing = (fs && fs->facing < 0.0f) ? -1.0 : 1.0;
