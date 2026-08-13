@@ -5,7 +5,9 @@ build_debug/
 build_falcon/
 build_falcon_qa/
 build_pikachu*/
+build_link*/
 build_harness/
+build_smash64_profile/
 release/
 widescreen.ini
 _ws_build.bat

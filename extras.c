@@ -16,6 +16,7 @@
 #include "game_voxel.h"
 #include "game_smash64.h"
 #include "game_smash64_render.h"
+#include "game_link.h"
 #include "game_samus.h"
 #include "watchdog.h"
 #ifdef ENABLE_NESTOPIA_ORACLE
@@ -276,6 +277,7 @@ void game_on_frame(uint64_t frame_count) {
     /* Player replacement samples input and ticks its controller before NMI,
      * so the fighter's intent for this frame exists before SMB1 runs. */
     game_smash64_update_input(frame_count);
+    game_link_update_input(frame_count);
     game_samus_update_input(frame_count);
     /* Start timing only after any TCP/debug pause has ended.  Previously the
      * watchdog's zero-initialized timestamp measured process lifetime and
@@ -288,6 +290,7 @@ void game_post_nmi(uint64_t frame_count) {
     ws_update_frame_gate();
     game_voxel_update();
     game_smash64_update(frame_count);
+    game_link_update(frame_count);
     game_samus_update(frame_count);
     if (s_debug_enabled) {
         debug_server_record_frame();
@@ -557,6 +560,7 @@ void game_fill_frame_record(void *record) {
 void game_post_render(uint32_t *framebuf) {
     game_voxel_post_render(framebuf);
     game_smash64_render_post_render(framebuf);
+    game_link_render_post_render(framebuf);
     game_samus_render_post_render(framebuf);
 }
 

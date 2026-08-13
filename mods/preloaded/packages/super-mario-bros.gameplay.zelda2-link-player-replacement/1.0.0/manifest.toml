@@ -1,0 +1,35 @@
+format_version = 1
+id = "super-mario-bros.gameplay.zelda2-link-player-replacement"
+version = "1.0.0"
+name = "Zelda II Link Player Replacement"
+author = "NESRecomp contributors"
+description = "Play Super Mario Bros. as side-view Link from Zelda II. The stock SMB and Zelda II ROMs are not modified or redistributed."
+license = "MIT (implementation only; owner-ROM assets remain Nintendo property)"
+resolver = "declarative"
+save_compatibility = "mod-specific"
+
+[[target]]
+game_id = "super-mario-bros-world"
+rom_crc32 = "d445f698"
+
+[[feature]]
+id = "zelda2-link-player"
+name = "Zelda II Link Player Replacement"
+description = "Replaces Mario with Zelda II Link: A jumps, B slashes, Down crouches, air Up/Down stabs attack vertically, and sword strikes hurt enemies and can break bricks. SMB worlds, music and progression remain native."
+group = "Gameplay"
+exclusive_group = "player-controller"
+default_enabled = false
+
+[[external_rom]]
+feature = "zelda2-link-player"
+id = "zelda2-us"
+label = "Zelda II: The Adventure of Link (USA) ROM"
+description = "Select a legally owned canonical Zelda II USA NES ROM. Headered iNES and headerless PRG+CHR images are normalized before verification."
+format = "nes"
+identity = "Zelda II: The Adventure of Link (USA)"
+size = 262144
+normalized_sha1 = "11333adb723a5975e0ecca3aee8f4747aa8d2d26"
+
+[[plugin]]
+feature = "zelda2-link-player"
+id = "super-mario-bros.zelda2.link"

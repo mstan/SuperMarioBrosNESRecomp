@@ -1,0 +1,58 @@
+LOG link-visual-qa
+WAIT 60
+HOLD START
+WAIT 6
+RELEASE START
+WAIT_RAM8 000E 08
+WAIT 90
+SCREENSHOT F:/Projects/nesrecomp/_wt-link-smb/build_link/link_visual_qa/idle.png
+
+HOLD RIGHT
+WAIT 24
+SCREENSHOT F:/Projects/nesrecomp/_wt-link-smb/build_link/link_visual_qa/walk_right.png
+RELEASE RIGHT
+WAIT 8
+
+HOLD B
+WAIT 2
+RELEASE B
+WAIT_FOREIGN_STATE Slash
+WAIT 1
+SCREENSHOT F:/Projects/nesrecomp/_wt-link-smb/build_link/link_visual_qa/slash.png
+WAIT 18
+
+HOLD DOWN
+WAIT 4
+HOLD B
+WAIT 2
+RELEASE B
+WAIT_FOREIGN_STATE CrouchSlash
+WAIT 1
+SCREENSHOT F:/Projects/nesrecomp/_wt-link-smb/build_link/link_visual_qa/crouch_slash.png
+RELEASE DOWN
+WAIT 18
+
+HOLD A
+WAIT 2
+RELEASE A
+WAIT_FOREIGN_STATE Jump
+HOLD UP
+HOLD B
+WAIT 2
+RELEASE B
+WAIT_FOREIGN_STATE UpStab
+WAIT 1
+SCREENSHOT F:/Projects/nesrecomp/_wt-link-smb/build_link/link_visual_qa/upstab.png
+RELEASE UP
+WAIT 6
+
+HOLD DOWN
+HOLD B
+WAIT 2
+RELEASE B
+WAIT_FOREIGN_STATE DownStab
+WAIT 1
+SCREENSHOT F:/Projects/nesrecomp/_wt-link-smb/build_link/link_visual_qa/downstab.png
+RELEASE DOWN
+WAIT 20
+EXIT 0

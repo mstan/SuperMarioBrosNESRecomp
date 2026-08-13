@@ -2,6 +2,7 @@
 
 #include "mods/smash64/characters/captain_falcon.h"
 #include "mods/smash64/characters/pikachu.h"
+#include "mods/zelda2/link_controller.h"
 #include "mods/metroid/samus_controller.h"
 
 #include <math.h>
@@ -181,9 +182,46 @@ static const Smash64FighterProfile kSamusProfile = {
     samus_state_traits
 };
 
+static uint32_t link_state_traits(unsigned state)
+{
+    switch (state) {
+    case ZELDA2_LINK_STAND:
+    case ZELDA2_LINK_WALK:
+    case ZELDA2_LINK_CROUCH:
+    case ZELDA2_LINK_JUMP:
+    case ZELDA2_LINK_FALL:
+    case ZELDA2_LINK_SLASH_START:
+    case ZELDA2_LINK_SLASH_ACTIVE:
+    case ZELDA2_LINK_SLASH_RECOVER:
+    case ZELDA2_LINK_CROUCH_SLASH:
+    case ZELDA2_LINK_UPSTAB:
+    case ZELDA2_LINK_DOWNSTAB:
+        return SMASH64_STATE_TRAIT_STREAM_LIMIT;
+    default:
+        return SMASH64_STATE_TRAIT_NONE;
+    }
+}
+
+static const Smash64FighterProfile kLinkProfile = {
+    ZELDA2_LINK_CONTROLLER_ID,
+    "Link",
+    0x4C494E4Bu, /* LINK */
+    0.08,
+    40,
+    0x00,
+    0,
+    0,
+    0,
+    0x20,
+    0,
+    NULL,
+    link_state_traits
+};
+
 static const Smash64FighterProfile *const kProfiles[] = {
     &kCaptainFalconProfile,
     &kPikachuProfile,
+    &kLinkProfile,
     &kSamusProfile
 };
 

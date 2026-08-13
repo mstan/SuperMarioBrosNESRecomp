@@ -34,6 +34,7 @@
 
 #include "mods/smash64/characters/pikachu.h"
 #include "mods/metroid/samus_controller.h"
+#include "mods/zelda2/link_controller.h"
 
 #include "foreign_controller.h"
 #include "mod_function_hooks.h"
@@ -367,6 +368,12 @@ static int samus_selected(void)
 {
     return s_selected &&
            strcmp(s_controller_id, METROID_SAMUS_CONTROLLER_ID) == 0;
+}
+
+static int link_selected(void)
+{
+    return s_selected &&
+           strcmp(s_controller_id, ZELDA2_LINK_CONTROLLER_ID) == 0;
 }
 /* NES keyboard/controller events can place B one VBlank ahead of the d-pad
  * direction the player intended to press with it. Defer only a directionless
@@ -844,7 +851,7 @@ static ForeignOwnership decide_ownership(void)
      * found no other absolute store), so gating the whole level is exact,
      * not an approximation.
      */
-    if (g_ram[SwimmingFlag] && !samus_selected())
+    if (g_ram[SwimmingFlag] && !samus_selected() && !link_selected())
         return FOREIGN_OWNERSHIP_SCRIPTED;
 
     /*
@@ -891,12 +898,14 @@ static void sample_input(ForeignInput *out)
     out->stick_x = (float)((right ? 1 : 0) - (left ? 1 : 0));
     out->stick_y = (float)((up ? 1 : 0) - (down ? 1 : 0));
 
-    if (samus_selected()) {
-        /* NES Metroid mapping: A jumps, B fires/lays a bomb, Select changes
-         * beam/missile mode in the Samus gameplay layer. */
+    if (samus_selected() || link_selected()) {
+        /* NES-source mappings: A jumps; B belongs to the character layer
+         * (Metroid beam/bomb, Zelda II sword). Select remains available to
+         * character-specific gameplay code through raw_buttons. */
         out->jump_pressed = (pressed & PAD_A) != 0;
         out->jump_held = (b & PAD_A) != 0;
         out->attack_pressed = (pressed & PAD_B) != 0;
+        out->special_pressed = (pressed & PAD_B) != 0;
         out->down_pressed = (pressed & PAD_DOWN) != 0;
         out->raw_buttons = b;
         s_special_grace_pending = 0;
@@ -2349,12 +2358,16 @@ static int jumpsquat_hook(uint16_t addr)
     fs = nes_foreign_state();
     if (!fs) return 0;
 
-    if (samus_selected()) {
-        /* Both face buttons belong to Samus. Her controller publishes a
-         * one-frame LAUNCH handshake, so SMB receives A only on that frame;
-         * B never leaks into run/fireball handling. */
+    if (samus_selected() || link_selected()) {
+        /* Both face buttons belong to the owner-ROM character. The controller
+         * publishes a one-frame LAUNCH handshake, so SMB receives A only on
+         * that frame; B never leaks into run/fireball handling. */
         g_ram[A_B_Buttons] &=
             (uint8_t)~(SMB1_A_BUTTON_BIT | SMB1_B_BUTTON_BIT);
+        if (link_selected()) {
+            apply_pending_attack();
+            apply_pending_actions();
+        }
         if (fs->jump_phase == FOREIGN_JUMP_LAUNCH) {
             g_ram[A_B_Buttons] |= SMB1_A_BUTTON_BIT;
             s_launch_frames++;
@@ -2943,8 +2956,9 @@ int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
                 "contact bounds may follow hidden Mario size\n");
     }
     s_enabled = 1;
-    if (samus_selected()) game_smash64_audio_set_enabled(0);
-    if (!samus_selected() && !game_smash64_audio_set_enabled(1)) {
+    if (samus_selected() || link_selected()) game_smash64_audio_set_enabled(0);
+    if (!samus_selected() && !link_selected() &&
+        !game_smash64_audio_set_enabled(1)) {
         game_smash64_set_mod_enabled(0, NULL);
         return 0;
     }
@@ -2959,7 +2973,12 @@ int game_smash64_active(void)
 
 int game_smash64_falcon_selected(void)
 {
-    return s_enabled && s_selected && !samus_selected();
+    return s_enabled && s_selected && !samus_selected() && !link_selected();
+}
+
+int game_smash64_link_selected(void)
+{
+    return s_enabled && link_selected();
 }
 
 int game_smash64_samus_selected(void)
@@ -3028,6 +3047,9 @@ void game_smash64_init(void)
     if (samus_selected())
         printf("[Metroid] Controls: A jump, B fire/bomb, Select beam/missile, "
                "Down morph. SMB1 keeps world collision and progression.\n");
+    else if (link_selected())
+        printf("[Zelda II] Controls: A jump, B sword, Down crouch, Up/Down "
+               "stab in the air. SMB1 keeps world collision and progression.\n");
     else
         printf("[Smash64] Controls: A normal, B special, Up jump (4-frame "
                "jumpsquat). SMB1 keeps all collision and scripted sequences.\n");

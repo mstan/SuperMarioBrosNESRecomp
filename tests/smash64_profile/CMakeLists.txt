@@ -9,5 +9,5 @@ add_executable(smash64_fighter_profile_test
     ../../game_smash64_fighter_profile.c)
 target_include_directories(smash64_fighter_profile_test PRIVATE ../..)
 
-add_test(NAME smash64_fighter_profile COMMAND smash64_fighter_profile_test)
-
+add_test(NAME smash64_fighter_profile
+         COMMAND $<TARGET_FILE:smash64_fighter_profile_test>)

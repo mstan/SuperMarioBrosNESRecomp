@@ -47,6 +47,7 @@ int game_smash64_active(void);
 
 /* Controller identity gates for presentation and character-specific policy. */
 int game_smash64_falcon_selected(void);
+int game_smash64_link_selected(void);
 int game_smash64_samus_selected(void);
 
 /* Native SMB consequences shared by player-replacement combat adapters. */

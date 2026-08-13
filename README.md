@@ -66,6 +66,23 @@ so the launcher permits only one at a time. See
 [docs/METROID_SAMUS_MOD.md](docs/METROID_SAMUS_MOD.md) for implementation and
 validation details.
 
+## Zelda II Link (bundled mod)
+
+Open **Mods**, enable **Zelda II Link Player Replacement**, and select a legally
+owned canonical **Zelda II: The Adventure of Link (USA)** ROM. Headered and
+headerless images are accepted; the launcher strips a valid iNES header and
+verifies normalized SHA-1 `11333adb723a5975e0ecca3aee8f4747aa8d2d26`. Link's
+side-view sprite tiles are extracted into memory from that verified ROM. No
+Zelda II ROM data or derived graphics are shipped or written beside the game.
+
+Link uses Zelda II-style controls: A jumps, B slashes, Down crouches, and
+Up/Down with B in the air performs vertical stabs. Sword strikes hurt enemies
+and, as an SMB-specific liberty, can break ordinary breakable bricks. The Link,
+Samus and Smash 64 packages share the `player-controller` exclusive group, so
+the launcher permits only one at a time. See
+[docs/ZELDA2_LINK_MOD.md](docs/ZELDA2_LINK_MOD.md) for implementation and
+validation details.
+
 ## Widescreen mod (experimental)
 
 An optional 16:9 mode renders the world beyond the NES's 256-px viewport

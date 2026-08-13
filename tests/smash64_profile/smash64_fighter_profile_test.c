@@ -1,5 +1,6 @@
 #include "game_smash64_fighter_profile.h"
 #include "mods/smash64/characters/captain_falcon.h"
+#include "mods/zelda2/link_controller.h"
 
 #include <assert.h>
 #include <math.h>
@@ -38,7 +39,17 @@ int main(void)
     assert(!has_trait(profile, FL_JAB,
                       SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER));
 
+    profile = smash64_fighter_profile_find(ZELDA2_LINK_CONTROLLER_ID);
+    assert(profile != NULL);
+    assert(fabs(profile->units_to_smb_px - 0.08) < 0.000001);
+    assert(profile->ordinary_stream_xspeed_limit == 40);
+    assert(profile->allow_one_tile_step_down == 0);
+    assert(has_trait(profile, ZELDA2_LINK_WALK,
+                     SMASH64_STATE_TRAIT_STREAM_LIMIT));
+    assert(has_trait(profile, ZELDA2_LINK_SLASH_ACTIVE,
+                     SMASH64_STATE_TRAIT_STREAM_LIMIT));
+    assert(!has_trait(profile, 9999, SMASH64_STATE_TRAIT_STREAM_LIMIT));
+
     puts("smash64_fighter_profile_test: PASS");
     return 0;
 }
-
