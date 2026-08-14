@@ -254,6 +254,12 @@ function New-ReleaseZip([string]$kind) {
   Copy-Item $exe $stage
   foreach ($extra in 'SDL2.dll', 'keybinds.ini', 'falcon_owner_assets.exe') {
     $p = Join-Path $bin $extra
+    if (-not (Test-Path $p -PathType Leaf)) {
+      $p = Join-Path $buildRoot $extra
+    }
+    if ($extra -eq 'keybinds.ini' -and -not (Test-Path $p -PathType Leaf)) {
+      $p = Join-Path $root 'recomp-ui\keybinds.ini'
+    }
     if (-not (Test-Path $p -PathType Leaf)) { throw "missing required runtime file at $p" }
     Copy-Item $p $stage
   }
