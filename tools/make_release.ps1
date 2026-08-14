@@ -34,7 +34,12 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$bin  = Join-Path $root $BuildDir
+$buildRoot = Join-Path $root $BuildDir
+$bin  = $buildRoot
+if (-not (Test-Path (Join-Path $bin 'SuperMarioBrosRecomp.exe')) -and
+    (Test-Path (Join-Path $buildRoot 'Release\SuperMarioBrosRecomp.exe'))) {
+  $bin = Join-Path $buildRoot 'Release'
+}
 $out  = Join-Path $root 'release'
 New-Item -ItemType Directory -Force $out | Out-Null
 
@@ -45,7 +50,7 @@ if (-not $SkipBuild) {
 
 $exe = Join-Path $bin 'SuperMarioBrosRecomp.exe'
 if (-not (Test-Path $exe)) { throw "missing $exe -- run build_all.bat first" }
-$cmakeCache = Join-Path $bin 'CMakeCache.txt'
+$cmakeCache = Join-Path $buildRoot 'CMakeCache.txt'
 if (-not (Test-Path $cmakeCache)) { throw "missing $cmakeCache -- run build_all.bat first" }
 $traceSetting = Select-String -LiteralPath $cmakeCache -Pattern '^NESRECOMP_ENABLE_TRACE:BOOL=OFF$'
 if (-not $traceSetting) {
