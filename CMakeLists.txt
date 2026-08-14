@@ -64,6 +64,7 @@ target_compile_definitions(SuperMarioBrosRecomp PRIVATE
 
 target_include_directories(SuperMarioBrosRecomp PRIVATE
     ${NESRECOMP_RUNNER_INCLUDE_DIRS}
+    ${NESRECOMP_ROOT}/runner/src
     ${CMAKE_SOURCE_DIR}
     ${SDL2_INCLUDE_DIRS}
 )
