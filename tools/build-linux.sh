@@ -100,6 +100,9 @@ fi
 # already finds system SDL2.
 SDL2_CFG_DIR="$( { find /usr/lib /usr/lib64 /usr/local/lib -type d -path '*cmake/SDL2' 2>/dev/null || true; } | head -1 )"
 [ -n "$SDL2_CFG_DIR" ] && FLAGS+=( -DSDL2_DIR="$SDL2_CFG_DIR" )
+if [ -n "${PYTHON3_EXECUTABLE:-}" ]; then
+  FLAGS+=( -DPython3_EXECUTABLE="$PYTHON3_EXECUTABLE" )
+fi
 
 # Single cleanup hook: remove the AppDir scratch dir AND restore any .pin files
 # the --nopin bypass moved aside (so a failed build never leaves the repo dirty).
