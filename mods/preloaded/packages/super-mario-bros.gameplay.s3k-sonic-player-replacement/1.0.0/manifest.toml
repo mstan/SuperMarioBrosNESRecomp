@@ -1,0 +1,50 @@
+format_version = 1
+id = "super-mario-bros.gameplay.s3k-sonic-player-replacement"
+version = "1.0.0"
+name = "Sonic 3 & Knuckles Sonic Player Replacement"
+author = "NESRecomp contributors"
+description = "Experimental player replacement: play Super Mario Bros. as Sonic from Sonic 3 & Knuckles. The stock SMB and S3&K ROMs are not modified or redistributed."
+license = "MIT (implementation only; owner-ROM assets remain Sega/Sonic Team property)"
+resolver = "declarative"
+save_compatibility = "mod-specific"
+
+[[target]]
+game_id = "super-mario-bros-world"
+rom_crc32 = "d445f698"
+
+[[feature]]
+id = "s3k-sonic-player"
+name = "Sonic 3 & Knuckles Player Replacement"
+description = "Experimental replacement for Mario with Sonic: A jumps, Down+B charges a spindash, spin attacks hurt enemies, and spindash rolls can break bricks. SMB worlds, music and progression remain native."
+group = "Gameplay"
+exclusive_group = "player-controller"
+default_enabled = false
+
+[[external_rom]]
+feature = "s3k-sonic-player"
+id = "sonic-3-and-knuckles"
+label = "Sonic 3 & Knuckles ROM"
+description = "Select a legally owned canonical Sonic 3 & Knuckles Genesis ROM. The ROM is normalized and verified before Sonic can be enabled."
+format = "raw"
+identity = "Sonic 3 & Knuckles"
+size = 4194304
+normalized_sha1 = "cfbf98c36c776677290a872547ac47c53d2761d6"
+
+[[option]]
+feature = "s3k-sonic-player"
+id = "character"
+label = "Character"
+description = "Which Sonic 3 & Knuckles character drives the player."
+group = "Character"
+type = "choice"
+default = "sonic"
+
+[[option.choice]]
+value = "sonic"
+label = "Sonic"
+
+[[plugin]]
+feature = "s3k-sonic-player"
+id = "super-mario-bros.s3k.sonic"
+when_option = "character"
+when_value = "sonic"

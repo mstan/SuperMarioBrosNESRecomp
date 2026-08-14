@@ -32,10 +32,12 @@
 #include "game_smash64_audio.h"
 #include "game_smash64_fighter_profile.h"
 #include "game_link_audio.h"
+#include "game_sonic_audio.h"
 
 #include "mods/smash64/characters/pikachu.h"
 #include "mods/metroid/samus_controller.h"
 #include "mods/zelda2/link_controller.h"
+#include "mods/s3k/sonic_controller.h"
 
 #include "foreign_controller.h"
 #include "mod_function_hooks.h"
@@ -376,6 +378,12 @@ static int link_selected(void)
     return s_selected &&
            strcmp(s_controller_id, ZELDA2_LINK_CONTROLLER_ID) == 0;
 }
+
+static int sonic_selected(void)
+{
+    return s_selected &&
+           strcmp(s_controller_id, S3K_SONIC_CONTROLLER_ID) == 0;
+}
 /* NES keyboard/controller events can place B one VBlank ahead of the d-pad
  * direction the player intended to press with it. Defer only a directionless
  * B edge for one frame; simultaneous and direction-first specials remain
@@ -529,6 +537,21 @@ static int s_reseed_this_frame = 0;   /* marks the ring row after the tick
  * the frame -- see the drain site. */
 static uint32_t s_pending_flags = 0;
 
+static int sonic_clear_ball_attack_bricks_at(int native_x);
+static void enqueue_smb1_brick_debris(int world_col, int tile_top);
+static void drain_smb1_brick_debris_queue(void);
+
+typedef struct Smash64BrickDebris {
+    uint8_t active;
+    uint16_t world_col;
+    uint8_t tile_top;
+} Smash64BrickDebris;
+
+#define SMASH64_BRICK_DEBRIS_CAP 16
+static Smash64BrickDebris s_brick_debris[SMASH64_BRICK_DEBRIS_CAP];
+static unsigned s_brick_debris_head = 0;
+static unsigned s_brick_debris_count = 0;
+
 static void game_smash64_request_savestate_reseed(void)
 {
     s_xspeed = 0;
@@ -560,6 +583,9 @@ static void game_smash64_request_savestate_reseed(void)
     s_contact_pending = 0;
     s_forced_airborne_pending = 0;
     s_forced_airborne_frames = 0;
+    memset(s_brick_debris, 0, sizeof(s_brick_debris));
+    s_brick_debris_head = 0;
+    s_brick_debris_count = 0;
     memset(&s_attack, 0, sizeof(s_attack));
     smash64_actions_clear();
     game_smash64_sync_persistent_audio();
@@ -579,7 +605,22 @@ static void game_smash64_request_savestate_reseed(void)
 static uint8_t block_adder_index(void)
 {
     if (samus_selected() && metroid_samus_is_morphed()) return 0x0e;
+    if (sonic_selected() && s3k_sonic_is_ball()) return 0x0e;
     return s_profile ? s_profile->block_adder_index : 0x00;
+}
+
+static uint8_t block_adder_index_for_vertical_edge(int feet,
+                                                   int head_bumpables_are_barriers)
+{
+    if (!feet && sonic_selected() && s3k_sonic_is_ball() &&
+        head_bumpables_are_barriers) {
+        /* Sonic's spin ball keeps small side/floor collision, but from below
+         * he must run the same head-bump transaction as Big Mario. Probe the
+         * Big-Mario head adder here so item blocks and bricks are caught before
+         * the native PlayerHeadCollision consequence hook resolves them. */
+        return 0x00;
+    }
+    return block_adder_index();
 }
 
 static double source_units_to_px(double units)
@@ -665,7 +706,8 @@ static int smb1_solid_at(int y_pos, int feet,
     /* BlockBufferColli_Head does not set X (only _Side does), so the caller
      * owns it. Y selects the adder pair; _Feet increments it on entry. */
     g_cpu.X = 0;
-    g_cpu.Y = block_adder_index();
+    g_cpu.Y = block_adder_index_for_vertical_edge(
+        feet, head_bumpables_are_barriers);
     if (feet) BlockBufferColli_Feet();
     else      BlockBufferColli_Head();
     tile = settle_orphaned_blank_metatile(g_cpu.A);
@@ -801,6 +843,68 @@ static int smb1_side_solid_at(int x_pos, int page, int dir)
     return solid;
 }
 
+static int sonic_clear_ball_side_probe_bricks_at(int x_pos, int page, int dir)
+{
+    CPU6502State save_cpu = g_cpu;
+    uint8_t save_scratch[6];
+    uint8_t save_x = g_ram[Player_X_Position];
+    uint8_t save_page = g_ram[Player_PageLoc];
+    uint8_t base = block_adder_index();
+    uint8_t py = g_ram[Player_Y_Position];
+    int broken = 0;
+
+    if (!sonic_selected() || !s3k_sonic_breaks_side_blocks() ||
+        !s_attack.active ||
+        !(s_attack.flags & FOREIGN_ATTACK_BREAK_BLOCKS) ||
+        page < 0)
+        return 0;
+
+    memcpy(save_scratch, &g_ram[0x02], sizeof save_scratch);
+    g_ram[Player_X_Position] = (uint8_t)(x_pos & 0xFF);
+    g_ram[Player_PageLoc] = (uint8_t)page;
+
+    for (int probe = 0; probe < 2; ++probe) {
+        const int upper = probe == 0;
+        uint8_t tile;
+        uint16_t addr;
+
+        if (upper) {
+            if (py < 0x20 || py >= 0xE4) continue;
+            g_cpu.Y = (uint8_t)(base + (dir < 0 ? 3 : 5));
+        } else {
+            if (py < 0x08 || py >= 0xD0) continue;
+            g_cpu.Y = (uint8_t)(base + (dir < 0 ? 4 : 6));
+        }
+
+        BlockBufferColli_Side();
+        tile = settle_orphaned_blank_metatile(g_cpu.A);
+        if (tile != 0x51 && tile != 0x52) continue;
+
+        addr = (uint16_t)(((uint16_t)g_ram[0x07] << 8) | g_ram[0x06]);
+        addr = (uint16_t)(addr + g_ram[0x02]);
+        if (addr >= sizeof g_ram ||
+            (g_ram[addr] != 0x51 && g_ram[addr] != 0x52))
+            continue;
+
+        if (g_ram[VRAM_Buffer1_Offset] <= 0x28)
+            DestroyBlockMetatile();
+        g_ram[addr] = 0;
+        g_ram[NoiseSoundQueue] |= 0x01;
+        enqueue_smb1_brick_debris((page * 256 + x_pos) / 16,
+                                  g_ram[0x02] + 0x20);
+        broken++;
+
+        g_ram[Player_X_Position] = (uint8_t)(x_pos & 0xFF);
+        g_ram[Player_PageLoc] = (uint8_t)page;
+    }
+
+    memcpy(&g_ram[0x02], save_scratch, sizeof save_scratch);
+    g_ram[Player_X_Position] = save_x;
+    g_ram[Player_PageLoc] = save_page;
+    g_cpu = save_cpu;
+    return broken;
+}
+
 /* A two-tile-high tunnel can begin one tile below the platform Falcon is
  * standing on. At the lip, a purely horizontal Big-Mario probe sees the roof
  * before SMB1 has had a frame to discover the lower floor, so movement locks
@@ -852,7 +956,8 @@ static ForeignOwnership decide_ownership(void)
      * found no other absolute store), so gating the whole level is exact,
      * not an approximation.
      */
-    if (g_ram[SwimmingFlag] && !samus_selected() && !link_selected())
+    if (g_ram[SwimmingFlag] && !samus_selected() && !link_selected() &&
+        !sonic_selected())
         return FOREIGN_OWNERSHIP_SCRIPTED;
 
     /*
@@ -899,9 +1004,9 @@ static void sample_input(ForeignInput *out)
     out->stick_x = (float)((right ? 1 : 0) - (left ? 1 : 0));
     out->stick_y = (float)((up ? 1 : 0) - (down ? 1 : 0));
 
-    if (samus_selected() || link_selected()) {
+    if (samus_selected() || link_selected() || sonic_selected()) {
         /* NES-source mappings: A jumps; B belongs to the character layer
-         * (Metroid beam/bomb, Zelda II sword). Select remains available to
+         * (Metroid beam/bomb, Zelda II sword, Sonic spindash). Select remains available to
          * character-specific gameplay code through raw_buttons. */
         out->jump_pressed = (pressed & PAD_A) != 0;
         out->jump_held = (b & PAD_A) != 0;
@@ -1039,6 +1144,7 @@ void game_smash64_update_input(uint64_t frame_count)
     s_frame = frame_count;
     s_friction_ran = 0;
     if (!s_enabled || !s_selected) return;
+    drain_smb1_brick_debris_queue();
 
     sample_input(&fin);
 
@@ -1171,6 +1277,8 @@ void game_smash64_update_input(uint64_t frame_count)
         }
         if (link_selected())
             game_link_audio_play_events(&move.audio, frame_count);
+        else if (sonic_selected())
+            game_sonic_audio_play_events(&move.audio, frame_count);
         else
             game_smash64_audio_play_events(&move.audio, frame_count);
         s_attack = move.attack;
@@ -1654,21 +1762,23 @@ static int move_player_vertically_hook(uint16_t addr)
              * Falcon's stable profile is always the Big $20 extent.
              */
             {
-                int dive_head_barrier = !feet && state_has_trait(
+                int scripted_head_barrier = !feet && state_has_trait(
                     fs->state, SMASH64_STATE_TRAIT_HEAD_BUMP_BARRIER);
+                int head_bump_barrier = scripted_head_barrier ||
+                    (!feet && sonic_selected());
                 if (cand_hi == 1 &&
                     (feet ? (cand < 0xCF)
                           : (cand >= (s_profile
                                          ? s_profile->head_upper_extent
                                          : 0x20))) &&
-                    smb1_solid_at(cand, feet, dive_head_barrier)) {
+                    smb1_solid_at(cand, feet, head_bump_barrier)) {
                     /* Ordinary contact parks at the first blocked coordinate
                      * so SMB1's alignment-gated collision can resolve it.
                      * Dive deliberately suppresses native HeadChk to avoid a
                      * bump/shatter transaction, so it must stay one pixel
                      * BEFORE the barrier or repeated root deltas creep through
                      * it one pixel per frame. */
-                    if (!dive_head_barrier) {
+                    if (!scripted_head_barrier) {
                         pos = cand;
                         high = cand_hi;
                     }
@@ -1963,6 +2073,12 @@ static int move_player_horizontally_hook(uint16_t addr)
             pos = cand;
             page = cand_page;
 
+            if (sonic_clear_ball_side_probe_bricks_at(cand, cand_page, step))
+                s_pending_flags |= SMASH64_CF_BLOCK_BROKEN;
+            if (cand_page >= 0 &&
+                sonic_clear_ball_attack_bricks_at(cand_page * 256 + cand))
+                s_pending_flags |= SMASH64_CF_BLOCK_BROKEN;
+
             if (cand_page >= 0 &&
                 smb1_side_solid_at(cand, cand_page, step)) {
                 if (!s_sweep_noblock &&
@@ -2231,9 +2347,130 @@ static int break_smb1_brick(int world_col, int tile_top)
     return broke;
 }
 
-static int break_bricks_in_attack(double left, double right,
-                                  double top, double bottom,
-                                  int max_blocks)
+static void enqueue_smb1_brick_debris(int world_col, int tile_top)
+{
+    unsigned slot;
+
+    if (world_col < 0 || world_col > 4095 ||
+        tile_top < 0x20 || tile_top > 0xE0)
+        return;
+
+    slot = (s_brick_debris_head + s_brick_debris_count) %
+           SMASH64_BRICK_DEBRIS_CAP;
+    if (s_brick_debris_count == SMASH64_BRICK_DEBRIS_CAP) {
+        slot = s_brick_debris_head;
+        s_brick_debris_head =
+            (s_brick_debris_head + 1) % SMASH64_BRICK_DEBRIS_CAP;
+    } else {
+        s_brick_debris_count++;
+    }
+
+    s_brick_debris[slot].active = 1;
+    s_brick_debris[slot].world_col = (uint16_t)world_col;
+    s_brick_debris[slot].tile_top = (uint8_t)tile_top;
+}
+
+static int spawn_smb1_brick_debris_from_queue(void)
+{
+    CPU6502State save_cpu = g_cpu;
+    Smash64BrickDebris request;
+    int block_slot = -1;
+    int x;
+
+    if (!s_brick_debris_count) return 0;
+    if (!s_brick_debris[s_brick_debris_head].active) {
+        s_brick_debris_head =
+            (s_brick_debris_head + 1) % SMASH64_BRICK_DEBRIS_CAP;
+        s_brick_debris_count--;
+        return 1;
+    }
+
+    for (int i = 0; i < 2; ++i) {
+        if (g_ram[Block_State + i] == 0 && g_ram[Block_RepFlag + i] == 0) {
+            block_slot = i;
+            break;
+        }
+    }
+    if (block_slot < 0) return 0;
+
+    request = s_brick_debris[s_brick_debris_head];
+    s_brick_debris[s_brick_debris_head].active = 0;
+    s_brick_debris_head =
+        (s_brick_debris_head + 1) % SMASH64_BRICK_DEBRIS_CAP;
+    s_brick_debris_count--;
+
+    x = (int)request.world_col * 16;
+    g_ram[Block_State + block_slot] = 0x12;
+    g_ram[Block_X_Position + block_slot] = (uint8_t)x;
+    g_ram[Block_PageLoc + block_slot] = (uint8_t)(x >> 8);
+    g_ram[Block_PageLoc2 + block_slot] = (uint8_t)(x >> 8);
+    g_ram[Block_Y_Position + block_slot] = request.tile_top;
+    g_ram[Block_Y_HighPos + block_slot] = 1;
+    g_ram[Block_Orig_XPos + block_slot] = (uint8_t)x;
+    g_ram[Block_Y_MoveForce + block_slot] = 0;
+    g_ram[Block_Y_MoveForce + block_slot + 2] = 0;
+    g_cpu.X = (uint8_t)block_slot;
+    SpawnBrickChunks();
+
+    g_cpu = save_cpu;
+    return 1;
+}
+
+static void drain_smb1_brick_debris_queue(void)
+{
+    for (int i = 0; i < 2; ++i) {
+        if (!spawn_smb1_brick_debris_from_queue()) break;
+    }
+}
+
+static int blank_smb1_brick_direct(int world_col, int tile_top)
+{
+    CPU6502State save_cpu = g_cpu;
+    uint8_t save_scratch[8];
+    int row = tile_top - 0x20;
+    uint16_t base;
+    uint16_t addr;
+    uint8_t tile;
+
+    if (world_col < 0 || tile_top < 0x20 || tile_top > 0xE0) return 0;
+    base = (world_col & 0x10) ? Block_Buffer_2 : Block_Buffer_1;
+    addr = (uint16_t)(base + (world_col & 0x0F) + row);
+    tile = g_ram[addr];
+    if (tile != 0x51 && tile != 0x52) return 0;
+
+    memcpy(save_scratch, &g_ram[0x00], sizeof save_scratch);
+    g_ram[0x02] = (uint8_t)row;
+    g_ram[0x06] = (uint8_t)(base + (world_col & 0x0F));
+    g_ram[0x07] = (uint8_t)(base >> 8);
+
+    /* Sonic can reach fresh columns faster than SMB1's two block-object
+     * animation slots can drain. If the native shatter path is saturated,
+     * keep the world collision truthful immediately and use SMB1's metatile
+     * writer while there is room in the VRAM buffer. This drops only the
+     * extra debris objects; the first two blocks still go through
+     * PlayerHeadCollision and produce the native chunks/score/sound. */
+    if (g_ram[VRAM_Buffer1_Offset] <= 0x28)
+        DestroyBlockMetatile();
+    g_ram[addr] = 0;
+    g_ram[NoiseSoundQueue] |= 0x01;
+    enqueue_smb1_brick_debris(world_col, tile_top);
+
+    memcpy(&g_ram[0x00], save_scratch, sizeof save_scratch);
+    g_cpu = save_cpu;
+    return 1;
+}
+
+static int break_smb1_brick_for_attack(int world_col, int tile_top,
+                                       int direct_fallback)
+{
+    if (break_smb1_brick(world_col, tile_top)) return 1;
+    return direct_fallback ? blank_smb1_brick_direct(world_col, tile_top) : 0;
+}
+
+static int break_bricks_in_attack_ex(double left, double right,
+                                     double top, double bottom,
+                                     int max_blocks,
+                                     int direct_fallback)
 {
     int first_col = (int)(left / 16.0);
     int last_col = (int)((right - 0.001) / 16.0);
@@ -2242,16 +2479,80 @@ static int break_bricks_in_attack(double left, double right,
     int broken = 0;
 
     if (max_blocks < 1) return 0;
-    if (max_blocks > 2) max_blocks = 2;
+    if (max_blocks > 16) max_blocks = 16;
 
     for (int row = first_row; row <= last_row; ++row) {
         int tile_top = row * 16;
         for (int col = first_col; col <= last_col; ++col) {
-            broken += break_smb1_brick(col, tile_top);
+            broken += break_smb1_brick_for_attack(
+                col, tile_top, direct_fallback);
             if (broken >= max_blocks) return broken;
         }
     }
     return broken;
+}
+
+static int break_bricks_in_attack(double left, double right,
+                                  double top, double bottom,
+                                  int max_blocks)
+{
+    return break_bricks_in_attack_ex(left, right, top, bottom, max_blocks, 0);
+}
+
+static int sonic_clear_ball_attack_bricks_at(int native_x)
+{
+    const ForeignState *fs;
+    double facing, center_x, foot_y, center_y, half_w, half_h;
+
+    if (!sonic_selected() || !s3k_sonic_breaks_side_blocks() ||
+        !s_attack.active ||
+        !(s_attack.flags & FOREIGN_ATTACK_BREAK_BLOCKS))
+        return 0;
+
+    fs = nes_foreign_state();
+    if (!fs) return 0;
+
+    facing = fs->facing < 0.0f ? -1.0 : 1.0;
+    center_x = (double)native_x + 8.0 +
+               facing * source_units_to_px(s_attack.offset_x);
+    foot_y = (double)g_ram[Player_Y_Position] + 32.0;
+    center_y = foot_y - source_units_to_px(s_attack.offset_y);
+    half_w = source_units_to_px(s_attack.width) * 0.5;
+    half_h = source_units_to_px(s_attack.height) * 0.5;
+
+    return break_bricks_in_attack_ex(center_x - half_w,
+                                     center_x + half_w,
+                                     center_y - half_h,
+                                     center_y + half_h,
+                                     16,
+                                     1);
+}
+
+static void sonic_apply_airborne_enemy_bounce(void)
+{
+    ForeignState *state;
+    int8_t host_yspeed;
+
+    if (!sonic_selected() || !s3k_sonic_is_ball()) return;
+    state = nes_foreign_state();
+    if (!state || state->grounded || state->vy >= 0.0) return;
+
+    /* Touch_EnemyNormal negates downward y_vel when Sonic destroys a normal
+     * enemy from above. Sonic's controller uses positive-up Y, so negate the
+     * falling velocity here before the next controller tick. */
+    state->vy = -state->vy;
+    state->grounded = 0;
+    state->state = S3K_SONIC_JUMP;
+    state->state_frame = 0;
+
+    host_yspeed = (int8_t)source_units_to_px(-state->vy);
+    if (host_yspeed > -1) host_yspeed = -1;
+    g_ram[Player_State] = 1;
+    g_ram[Player_Y_Speed] = (uint8_t)host_yspeed;
+    s_wrote_yspeed_valid = 0;
+    s_forced_airborne_pending = 1;
+    s_forced_airborne_frames = 0;
+    s_pending_flags |= SMASH64_CF_FORCE_AIRBORNE;
 }
 
 int game_smash64_break_bricks(double left, double right,
@@ -2273,9 +2574,12 @@ static void apply_pending_attack(void)
     const ForeignController *ctl = nes_foreign_active();
     double facing, center_x, foot_y, center_y, half_w, half_h;
     double left, right, top, bottom;
+    int sonic_ball, sonic_side_break;
     int enemies, blocks = 0;
 
     if (!s_attack.active || !fs) return;
+    sonic_ball = sonic_selected() && s3k_sonic_is_ball();
+    sonic_side_break = sonic_selected() && s3k_sonic_breaks_side_blocks();
     facing = fs->facing < 0.0f ? -1.0 : 1.0;
     center_x = (double)player_native_x() + 8.0 +
                facing * source_units_to_px(s_attack.offset_x);
@@ -2293,10 +2597,24 @@ static void apply_pending_attack(void)
         left, right, top, bottom,
         (s_attack.flags & FOREIGN_ATTACK_CONTACT_ONLY) ? 1 : 0);
     if (!(s_attack.flags & FOREIGN_ATTACK_CONTACT_ONLY) &&
-        (s_attack.flags & FOREIGN_ATTACK_BREAK_BLOCKS))
-        blocks = break_bricks_in_attack(left, right, top, bottom, 2);
+        (s_attack.flags & FOREIGN_ATTACK_BREAK_BLOCKS)) {
+        if (sonic_ball && !sonic_side_break) {
+            if (fs->vy < 0.0) {
+                blocks = break_bricks_in_attack_ex(
+                    center_x - 7.0, center_x + 7.0,
+                    foot_y - 1.0, foot_y + 3.0,
+                    2, 0);
+            }
+        } else {
+            blocks = break_bricks_in_attack_ex(
+                left, right, top, bottom,
+                sonic_side_break ? 16 : 2,
+                sonic_side_break ? 1 : 0);
+        }
+    }
     if (enemies) nes_foreign_trace_note_flags(SMASH64_CF_ENEMY_DEFEATED);
     if (blocks) nes_foreign_trace_note_flags(SMASH64_CF_BLOCK_BROKEN);
+    if (enemies) sonic_apply_airborne_enemy_bounce();
     if (enemies || blocks) {
         const char *name = (ctl && ctl->state_name)
                                ? ctl->state_name(fs->state) : "?";
@@ -2362,14 +2680,16 @@ static int jumpsquat_hook(uint16_t addr)
     fs = nes_foreign_state();
     if (!fs) return 0;
 
-    if (samus_selected() || link_selected()) {
+    if (samus_selected() || link_selected() || sonic_selected()) {
         /* Both face buttons belong to the owner-ROM character. The controller
          * publishes a one-frame LAUNCH handshake, so SMB receives A only on
          * that frame; B never leaks into run/fireball handling. */
         g_ram[A_B_Buttons] &=
             (uint8_t)~(SMB1_A_BUTTON_BIT | SMB1_B_BUTTON_BIT);
-        if (link_selected()) {
+        if (link_selected() || sonic_selected()) {
             apply_pending_attack();
+        }
+        if (link_selected()) {
             apply_pending_actions();
         }
         if (fs->jump_phase == FOREIGN_JUMP_LAUNCH) {
@@ -2442,6 +2762,8 @@ static int bounding_box_core_hook(uint16_t addr)
         g_ram[Player_BoundBoxCtrl] = s_profile->player_bbox_ctrl;
         if (samus_selected() && metroid_samus_is_morphed())
             g_ram[Player_BoundBoxCtrl] = 1;
+        if (sonic_selected() && s3k_sonic_is_ball())
+            g_ram[Player_BoundBoxCtrl] = 1;
     }
     return 0;
 }
@@ -2466,17 +2788,35 @@ uint8_t game_smash64_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val)
 
     /* PlayerBGCollision $DC64: geometry selection only.
      * $DC9A/$DC9F choose BlockBufferAdderData and $DCB1/$DCB4 choose
-     * PlayerBGUpperExtent. $BD57/$BD5C choose the contacted block's Y anchor;
-     * they must use the same profile or a hidden-small Falcon spawns a powerup
-     * one tile too low. The earlier consequence reads in PlayerHeadCollision
-     * remain native, so small Falcon still bumps a brick instead of shattering
-     * it. */
+     * PlayerBGUpperExtent. Falcon/Samus keep native PlayerHeadCollision
+     * consequence reads so hidden-small variants bump bricks. Sonic is a
+     * gameplay exception: from below he should trigger blocks exactly like
+     * Big Mario, regardless of the hidden SMB power-up byte. */
     if (samus_selected() && metroid_samus_is_morphed()) {
         if (addr == CrouchingFlag &&
             (pc == 0xDC9A || pc == 0xDCB4 || pc == 0xBD57))
             return 1;
         if (addr == PlayerSize &&
             (pc == 0xDC9F || pc == 0xDCB1 || pc == 0xBD5C))
+            return 1;
+    }
+    if (sonic_selected() && s3k_sonic_is_ball()) {
+        int sonic_upward_head_hit = (int8_t)g_ram[Player_Y_Speed] < 0;
+        if (addr == CrouchingFlag && (pc == 0xBCF3 || pc == 0xBD57))
+            return 0;
+        if (addr == PlayerSize && (pc == 0xBD14 || pc == 0xBD5C))
+            return 0;
+        if (sonic_upward_head_hit && addr == CrouchingFlag &&
+            (pc == 0xDC9A || pc == 0xDCB4))
+            return 0;
+        if (sonic_upward_head_hit && addr == PlayerSize &&
+            (pc == 0xDC9F || pc == 0xDCB1))
+            return 0;
+        if (addr == CrouchingFlag &&
+            (pc == 0xDC9A || pc == 0xDCB4))
+            return 1;
+        if (addr == PlayerSize &&
+            (pc == 0xDC9F || pc == 0xDCB1))
             return 1;
     }
     if (!s_profile) return val;
@@ -2960,8 +3300,9 @@ int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
                 "contact bounds may follow hidden Mario size\n");
     }
     s_enabled = 1;
-    if (samus_selected() || link_selected()) game_smash64_audio_set_enabled(0);
-    if (!samus_selected() && !link_selected() &&
+    if (samus_selected() || link_selected() || sonic_selected())
+        game_smash64_audio_set_enabled(0);
+    if (!samus_selected() && !link_selected() && !sonic_selected() &&
         !game_smash64_audio_set_enabled(1)) {
         game_smash64_set_mod_enabled(0, NULL);
         return 0;
@@ -2977,7 +3318,8 @@ int game_smash64_active(void)
 
 int game_smash64_falcon_selected(void)
 {
-    return s_enabled && s_selected && !samus_selected() && !link_selected();
+    return s_enabled && s_selected && !samus_selected() && !link_selected() &&
+           !sonic_selected();
 }
 
 int game_smash64_link_selected(void)
@@ -2988,6 +3330,11 @@ int game_smash64_link_selected(void)
 int game_smash64_samus_selected(void)
 {
     return s_enabled && samus_selected();
+}
+
+int game_smash64_sonic_selected(void)
+{
+    return s_enabled && sonic_selected();
 }
 
 int game_smash64_death_presentation_active(void)

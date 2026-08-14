@@ -6,6 +6,7 @@ build_falcon/
 build_falcon_qa/
 build_pikachu*/
 build_link*/
+build_sonic*/
 build_harness/
 build_smash64_profile/
 release/
@@ -47,3 +48,6 @@ tests/falcon_harness/trace_*.csv
 
 # SSB64 owner ROM + locally generated/cache assets. Never commit or package.
 assets_ssb64/
+_external/
+_validation/
+_validation_genesis/

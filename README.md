@@ -42,6 +42,8 @@ are shipped in the release.
 | ![Captain Falcon in World 1-2](docs/screenshots/character-replacements/captain-falcon.png) | ![Pikachu firing Thunder Jolt in World 1-1](docs/screenshots/character-replacements/pikachu.png) |
 | Samus | Link |
 | ![Samus in World 1-1](docs/screenshots/character-replacements/samus.png) | ![Zelda II Link firing a crouched sword beam in World 1-1](docs/screenshots/character-replacements/link.png) |
+| Sonic | |
+| ![Sonic from Sonic 3 & Knuckles in World 1-2](docs/screenshots/character-replacements/sonic.png) | |
 
 ## Smash 64 characters (bundled mod)
 
@@ -100,6 +102,23 @@ Samus and Smash 64 packages share the `player-controller` exclusive group, so
 the launcher permits only one at a time. See
 [docs/ZELDA2_LINK_MOD.md](docs/ZELDA2_LINK_MOD.md) for implementation and
 validation details.
+
+## Sonic 3 & Knuckles Sonic (bundled mod)
+
+Open **Mods**, enable **Sonic 3 & Knuckles Sonic Player Replacement**, choose
+Sonic from the Character dropdown, and select a legally owned canonical
+**Sonic 3 & Knuckles** Genesis ROM. The launcher verifies normalized SHA-1
+`cfbf98c36c776677290a872547ac47c53d2761d6`. Sonic's Genesis sprites are
+decoded into memory from that verified ROM. No Sonic 3 & Knuckles ROM data or
+derived graphics are shipped or written beside the game.
+
+Sonic uses Sonic 3 & Knuckles-style movement adapted to SMB worlds: A jumps,
+Down crouches, Down+B charges a spindash, and spin attacks hurt enemies. A
+spindash-origin roll can break ordinary breakable bricks and preserve momentum
+through block rows; ordinary ground rolls do not break bricks. Fire Flower
+grants a fire shield presentation and enables an airborne double-A fire dash.
+The Sonic, Link, Samus and Smash 64 packages share the `player-controller`
+exclusive group, so the launcher permits only one at a time.
 
 ## Widescreen mod (experimental)
 

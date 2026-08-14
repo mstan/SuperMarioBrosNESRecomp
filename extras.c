@@ -18,6 +18,7 @@
 #include "game_smash64_render.h"
 #include "game_link.h"
 #include "game_samus.h"
+#include "game_sonic.h"
 #include "watchdog.h"
 #ifdef ENABLE_NESTOPIA_ORACLE
 #include "nestopia_bridge.h"
@@ -38,6 +39,9 @@ static void get_exe_relative_path(const char *filename, char *out, int max_len);
 
 static int check_debug_ini(void) {
     char path[512];
+    const char *env = getenv("NESRECOMP_DEBUG");
+    if (s_debug_enabled) return 1;
+    if (env && env[0] && strcmp(env, "0") != 0) return 1;
     get_exe_relative_path("debug.ini", path, sizeof(path));
     FILE *f = fopen(path, "r");
     if (f) { fclose(f); return 1; }
@@ -46,9 +50,16 @@ static int check_debug_ini(void) {
 
 /* ---- Debug server state ---- */
 static int s_tcp_port = 4370;
+static int s_debug_server_started = 0;
 
 /* ROM path exposed by runner for verify mode init */
 const char *g_rom_path_for_extras = NULL;
+
+static void start_debug_server_once(void) {
+    if (s_debug_server_started) return;
+    debug_server_init(s_tcp_port);
+    s_debug_server_started = 1;
+}
 
 /* ---- Path helper ---- */
 
@@ -250,7 +261,7 @@ void game_on_init(void) {
 
     if (s_debug_enabled) {
         printf("[Debug] debug.ini found — TCP server and verify mode enabled\n");
-        debug_server_init(s_tcp_port);
+        start_debug_server_once();
 
         if (g_run_mode != RUN_MODE_NATIVE && g_rom_path_for_extras) {
             verify_mode_init(g_rom_path_for_extras);
@@ -258,7 +269,7 @@ void game_on_init(void) {
     } else if (g_run_mode != RUN_MODE_NATIVE) {
         /* --verify or --emulated implies debug even without ini */
         s_debug_enabled = 1;
-        debug_server_init(s_tcp_port);
+        start_debug_server_once();
         if (g_rom_path_for_extras)
             verify_mode_init(g_rom_path_for_extras);
     }
@@ -279,6 +290,7 @@ void game_on_frame(uint64_t frame_count) {
     game_smash64_update_input(frame_count);
     game_link_update_input(frame_count);
     game_samus_update_input(frame_count);
+    game_sonic_update_input(frame_count);
     /* Start timing only after any TCP/debug pause has ended.  Previously the
      * watchdog's zero-initialized timestamp measured process lifetime and
      * eventually blamed an ordinary backward branch (often ReadPortBits). */
@@ -292,6 +304,7 @@ void game_post_nmi(uint64_t frame_count) {
     game_smash64_update(frame_count);
     game_link_update(frame_count);
     game_samus_update(frame_count);
+    game_sonic_update(frame_count);
     if (s_debug_enabled) {
         debug_server_record_frame();
     }
@@ -307,6 +320,7 @@ int game_handle_arg(const char *key, const char *val) {
     }
     if (strcmp(key, "--tcp-port") == 0 && val) {
         s_tcp_port = atoi(val);
+        s_debug_enabled = 1;
         printf("[Debug] TCP port set to %d\n", s_tcp_port);
         return 1;
     }
@@ -562,6 +576,7 @@ void game_post_render(uint32_t *framebuf) {
     game_smash64_render_post_render(framebuf);
     game_link_render_post_render(framebuf);
     game_samus_render_post_render(framebuf);
+    game_sonic_render_post_render(framebuf);
 }
 
 /* ---- Debug command handler (SMB-specific) ---- */

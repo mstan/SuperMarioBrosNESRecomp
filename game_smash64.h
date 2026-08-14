@@ -49,6 +49,7 @@ int game_smash64_active(void);
 int game_smash64_falcon_selected(void);
 int game_smash64_link_selected(void);
 int game_smash64_samus_selected(void);
+int game_smash64_sonic_selected(void);
 
 /* Native SMB consequences shared by player-replacement combat adapters. */
 int game_smash64_defeat_enemies(double left, double right,
