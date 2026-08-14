@@ -70,6 +70,12 @@ never included in this package. The first launch derives each selected fighter's
 model, animations, effects, and audio into your local user cache; those
 generated files are not shipped.
 
+Experimental character replacement mods are default-off and mutually exclusive.
+Samus requires a verified Metroid ROM, Link requires a verified Zelda II ROM,
+and Sonic requires a verified Sonic 3 & Knuckles Genesis ROM. The launcher Mods
+screen handles these owner-ROM pickers and verification gates; no owner ROM data
+or derived owner-ROM graphics are shipped in this package.
+
 Controls: arrow keys = D-Pad, Z = A, X = B, Enter = Start,
 Right Shift = Select. F5 turbo, F6 save state, F7 load state,
 F11 / Alt+Enter fullscreen. Gamepads are supported; bindings are

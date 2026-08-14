@@ -31,7 +31,10 @@ actual_assets=$(cd "$appdir/usr/bin/assets" && find . -type f -printf '%P\n' | s
 
 required_mods='packages/super-mario-bros.enhancement.voxel-first-person/1.0.0/manifest.toml
 packages/super-mario-bros.enhancement.widescreen/1.0.0/manifest.toml
-packages/super-mario-bros.gameplay.smash64-player-replacement/1.0.0/manifest.toml'
+packages/super-mario-bros.gameplay.metroid-samus-player-replacement/1.0.0/manifest.toml
+packages/super-mario-bros.gameplay.s3k-sonic-player-replacement/1.0.0/manifest.toml
+packages/super-mario-bros.gameplay.smash64-player-replacement/1.0.0/manifest.toml
+packages/super-mario-bros.gameplay.zelda2-link-player-replacement/1.0.0/manifest.toml'
 actual_mods=$(cd "$appdir/usr/bin/mods" && find . -type f -printf '%P\n' | sort)
 [ "$actual_mods" = "$required_mods" ] || {
     echo "preloaded mod inventory differs from the pristine manifests" >&2; exit 1; }
