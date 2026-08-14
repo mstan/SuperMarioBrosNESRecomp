@@ -1,6 +1,7 @@
 build/
 build-voxel-vs/
 build_release/
+build_release_prod/
 build_debug/
 build_falcon/
 build_falcon_qa/
