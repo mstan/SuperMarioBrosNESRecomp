@@ -29,11 +29,12 @@ Usage: powershell -File tools\make_release.ps1 [-Variant standard|widescreen|bot
 param(
   [ValidateSet('standard', 'widescreen', 'both')]
   [string]$Variant = 'both',
+  [string]$BuildDir = 'build_release',
   [switch]$SkipBuild
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$bin  = Join-Path $root 'build_release'
+$bin  = Join-Path $root $BuildDir
 $out  = Join-Path $root 'release'
 New-Item -ItemType Directory -Force $out | Out-Null
 
