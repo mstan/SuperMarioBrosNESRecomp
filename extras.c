@@ -9,6 +9,7 @@
  */
 #include "game_extras.h"
 #include "nes_runtime.h"
+#include "nes_video.h"
 #include "config.h"
 #include "input_script.h"
 #include "debug_server.h"
@@ -225,9 +226,9 @@ void game_widescreen_set_mod_enabled(int enabled) {
 
 static void ws_apply_init(void) {
     if (!s_ws_enabled) return;
-    g_widescreen_left  = s_ws_left;
-    g_widescreen_right = s_ws_right;
-    g_render_width     = 256 + s_ws_left + s_ws_right;
+    /* Fixed geometry, set before the SDL window exists: the video layer
+     * applies it immediately (nes_video.h). */
+    nes_video_request_margins(s_ws_left, s_ws_right);
     g_ws_oam_sidecar   = 1;
     /* Start pillarboxed; the per-frame gate opens the margins in gameplay. */
     g_ws_eff_left = g_ws_eff_right = 0;
