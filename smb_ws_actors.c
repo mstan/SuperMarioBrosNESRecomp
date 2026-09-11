@@ -67,7 +67,7 @@ typedef struct {
 
 static int camera(void) { return (g_ram[0x71a]<<8)|g_ram[0x71c]; }
 static int actor_x(const Actor *a) { return (a->state[F_PAGE]<<8)|a->state[F_X]; }
-static int live_x(int slot) { return (g_ram[0x6e+slot]<<8)|g_ram[0x87+slot]; }
+static int live_x(int slot) { return (g_ram[0x6e + slot]<<8)|g_ram[0x87+slot]; }
 static int gameplay(void) { return g_ram[0x770]==1 && g_ram[0x772]==3; }
 /* Balance platforms ($24) reference another native slot and need paired
  * ownership. Independent platforms retain all movement state in one actor. */

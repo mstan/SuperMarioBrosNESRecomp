@@ -72,7 +72,7 @@ static void decode(void) {
         for (int slot=0;slot<5;slot++) if (g_ram[0x0f+slot] && g_ram[0x16+slot]==0x0d) {
             if (w->plant_count<SMB_WS_MAX_PLANTS) {
                 SmbWsPlant *p=&w->plants[w->plant_count++];
-                p->x=(uint16_t)((g_ram[0x6e+slot]<<8)|g_ram[0x87+slot]);
+                p->x=(uint16_t)((g_ram[0x6e + slot]<<8)|g_ram[0x87+slot]);
                 p->y=g_ram[0xcf+slot];
             }
         }
