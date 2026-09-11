@@ -4,7 +4,7 @@ project(SuperMarioBrosRecomp C CXX)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-set(NESRECOMP_ROOT ${CMAKE_SOURCE_DIR}/nesrecomp)
+set(NESRECOMP_ROOT "${CMAKE_SOURCE_DIR}/nesrecomp" CACHE PATH "NESRecomp engine checkout")
 
 # nesrecomp/ and recomp-ui/ are git submodules (see .gitmodules); the pinned
 # commit is the gitlink recorded in this repo. After cloning run setup.sh/.bat
@@ -21,6 +21,9 @@ find_package(SDL2 REQUIRED)
 add_executable(SuperMarioBrosRecomp
     ${NESRECOMP_RUNNER_SOURCES}
     extras.c
+    game_widescreen.c
+    smb_ws_world.c
+    smb_ws_actors.c
     game_voxel.c
     game_smash64.c
     game_smash64_actions.c

@@ -1,113 +1,216 @@
-# Widescreen mode (EXPERIMENTAL)
+# Custom widescreen (experimental)
 
-Optional 16:9 (or custom-margin) rendering for Super Mario Bros.
-**Status: experimental and buggy.** The default build is always the
-authentic 4:3 game; everything described here is runtime-gated and
-off unless explicitly enabled.
+Enable **Widescreen (Experimental)** in the launcher's **Mods** screen. The package is off by
+default and shares the display-mode group with Voxel 3D. Stock play uses the
+original renderer. The ROM is unchanged.
 
-## Enabling
+The renderer extends terrain, ordinary authored enemies and independent moving
+platforms across the viewport.
+Enemy movement can begin on load or retain original 4:3 activation timing.
+Special spawners, linked balance platforms and some other objects retain native limits;
+this experimental branch has not been validated through every world.
 
-Open **Mods** in the launcher and enable **Widescreen (16:9)**. The bundled
-package is disabled by default and activates the game-specific rendering
-implementation without patching the ROM. It is mutually exclusive with
-**Voxel 3D**; enabling either display mode automatically disables the other.
+## Presentation
 
-For developer testing, the command-line override remains available:
+Choose **Fit window**, **16:9**, **21:9**, or **32:9**. Fit follows the window's
+drawable aspect during play, clamped between the native aspect and 32:9. The
+status bar can stay centered or sit at the screen edges.
 
+The engine uses square pixels throughout:
+
+| Mode | Logical frame |
+| --- | --- |
+| Stock | 256 x 240 |
+| 16:9 | 426 x 240 |
+| 21:9 | 560 x 240 |
+| 32:9 | 854 x 240 |
+| Fit | 256–854 x 240, following the window |
+
+Developer overrides:
+
+```powershell
+.\SuperMarioBrosRecomp.exe baserom.nes --widescreen fit
+.\SuperMarioBrosRecomp.exe baserom.nes --widescreen 16:9
+.\SuperMarioBrosRecomp.exe baserom.nes --widescreen 21:9
+.\SuperMarioBrosRecomp.exe baserom.nes --widescreen 32:9
+.\SuperMarioBrosRecomp.exe baserom.nes --widescreen off
+.\SuperMarioBrosRecomp.exe baserom.nes --widescreen 32:9 --widescreen-enemies classic
+.\SuperMarioBrosRecomp.exe baserom.nes --widescreen 32:9 --widescreen-enemies viewport
 ```
-SuperMarioBrosRecomp.exe --widescreen 16:9
-SuperMarioBrosRecomp.exe --widescreen 85x85
-SuperMarioBrosRecomp.exe --widescreen off
+
+The old arbitrary-margin syntax, screen-edge read patches and OAM sidecar policy
+are removed from SMB's widescreen implementation. The old `widescreen.ini`
+configuration file is obsolete; configure the package through Mods. The
+widescreen release ZIP includes a portable Mods selection for 16:9 and viewport
+activation. The standard ZIP and Linux AppImage leave the package disabled.
+
+## World cache and compositor
+
+`smb_ws_world.c` runs SMB's original `AreaParserCore` over the area's 512 possible
+metatile columns in an isolated guest context, outside rendering. It restores
+RAM, CPU registers, continuation state and the runtime state blob afterward;
+the extra decoding advances no guest CPU/APU time. The live `AreaData` pointer
+identifies the room, since `AreaPointer` may already name a pipe destination.
+
+The host cache owns the resulting terrain tiles and palette indices. The
+custom renderer samples it by world position instead of treating both physical
+nametables as valid across an arbitrarily wide viewport. This removes the old
+left/right limits imposed by nametable reuse and partial streaming.
+
+An observation hook at `RenderAreaGraphics` compares generated metatile columns
+against the cache and records their intended world coordinates. A physical
+nametable column receives that binding only after its actual tile bytes match
+the pending upload. Live bound columns update the cache, retaining visible
+brick and coin edits as the nametables are reused. `InitializeArea` clears the
+cache, including when restarting the same area after death.
+
+Each column keeps the palette selected by its decoded metatiles. SMB uploads
+attribute bytes later than tile bytes, so copying a reused physical attribute
+could briefly turn part of a white cloud green. Live tile edits still update
+the cache; delayed attributes cannot recolor unrelated world columns.
+
+The native 256-pixel pass remains authoritative for the central background,
+unmanaged sprites and transient background updates. The compositor
+adds the cached terrain on either side and places the native HUD. Title and
+other non-gameplay screens retain the centered native image. Dot-PPU rejects
+the custom hook; HD-pack compositing is bypassed while the hook is active.
+
+Terrain and extended sprites use the same captured PPU scroll as the native
+pass. Reading the already-advanced game camera produced a one-frame offset
+at the two joins while scrolling; the captured scroll removes that seam.
+
+The world cache and enemy residents participate in mod savestates. Mod settings belong to
+the mod configuration and are not overwritten by loading a state. Internal
+mod state layouts may change across experimental versions.
+
+## Enemy movement and remaining limits
+
+The mod's **Enemy movement** option offers two policies:
+
+- **Move when loaded in the wide view** (default): ordinary authored enemies
+  initialize and move when their spawn enters the viewport plus a 48-pixel pad.
+- **Preserve original 4:3 activation**: show a frozen preview at the authored
+  location, then let the native parser initialize and activate it normally.
+
+`smb_ws_actors.c` keeps enemy records in world coordinates. It invokes the
+original initialization, graphics, terrain collision and movement routines in
+an isolated guest context for residents outside native interaction slots.
+Collision columns carry world ownership, so actors see their local terrain
+instead of whichever columns currently occupy the two native block buffers.
+Sprites use host packets beyond the original screen; near Mario, complete
+per-enemy state transfers into native slots for normal player interactions.
+The parser consumes already-loaded records without creating duplicate enemies.
+Group records are activation triggers: their first enemy belongs 48 pixels
+before the trigger, followed by 24-pixel spacing. Treating the trigger as the
+first body's position placed a 1-2 Goomba inside a pipe. Classic activation
+still takes the native parser's actual positions and timing.
+
+Piranha Plants come from the area parser rather than ordinary enemy records.
+The isolated area decode captures their pipe coordinates and original vertical
+limits, and the resident manager observes `InitPiranhaPlant` for native handoff.
+It also adopts plants created during initial screen construction. This makes
+plants visible and active beyond the old screen without duplicating them when
+their pipe streams in.
+
+Independent platforms (`$25` through `$2C`) use their original initializer,
+movement and graphics routines. The resident owns each complete six-sprite
+packet, including both decks of a small looping lift. Large platforms move
+before drawing; small lifts draw before moving, matching the original order.
+The same activation option applies to platforms. Native interaction slots
+retain Mario's landing and riding collision; detached platforms have no rider.
+Multiple lifts sharing one X coordinate retain separate records and phases.
+Linked balance platforms (`$24`) still need ownership of their paired slots.
+
+Managed enemies are drawn as complete sprites across both old screen edges;
+their corresponding native OAM slots are suppressed for presentation. This
+avoids joining half a host sprite to SMB's column-clipped native sprite. The
+compositor preserves foreground priority for higher-priority native sprites.
+
+The goal flag appears alongside a decoded flagpole before native loading.
+After the real flag loads, the compositor follows its original graphics,
+lowering animation and score sprites. Flag collision and level completion
+remain controlled by the native game.
+Areas without a flag explicitly reject the missing-position sentinel; it can
+never become a preview at world X=-1 during an area transition.
+
+Remaining work, tracked in **beads-2dw.2.5**:
+
+- Special bosses, linked balance platforms, frenzy controllers, and objects such as power-ups
+  and projectiles still use native spawning/culling. Offscreen Hammer Bros'
+  generated projectiles are not retained by the resident simulation yet.
+- Mario's interactions still use the five original enemy slots, assigned to
+  nearby actors. Dense crowds, offscreen shell scoring, score popups and special
+  enemy behavior need more work and validation. This is not unlimited simulation.
+- The whole-stage experiment (both viewing and simulating the entire stage) is
+  still pending. Decoding 512 terrain columns alone does not implement it.
+
+The previous spawn bugs were not solely a rendering problem: group and frenzy
+spawners derive coordinates from screen edges. Rewriting those shared values
+moved some spawns into terrain. The replacement must keep authored positions,
+viewport extent and activation policy separate.
+
+## Validation
+
+`tests/custom_widescreen_probe.py` drives isolated TRACE-enabled executables,
+using `--widescreen-enemies native` to isolate renderer regressions.
+It compares RAM, CPU state and the native playfield against an untouched stock
+binary; checks cached columns against live parser output; and verifies
+deterministic rendering across save/load. On Windows it also resizes the live
+Fit window through all supported widths.
+
+```powershell
+python tests/custom_widescreen_probe.py --exe <candidate.exe> `
+  --baseline <untouched-stock.exe> --rom baserom.nes --out <new-artifact-directory>
 ```
 
-`16:9` resolves to 428 px wide (86 left + 256 + 86 right) at 240 lines.
-Margins are capped at **left ≤ 128, right ≤ 96** — see Caps below.
+The initial 1-1 route passed all presets and Fit: 34 streamed columns matched,
+RAM/CPU and native playfield pixels matched stock, and save/load reproduced the
+same state and image. A separate 1,200-frame stock smoke run matched all 120
+baseline frame hashes with zero dispatch misses. The 32:9 route also matched
+all 806 full-machine hash records from the untouched binary, including timing,
+APU, PPU memory, open bus and mapper state. Saved mod selections enabled 21:9
+with a centered HUD; package defaults and the `off` override retained stock
+output. These checks do not establish all-world or extended-enemy correctness.
 
-With the package disabled (and no command-line override), the game is exactly
-vanilla: the 8000-frame `--verify` oracle run is byte-identical to the Nestopia
-reference in work RAM with widescreen off.
+`tests/widescreen_enemies_probe.py` checks the first Goomba is visible outside
+the native screen, stays frozen in classic mode, moves on load in viewport
+mode, stays on the floor, and reproduces its state and image after save/load.
+`tests/widescreen_seam_probe.py --require-aligned` compares cached and native
+background opacity near both joins during a 240-frame scrolling route. The old
+camera produced 143 misaligned frames; the captured-scroll version produced
+none. Both probes require the same `--exe`, `--rom` and `--out` arguments.
 
-## How it works
+`tests/widescreen_boundaries_probe.py` exercises complete enemy sprites on
+both edges, palette ownership while streaming, and the owner's F2 flag setup.
+The reproduced left-edge case lost 46 brown body pixels before the fix and
+none afterward. The color route had 18 bad samples out of 120 before the fix
+and none afterward. The F2 route verifies a preview flag, transfer to native
+flag graphics, and lowering from Y=49 to Y=172. Its optional fixture conversion
+drops obsolete world and actor payloads from a copy; owner saves are never modified.
 
-Four coordinated layers, all gated at runtime on the package switch AND the
-gameplay mode (OperMode 1 = game, 2 = victory; the title screen, attract
-demo, and game-over screens stay fully vanilla and pillarboxed):
+`tests/widescreen_pipe_probe.py` checks the owner's 1-2 pipe scene. A fresh
+native area restart is needed to test corrected spawning: the old F5 already
+contains the misplaced Goomba. The replay verifies the middle plant beyond
+the native viewport, no Goomba centered inside the three pipes, and deterministic
+save/load. Its optional injury-timer override keeps the test alive without
+freezing enemy movement; the initial preview checkpoint has no override.
+`tests/widescreen_transition_probe.py` follows 1-1 completion through the 1-2
+entry scene and underground arrival: 50 sampled ghost-flag frames before the
+sentinel fix, zero afterward. The world state layout is version 3; the actor
+layout is version 4 after adding independent platform residents.
 
-1. **Presentation** — the renderer draws extra background columns into
-   the margins. SMB's two vertically-mirrored nametables hold 512 px of
-   world; the margins show columns the game has already written.
-2. **Sprite-X sidecar** — SMB computes sprite X with 8-bit math, so
-   anything past the vanilla edges would wrap to the opposite side. A
-   16-bit sidecar, keyed per rel-position slot at `GetObjRelativePosition`
-   and re-armed on every rel-var read, unwraps OAM X writes so sprites
-   render correctly inside the margins.
-3. **Window widening** — the game's own draw-cull and despawn decisions
-   are widened by shifting the screen-edge values they read at exactly the
-   PCs that implement each decision (`game.toml` `[[ram_read_hook]]` + the
-   policy table in `extras.c`). Player edge clamping, loop-command rewind,
-   and the area parser remain vanilla — they are dual-purpose state, not
-   draw logic.
+`tests/widescreen_platform_probe.py` checks the owner's F5 lift setup. The old
+renderer lost 150 of 300 platform pixels at the left edge and 186 at the right;
+the new renderer loses none at either edge or fully outside native bounds.
+The four 1-2 lifts match their original native positions across 360 frames,
+including a transfer to private simulation. Mario rides an ascending lift for
+30 frames with the same positions and collision flags as before. A controlled
+loading setup places all four lifts beyond native activation, verifying visible
+preloading and frozen classic versus moving viewport behavior. Save/load gives
+identical RAM, CPU state, resident state and images. The test can convert a copy
+of the previous F5 fixture without adding compatibility code to the runtime.
 
-   **Spawns stay vanilla 4:3.** The spawn-window PCs (`$C164/$C16E`,
-   `$C1B6/$C1BB`, `$C5DA/$C5E2`, `$C73C/$C741`) are deliberately *not*
-   widened: enemies spawn at the authentic 4:3 edge, with vanilla position
-   and timing. The widened draw-cull/despawn then keep those objects
-   visible across the full 16:9 width. This is **4:3 spawns + 16:9
-   culling** — see "Spawn behavior" below.
-4. **Collision offscreen gate** — keeping margin enemies "on-screen" for
-   rendering (layer 3) also makes the game build a *collision* bounding box
-   for them, and that box is 8-bit screen-relative, so it wraps to the
-   opposite side of the screen — a phantom hitbox the player can stomp/hit
-   even though the enemy renders correctly in the margin. At
-   `GetMaskedOffScrBits` (`$E268`) the runner reports any enemy whose true
-   screen X is in a margin as offscreen, so the vanilla `MoveBoundBoxOffscreen`
-   parks its box at `$FF,$FF`. The player is always clamped on-screen and can
-   never reach a margin, so a margin enemy never truly touches it — this is
-   the collision analogue of the sprite-X sidecar. On-screen enemies are
-   untouched, so collision stays byte-for-byte vanilla.
-
-The simulation itself stays vanilla-exact; only *when* the draw-cull and
-despawn windows trigger changes (by the margin width), which is what keeps
-the margins free of despawn pop-out, plus the collision gate that keeps
-margin enemies from forming phantom hitboxes.
-
-## Caps (load-bearing — do not raise)
-
-- **Right ≤ 96**: SMB's column writer leads ScreenRight by ~98 px at
-  minimum; beyond that the margin would show not-yet-written tiles.
-- **Left ≤ 128**: the left margin shows just-scrolled-out columns, valid
-  until the column writer wraps the nametable (512 px total).
-
-## Spawn behavior (4:3 spawns + 16:9 culling)
-
-Enemies spawn on the **vanilla 4:3 timeline and position**, not at the
-widened 16:9 edge. The earlier "widen the spawn window too" approach
-caused serious spawn-area bugs — frenzy/group spawners derive an enemy's
-X straight from the screen edge, so a widened edge dropped enemies *inside*
-pipes and blocks with no collision to escape, and authored enemies
-activated early enough to drift off their walk/fall pattern. Holding the
-spawn PCs at 4:3 removes those bugs entirely.
-
-The trade-off is a **spawn pop-in at the 4:3 edge line**: an enemy
-materializes inside the right margin (where the 4:3 edge falls on the wider
-screen) rather than at the very screen edge. Once spawned it is fully
-covered by the widened draw-cull and despawn, so it never pops *out*. This
-is the intended, accepted behavior.
-
-## Known issues (why this is experimental)
-
-- Occasional sprite placement glitches in and near the margins are still
-  being found; HUD-row margin rendering on non-sky palettes is untested,
-  as are parts of later worlds (lifts, frenzy spawners, flagpole edge
-  content).
-- Sprite-0 timing, scores, physics, and RNG are checked with the standalone
-  `nesref`/Mesen co-sim workflow.
-
-## Verification tooling
-
-- `tools/ws_check.py` — drives 1-1 over the TCP debug server and asserts
-  the three historical failure modes never occur (wrap ghosts, spawn
-  pops, despawn pops). Requires a trace-enabled build and `debug.ini` next
-  to the exe.
-- `nesrecomp/tools/nes_cosim.py` — compares RAM, PPU state, cycles, video,
-  and audio against standalone `nesref`/Mesen runs.
+The engine's TCP pause loop currently drops window-resize events
+(**beads-2dw.1.28**). Resizing during ordinary execution works; the probe tests
+that path. Old `ws_check.py` and `ws_diag.py` probes depended on the retired
+margin policy and have been replaced by this renderer comparison.

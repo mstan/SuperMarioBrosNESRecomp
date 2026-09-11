@@ -8,6 +8,12 @@ static void reset_widescreen(void) {
 }
 
 static void activate_widescreen(void) {
+    const char *package = "super-mario-bros.enhancement.widescreen";
+    char aspect[32] = "fit", hud[32] = "edges", enemies[32]="viewport";
+    nes_mod_option_value(package, "widescreen", "aspect", aspect, sizeof aspect);
+    nes_mod_option_value(package, "widescreen", "hud", hud, sizeof hud);
+    nes_mod_option_value(package,"widescreen","enemy_activation",enemies,sizeof enemies);
+    game_widescreen_configure(aspect, hud, enemies);
     game_widescreen_set_mod_enabled(1);
 }
 

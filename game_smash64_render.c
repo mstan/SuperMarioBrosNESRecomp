@@ -86,12 +86,10 @@ static const uint32_t k_cube_color[1] = { 0xFF3060C8u };
  * predicates. With the mod off this always returns 0 and ppu_render_frame
  * draws every sprite exactly as before.
  */
-static int smash64_suppress_player_sprite(int oam_slot, int x, int y,
-                                          void *user) {
+int game_smash64_render_suppress_sprite(int oam_slot, int x, int y) {
     int player_oam_byte, first_player_oam_byte;
     (void)x;
     (void)y;
-    (void)user;
 
     if (!game_smash64_active() &&
         !game_smash64_death_presentation_active() &&
@@ -113,10 +111,7 @@ static int smash64_suppress_player_sprite(int oam_slot, int x, int y,
 }
 
 void game_smash64_render_init(void) {
-    /* The predicate self-gates, so registering it before the mod is ever
-     * enabled changes nothing -- ppu_render_frame calls it every frame, and
-     * it returns 0 until a Falcon presentation predicate does. */
-    ppu_renderer_set_sprite_suppress(smash64_suppress_player_sprite, NULL);
+    /* The game registers a combined predicate for independent replacements. */
 }
 
 /* One vertex, one 1x1-texel binding: u/v are irrelevant since a 1x1 texture

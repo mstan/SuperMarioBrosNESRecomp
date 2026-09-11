@@ -17,6 +17,7 @@
 #include "super-mario-bros_full_bank01_part10.c"
 #include "super-mario-bros_full_bank01_part11.c"
 #include "super-mario-bros_full_bank01_part12.c"
+#include "super-mario-bros_full_bank01_part13.c"
 #endif
 
 /* Interpreter wrappers for discovered entries that were not emitted natively. */

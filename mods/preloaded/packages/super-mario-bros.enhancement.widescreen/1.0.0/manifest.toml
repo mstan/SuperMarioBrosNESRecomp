@@ -1,9 +1,9 @@
 format_version = 1
 id = "super-mario-bros.enhancement.widescreen"
 version = "1.0.0"
-name = "Super Mario Bros. Widescreen"
+name = "Super Mario Bros. Widescreen (Experimental)"
 author = "NESRecomp"
-description = "Renders Super Mario Bros. with its game-specific 16:9 background, sprite, culling, and HUD treatment without modifying the stock ROM."
+description = "Custom widescreen rendering from a world-space level cache. Stock play keeps the original renderer and game logic."
 license = "MIT"
 resolver = "declarative"
 save_compatibility = "stock"
@@ -14,8 +14,8 @@ rom_crc32 = "d445f698"
 
 [[feature]]
 id = "widescreen"
-name = "Widescreen (16:9)"
-description = "Enable Super Mario Bros.' experimental game-specific 16:9 rendering enhancement."
+name = "Widescreen (Experimental)"
+description = "Render extended terrain, ordinary enemies and independent moving platforms. Choose original activation timing or movement throughout the visible area. Experimental; bosses, linked balance platforms and frenzy spawners still use native loading."
 group = "Display"
 exclusive_group = "display-mode"
 default_enabled = false
@@ -23,3 +23,49 @@ default_enabled = false
 [[plugin]]
 feature = "widescreen"
 id = "super-mario-bros.widescreen"
+
+[[option]]
+feature = "widescreen"
+id = "aspect"
+label = "Aspect"
+type = "choice"
+default = "fit"
+
+[[option.choice]]
+value = "fit"
+label = "Fit window (adaptive)"
+[[option.choice]]
+value = "16-9"
+label = "16:9"
+[[option.choice]]
+value = "21-9"
+label = "21:9"
+[[option.choice]]
+value = "32-9"
+label = "32:9"
+
+[[option]]
+feature = "widescreen"
+id = "hud"
+label = "Status bar"
+type = "choice"
+default = "edges"
+[[option.choice]]
+value = "edges"
+label = "Screen edges"
+[[option.choice]]
+value = "center"
+label = "Centered"
+
+[[option]]
+feature = "widescreen"
+id = "enemy_activation"
+label = "Enemy movement"
+type = "choice"
+default = "viewport"
+[[option.choice]]
+value = "viewport"
+label = "Move when loaded in the wide view"
+[[option.choice]]
+value = "classic"
+label = "Preserve original 4:3 activation"

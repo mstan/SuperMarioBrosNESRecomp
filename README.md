@@ -122,11 +122,15 @@ exclusive group, so the launcher permits only one at a time.
 
 ## Widescreen mod (experimental)
 
-An optional 16:9 mode renders the world beyond the NES's 256-px viewport
-— real background and sprites in the margins, no stretching. It is
-**experimental and buggy** (see [WIDESCREEN.md](WIDESCREEN.md)).
+An experimental custom renderer extends the terrain beyond the NES's 256-pixel
+viewport, with **Fit window**, **16:9**, **21:9**, and **32:9** options. Ordinary
+authored enemies load across the wide view. **Enemy movement** selects movement
+on load or preserved original 4:3 activation. Independent moving platforms also
+use the expanded view. Special spawners, linked balance platforms and
+some other objects still retain native limits. See
+[WIDESCREEN.md](WIDESCREEN.md) for the current limits and validation.
 
-Open **Mods** in the launcher and enable **Widescreen (16:9)**. It is a
+Open **Mods** in the launcher and enable **Widescreen**. It is a
 default-off package alongside **Voxel 3D**. The two display modes are mutually
 exclusive: enabling either one automatically disables the other. Neither
 package patches the stock ROM. With both disabled the game is the authentic
@@ -160,7 +164,7 @@ and 1/3 changes sprite scale. Numpad 0 toggles Voxel 3D and Numpad 5 restores
 the package defaults. These live controls are intended for experimentation;
 the values selected in Mods remain the persistent defaults.
 
-Voxel 3D is disabled by default, is mutually exclusive with Widescreen (16:9),
+Voxel 3D is disabled by default, is mutually exclusive with Widescreen,
 and does not patch the stock ROM or alter save data.
 
 ## Controls
@@ -171,15 +175,16 @@ and does not patch the stock ROM or alter save data.
 | A          | Z |
 | B          | X |
 | Start      | Enter |
-| Select     | Right Shift |
+| Select     | Backslash |
 
 ## Hotkeys
 
 | Key | Action |
 |-----|--------|
-| F5  | Toggle turbo (fast-forward) |
-| F6  | Save state |
-| F7  | Load state |
+| Hold Tab | Turbo (fast-forward) |
+| F1–F12 | Load the corresponding save slot |
+| Shift+F1–F12 | Save to the corresponding slot |
+| Alt+Enter | Toggle fullscreen |
 
 ## ROM
 

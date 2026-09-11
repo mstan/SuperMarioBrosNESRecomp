@@ -38,10 +38,9 @@
  * untouched and sharp.
  */
 
-/* Register the OAM suppression predicate. Call once from game_on_init();
- * the predicate self-gates on game_smash64_active(), so registering it
- * early does not change behavior before the mod is enabled. */
+/* Initialize presentation; suppression is composed in extras.c. */
 void game_smash64_render_init(void);
+int game_smash64_render_suppress_sprite(int oam_slot, int x, int y);
 
 /* Draw Falcon (or the cube fallback) in place of the player's sprite when
  * game_smash64_active() is true; a no-op otherwise. */

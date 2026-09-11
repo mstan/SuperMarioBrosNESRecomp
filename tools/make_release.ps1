@@ -5,14 +5,12 @@ Every release ships TWO windows zips (never a bare exe -- the exe needs
 SDL2.dll):
 
   standard    SuperMarioBrosRecomp-windows-x64.zip
-              No widescreen.ini -- boots the authentic 4:3 game.
+              Default-off Mods catalog -- boots the authentic stock game.
 
   widescreen  SuperMarioBrosRecomp-widescreen-windows-x64.zip
-              Same exe plus widescreen.ini (enabled, 16:9). Widescreen
-              is runtime-gated config: with the ini absent or disabled
-              the binary is exactly the standard game (the --verify
-              oracle gate runs byte-identical with widescreen off), so
-              both zips share one build.
+              Same exe plus a portable mods/state.toml selecting experimental
+              widescreen with 16:9 and viewport enemy activation.
+              Both zips share one build; configure widescreen in Mods.
 
 The script builds build_release\ via build_all.bat (plain regen, oracle
 OFF, reverse-debug OFF), then stages and zips. Zips land in release\
@@ -66,7 +64,7 @@ recompiling the NES ROM's 6502 code to C with the NESRecomp framework
 (github.com/mstan/nesrecomp).
 
 No ROM is included. On first launch, select your legally-obtained
-Super Mario Bros. (World) ROM (CRC32 3337EC46). The path is remembered
+Super Mario Bros. (World) ROM (PRG+CHR CRC32 D445F698). The path is remembered
 for future launches.
 
 The Super Smash Bros. 64 player-replacement mod includes Captain Falcon and
@@ -83,9 +81,32 @@ screen handles these owner-ROM pickers and verification gates; no owner ROM data
 or derived owner-ROM graphics are shipped in this package.
 
 Controls: arrow keys = D-Pad, Z = A, X = B, Enter = Start,
-Right Shift = Select. F5 turbo, F6 save state, F7 load state,
-F11 / Alt+Enter fullscreen. Gamepads are supported; bindings are
+Backslash = Select. Hold Tab for turbo. F1-F12 load save slots;
+Shift+F1-F12 save those slots. Alt+Enter toggles fullscreen.
+Gamepads are supported; bindings are
 configurable in keybinds.ini.
+
+Widescreen (Experimental) is available in Mods: adaptive Fit, 16:9, 21:9,
+and 32:9, with original enemy activation or movement on load. The standard
+package leaves it disabled. Special objects and linked balance platforms
+still have native limits; this has not been validated through every world.
+Experimental mod savestates are not compatible across all builds.
+'@
+
+# Authored release preset, never copied from a user's Mods selections.
+$widescreenPreset = @'
+format_version = 1
+[[package]]
+id = "super-mario-bros.enhancement.widescreen"
+version = "1.0.0"
+[[feature]]
+package_id = "super-mario-bros.enhancement.widescreen"
+id = "widescreen"
+enabled = true
+[feature.values]
+aspect = "16-9"
+hud = "edges"
+enemy_activation = "viewport"
 '@
 
 function Get-StageRelativePath([string]$stage, [string]$path) {
@@ -103,7 +124,7 @@ function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods)
     'keybinds.ini',
     'README.txt'
   )
-  if ($kind -eq 'widescreen') { $required += 'widescreen.ini' }
+  if ($kind -eq 'widescreen') { $required += 'mods/state.toml' }
   $missing = @($required | Where-Object { $_ -notin $relativeFiles })
   if ($missing.Count -ne 0) {
     throw "release staging is missing required payload: $($missing -join ', ')"
@@ -143,8 +164,7 @@ function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods)
   }
 
   # The staged catalog must be a byte-for-byte mirror of source-controlled
-  # mods/preloaded. This rejects state.toml, generated fighter blobs/audio,
-  # local saves, and any other runtime residue under mods/.
+  # mods/preloaded. Only the authored widescreen preset may accompany it.
   $sourceManifestRoot = (Resolve-Path $sourceMods).Path
   $sourceManifests = @(Get-ChildItem $sourceManifestRoot -Recurse -File)
   if ($sourceManifests.Count -eq 0) { throw 'source preloaded mod catalog is empty' }
@@ -166,6 +186,11 @@ function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods)
     }
   }
   $stagedModPaths = @($relativeFiles | Where-Object { $_ -like 'mods/*' })
+  if ($kind -eq 'widescreen') {
+    $expectedModPaths += 'mods/state.toml'
+    $preset = Get-Content -Raw -LiteralPath (Join-Path $stage 'mods/state.toml')
+    if ($preset -cne $widescreenPreset) { throw 'widescreen preset differs from the authored release selection' }
+  }
   $modDifference = @(Compare-Object $expectedModPaths $stagedModPaths)
   if ($modDifference.Count -ne 0) {
     throw "release staging mod inventory differs from pristine mods/preloaded"
@@ -235,20 +260,25 @@ $readmeWidescreen = @'
 
 WIDESCREEN (EXPERIMENTAL)
 -------------------------
-This variant ships with 16:9 widescreen enabled via widescreen.ini.
-Widescreen is EXPERIMENTAL AND BUGGY: enemy spawn timing differs
-slightly from the vanilla timeline, and sprite glitches in the widened
-margins are still being found. See WIDESCREEN.md in the source repo
-for details.
-
-Delete widescreen.ini (or set enabled = 0) to get the standard 4:3
-game; you can also pass --widescreen 16:9, --widescreen <L>x<R>, or
---widescreen off on the command line.
+This variant enables Widescreen (Experimental) through mods/state.toml.
+The preset is 16:9, and enemies move as soon as they load.
+Use Mods to select adaptive Fit, 21:9, 32:9, original enemy activation, or disable
+widescreen. --widescreen off is also available as a command-line override.
+The old widescreen.ini file and arbitrary margin syntax are retired.
 '@
+
+function Remove-ReleaseStage([string]$stage) {
+  $full = [IO.Path]::GetFullPath($stage)
+  $allowed = @('stage_standard', 'stage_widescreen') | ForEach-Object {
+    [IO.Path]::GetFullPath((Join-Path $out $_))
+  }
+  if ($full -notin $allowed) { throw "refusing to remove an unexpected release stage: $full" }
+  if (Test-Path -LiteralPath $full) { Remove-Item -LiteralPath $full -Recurse -Force }
+}
 
 function New-ReleaseZip([string]$kind) {
   $stage = Join-Path $out "stage_$kind"
-  if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
+  Remove-ReleaseStage $stage
   New-Item -ItemType Directory -Force $stage | Out-Null
 
   Copy-Item $exe $stage
@@ -282,8 +312,7 @@ function New-ReleaseZip([string]$kind) {
   Copy-Item $preloadedMods (Join-Path $stage 'mods') -Recurse
 
   if ($kind -eq 'widescreen') {
-    "enabled = 1`r`naspect = 16:9`r`n" |
-      Out-File -Encoding ascii (Join-Path $stage 'widescreen.ini') -NoNewline
+    [IO.File]::WriteAllText((Join-Path $stage 'mods/state.toml'), $widescreenPreset, [Text.Encoding]::ASCII)
     ($readmeCommon + $readmeWidescreen) |
       Out-File -Encoding ascii (Join-Path $stage 'README.txt')
     $zip = Join-Path $out 'SuperMarioBrosRecomp-widescreen-windows-x64.zip'
@@ -294,7 +323,7 @@ function New-ReleaseZip([string]$kind) {
 
   Assert-ReleaseStage $stage $kind $preloadedMods
 
-  if (Test-Path $zip) { Remove-Item $zip }
+  if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip }
   Add-Type -AssemblyName System.IO.Compression
   Add-Type -AssemblyName System.IO.Compression.FileSystem
   $stageFull = [IO.Path]::GetFullPath($stage).TrimEnd('\') + '\'
@@ -318,7 +347,7 @@ function New-ReleaseZip([string]$kind) {
     $archive.Dispose()
   }
   Assert-ReleaseArchive $zip $stage
-  Remove-Item -Recurse -Force $stage
+  Remove-ReleaseStage $stage
   Write-Host "staged $zip"
 }
 
