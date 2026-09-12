@@ -23,7 +23,7 @@ def records(data):
 def palette_errors(path):
     _,items=records(path.read_bytes())
     world=next(v for k,v in items if k.rstrip(b'\0')==b'super-mario-bros.widescreen.world')
-    assert struct.unpack_from('<I',world)[0] in (2,3)
+    assert struct.unpack_from('<I',world)[0] in (2,3,4)
     pal=world[9+1024*26:9+2*1024*26]
     meta=world[9+2*1024*26:9+2*1024*26+512*13]
     return sum(pal[c*26+r]!=(meta[(c//2)*13+r//2]>>6) for c in range(1024) for r in range(26))

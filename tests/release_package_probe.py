@@ -22,10 +22,12 @@ for name,variant,extra in [('stock','',[]),('preset','-widescreen',[]),
     manifest=tomllib.loads(catalog.read_text())
     assert 'Experimental' in manifest['name'] and 'Experimental' in manifest['feature'][0]['name']
     assert manifest['feature'][0]['default_enabled'] is False
+    camera=next(option for option in manifest['option'] if option['id']=='camera')
+    assert camera['default']=='edges' and {c['value'] for c in camera['choice']}=={'edges','centered'}
     state=directory/'mods/state.toml'
     if variant:
         values=tomllib.loads(state.read_text())['feature'][0]
-        assert values['enabled'] and values['values']==dict(aspect='16-9',hud='edges',enemy_activation='viewport')
+        assert values['enabled'] and values['values']==dict(aspect='16-9',hud='edges',enemy_activation='viewport',camera='edges')
     else:assert not state.exists()
     commands=script.replace('SCREENSHOT spawn.png',f'SCREENSHOT {(directory/"spawn.png").as_posix()}')
     commands=commands.replace('SCREENSHOT right.png',f'SCREENSHOT {(directory/"right.png").as_posix()}')

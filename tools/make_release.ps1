@@ -88,7 +88,8 @@ configurable in keybinds.ini.
 
 Widescreen (Experimental) is available in Mods: adaptive Fit, 16:9, 21:9,
 and 32:9, with original enemy activation or movement on load. The standard
-package leaves it disabled. Special objects and linked balance platforms
+package leaves it disabled. The camera anchors at area edges and centers small
+fixed rooms; Mods also offers the previous centered camera. Special objects and linked balance platforms
 still have native limits; this has not been validated through every world.
 Experimental mod savestates are not compatible across all builds.
 '@
@@ -107,6 +108,7 @@ enabled = true
 aspect = "16-9"
 hud = "edges"
 enemy_activation = "viewport"
+camera = "edges"
 '@
 
 function Get-StageRelativePath([string]$stage, [string]$path) {
@@ -261,7 +263,7 @@ $readmeWidescreen = @'
 WIDESCREEN (EXPERIMENTAL)
 -------------------------
 This variant enables Widescreen (Experimental) through mods/state.toml.
-The preset is 16:9, and enemies move as soon as they load.
+The preset is 16:9 with an edge-anchored camera, and enemies move as soon as they load.
 Use Mods to select adaptive Fit, 21:9, 32:9, original enemy activation, or disable
 widescreen. --widescreen off is also available as a command-line override.
 The old widescreen.ini file and arbitrary margin syntax are retired.

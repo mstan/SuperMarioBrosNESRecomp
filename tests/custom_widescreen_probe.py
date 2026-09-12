@@ -17,7 +17,7 @@ import time
 from PIL import Image
 
 class Probe:
-    def __init__(self, exe, rom, out, aspect, *, mods=None, state=None, extra_args=()):
+    def __init__(self, exe, rom, out, aspect, *, mods=None, state=None, extra_args=(), port=5397):
         self.out = Path(out).resolve(); self.out.mkdir(parents=True, exist_ok=False)
         exe = Path(exe).resolve()
         for name in (exe.name,'SDL2.dll'):shutil.copy2(exe.parent/name,self.out/name)
@@ -25,9 +25,10 @@ class Probe:
         if state:(self.out/'mods/state.toml').write_text(state)
         env=dict(os.environ,NESRECOMP_NO_LAUNCHER='1',NESRECOMP_START_PAUSED='1')
         env.pop('NESRECOMP_FALLBACK_LOG',None)
+        env.pop('NESRECOMP_DEBUG_PORT',None)
         env['NESRECOMP_COSIM_HASH']=str(self.out/'machine.jsonl')
         self.log=(self.out/'runner.log').open('w')
-        args=[str(self.out/exe.name),str(Path(rom).resolve()),'--tcp-port','5397']
+        args=[str(self.out/exe.name),str(Path(rom).resolve()),'--tcp-port',str(port)]
         if aspect!='fit':args+=['--smoke','1000000','--smoke-output',str(self.out/'smoke.json')]
         if aspect is not None:args+=['--widescreen',aspect]
         args+=list(extra_args)
@@ -38,7 +39,7 @@ class Probe:
             deadline=time.monotonic()+20
             while True:
                 if self.proc.poll() is not None:raise RuntimeError('Runner exited; see '+str(self.out/'runner.log'))
-                try:self.sock=socket.create_connection(('127.0.0.1',5397),timeout=1);break
+                try:self.sock=socket.create_connection(('127.0.0.1',port),timeout=5);break
                 except OSError:
                     if time.monotonic()>deadline:raise
                     time.sleep(.05)

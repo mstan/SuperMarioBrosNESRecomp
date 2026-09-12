@@ -22,7 +22,7 @@ static uint8_t tile_for(uint8_t meta, int x, int y) {
 }
 void smb_ws_world_reset(void) {
     memset(&g_smb_ws_world, 0, sizeof g_smb_ws_world);
-    g_smb_ws_world.version = 3;
+    g_smb_ws_world.version = 4;
     g_smb_ws_world.flag_x = -1;
     memset(g_smb_ws_world.block_world, 0xff, sizeof g_smb_ws_world.block_world);
     memset(g_smb_ws_world.nt_world, 0xff, sizeof g_smb_ws_world.nt_world);
@@ -60,6 +60,7 @@ static void decode(void) {
     g_ram[0x733] = header1 >> 6;
     if (g_ram[0x733] == 3) { g_ram[0x743] = 3; g_ram[0x733] = 0; }
     g_bail_active = 0;
+    int first_lock = -1;
     for (int col = 0; col < SMB_WS_META_COLUMNS; col++) {
         g_ram[0x725] = (uint8_t)(col >> 4);
         g_ram[0x726] = (uint8_t)(col & 15);
@@ -69,6 +70,13 @@ static void decode(void) {
         memset(g_ram+0x0f,0,5);
         g_cpu.S = 0xfd;
         func_93FC_b0();
+        if (first_lock < 0 && g_ram[0x723]) first_lock = col;
+        /* $FD ends the object stream, but a buffered castle/pipe can still
+         * have columns left to render. The cache continues for validation;
+         * presentation stops at the last authored page, not its 8192px cap. */
+        if (!w->area_end && rom(data + g_ram[0x72c]) == 0xfd &&
+            (g_ram[0x730] & g_ram[0x731] & g_ram[0x732] & 0x80))
+            w->area_end = (uint16_t)(((col + 16) / 16) * 256);
         for (int slot=0;slot<5;slot++) if (g_ram[0x0f+slot] && g_ram[0x16+slot]==0x0d) {
             if (w->plant_count<SMB_WS_MAX_PLANTS) {
                 SmbWsPlant *p=&w->plants[w->plant_count++];
@@ -91,6 +99,12 @@ static void decode(void) {
         }
         w->decoded_columns++;
     }
+    if (!w->area_end) w->area_end = SMB_WS_META_COLUMNS * 16;
+    /* InitializeArea preloads 24 columns. A lock in that initial set means
+     * the native view cannot scroll. In the supported ROM these are the
+     * pipe intro and the underground bonus-room collection. Each bonus
+     * entrance selects its own page; adjacent entries are separate rooms. */
+    w->fixed_rooms = first_lock >= 0 && first_lock < 24;
     memcpy(g_ram, ram, sizeof ram);
     g_cpu = cpu; g_bail_active = bail; g_recomp_stack_top = stack; g_rts_target = rts;
     runtime_end_unclocked();
@@ -166,6 +180,14 @@ void smb_ws_world_update(void) {
 }
 int smb_ws_world_flag_x(void) {
     return g_smb_ws_world.valid?g_smb_ws_world.flag_x:-1;
+}
+void smb_ws_world_bounds(int native_camera, int *left, int *right) {
+    const SmbWsWorld *w = &g_smb_ws_world;
+    *left = w->fixed_rooms ? native_camera & ~255 : 0;
+    *right = w->fixed_rooms ? *left + 256 : w->area_end;
+    /* Native scripted movement can continue past the last authored object.
+     * Always keep its full playfield visible, including the castle walk. */
+    if (*right < native_camera + 256) *right = native_camera + 256;
 }
 int smb_ws_world_pixel(int world_x, int y, uint8_t *palette, uint8_t *tile) {
     if (!g_smb_ws_world.valid || world_x < 0 || world_x >= SMB_WS_TILE_COLUMNS*8 || y < 32 || y >= 240) return 0;

@@ -16,6 +16,14 @@ Choose **Fit window**, **16:9**, **21:9**, or **32:9**. Fit follows the window's
 drawable aspect during play, clamped between the native aspect and 32:9. The
 status bar can stay centered or sit at the screen edges.
 
+**Camera: Anchor at area edges** is the default within the enabled mod. The
+wide view stops at the start and end of the authored area, letting Mario stand
+near either edge of the screen. Small fixed rooms, including pipe intros and
+each underground bonus room, stay centered. **Keep native view centered**
+restores the previous presentation. Both policies keep the original game
+camera, player boundaries and classic enemy activation logic; extended
+loading follows the displayed viewport.
+
 The engine uses square pixels throughout:
 
 | Mode | Logical frame |
@@ -36,6 +44,8 @@ Developer overrides:
 .\SuperMarioBrosRecomp.exe baserom.nes --widescreen off
 .\SuperMarioBrosRecomp.exe baserom.nes --widescreen 32:9 --widescreen-enemies classic
 .\SuperMarioBrosRecomp.exe baserom.nes --widescreen 32:9 --widescreen-enemies viewport
+.\SuperMarioBrosRecomp.exe baserom.nes --widescreen 32:9 --widescreen-camera edges
+.\SuperMarioBrosRecomp.exe baserom.nes --widescreen 32:9 --widescreen-camera centered
 ```
 
 The old arbitrary-margin syntax, screen-edge read patches and OAM sidecar policy
@@ -69,15 +79,26 @@ attribute bytes later than tile bytes, so copying a reused physical attribute
 could briefly turn part of a white cloud green. Live tile edits still update
 the cache; delayed attributes cannot recolor unrelated world columns.
 
-The native 256-pixel pass remains authoritative for the central background,
+The native 256-pixel pass remains authoritative for its original background,
 unmanaged sprites and transient background updates. The compositor
-adds the cached terrain on either side and places the native HUD. Title and
+positions that pass at the same world offset as the extended terrain and
+resident sprites, then places the HUD independently. Title and
 other non-gameplay screens retain the centered native image. Dot-PPU rejects
 the custom hook; HD-pack compositing is bypassed while the hook is active.
 
 Terrain and extended sprites use the same captured PPU scroll as the native
 pass. Reading the already-advanced game camera produced a one-frame offset
 at the two joins while scrolling; the captured scroll removes that seam.
+
+Area bounds use the original parser's `$FD` terminator after its buffered
+objects finish, rounded to the last authored 256-pixel page. Repeated scenery
+beyond that point is cache capacity, not another part of the stage. A scroll
+lock during the initial 24-column preload identifies the supported ROM's fixed
+rooms; each selected bonus-room page is isolated from the other entries in
+that area's shared stream. Scripted native movement can extend the right
+bound if necessary to keep its full playfield visible during the castle walk.
+The `native` enemy diagnostic policy retains centered presentation for stock
+pixel comparisons.
 
 The world cache and enemy residents participate in mod savestates. Mod settings belong to
 the mod configuration and are not overwritten by loading a state. Internal
@@ -196,8 +217,16 @@ save/load. Its optional injury-timer override keeps the test alive without
 freezing enemy movement; the initial preview checkpoint has no override.
 `tests/widescreen_transition_probe.py` follows 1-1 completion through the 1-2
 entry scene and underground arrival: 50 sampled ghost-flag frames before the
-sentinel fix, zero afterward. The world state layout is version 3; the actor
+sentinel fix, zero afterward. The world state layout is version 4; the actor
 layout is version 4 after adding independent platform residents.
+
+`tests/widescreen_camera_probe.py` compares centered presentation with the
+previous executable, checks native pixels and guest state at all three fixed
+aspects, and exercises the goal, two fixed bonus entrances, save/load, live Fit
+resizing and both saved Camera choices in Mods. Bonus-room cases drive the
+original room initializer directly; they are rendering fixtures, not player
+routes through the bonus pipes. Use `--exe`, `--baseline`, `--rom`, `--out`,
+`--f2 <goal-approach-state>` and optionally `--mods mods/preloaded`.
 
 `tests/widescreen_platform_probe.py` checks the owner's F5 lift setup. The old
 renderer lost 150 of 300 platform pixels at the left edge and 186 at the right;

@@ -14,6 +14,9 @@ static void activate_widescreen(void) {
     nes_mod_option_value(package, "widescreen", "hud", hud, sizeof hud);
     nes_mod_option_value(package,"widescreen","enemy_activation",enemies,sizeof enemies);
     game_widescreen_configure(aspect, hud, enemies);
+    char camera[32] = "edges";
+    nes_mod_option_value(package, "widescreen", "camera", camera, sizeof camera);
+    game_widescreen_set_camera(camera);
     game_widescreen_set_mod_enabled(1);
 }
 

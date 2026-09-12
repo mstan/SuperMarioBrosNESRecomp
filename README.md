@@ -130,7 +130,11 @@ use the expanded view. Special spawners, linked balance platforms and
 some other objects still retain native limits. See
 [WIDESCREEN.md](WIDESCREEN.md) for the current limits and validation.
 
-Open **Mods** in the launcher and enable **Widescreen**. It is a
+The camera anchors at the start and end of an area to avoid empty space.
+Small fixed rooms stay centered. Select **Keep native view centered** in the
+Camera option to restore the previous presentation.
+
+Open **Mods** in the launcher and enable **Widescreen (Experimental)**. It is a
 default-off package alongside **Voxel 3D**. The two display modes are mutually
 exclusive: enabling either one automatically disables the other. Neither
 package patches the stock ROM. With both disabled the game is the authentic

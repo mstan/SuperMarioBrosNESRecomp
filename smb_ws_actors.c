@@ -4,6 +4,7 @@
  * World coordinates never depend on the widened screen edge. */
 #include "smb_ws_actors.h"
 #include "smb_ws_world.h"
+#include "game_widescreen.h"
 #include "nes_runtime.h"
 #include "mapper.h"
 #include "recomp_stack.h"
@@ -358,7 +359,8 @@ void smb_ws_actors_begin_frame(void) {
 }
 void smb_ws_actors_update(void) {
     if (!s_enabled || !gameplay() || !ensure() || runtime_get_vblank_depth()>1) return;
-    int cam=camera(),left=cam-g_widescreen_left-PAD,right=cam+256+g_widescreen_right+PAD;
+    int cam=camera(),left,right;
+    game_widescreen_actor_range(cam,g_render_width,PAD,&left,&right);
     uint8_t native_ticked[MAX_ACTORS]={0};
     for (int slot=0;slot<5;slot++) {
         int n=s.owner[slot];

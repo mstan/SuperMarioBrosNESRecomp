@@ -21,6 +21,8 @@ typedef struct {
     int16_t flag_x;
     uint16_t plant_count;
     SmbWsPlant plants[SMB_WS_MAX_PLANTS];
+    uint16_t area_end;
+    uint8_t fixed_rooms;
 } SmbWsWorld;
 
 extern SmbWsWorld g_smb_ws_world;
@@ -31,3 +33,4 @@ int smb_ws_world_pixel(int world_x, int y, uint8_t *palette, uint8_t *tile);
 int smb_ws_world_busy(void);
 int smb_ws_world_flag_x(void);
 void smb_ws_world_begin_column(void);
+void smb_ws_world_bounds(int native_camera, int *left, int *right);
