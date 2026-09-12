@@ -46,6 +46,19 @@ label = "32:9"
 
 [[option]]
 feature = "widescreen"
+id = "camera"
+label = "Camera"
+type = "choice"
+default = "edges"
+[[option.choice]]
+value = "edges"
+label = "Anchor at area edges"
+[[option.choice]]
+value = "centered"
+label = "Keep native view centered"
+
+[[option]]
+feature = "widescreen"
 id = "hud"
 label = "Status bar"
 type = "choice"

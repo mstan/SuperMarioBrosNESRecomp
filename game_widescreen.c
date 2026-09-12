@@ -11,15 +11,40 @@
 #include <string.h>
 
 static int s_enabled, s_ready, s_edges = 1;
+static int s_room_edges = 1;
 static NesAspectMode s_aspect = NES_ASPECT_FIT;
 static uint64_t s_wide_frames, s_native_frames;
 static SmbEnemyMode s_enemies=SMB_ENEMIES_VIEWPORT;
 static uint8_t s_opaque[NES_MAX_RENDER_WIDTH*240];
-static int s_render_camera;
+static int s_render_camera, s_render_native_x0, s_view_left;
 static int gameplay(void) {
     return (g_ram[0x770] == 1 && g_ram[0x772] == 3) || g_ram[0x770] == 2;
 }
 static int camera_x(void) { return (g_ram[0x71a] << 8) | g_ram[0x71c]; }
+static int anchor_camera(int width) {
+    return s_enabled && s_room_edges && width > 256 &&
+        s_enemies != SMB_ENEMIES_NATIVE && gameplay() && g_smb_ws_world.valid;
+}
+int game_widescreen_view_left(int native_camera, int width) {
+    int view = native_camera - (width - 256) / 2;
+    if (!anchor_camera(width)) return view;
+    int left, right;
+    smb_ws_world_bounds(native_camera, &left, &right);
+    if (right - left <= width) return left - (width - (right - left)) / 2;
+    if (view < left) view = left;
+    if (view > right - width) view = right - width;
+    return view;
+}
+void game_widescreen_actor_range(int native_camera, int width, int pad, int *left, int *right) {
+    *left = game_widescreen_view_left(native_camera, width) - pad;
+    *right = *left + width + pad * 2;
+    if (anchor_camera(width)) {
+        int start, end;
+        smb_ws_world_bounds(native_camera, &start, &end);
+        if (*left < start - pad) *left = start - pad;
+        if (*right > end + pad) *right = end + pad;
+    }
+}
 static int render_camera(void) {
     /* Game logic has already advanced the camera for the next frame. Match
      * the stock pass's captured PPU scroll, then unwrap its two nametables
@@ -38,14 +63,19 @@ static int render(uint32_t *out, int width, int height, int native_x0,
     }
     int cam = render_camera();
     s_render_camera=cam;
+    s_view_left = game_widescreen_view_left(cam, width);
+    int play_x0 = cam - s_view_left;
+    s_render_native_x0 = play_x0;
+    int room_left = 0, room_right = SMB_WS_META_COLUMNS * 16;
+    if (anchor_camera(width)) smb_ws_world_bounds(cam, &room_left, &room_right);
     uint32_t backdrop = g_nes_palette[g_ppu_pal[0] & 63];
     int pattern = (g_ppuctrl & 0x10) ? 0x1000 : 0;
     for (int y = 0; y < height; y++) for (int x = 0; x < width; x++) {
         uint8_t tile, palette;
-        int wx = cam + x - native_x0;
+        int wx = s_view_left + x;
         uint32_t color = backdrop;
         s_opaque[y*width+x]=0;
-        if (smb_ws_world_pixel(wx, y, &palette, &tile)) {
+        if (wx >= room_left && wx < room_right && smb_ws_world_pixel(wx, y, &palette, &tile)) {
             int offset = pattern + tile * 16 + (y & 7), shift = 7 - (wx & 7);
             int pixel = ((g_chr_ram[offset] >> shift) & 1) |
                         (((g_chr_ram[offset+8] >> shift) & 1) << 1);
@@ -55,11 +85,13 @@ static int render(uint32_t *out, int width, int height, int native_x0,
     }
     /* The stock pass remains authoritative for native sprites, priority,
      * sprite-zero timing, transient tiles and the original play area. */
-    for (int y = 32; y < height; y++)
-        memcpy(out+y*width+native_x0, native+y*256, 256*sizeof(uint32_t));
-    for (int y=32;y<height;y++) for (int x=0;x<256;x++)
-        s_opaque[y*width+x+native_x0]=(uint8_t)ppu_renderer_background_opaque(x,y);
-    smb_ws_actors_draw(out,width,native_x0,cam,s_opaque);
+    int first = play_x0 < 0 ? -play_x0 : 0;
+    int last = play_x0 + 256 > width ? width - play_x0 : 256;
+    for (int y = 32; y < height; y++) for (int x = first; x < last; x++) {
+        out[y*width+x+play_x0] = native[y*256+x];
+        s_opaque[y*width+x+play_x0]=(uint8_t)ppu_renderer_background_opaque(x,y);
+    }
+    smb_ws_actors_draw(out,width,play_x0,cam,s_opaque);
     ppu_renderer_set_background_opaque_frame(s_opaque,width,height);
     for (int y = 0; y < 32; y++) {
         if (s_edges) {
@@ -92,7 +124,7 @@ static void apply(void) {
 }
 void game_widescreen_set_mod_enabled(int enabled) {
     s_enabled = enabled != 0;
-    if (!s_enabled) { s_aspect = NES_ASPECT_FIT; s_edges = 1; s_enemies=SMB_ENEMIES_VIEWPORT; }
+    if (!s_enabled) { s_aspect = NES_ASPECT_FIT; s_edges = s_room_edges = 1; s_enemies=SMB_ENEMIES_VIEWPORT; }
     apply();
 }
 void game_widescreen_configure(const char *aspect, const char *hud, const char *enemies) {
@@ -101,6 +133,9 @@ void game_widescreen_configure(const char *aspect, const char *hud, const char *
     s_edges = !hud || strcmp(hud, "center") != 0;
     s_enemies=enemies && !strcmp(enemies,"classic")?SMB_ENEMIES_CLASSIC:SMB_ENEMIES_VIEWPORT;
     apply();
+}
+void game_widescreen_set_camera(const char *camera) {
+    s_room_edges = !camera || strcmp(camera, "centered") != 0;
 }
 void game_widescreen_init(void) {
     smb_ws_world_reset(); smb_ws_actors_reset(); s_wide_frames = s_native_frames = 0;
@@ -127,6 +162,11 @@ static int collision_column_hook(uint16_t addr) {
     return 0;
 }
 int game_widescreen_arg(const char *key, const char *value) {
+    if (!strcmp(key, "--widescreen-camera") && value) {
+        if (!strcmp(value, "edges") || !strcmp(value, "centered")) game_widescreen_set_camera(value);
+        else fprintf(stderr, "[Widescreen] camera must be edges or centered\n");
+        return 1;
+    }
     if (!strcmp(key,"--widescreen-enemies") && value) {
         if (!strcmp(value,"classic")) s_enemies=SMB_ENEMIES_CLASSIC;
         else if (!strcmp(value,"viewport")) s_enemies=SMB_ENEMIES_VIEWPORT;
@@ -153,9 +193,10 @@ int game_widescreen_debug(const char *cmd, int id) {
          * diagnostic runs only when explicitly requested over TCP. */
         int errors[9]={0},samples=0;
         if (s_enabled && g_smb_ws_world.valid && gameplay()) {
-            int x0=(g_render_width-256)/2;
+            int x0=s_render_native_x0;
             for (int y=32;y<240;y++) for (int side=0;side<2;side++)
                 for (int x=8+side*224;x<24+side*224;x++) {
+                    if (x0+x < 0 || x0+x >= g_render_width) continue;
                     int actual=s_opaque[y*g_render_width+x0+x];
                     samples++;
                     for (int d=-4;d<=4;d++) {
@@ -177,10 +218,12 @@ int game_widescreen_debug(const char *cmd, int id) {
     const SmbWsWorld *w = &g_smb_ws_world;
     debug_server_send_fmt("{\"id\":%d,\"enabled\":%d,\"custom_renderer\":%d,"
         "\"render_width\":%d,\"camera_x\":%d,\"area_data\":%u,"
+        "\"view_left\":%d,\"native_x0\":%d,\"room_edges\":%d,\"area_end\":%u,\"fixed_rooms\":%u,"
         "\"decoded_columns\":%u,\"verified_columns\":%u,\"mismatched_columns\":%u,"
         "\"first_mismatch_column\":%d,\"first_mismatch_row\":%d,"
         "\"expected\":%u,\"actual\":%u,\"wide_frames\":%llu,\"native_frames\":%llu}",
         id,s_enabled,ppu_renderer_custom_render_active(),g_render_width,camera_x(),w->area_data,
+        s_view_left,s_render_native_x0,s_room_edges,w->area_end,w->fixed_rooms,
         w->decoded_columns,w->verified_columns,w->mismatched_columns,w->first_mismatch_column,
         w->first_mismatch_row,w->first_expected,w->first_actual,
         (unsigned long long)s_wide_frames,(unsigned long long)s_native_frames);
@@ -196,7 +239,7 @@ static int load_world(const uint8_t *data, int len) {
     if (!len) { smb_ws_world_reset(); return 1; }
     if (len != sizeof g_smb_ws_world) return 0;
     memcpy(&version,data,sizeof version);
-    if (version != 3) return 0;
+    if (version != 4) return 0;
     memcpy(&g_smb_ws_world,data,sizeof g_smb_ws_world);
     /* The previous compositor could save attributes from a reused physical
      * nametable. Palette ownership comes from the area's metatiles. */
