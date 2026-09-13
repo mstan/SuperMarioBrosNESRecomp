@@ -12,7 +12,7 @@ below is no longer exposed by the NES control map.
 Every address below was confirmed in Ghidra (`nes/SuperMarioBrosNES`) before
 being read or written — framework RULE 0 — and the confirming instruction is
 cited. Names come from `symbols.sym`, emitted into the generated decls header,
-so `game_smash64.c` contains no bare literals.
+so `src/game_smash64.c` contains no bare literals.
 
 ---
 
@@ -343,7 +343,7 @@ contradicts — revisit at M3.
 
 ## 5. Input mapping
 
-`sample_input()` in `game_smash64.c`. A d-pad press moves the synthetic stick
+`sample_input()` in `src/game_smash64.c`. A d-pad press moves the synthetic stick
 0 → ±80 in one frame, which by the source's tap rule is exactly a fresh stick
 tap. Dash, dash→run, brake, turn, stick jump, and fast fall are reachable. See
 `falcon_movement_dependency.md` §7.

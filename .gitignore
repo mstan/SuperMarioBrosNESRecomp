@@ -1,16 +1,14 @@
+# Local build trees and release staging
 build/
-build-voxel-vs/
-build_release/
-build_release_prod/
-build_debug/
-build_falcon/
-build_falcon_qa/
-build_pikachu*/
-build_link*/
-build_sonic*/
-build_harness/
-build_smash64_profile/
+build-*/
+build_*/
 release/
+release-*/
+release_*/
+cmake-build-*/
+/CMakeUserPresets.json
+
+# Runtime state, private configuration, ROMs, and captures
 widescreen.ini
 _ws_build.bat
 *.nes
@@ -18,11 +16,24 @@ _ws_build.bat
 *.sav
 *.log
 *.zip
+*.AppImage
+*.dmg
 .mcp.json
 debug.ini
+rom.cfg
+*.srm
+mods/state.toml
 *.cdl
 *.mlbl
 *.cht
+
+# Ghidra databases stay local; share human annotation exports instead.
+*.gpr
+*.rep/
+/ghidra/*.lock
+/ghidra/*.lock~
+!ghidra/annotations/
+!ghidra/annotations/**
 
 # Recompiler regen audit byproducts (regenerated on every NESRecomp run)
 generated/*_coverage.txt
@@ -34,13 +45,16 @@ hdpack/
 
 nestopia-core
 
-build_ui/
-build-linux-prod/
-release-linux/
-
 # Local Python tooling bytecode
 __pycache__/
 *.pyc
+.pytest_cache/
+.venv/
+
+# Editor and OS metadata
+.vs/
+.DS_Store
+Thumbs.db
 
 # Falcon harness build byproducts (traces are regenerated, not tracked)
 tests/falcon_harness/*.exe

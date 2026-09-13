@@ -40,7 +40,7 @@ Link clears SMB1 terrain at roughly Mario-compatible heights.
 
 ## Owner-ROM Assets
 
-`game_link.c` extracts Link's CHR from the verified Zelda II owner ROM at
+`src/game_link.c` extracts Link's CHR from the verified Zelda II owner ROM at
 runtime. No Zelda II ROM bytes or derived graphics are committed or shipped.
 
 The package accepts headered iNES and headerless PRG+CHR images that normalize

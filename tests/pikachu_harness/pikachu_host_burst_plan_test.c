@@ -1,4 +1,4 @@
-#include "../../game_smash64_fighter_profile.h"
+#include "../../src/game_smash64_fighter_profile.h"
 #include "../../mods/smash64/characters/pikachu.h"
 
 #include <math.h>

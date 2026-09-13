@@ -1,5 +1,8 @@
 # Super Mario Bros. — Known Issues
 
+> Historical investigations, not the current issue tracker. See the
+> [project README](../../README.md) and [developer guides](../README.md).
+
 ---
 
 ## ISSUE #1 — Black screen / CHR ROM zeroed at startup

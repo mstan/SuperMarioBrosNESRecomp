@@ -15,7 +15,7 @@ container, strips the 16-byte header, and rejects wrong declared sizes,
 truncation, trailing data, and NES 2.0 exponent encoding.
 
 The consumed 1,968-byte Samus graphics block is identical in both revisions.
-At activation, `game_samus.c` reads that CHR-RAM source block from
+At activation, `src/game_samus.c` reads that CHR-RAM source block from
 PRG bank 6 (`normalized PRG offset 0x18000`) into process memory. The executable,
 mod manifest, and release archive contain no Metroid tiles or ROM bytes.
 
@@ -51,16 +51,16 @@ copy Metroid executable code.
 
 ## Architecture and tests
 
-`game_samus_audio.c` reads Metroid's original APU register seeds from normalized
+`src/game_samus_audio.c` reads Metroid's original APU register seeds from normalized
 PRG offset `$3230`, replays the sound-driver changes into temporary PCM, and
 registers it only for the active process. No extracted audio is written or
 packaged.
 
 `mods/metroid/samus_controller.c` is game-independent locomotion behind the
-nesrecomp `ForeignController` ABI. `game_smash64.c` remains the shared SMB host
+nesrecomp `ForeignController` ABI. `src/game_smash64.c` remains the shared SMB host
 adapter because it already owns the proven per-pixel collision sweeps and guest
 function hooks; identity gates prevent Falcon audio/rendering from running for
-Samus. `game_samus.c` owns only character-specific combat, energy, projectiles,
+Samus. `src/game_samus.c` owns only character-specific combat, energy, projectiles,
 freeze state, owner assets, HUD, and 2D presentation.
 
 Focused validation:

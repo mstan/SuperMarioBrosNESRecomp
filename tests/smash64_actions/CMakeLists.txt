@@ -4,10 +4,11 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 add_executable(smash64_actions_test
     smash64_actions_test.c
-    ../../game_smash64_actions.c
-    ../../game_smash64_fighter_profile.c)
+    ../../src/game_smash64_actions.c
+    ../../src/game_smash64_fighter_profile.c)
 target_include_directories(smash64_actions_test PRIVATE
     ../..
+    ../../src
     ../../nesrecomp/runner/include)
 if(NOT MSVC)
     target_link_libraries(smash64_actions_test m)

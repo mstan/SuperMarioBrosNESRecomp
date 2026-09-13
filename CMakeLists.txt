@@ -20,23 +20,23 @@ find_package(SDL2 REQUIRED)
 # ---- Main executable ----
 add_executable(SuperMarioBrosRecomp
     ${NESRECOMP_RUNNER_SOURCES}
-    extras.c
-    game_widescreen.c
-    smb_ws_world.c
-    smb_ws_actors.c
-    game_voxel.c
-    game_smash64.c
-    game_smash64_actions.c
-    game_smash64_fighter_profile.c
-    game_smash64_audio.c
-    game_smash64_assets.c
-    game_smash64_render.c
-    game_link.c
-    game_link_audio.c
-    game_samus.c
-    game_samus_audio.c
-    game_sonic.c
-    game_sonic_audio.c
+    src/extras.c
+    src/game_widescreen.c
+    src/smb_ws_world.c
+    src/smb_ws_actors.c
+    src/game_voxel.c
+    src/game_smash64.c
+    src/game_smash64_actions.c
+    src/game_smash64_fighter_profile.c
+    src/game_smash64_audio.c
+    src/game_smash64_assets.c
+    src/game_smash64_render.c
+    src/game_link.c
+    src/game_link_audio.c
+    src/game_samus.c
+    src/game_samus_audio.c
+    src/game_sonic.c
+    src/game_sonic_audio.c
     mods/widescreen_plugin.c
     mods/voxel_plugin.c
     mods/smash64_player_plugin.c
@@ -51,9 +51,9 @@ add_executable(SuperMarioBrosRecomp
     mods/smash64/ssb_ported/falcon_locomotion.c
     mods/smash64/characters/pikachu.c
     mods/smash64/ssb_ported/pikachu_locomotion.c
-    nes_snapshot.c
-    verify_mode.c
-    watchdog.c
+    src/nes_snapshot.c
+    src/verify_mode.c
+    src/watchdog.c
     generated/super-mario-bros_full.c
     generated/super-mario-bros_dispatch.c
 )
@@ -69,6 +69,7 @@ target_include_directories(SuperMarioBrosRecomp PRIVATE
     ${NESRECOMP_RUNNER_INCLUDE_DIRS}
     ${NESRECOMP_ROOT}/runner/src
     ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
     ${SDL2_INCLUDE_DIRS}
 )
 
@@ -183,7 +184,7 @@ if(MSVC)
 endif()
 
 # ---- Pre-boot GUI launcher (recomp-ui / Dear ImGui) ----
-# recomp-ui/ is a directory junction -> the shared recomp-ui checkout. Its
+# recomp-ui/ is a pinned submodule. Its
 # module defines RECOMP_LAUNCHER on the target, un-gating the launcher block in
 # launcher.c's main(), and stages the launcher assets next to the exe.
 include(${CMAKE_SOURCE_DIR}/recomp-ui/recomp_ui.cmake)

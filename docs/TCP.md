@@ -1,25 +1,18 @@
-# TCP.md — Super Mario Bros. Debug Server Protocol
+# Super Mario Bros. debug server protocol
 
-The TCP debug server is the **only** sanctioned debugging interface for this
-project. See `nesrecomp/TCP.md` for the full framework-level protocol
-reference. This file covers SMB-specific configuration and commands.
+The TCP debug server is the debugging interface for this project. See the
+[framework protocol reference](../nesrecomp/TCP.md) for shared commands.
+This guide covers SMB-specific configuration and commands. Paths below are
+relative to the repository root.
 
 ---
 
-## IMPORTANT — Finding the TCP Server
+## Implementation and client
 
-The TCP server lives in `nesrecomp/runner/src/debug_server.c`. It is built
-into the runner, not a separate tool or external dependency. If you cannot
-find it, you are searching in the wrong directory.
-
-**Common failure mode in prior sessions:** Claude searched only the game
-repo root or `extras.c`, failed to find TCP tooling, and incorrectly
-concluded it didn't exist. The fix: always search inside
-`nesrecomp/runner/src/` for `debug_server.c`. It is ~1750 lines and
-contains the full implementation.
-
-Game-specific command extensions are in `extras.c::game_handle_debug_cmd()`.
-Python client scripts are the `tcp_*.py` files in the project root.
+The server lives in `nesrecomp/runner/src/debug_server.c` and is built into
+the runner when tracing is enabled. Game-specific command extensions are in
+`src/extras.c::game_handle_debug_cmd()`. Use [`tools/dbg.py`](../tools/dbg.py)
+to send commands from Python.
 
 ---
 
@@ -30,13 +23,14 @@ Python client scripts are the `tcp_*.py` files in the project root.
 | Native recomp (SMB) | default / debug.ini | **127.0.0.1:4370** |
 | Nestopia oracle (SMB) | `--emulated`, `--verify` | **127.0.0.1:4371** |
 
-Port selection is in `extras.c::s_tcp_port` (line 41).
+Port selection is in `src/extras.c::s_tcp_port`.
 
 ---
 
 ## Activation
 
-Requires one of:
+Configure a diagnostic build with `-DNESRECOMP_ENABLE_TRACE=ON`; production
+builds compile out the server. Then enable it with one of:
 1. `debug.ini` file in the same directory as `SuperMarioBrosRecomp.exe`
 2. `--verify` or `--emulated` CLI flags
 
@@ -66,8 +60,7 @@ Returns current gameplay state. Only trace-verified fields are exposed.
 Fields previously exposed but removed (they were mislabeled or read the
 wrong RAM byte): `world`, `level`, `player_size`, `player_state`,
 `area_type`. Use `read_ram` against the canonical addresses below if
-you need them; the semcomp facade (`semcomp/SmbRamMap.h`) documents
-the authoritative labels.
+you need them; [`symbols.sym`](../symbols.sym) records the symbolic addresses.
 
 ### `smb_demo_state`
 Returns demo/attract mode timing.
@@ -88,7 +81,7 @@ Returns demo/attract mode timing.
 ## Key SMB RAM Addresses
 
 Canonical smbdis labels, trace-verified 2026-05-14. See
-`semcomp/SmbRamMap.h` for the full enumerated set.
+[`symbols.sym`](../symbols.sym) for the full symbol list.
 
 | Address | Name | Notes |
 |---------|------|-------|
@@ -119,27 +112,24 @@ verification against a recorded attract-demo trace.
 
 ---
 
-## Python Client Scripts
+## Python client
 
-| Script | Purpose |
-|--------|---------|
-| `tcp_quick.py` | Minimal test: send `smb_state` |
-| `tcp_test.py` | Basic ping and state check |
-| `tcp_check.py` | Startup sequence (press Start twice, check state) |
-| `tcp_run.py` | Hold Right+B, monitor position/camera |
-| `tcp_screenshot.py` | Capture screenshot |
-| `tcp_walk.py` | Walk right, read enemy/camera RAM |
-| `tcp_input_test.py` | Test controller input mapping |
-| `tcp_start_game.py` | Enter gameplay by pressing Start twice |
-| `tcp_verify_input.py` | Verify input override mechanics |
-| `tcp_validate_margins.py` | Walk right looking for margin-spawned enemies |
+Run from the repository root against a diagnostic build:
+
+```sh
+python tools/dbg.py ping
+python tools/dbg.py smb_state
+python tools/dbg.py read_ram 0x075F 2
+```
+
+For reusable automated scenarios, see the [test guide](../tests/README.md).
 
 ---
 
 ## Common Workflow
 
 ```python
-import socket, json
+import socket, json, time
 
 def send_cmd(cmd, port=4370):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -176,7 +166,8 @@ send_cmd({'cmd':'clear_input','id':6})
 
 ## Built-in Commands
 
-See `nesrecomp/TCP.md` for the full list. Key ones for SMB work:
+See the [framework reference](../nesrecomp/TCP.md) for the full list. Key ones
+for SMB work:
 
 - `ping`, `frame` — heartbeat
 - `smb_state`, `smb_demo_state` — game-specific state

@@ -60,7 +60,7 @@
  * kneebend path never goes through it.
  */
 #include "../../mods/smash64/ssb_ported/falcon_locomotion.h"
-#include "../../game_smash64_attack_policy.h"
+#include "../../src/game_smash64_attack_policy.h"
 
 #include <stdio.h>
 #include <stdlib.h>

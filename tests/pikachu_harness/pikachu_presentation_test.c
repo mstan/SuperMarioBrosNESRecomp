@@ -1,4 +1,4 @@
-#include "../../game_smash64_pikachu_presentation.h"
+#include "../../src/game_smash64_pikachu_presentation.h"
 
 #include <assert.h>
 #include <stdio.h>

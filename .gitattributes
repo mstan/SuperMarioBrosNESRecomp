@@ -1,0 +1,2 @@
+# Keep committed recompiler output collapsed in GitHub reviews and language stats.
+generated/** linguist-generated=true

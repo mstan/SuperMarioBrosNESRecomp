@@ -56,7 +56,7 @@ activation. The standard ZIP and Linux AppImage leave the package disabled.
 
 ## World cache and compositor
 
-`smb_ws_world.c` runs SMB's original `AreaParserCore` over the area's 512 possible
+`src/smb_ws_world.c` runs SMB's original `AreaParserCore` over the area's 512 possible
 metatile columns in an isolated guest context, outside rendering. It restores
 RAM, CPU registers, continuation state and the runtime state blob afterward;
 the extra decoding advances no guest CPU/APU time. The live `AreaData` pointer
@@ -113,7 +113,7 @@ The mod's **Enemy movement** option offers two policies:
 - **Preserve original 4:3 activation**: show a frozen preview at the authored
   location, then let the native parser initialize and activate it normally.
 
-`smb_ws_actors.c` keeps enemy records in world coordinates. It invokes the
+`src/smb_ws_actors.c` keeps enemy records in world coordinates. It invokes the
 original initialization, graphics, terrain collision and movement routines in
 an isolated guest context for residents outside native interaction slots.
 Collision columns carry world ownership, so actors see their local terrain

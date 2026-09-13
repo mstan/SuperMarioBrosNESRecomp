@@ -28,6 +28,10 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 2. Extract and run `SuperMarioBrosRecomp.exe`
 3. Select your Super Mario Bros. (World) ROM when prompted — the path is saved for future launches
 
+For contributors: [build from source](#building-from-source), browse the
+[repository layout](#repository-layout), or start with the
+[developer guides](docs/README.md) and [test instructions](tests/README.md).
+
 ## Character replacements (experimental)
 
 SuperMarioBrosRecomp includes default-off, mutually exclusive character
@@ -128,7 +132,7 @@ authored enemies load across the wide view. **Enemy movement** selects movement
 on load or preserved original 4:3 activation. Independent moving platforms also
 use the expanded view. Special spawners, linked balance platforms and
 some other objects still retain native limits. See
-[WIDESCREEN.md](WIDESCREEN.md) for the current limits and validation.
+[widescreen guide](docs/WIDESCREEN.md) for the current limits and validation.
 
 The camera anchors at the start and end of an area to avoid empty space.
 Small fixed rooms stay centered. Select **Keep native view centered** in the
@@ -201,9 +205,11 @@ and does not patch the stock ROM or alter save data.
 
 ## Building from Source
 
-Prerequisites: Windows 10+, Visual Studio 2022, CMake 3.20+ (SDL2 is bundled).
-Release builds also require Python 3 with `PyInstaller` and `Pillow` to package
-the source-only owner-ROM cache helper.
+Windows prerequisites: Visual Studio 2022 with C++ tools and CMake 3.20+
+(SDL2 is bundled). The [Linux](tools/build-linux.sh) and
+[macOS](tools/build-macos.sh) build scripts list their platform prerequisites.
+Python 3 with `PyInstaller` and `Pillow` is needed for the Smash 64 owner-ROM
+cache helper and is required when packaging Windows/Linux releases.
 
 ```bash
 git clone https://github.com/mstan/SuperMarioBrosNESRecomp
@@ -216,28 +222,47 @@ setup.bat
 chmod +x setup.sh && ./setup.sh
 ```
 
-This initializes the pinned [nesrecomp](https://github.com/mstan/nesrecomp)
-submodule and links the Nestopia oracle core.
+This initializes the pinned engine and launcher submodules and links the
+Nestopia oracle core. The optional `smb-disassembly` reference submodule is
+only needed for reverse engineering; initialize it with
+`git submodule update --init smb-disassembly`.
 
-Then build:
+Then build on Windows:
 
 ```bash
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config Release
 ```
 
-## Architecture
+On Linux, run `bash tools/build-linux.sh --no-package`; on macOS, run
+`bash tools/build-macos.sh --no-dmg`.
+
+The generated C is committed, so a normal build does not require regeneration.
+The game still needs your ROM at runtime. To regenerate after changing
+`game.toml` or `symbols.sym`, place your ROM at `baserom.nes` and use
+`build_all.bat` on Windows; it builds the recompiler, regenerates the C, and
+builds the game and owner-ROM helper.
+
+## Repository layout
 
 This is a **static recompiler**, not an emulator. The 6502 machine code in the ROM
 has been translated to C by [NESRecomp](nesrecomp/) and compiled to native x64.
 
-| File | Purpose |
+| Path | Purpose |
 |------|---------|
-| `extras.c` | SMB-specific runner hooks |
-| `game.cfg` | Recompiler config (inline dispatch, NROM-256 layout) |
-| `generated/super-mario-bros_full.c` | Recompiled 6502 code (committed) |
-| `generated/super-mario-bros_dispatch.c` | Dispatch table (committed) |
-| `ISSUES.md` | Detailed issue tracker with root-cause analysis |
+| [`src/`](src/) | Handwritten game integration; start with `extras.c` |
+| [`mods/`](mods/) | Character controllers, plugin entry points, and bundled package manifests |
+| [`generated/`](generated/) | Committed recompiled 6502 code and dispatch table |
+| [`game.toml`](game.toml), [`symbols.sym`](symbols.sym) | Recompiler configuration and named ROM/RAM symbols |
+| [`tests/`](tests/README.md) | Controller harnesses, runtime probes, and regression baselines |
+| [`tools/`](tools/) | Build, packaging, debugging, and owner-ROM asset tools |
+| [`docs/`](docs/README.md) | Technical guides, screenshots, and archived development notes |
+| [`nesrecomp/`](nesrecomp/), [`recomp-ui/`](recomp-ui/) | Pinned engine and launcher dependencies |
+| [`smb-disassembly/`](smb-disassembly/) | Optional upstream disassembly reference |
+| [`ghidra/`](ghidra/README.md) | Local analysis policy; database files are ignored |
+
+Report bugs through [GitHub Issues](../../issues). The notes under
+`docs/archive/` preserve earlier investigations and are not a current issue tracker.
 
 ## License
 

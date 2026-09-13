@@ -8,9 +8,10 @@ add_executable(pikachu_harness
     ${CMAKE_CURRENT_SOURCE_DIR}/../../mods/smash64/ssb_ported/pikachu_locomotion.c)
 add_executable(pikachu_host_burst_plan_test
     pikachu_host_burst_plan_test.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../game_smash64_fighter_profile.c)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/game_smash64_fighter_profile.c)
 add_executable(pikachu_presentation_test
     pikachu_presentation_test.c)
+target_include_directories(pikachu_host_burst_plan_test PRIVATE ../..)
 if(MSVC)
     target_compile_definitions(pikachu_harness PRIVATE _CRT_SECURE_NO_WARNINGS)
     target_compile_options(pikachu_harness PRIVATE /W4 /WX)

@@ -23,7 +23,7 @@ rather than asserted.
 ## 1. The two mechanisms this table is built on
 
 Everything below reduces to two already-shipped pieces of machinery in
-`game_smash64.c`:
+`src/game_smash64.c`:
 
 **`decide_ownership()`** (line 491) returns one of `NATIVE` / `FOREIGN` /
 `SCRIPTED`. `FOREIGN` is the only value under which the physics hooks

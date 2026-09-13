@@ -66,7 +66,7 @@ class PikachuRecipeTests(unittest.TestCase):
             "DownSpecialEnd": 2092, "DownSpecialStartAir": 2093,
             "DownSpecialThunderedAir": 2094, "DownSpecialEndAir": 2095,
         })
-        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        source = (ROOT / "src" / "game_smash64_assets.c").read_text(encoding="utf-8")
         self.assertIn('state->grounded ? "DownSpecialStart" :', source)
         self.assertIn('"DownSpecialStartAir"', source)
         self.assertIn('state->grounded ? "GettingThundered" :', source)
@@ -90,7 +90,7 @@ class PikachuRecipeTests(unittest.TestCase):
             "LandingAirX": 1976, "FallSpecial": 1990,
             "LandingAirF": 2031, "LandingAirD": 2032,
         })
-        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        source = (ROOT / "src" / "game_smash64_assets.c").read_text(encoding="utf-8")
         for state, motion in (
             ("PK_FALL_SPECIAL", "FallSpecial"),
             ("PK_FALL_SPECIAL_LANDING", "LandingAirX"),
@@ -109,7 +109,7 @@ class PikachuRecipeTests(unittest.TestCase):
             "LandingAirX": 1976, "JumpB": 1968,
             "JumpAerialB": 1970, "FallAerial": 1972,
         })
-        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        source = (ROOT / "src" / "game_smash64_assets.c").read_text(encoding="utf-8")
         for state, motion in (
             ("PK_KNEEBEND", "LandingAirX"),
             ("PK_LANDING_HEAVY", "LandingAirX"),
@@ -123,7 +123,7 @@ class PikachuRecipeTests(unittest.TestCase):
         self.assertIn("case PK_LANDING_HEAVY: return (float)state->state_frame * 0.5f", sampler)
 
     def test_landing_events_have_explicit_bounded_host_visuals(self):
-        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        source = (ROOT / "src" / "game_smash64_assets.c").read_text(encoding="utf-8")
         landing = source[source.index("static void draw_pikachu_landing_effect"):
                          source.index("static int evaluate_pikachu_joint_render")]
         self.assertIn("PK_LANDING_AIR_NULL", landing)
@@ -134,10 +134,10 @@ class PikachuRecipeTests(unittest.TestCase):
         self.assertIn("draw_pikachu_landing_effect(state", source)
 
     def test_thunder_hit_color_uses_source_tint_sequence(self):
-        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        source = (ROOT / "src" / "game_smash64_assets.c").read_text(encoding="utf-8")
         tint = source[source.index("static uint32_t pikachu_thunder_color_overlay"):
                       source.index("static int evaluate_pikachu_joint_render")]
-        helper = (ROOT / "game_smash64_pikachu_presentation.h").read_text(
+        helper = (ROOT / "src" / "game_smash64_pikachu_presentation.h").read_text(
             encoding="utf-8")
         self.assertIn("0x5A0000FFu", helper)
         self.assertIn("0x64FFFFFFu", helper)
@@ -148,7 +148,7 @@ class PikachuRecipeTests(unittest.TestCase):
         self.assertIn("nes_voxel_mesh_set_color_overlay", source)
 
     def test_quick_attack_uses_static_start_zip_and_end_local_clock(self):
-        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        source = (ROOT / "src" / "game_smash64_assets.c").read_text(encoding="utf-8")
         animations = {name: file_id for file_id, name, _count
                       in pikachu.ANIM_SPECS}
         self.assertEqual(animations["UpSpecialAirEnd"], 2089)
@@ -191,7 +191,7 @@ class PikachuRecipeTests(unittest.TestCase):
 
     def test_quick_start_freezes_serialized_wait_run_fall_entry_pose(self):
         """Source SpecialHi Start uses motion -1, not End frame zero."""
-        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        source = (ROOT / "src" / "game_smash64_assets.c").read_text(encoding="utf-8")
         entry = source[source.index("static int pikachu_quick_start_entry_sample"):
                        source.index("static int evaluate_pikachu_joint_render")]
         self.assertIn("smash64_pikachu_quick_entry_pose", entry)
@@ -211,8 +211,8 @@ class PikachuRecipeTests(unittest.TestCase):
             self.assertIn(f'case {state}: return "{motion}";', mapping)
 
     def test_joint_attachment_api_is_current_pose_not_last_draw(self):
-        header = (ROOT / "game_smash64_assets.h").read_text(encoding="utf-8")
-        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        header = (ROOT / "src" / "game_smash64_assets.h").read_text(encoding="utf-8")
+        source = (ROOT / "src" / "game_smash64_assets.c").read_text(encoding="utf-8")
         self.assertIn("game_smash64_assets_pikachu_joint_native", header)
         self.assertIn("evaluate_pikachu_joint_render", source)
         self.assertIn("animation_for_state(state)", source)
@@ -227,7 +227,7 @@ class PikachuRecipeTests(unittest.TestCase):
         self.assertNotIn("env_", native_body)
 
     def test_attachment_pose_is_env_invariant_and_landing_rate_is_source_backed(self):
-        source = (ROOT / "game_smash64_assets.c").read_text(encoding="utf-8")
+        source = (ROOT / "src" / "game_smash64_assets.c").read_text(encoding="utf-8")
         evaluator = source[source.index("static int evaluate_pikachu_joint_render"):
                            source.index("int game_smash64_assets_pikachu_joint_native")]
         self.assertNotIn("env_", evaluator)
