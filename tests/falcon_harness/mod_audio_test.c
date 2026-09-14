@@ -11,6 +11,21 @@ static int expect_sample(const char *label, int16_t have, int16_t want)
     return 0;
 }
 
+static int s_stream_value;
+static int s_stream_resets;
+
+static void test_stream_render(void *user, int16_t *samples, int frame_count)
+{
+    (void)user;
+    for (int i = 0; i < frame_count; ++i) samples[i] = (int16_t)s_stream_value;
+}
+
+static void test_stream_reset(void *user)
+{
+    (void)user;
+    s_stream_resets++;
+}
+
 int main(void)
 {
     static const int16_t sequence[] = { 1000, -1000, 30000 };
@@ -75,10 +90,33 @@ int main(void)
     nes_mod_audio_mix(out, 1);
     ok &= expect_sample("stop all", out[0], 0);
 
+    /* A live stream is added under the clip voices, saturates with them, is
+     * reset (not removed) by a save load, and leaves when cleared. */
+    out[0] = 32500;
+    s_stream_value = 700;
+    nes_mod_audio_set_stream(test_stream_render, test_stream_reset, NULL);
+    nes_mod_audio_mix(out, 1);
+    ok &= expect_sample("stream saturates", out[0], 32767);
+    out[0] = 2000;
+    ok &= nes_mod_audio_play(clip, 100);
+    nes_mod_audio_mix(out, 1);
+    ok &= expect_sample("stream + base + voice", out[0], 3700);
+    nes_mod_audio_stop_all();
+    ok &= s_stream_resets == 1;
+    out[0] = 0;
+    nes_mod_audio_mix(out, 1);
+    ok &= expect_sample("stream survives stop all", out[0], 700);
+    nes_mod_audio_set_stream(NULL, NULL, NULL);
+    out[0] = 0;
+    nes_mod_audio_mix(out, 1);
+    ok &= expect_sample("stream cleared", out[0], 0);
+    nes_mod_audio_stop_all();
+    ok &= s_stream_resets == 1;
+
     nes_mod_audio_unregister(clip);
     ok &= !nes_mod_audio_play(clip, 100);
     nes_mod_audio_unregister(loud_clip);
 
-    if (ok) printf("mod_audio: registration, mix, saturation, stop, unregister OK\n");
+    if (ok) printf("mod_audio: registration, mix, saturation, stop, stream, unregister OK\n");
     return ok ? 0 : 1;
 }

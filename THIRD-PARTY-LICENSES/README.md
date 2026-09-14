@@ -68,3 +68,15 @@ the disassembly's own commentary. That is the same treatment
 | [`recomp-ui`](https://github.com/mstan/recomp-ui) | pre-boot launcher (Dear ImGui) | see that repository |
 | SDL2 | window, input, audio | zlib |
 | Dear ImGui | launcher widgets | MIT |
+| [`ymfm`](https://github.com/aaronsgiles/ymfm) | YM2612 emulation for the Sonic mod's Genesis sound board, vendored in `third_party/ymfm/` at `81aec25ccbb98f4873a255f7551ac4dadac59b4a` | BSD-3-Clause (`third_party/ymfm/LICENSE`) |
+
+### Sonic 3 & Knuckles sound
+
+The Sonic player replacement plays S3K's sounds by running S3K's own Z80
+sound driver, decompressed at runtime from the user's verified owner ROM, on
+an emulated Genesis sound board: this project's Z80 and SN76489
+implementations (`mods/s3k/audio/`) and ymfm's YM2612. No driver code, sound
+data or rendered audio is included in the repository or the executable. The
+Z80 core was cross-checked against the chip-write log of
+[jgenesis](https://github.com/jsgroth/jgenesis)'s Z80 running the same driver;
+no jgenesis code is included.

@@ -5602,6 +5602,7 @@ label_BA30:; /* ExCannon */
 }
 
 void func_B7B8_b0(void) { /* ProcessWhirlpools */
+    if (nes_mod_function_entry(0xB7B8u)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_B7B8_b0");
 #endif
@@ -11475,6 +11476,7 @@ label_BD9A:;
 }
 
 void func_B91E_b0(void) { /* Setup_Vine */
+    if (nes_mod_function_entry(0xB91Eu)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_B91E_b0");
 #endif
@@ -16086,6 +16088,7 @@ label_BDDC:;
 }
 
 void func_BC49_b0(void) { /* SetupPowerUp */
+    if (nes_mod_function_entry(0xBC49u)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_BC49_b0");
 #endif

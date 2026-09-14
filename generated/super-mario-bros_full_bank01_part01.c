@@ -3632,6 +3632,7 @@ void func_E278(void) {
 }
 
 void func_DB45(void) { /* LargePlatformCollision */
+    if (nes_mod_function_entry(0xDB45u)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_DB45");
 #endif
@@ -3996,6 +3997,7 @@ label_E29B:;
 }
 
 void func_DB7B(void) { /* SmallPlatformCollision */
+    if (nes_mod_function_entry(0xDB7Bu)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_DB7B");
 #endif

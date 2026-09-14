@@ -10,6 +10,7 @@
     "super-mario-bros.gameplay.s3k-sonic-player-replacement"
 #define S3K_FEATURE_ID "s3k-sonic-player"
 #define S3K_OWNER_ROM_ID "sonic-3-and-knuckles"
+#define S2_OWNER_ROM_ID "sonic-2"
 
 static void reset_s3k_player(void)
 {
@@ -22,6 +23,9 @@ static void activate_sonic(void)
 {
     const char *owner_rom = nes_mod_external_rom_path(
         S3K_PACKAGE_ID, S3K_FEATURE_ID, S3K_OWNER_ROM_ID);
+    /* Optional: NULL when no Sonic 2 ROM is selected. */
+    game_sonic_set_sonic2_rom(nes_mod_external_rom_path(
+        S3K_PACKAGE_ID, S3K_FEATURE_ID, S2_OWNER_ROM_ID));
     if (!owner_rom || !*owner_rom || !game_sonic_set_enabled(1, owner_rom)) {
         game_sonic_set_enabled(0, NULL);
         game_smash64_set_mod_enabled(0, NULL);

@@ -21946,6 +21946,7 @@ label_C0CB:;
 }
 
 void func_C08C(void) { /* ExecGameLoopback */
+    if (nes_mod_function_entry(0xC08Cu)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_C08C");
 #endif
