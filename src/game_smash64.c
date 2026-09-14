@@ -33,6 +33,8 @@
 #include "game_smash64_fighter_profile.h"
 #include "game_link_audio.h"
 #include "game_sonic_audio.h"
+#include "game_sonic_adapter.h"
+#include "game_sonic_items.h"
 
 #include "mods/smash64/characters/pikachu.h"
 #include "mods/metroid/samus_controller.h"
@@ -537,9 +539,41 @@ static int s_reseed_this_frame = 0;   /* marks the ring row after the tick
  * the frame -- see the drain site. */
 static uint32_t s_pending_flags = 0;
 
-static int sonic_clear_ball_attack_bricks_at(int native_x);
 static void enqueue_smb1_brick_debris(int world_col, int tile_top);
 static void drain_smb1_brick_debris_queue(void);
+
+/* ------------------------------------------------------------------ */
+/* S3K Sonic host path                                                */
+/*                                                                    */
+/* Sonic's S3K object splits each source frame at MoveSprite (see     */
+/* mods/s3k/s3k_player.h). The two halves are pinned to SMB1's own    */
+/* frame so a paused, lagged or scripted guest frame can never advance */
+/* the object without the player actually moving:                     */
+/*                                                                    */
+/*   VBlank           sample the pad and decide ownership only        */
+/*   PlayerPhysicsSub control half (Sonic_Control's mode code)        */
+/*   $BF09 / $BF4D    integrate the exact 8.8 velocity, per pixel      */
+/*   first enemy touch, or post-NMI                                   */
+/*                    collision half (landing, walls, animation)      */
+/*                                                                    */
+/* Horizontal motion is integrated from S3K's int16 x_vel rather than  */
+/* SMB's int8 Player_X_Speed, so S3K speeds up to the $1000 roll clamp */
+/* are real; the area parser is serviced to keep pace post-NMI.        */
+/* ------------------------------------------------------------------ */
+static int s_sonic_frame_dy;          /* px Sonic's own Y move covered */
+static int s_sonic_control_pending;   /* FOREIGN this frame, control not run */
+static int s_sonic_reconcile_pending; /* control ran, collision half pending */
+static ForeignInput s_sonic_input;
+static uint8_t s_sonic_x_sub;         /* S3K x_sub high byte */
+static uint8_t s_sonic_y_sub;         /* S3K y_sub high byte */
+static int s_sonic_launch_frame;
+static int s_sonic_spring_armed;      /* JumpspringAnimCtrl was live at control */
+static uint8_t s_sonic_yspeed_written;
+static int s_sonic_yspeed_written_valid;
+/* Pos_table for MoveCameraX's delayed target (world x, newest at index). */
+static int32_t s_sonic_x_history[SONIC_CAMERA_HISTORY];
+static unsigned s_sonic_x_history_index;
+static int s_sonic_x_history_valid;
 
 typedef struct Smash64BrickDebris {
     uint8_t active;
@@ -605,21 +639,20 @@ static void game_smash64_request_savestate_reseed(void)
 static uint8_t block_adder_index(void)
 {
     if (samus_selected() && metroid_samus_is_morphed()) return 0x0e;
-    if (sonic_selected() && s3k_sonic_is_ball()) return 0x0e;
+    /* S3K Sonic rolling on the ground is SMB1's crouching Big Mario: the
+     * $0E adders (head at +$12, both side probes at +$18), so a roll slides
+     * under the one-tile gaps a crouch-slide passes, and a ball that jumps
+     * out of such a gap keeps them like a crouch jump. Otherwise standing
+     * and airborne he keeps the Big envelope. */
+    if (sonic_selected() && game_sonic_adapter_low_profile()) return 0x0e;
     return s_profile ? s_profile->block_adder_index : 0x00;
 }
 
 static uint8_t block_adder_index_for_vertical_edge(int feet,
                                                    int head_bumpables_are_barriers)
 {
-    if (!feet && sonic_selected() && s3k_sonic_is_ball() &&
-        head_bumpables_are_barriers) {
-        /* Sonic's spin ball keeps small side/floor collision, but from below
-         * he must run the same head-bump transaction as Big Mario. Probe the
-         * Big-Mario head adder here so item blocks and bricks are caught before
-         * the native PlayerHeadCollision consequence hook resolves them. */
-        return 0x00;
-    }
+    (void)feet;
+    (void)head_bumpables_are_barriers;
     return block_adder_index();
 }
 
@@ -645,7 +678,8 @@ static int state_has_trait(unsigned state, uint32_t trait)
  * unbounded multi-brick pass could overwrite both slots before the updater
  * consumed them, leaving a visually blank but collision-solid $23 in old
  * saves. Repair only an ORPHAN: a live block state or replacement flag with
- * the same BlockBufferColli scratch address still owns a legitimate $23. */
+ * the same BlockBufferColli scratch address still owns a legitimate $23, and
+ * so does a block Sonic's hits keep bouncing in the host pool. */
 static uint8_t settle_orphaned_blank_metatile(uint8_t tile)
 {
     uint8_t ptr_lo;
@@ -663,11 +697,24 @@ static uint8_t settle_orphaned_blank_metatile(uint8_t tile)
             g_ram[Block_Orig_YPos + i] == row)
             return tile;
     }
+    if (sonic_selected() && game_sonic_items_owns_cell(ptr_lo, row))
+        return tile;
 
     addr = (uint16_t)(((uint16_t)g_ram[0x07] << 8) | ptr_lo);
     addr = (uint16_t)(addr + row);
     if (addr < sizeof g_ram) g_ram[addr] = 0;
     return 0;
+}
+
+/* An enemy standing on a bumped block is killed and blanks the block's cell
+ * (EnemyToBGCollisionDet stores $00 over the $23) while the block is still
+ * bouncing out of it. A head that bumps a block is already falling away by
+ * then; Sonic's Insta-Shield bumps blocks he is still rising or running into,
+ * so for his probes the cell stays the $23 it was until the block settles. */
+static uint8_t sonic_blanked_bumped_metatile(uint8_t tile)
+{
+    if (tile != 0 || !sonic_selected()) return tile;
+    return game_sonic_items_cell_bouncing(g_ram[0x06], g_ram[0x02]) ? 0x23 : 0;
 }
 
 /*
@@ -690,8 +737,9 @@ static uint8_t settle_orphaned_blank_metatile(uint8_t tile)
  * Reimplementing any of this in C would be a second copy of ROM logic that
  * silently drifts; the game's tiles stay the only source of truth.
  */
-static int smb1_solid_at(int y_pos, int feet,
-                         int head_bumpables_are_barriers)
+static int smb1_vertical_probe(int y_pos, int feet,
+                               int head_bumpables_are_barriers,
+                               int right_foot, uint8_t *tile_out)
 {
     CPU6502State save_cpu = g_cpu;
     uint8_t save_scratch[6];
@@ -704,13 +752,16 @@ static int smb1_solid_at(int y_pos, int feet,
     g_ram[Player_Y_Position] = (uint8_t)(y_pos & 0xFF);
 
     /* BlockBufferColli_Head does not set X (only _Side does), so the caller
-     * owns it. Y selects the adder pair; _Feet increments it on entry. */
+     * owns it. Y selects the adder pair; _Feet increments it on entry, so
+     * the left foot is base+1 and DoFootCheck's second call the right. */
     g_cpu.X = 0;
-    g_cpu.Y = block_adder_index_for_vertical_edge(
-        feet, head_bumpables_are_barriers);
+    g_cpu.Y = (uint8_t)(block_adder_index_for_vertical_edge(
+        feet, head_bumpables_are_barriers) + (feet && right_foot ? 1 : 0));
     if (feet) BlockBufferColli_Feet();
     else      BlockBufferColli_Head();
-    tile = settle_orphaned_blank_metatile(g_cpu.A);
+    tile = sonic_blanked_bumped_metatile(
+        settle_orphaned_blank_metatile(g_cpu.A));
+    if (tile_out) *tile_out = tile;
     g_cpu.A = tile;
 
     /*
@@ -733,9 +784,16 @@ static int smb1_solid_at(int y_pos, int feet,
      */
     if (tile != 0) {
         if (feet) {
-            g_cpu.A = tile;
-            CheckForClimbMTiles();
-            solid = g_cpu.C ? 0 : 1;   /* climbable is not floor */
+            /* DoFootCheck collects coins and ignores the hidden coin/1-up
+             * blocks (ChkInvisibleMTiles) before anything lands on a tile:
+             * those are solid only to a head coming up from below. */
+            if (tile == 0xC2 || tile == 0xC3 || tile == 0x5F || tile == 0x60) {
+                solid = 0;
+            } else {
+                g_cpu.A = tile;
+                CheckForClimbMTiles();
+                solid = g_cpu.C ? 0 : 1;   /* climbable is not floor */
+            }
         } else if (head_bumpables_are_barriers &&
                    tile != 0xC2 && tile != 0xC3) {
             /* Native HeadChk deliberately classifies bricks and item blocks
@@ -756,6 +814,24 @@ static int smb1_solid_at(int y_pos, int feet,
     g_ram[Player_Y_Position] = save_y;
     g_cpu = save_cpu;
     return solid;
+}
+
+static int smb1_solid_at(int y_pos, int feet,
+                         int head_bumpables_are_barriers)
+{
+    return smb1_vertical_probe(y_pos, feet, head_bumpables_are_barriers, 0,
+                               NULL);
+}
+
+/* DoFootCheck's floor: the left foot's metatile, or the right foot's when the
+ * left finds nothing. smb1_solid_at asks only the left foot, which let Sonic's
+ * fall sink into a block under his right foot alone until SMB1 pushed him off
+ * its side instead of landing him. */
+static int sonic_feet_floor_at(int y_pos)
+{
+    uint8_t left;
+    if (smb1_vertical_probe(y_pos, 1, 0, 0, &left)) return 1;
+    return left == 0 && smb1_vertical_probe(y_pos, 1, 0, 1, NULL);
 }
 
 /*
@@ -810,6 +886,12 @@ static int smb1_side_solid_at(int x_pos, int page, int dir)
     uint8_t py = g_ram[Player_Y_Position];
     int solid = 0;
 
+    /* PlayerBGCollision's ChkOnScr (smb.asm:11857) leaves before any tile
+     * test unless Player_Y_HighPos is 1. Above the screen the low Y byte
+     * wraps ($E0 is 32px above the top), so probing anyway reads ground-row
+     * metatiles as invisible walls in the sky. */
+    if (g_ram[Player_Y_HighPos] != 1) return 0;
+
     memcpy(save_scratch, &g_ram[0x02], sizeof save_scratch);
 
     g_ram[Player_X_Position] = (uint8_t)(x_pos & 0xFF);
@@ -823,7 +905,8 @@ static int smb1_side_solid_at(int x_pos, int page, int dir)
         uint8_t tile;
         g_cpu.Y = (uint8_t)(base + (dir < 0 ? 3 : 5));
         BlockBufferColli_Side();
-        tile = settle_orphaned_blank_metatile(g_cpu.A);
+        tile = sonic_blanked_bumped_metatile(
+            settle_orphaned_blank_metatile(g_cpu.A));
         g_cpu.A = tile;
         if (side_tile_is_wall(tile, 1)) solid = 1;
     }
@@ -831,7 +914,8 @@ static int smb1_side_solid_at(int x_pos, int page, int dir)
         uint8_t tile;
         g_cpu.Y = (uint8_t)(base + (dir < 0 ? 4 : 6));
         BlockBufferColli_Side();
-        tile = settle_orphaned_blank_metatile(g_cpu.A);
+        tile = sonic_blanked_bumped_metatile(
+            settle_orphaned_blank_metatile(g_cpu.A));
         g_cpu.A = tile;
         if (side_tile_is_wall(tile, 0)) solid = 1;
     }
@@ -843,66 +927,420 @@ static int smb1_side_solid_at(int x_pos, int page, int dir)
     return solid;
 }
 
+/* ------------------------------------------------ Sonic's block hits -- */
+
+static int sonic_floor_div256(int32_t v);
+static int sonic_wrap16(int v);
+static uint16_t smb1_block_cell_addr(int world_col, int tile_top);
+
+static int side_tile_is_wall(uint8_t tile, int upper);
+static uint8_t sonic_cell_at(int world_col, int tile_top);
+
+/* Would the body SMB1 collides for Sonic fit at this position with its
+ * bottom pixel at `bottom`, clear of every tile a side probe would stop at? */
+static int sonic_body_fits(int x_pos, int page, int bottom)
+{
+    const int wx = page * 256 + x_pos;
+    const int top = bottom - 0x1F + (block_adder_index() == 0x0e ? 0x12 : 0x04);
+    CPU6502State save = g_cpu;
+    int fits = 1;
+
+    /* Block rows run from screen y $20 to $EF. */
+    for (int row = (top < 0x20 ? 0x20 : top) & ~0x0F;
+         fits && row <= bottom && row <= 0xE0; row += 16)
+        for (int col = (wx + 0x02) >> 4; fits && col <= (wx + 0x0D) >> 4; ++col)
+            if (side_tile_is_wall(sonic_cell_at(col, row), 0)) fits = 0;
+    g_cpu = save;
+    return fits;
+}
+
+/* A block buffer cell as Sonic's probes see it: a bumped block's cell stays
+ * $23 while it bounces, even where an enemy on it blanked the buffer. */
+static uint8_t sonic_cell_at(int world_col, int tile_top)
+{
+    const uint8_t tile = g_ram[smb1_block_cell_addr(world_col, tile_top)];
+    if (tile == 0 &&
+        game_sonic_items_cell_bouncing(
+            (uint8_t)(((world_col & 0x10) ? 0xD0 : 0x00) | (world_col & 0x0F)),
+            (uint8_t)(tile_top - 0x20)))
+        return 0x23;
+    return tile;
+}
+
+/* The body SMB1 collides for Sonic runs from the head probe's row (+$04, or
+ * +$12 in the crouching profile) to the pixel above the feet (+$1F), but its
+ * side probes sit at +$08 / +$18 (+$18 / +$18 crouching). DoPlayerSideCheck
+ * never looks at the pixels above the upper probe or below the lower one,
+ * and SMB1 only pushes a player who reaches into a tile there back out, one
+ * pixel a frame. Mario is slow enough for that; Sonic slid the top or the
+ * bottom of his body into, or right across, the corner of a block. Returns
+ * how many pixels the band reaches into a wall tile in the leading edge's
+ * column at this position, or 0. */
+static int sonic_body_band_wall(int x_pos, int page, int dir, int head)
+{
+    const int py = (int)g_ram[Player_Y_Position];
+    const int low = block_adder_index() == 0x0e;
+    const int edge = head ? py + (low ? 0x12 : 0x04) : py + 0x1F;
+    const int probe = head ? py + (low ? 0x18 : 0x08) : py + 0x18;
+    const int tile_top = edge & ~0x0F;
+    const int world_col = (page * 256 + x_pos + (dir < 0 ? 0x02 : 0x0D)) >> 4;
+    CPU6502State save_cpu;
+    int wall;
+
+    /* The side probe's own screen guard, and a band inside its row. */
+    if (g_ram[Player_Y_HighPos] != 1 || (probe & ~0x0F) == tile_top ||
+        (head ? (py < 0x20 || py >= 0xE4) : (py < 0x08 || py >= 0xD0)) ||
+        tile_top < 0x20 || tile_top > 0xE0)
+        return 0;
+    save_cpu = g_cpu;
+    wall = side_tile_is_wall(sonic_cell_at(world_col, tile_top), head);
+    /* A head up against a ceiling sits a pixel into its row (the upward
+     * sweep parks it there so HeadChk bumps the block). The next block along
+     * that row is more ceiling, not a wall: Sonic slid to a halt under every
+     * brick row he jumped into. Only a block beside a head that has no
+     * ceiling over it is a corner. */
+    if (wall && head) {
+        const int wx = page * 256 + x_pos - dir;
+        for (int col = (wx + 0x02) >> 4; col <= (wx + 0x0D) >> 4; ++col)
+            if (side_tile_is_wall(sonic_cell_at(col, tile_top), 1)) {
+                wall = 0;
+                break;
+            }
+    }
+    g_cpu = save_cpu;
+    if (!wall) return 0;
+    return head ? tile_top + 16 - edge : edge - tile_top + 1;
+}
+
+/* Bricks Sonic shattered this frame, owed BrickShatter's 50 points each. */
+static int s_sonic_brick_points;
+/* Blocks the current Insta-Shield has already hit (a multi-coin brick puts
+ * its metatile back while the shield is still out). */
+#define SONIC_INSTA_HIT_MAX 12
+static uint16_t s_sonic_insta_hits[SONIC_INSTA_HIT_MAX];
+static int s_sonic_insta_hit_count;
+/* sonic_bump_item_block is running PlayerHeadCollision for a host hit. */
+static int s_sonic_host_head_bump;
+
+/* BrickQBlockMetatiles: ? blocks $C1/$C0, hidden coin/1-up blocks $5F/$60
+ * and the item bricks $55-$5E, whose contents BlockBumpedChk hands out. */
+static int smb1_item_block_tile(uint8_t tile)
+{
+    return tile == 0xC0 || tile == 0xC1 || tile == 0x5F || tile == 0x60 ||
+           (tile >= 0x55 && tile <= 0x5E);
+}
+
+static uint16_t smb1_block_cell_addr(int world_col, int tile_top)
+{
+    const uint16_t base = (world_col & 0x10) ? Block_Buffer_2 : Block_Buffer_1;
+    return (uint16_t)(base + (world_col & 0x0F) + (tile_top - 0x20));
+}
+
+/* A brick Sonic's attack shatters: the cell clears at once, SMB1's metatile
+ * writer blanks it while the VRAM buffer has room, and the chunks are the
+ * adapter's own. Every wall piece gets its own chunks at once, as each
+ * Obj_BreakableWall fragment is its own object; SMB1's two block slots would
+ * otherwise replay a wall's debris for seconds, and stay busy when a ? block
+ * needs one. BrickShatter's sound and points come with it. */
+static int sonic_shatter_brick(int world_col, int tile_top)
+{
+    CPU6502State save_cpu = g_cpu;
+    uint8_t save_scratch[8];
+    const int row = tile_top - 0x20;
+    uint16_t addr;
+
+    if (world_col < 0 || tile_top < 0x20 || tile_top > 0xE0) return 0;
+    addr = smb1_block_cell_addr(world_col, tile_top);
+    if (g_ram[addr] != 0x51 && g_ram[addr] != 0x52) return 0;
+
+    memcpy(save_scratch, &g_ram[0x00], sizeof save_scratch);
+    g_ram[0x02] = (uint8_t)row;
+    g_ram[0x06] = (uint8_t)((addr - row) & 0xFF);
+    g_ram[0x07] = (uint8_t)((addr - row) >> 8);
+    if (g_ram[VRAM_Buffer1_Offset] <= 0x28)
+        DestroyBlockMetatile();
+    g_ram[addr] = 0;
+    g_ram[NoiseSoundQueue] |= 0x01;   /* Sfx_BrickShatter */
+    memcpy(&g_ram[0x00], save_scratch, sizeof save_scratch);
+    g_cpu = save_cpu;
+
+    game_sonic_adapter_spawn_brick_debris(world_col * 16, tile_top);
+    s_sonic_brick_points++;
+    return 1;
+}
+
+/* One AddToScore for every brick shattered since the last call, once the
+ * VRAM buffer has room for the status bar print. */
+static void sonic_flush_brick_points(void)
+{
+    CPU6502State save_cpu;
+    uint8_t save_scratch[8];
+    int tens;
+
+    if (!s_sonic_brick_points || g_ram[VRAM_Buffer1_Offset] > 0x28) return;
+    tens = s_sonic_brick_points * 5;
+    if (tens > 999) tens = 999;
+    s_sonic_brick_points = 0;
+
+    save_cpu = g_cpu;
+    memcpy(save_scratch, &g_ram[0x00], sizeof save_scratch);
+    g_ram[DigitModifier + 3] = (uint8_t)(tens / 100);
+    g_ram[DigitModifier + 4] = (uint8_t)(tens / 10 % 10);
+    g_ram[DigitModifier + 5] = (uint8_t)(tens % 10);
+    AddToScore();
+    memcpy(&g_ram[0x00], save_scratch, sizeof save_scratch);
+    g_cpu = save_cpu;
+}
+
+/* Hit a ? block, item brick or hidden block the way a head does: SMB1's own
+ * PlayerHeadCollision, from a head placed under the cell, gives the bump
+ * sound, the block object, its contents and the coin on top. The bouncing
+ * block and any jumping coins move into the host's pools (game_sonic_items.c)
+ * rather than holding SMB1's two block slots and three coin slots, so there
+ * is no limit on how many blocks bounce at once. Needs room for
+ * DestroyBlockMetatile. */
+static int sonic_bump_item_block(int world_col, int tile_top)
+{
+    CPU6502State save_cpu = g_cpu;
+    uint8_t save_scratch[8];
+    const uint8_t save_size = g_ram[PlayerSize];
+    const uint8_t save_crouch = g_ram[CrouchingFlag];
+    const uint8_t save_x = g_ram[Player_X_Position];
+    const uint8_t save_page = g_ram[Player_PageLoc];
+    const uint8_t save_y = g_ram[Player_Y_Position];
+    const uint8_t save_yhi = g_ram[Player_Y_HighPos];
+    const uint8_t save_yspeed = g_ram[Player_Y_Speed];
+    const int row = tile_top - 0x20;
+    const int anchor_x = world_col * 16 - 8;
+    uint16_t addr;
+    uint8_t tile;
+    int bumped;
+
+    if (world_col < 1 || tile_top < 0x20 || tile_top > 0xE0) return 0;
+    addr = smb1_block_cell_addr(world_col, tile_top);
+    tile = g_ram[addr];
+    if (!smb1_item_block_tile(tile)) return 0;
+    if (g_ram[VRAM_Buffer1_Offset] > 0x28) return 0;
+
+    memcpy(save_scratch, &g_ram[0x00], sizeof save_scratch);
+    game_sonic_items_begin_host_hit();
+    g_ram[0x02] = (uint8_t)row;
+    g_ram[0x06] = (uint8_t)((addr - row) & 0xFF);
+    g_ram[0x07] = (uint8_t)((addr - row) >> 8);
+    /* Big and standing, so BlockYPosAdderData's $04 puts the block object
+     * on the cell's own row, and InitBlock_XY_Pos's +8 on its column. */
+    g_ram[PlayerSize] = 0;
+    g_ram[CrouchingFlag] = 0;
+    g_ram[Player_PageLoc] = (uint8_t)(anchor_x >> 8);
+    g_ram[Player_X_Position] = (uint8_t)anchor_x;
+    g_ram[Player_Y_HighPos] = 1;
+    g_ram[Player_Y_Position] = (uint8_t)(tile_top - 4);
+    g_cpu.A = tile;
+    s_sonic_host_head_bump = 1;
+    PlayerHeadCollision();
+    s_sonic_host_head_bump = 0;
+    bumped = g_ram[addr] == 0x23;
+    game_sonic_items_end_host_hit();
+
+    memcpy(&g_ram[0x00], save_scratch, sizeof save_scratch);
+    g_ram[PlayerSize] = save_size;
+    g_ram[CrouchingFlag] = save_crouch;
+    g_ram[Player_X_Position] = save_x;
+    g_ram[Player_PageLoc] = save_page;
+    g_ram[Player_Y_Position] = save_y;
+    g_ram[Player_Y_HighPos] = save_yhi;
+    /* BumpBlock's Player_Y_Speed 0 is a head's; Sonic's y_vel is S3K's. */
+    g_ram[Player_Y_Speed] = save_yspeed;
+    g_cpu = save_cpu;
+    return bumped;
+}
+
+static int sonic_hit_block(int world_col, int tile_top)
+{
+    return sonic_shatter_brick(world_col, tile_top) ||
+           sonic_bump_item_block(world_col, tile_top);
+}
+
+/* The Insta-Shield's hits: every brick (whatever Sonic's size), ? block,
+ * item brick and hidden block inside its $30x$30 touch box, swept over this
+ * frame's move so the sweeps that follow already see the result. Blocks at
+ * or below his feet are the floor, which SMB1 never hits from above. A
+ * hidden block the body already overlaps stays hidden, rather than turning
+ * solid around him. */
+static void sonic_insta_shield_hits(void)
+{
+    const S3KPlayer *p = s3k_sonic_player();
+    const int world_x = ((int)g_ram[Player_PageLoc] << 8) |
+                        (int)g_ram[Player_X_Position];
+    const int y = (int)g_ram[Player_Y_Position];
+    const int dx = sonic_floor_div256(s3k_sonic_move_dx());
+    const int dy = sonic_floor_div256(s3k_sonic_move_dy());
+    int l, t, w, h;
+    int left, right, top, bottom;
+
+    if (!sonic_selected() || !s3k_sonic_insta_shield_active()) {
+        s_sonic_insta_hit_count = 0;
+        return;
+    }
+    if (g_ram[Player_Y_HighPos] != 1) return;
+
+    s3k_player_touch_box(p, &l, &t, &w, &h);
+    left = world_x + 8 + sonic_scale_px(l);
+    right = world_x + 8 + sonic_scale_px(l + w);
+    top = y + 32 - sonic_scale_px((int)p->y_radius) + sonic_scale_px(t);
+    bottom = y + 32 - sonic_scale_px((int)p->y_radius) + sonic_scale_px(t + h);
+    if (dx > 0) right += dx; else left += dx;
+    if (dy > 0) bottom += dy; else top += dy;
+    if (bottom > y + 32) bottom = y + 32;
+
+    for (int tile_top = 0x20; tile_top <= 0xE0; tile_top += 16) {
+        if (tile_top + 16 <= top || tile_top >= bottom) continue;
+        for (int col = left >> 4; col <= (right - 1) >> 4; ++col) {
+            uint16_t addr;
+            uint8_t tile;
+            int seen = 0;
+
+            if (col < 1) continue;
+            addr = smb1_block_cell_addr(col, tile_top);
+            tile = g_ram[addr];
+            if (tile != 0x51 && tile != 0x52 && !smb1_item_block_tile(tile))
+                continue;
+            for (int i = 0; i < s_sonic_insta_hit_count; ++i)
+                if (s_sonic_insta_hits[i] == addr) seen = 1;
+            if (seen) continue;
+            /* Big Mario's probes bound the body: x+$02..x+$0D, y+4..y+$1F. */
+            if ((tile == 0x5F || tile == 0x60) &&
+                col * 16 <= world_x + 0x0D && col * 16 + 16 > world_x + 0x02 &&
+                tile_top <= y + 0x1F && tile_top + 16 > y + 4)
+                continue;
+            if (!sonic_hit_block(col, tile_top)) continue;
+            if (s_sonic_insta_hit_count < SONIC_INSTA_HIT_MAX)
+                s_sonic_insta_hits[s_sonic_insta_hit_count++] = addr;
+        }
+    }
+}
+
+/* Blocks Sonic hits from above, like a ground pound in the later Mario games
+ * (an addition: neither SMB1 nor S3K has it):
+ *  - a spindash charging on a multi-coin brick ($58, or $5D without the
+ *    line) hits it again each time its bounce settles, for as long as the
+ *    charge lasts, until the brick's coin timer runs out;
+ *  - a ground roll hits every ? block and item brick its feet pass over.
+ * Only blocks that are solid on top: hidden blocks are not, and plain bricks
+ * and used blocks hold nothing, so they are left alone. The feet are Big
+ * Mario's foot probes (x+$03, x+$0C), swept over this frame's move. */
+static void sonic_ground_block_hits(int from_x, int to_x)
+{
+    const S3KPlayer *p = s3k_sonic_player();
+    const int y = (int)g_ram[Player_Y_Position];
+    const int tile_top = y + 0x20;
+    const int charging = p->spin_dash_flag && !(p->status & S3K_STATUS_ROLL);
+    const int rolling = (p->status & S3K_STATUS_ROLL) != 0;
+    int left, right;
+
+    if (!sonic_selected() || p->routine != S3K_ROUTINE_CONTROL ||
+        (p->status & S3K_STATUS_IN_AIR) || (!charging && !rolling))
+        return;
+    /* Feet on a block row's top edge, where DoFootCheck leaves them. */
+    if (g_ram[Player_Y_HighPos] != 1 || (y & 0x0F) != 0 || tile_top > 0xE0)
+        return;
+    if (sonic_wrap16(to_x - from_x) < 0) {
+        const int t = from_x;
+        from_x = to_x;
+        to_x = t;
+    }
+    if (sonic_wrap16(to_x - from_x) > 0x20) from_x = to_x;
+    left = from_x + 0x03;
+    right = from_x + sonic_wrap16(to_x - from_x) + 0x0C;
+
+    for (int col = left >> 4; col <= right >> 4; ++col) {
+        const uint8_t tile = g_ram[smb1_block_cell_addr(col, tile_top)];
+        const int wanted = charging
+            ? (tile == 0x58 || tile == 0x5D)
+            : (smb1_item_block_tile(tile) && tile != 0x5F && tile != 0x60);
+        if (wanted) sonic_bump_item_block(col, tile_top);
+    }
+}
+
+/* Obj_BreakableWall for SMB1's ordinary bricks: Sonic in his ball animation
+ * with |x_vel| >= $480 shatters the side wall and keeps his x_vel. The Fire
+ * Shield's dash hits ? blocks, item bricks and hidden blocks the same way,
+ * and a hit one is a wall. S3K breaks a wall piece whole, so the leading
+ * edge's column is hit over the full height of the body SMB1 collides, from
+ * its head probe (+$04, or +$12 crouching) to the pixel above its feet, not
+ * only at the two side probes: a dash whose feet clip a brick's top edge
+ * would otherwise be pushed back out of the wall by DoFootCheck.
+ * A ground roll, at any speed, hits the ? blocks and item bricks it runs into
+ * the way a kicked shell would (an addition: neither SMB1 nor S3K has it);
+ * plain bricks still need breakable-wall speed, and hidden blocks are no wall
+ * to run into. */
 static int sonic_clear_ball_side_probe_bricks_at(int x_pos, int page, int dir)
+{
+    const int bricks = sonic_selected() && s3k_sonic_breaks_side_blocks();
+    const int items = bricks && s3k_sonic_fire_dash_hits_blocks();
+    const int roll_items = sonic_selected() && s3k_sonic_low_profile();
+    const int py = (int)g_ram[Player_Y_Position];
+    const int top = py + (block_adder_index() == 0x0e ? 0x12 : 0x04);
+    const int bottom = py + 0x1F;
+    /* The hit column is the side probe's, not the player's: side probes sit
+     * BlockBuffer_X_Adder $02 (left) / $0D (right) into the body. */
+    const int world_col = (page * 256 + x_pos + (dir < 0 ? 0x02 : 0x0D)) >> 4;
+    int broken = 0;
+
+    if ((!bricks && !roll_items) || g_ram[Player_Y_HighPos] != 1)
+        return 0;
+
+    for (int tile_top = 0x20; tile_top <= 0xE0; tile_top += 16) {
+        uint8_t tile;
+        if (tile_top > bottom || tile_top + 16 <= top) continue;
+        tile = g_ram[smb1_block_cell_addr(world_col, tile_top)];
+        if (tile == 0x51 || tile == 0x52) {
+            if (bricks && sonic_shatter_brick(world_col, tile_top)) broken++;
+        } else if (items && smb1_item_block_tile(tile)) {
+            if (sonic_bump_item_block(world_col, tile_top)) broken++;
+        } else if (roll_items && smb1_item_block_tile(tile) &&
+                   tile != 0x5F && tile != 0x60) {
+            if (sonic_bump_item_block(world_col, tile_top)) broken++;
+        }
+    }
+    return broken;
+}
+
+/* HandleClimbing grabs the flagpole ($24 ball, $25 shaft) only when the
+ * LOWER side probe's pixel lies 6-9 into the pole's tile; DoPlayerSideCheck
+ * lets the upper probe pass climbables. SMB1 tests once per frame, so at
+ * S3K speeds that 4px window slips between frames. Asked per swept pixel,
+ * both sides, as SideCheckLoop does. */
+static int sonic_flagpole_at(int x_pos, int page)
 {
     CPU6502State save_cpu = g_cpu;
     uint8_t save_scratch[6];
     uint8_t save_x = g_ram[Player_X_Position];
     uint8_t save_page = g_ram[Player_PageLoc];
-    uint8_t base = block_adder_index();
-    uint8_t py = g_ram[Player_Y_Position];
-    int broken = 0;
+    const uint8_t base = block_adder_index();
+    const uint8_t py = g_ram[Player_Y_Position];
+    int found = 0;
 
-    if (!sonic_selected() || !s3k_sonic_breaks_side_blocks() ||
-        !s_attack.active ||
-        !(s_attack.flags & FOREIGN_ATTACK_BREAK_BLOCKS) ||
-        page < 0)
+    /* PlayerBGCollision's own gates (ChkOnScr, the $CF floor, BHalf's
+     * $08 top), so the sweep never waits at a pole SMB1 will not grab. */
+    if (g_ram[DisableCollisionDet] || g_ram[Player_Y_HighPos] != 1 ||
+        py < 0x08 || py >= 0xCF)
         return 0;
-
     memcpy(save_scratch, &g_ram[0x02], sizeof save_scratch);
-    g_ram[Player_X_Position] = (uint8_t)(x_pos & 0xFF);
+    g_ram[Player_X_Position] = (uint8_t)x_pos;
     g_ram[Player_PageLoc] = (uint8_t)page;
-
-    for (int probe = 0; probe < 2; ++probe) {
-        const int upper = probe == 0;
-        uint8_t tile;
-        uint16_t addr;
-
-        if (upper) {
-            if (py < 0x20 || py >= 0xE4) continue;
-            g_cpu.Y = (uint8_t)(base + (dir < 0 ? 3 : 5));
-        } else {
-            if (py < 0x08 || py >= 0xD0) continue;
-            g_cpu.Y = (uint8_t)(base + (dir < 0 ? 4 : 6));
-        }
-
+    for (int side = 0; side < 2 && !found; ++side) {
+        g_cpu.Y = (uint8_t)(base + (side ? 6 : 4));
         BlockBufferColli_Side();
-        tile = settle_orphaned_blank_metatile(g_cpu.A);
-        if (tile != 0x51 && tile != 0x52) continue;
-
-        addr = (uint16_t)(((uint16_t)g_ram[0x07] << 8) | g_ram[0x06]);
-        addr = (uint16_t)(addr + g_ram[0x02]);
-        if (addr >= sizeof g_ram ||
-            (g_ram[addr] != 0x51 && g_ram[addr] != 0x52))
-            continue;
-
-        if (g_ram[VRAM_Buffer1_Offset] <= 0x28)
-            DestroyBlockMetatile();
-        g_ram[addr] = 0;
-        g_ram[NoiseSoundQueue] |= 0x01;
-        enqueue_smb1_brick_debris((page * 256 + x_pos) / 16,
-                                  g_ram[0x02] + 0x20);
-        broken++;
-
-        g_ram[Player_X_Position] = (uint8_t)(x_pos & 0xFF);
-        g_ram[Player_PageLoc] = (uint8_t)page;
+        if ((g_cpu.A == 0x24 || g_cpu.A == 0x25) &&
+            g_ram[0x04] >= 0x06 && g_ram[0x04] < 0x0A)
+            found = 1;
     }
-
     memcpy(&g_ram[0x02], save_scratch, sizeof save_scratch);
     g_ram[Player_X_Position] = save_x;
     g_ram[Player_PageLoc] = save_page;
     g_cpu = save_cpu;
-    return broken;
+    return found;
 }
 
 /* A two-tile-high tunnel can begin one tile below the platform Falcon is
@@ -1004,9 +1442,23 @@ static void sample_input(ForeignInput *out)
     out->stick_x = (float)((right ? 1 : 0) - (left ? 1 : 0));
     out->stick_y = (float)((up ? 1 : 0) - (down ? 1 : 0));
 
-    if (samus_selected() || link_selected() || sonic_selected()) {
+    if (sonic_selected()) {
+        /* S3K reads A, B and C identically (Ctrl_1 button_A/B/C_mask all
+         * jump, spindash and trigger shield moves), so both NES face buttons
+         * are jump buttons. Pressing one while holding the other is a fresh
+         * press, exactly as Ctrl_1_pressed_logical reports it. */
+        out->jump_pressed = (pressed & (PAD_A | PAD_B)) != 0;
+        out->jump_held = (b & (PAD_A | PAD_B)) != 0;
+        out->down_pressed = (pressed & PAD_DOWN) != 0;
+        out->raw_buttons = b;
+        s_special_grace_pending = 0;
+        s_prev_buttons = b;
+        return;
+    }
+
+    if (samus_selected() || link_selected()) {
         /* NES-source mappings: A jumps; B belongs to the character layer
-         * (Metroid beam/bomb, Zelda II sword, Sonic spindash). Select remains available to
+         * (Metroid beam/bomb, Zelda II sword). Select remains available to
          * character-specific gameplay code through raw_buttons. */
         out->jump_pressed = (pressed & PAD_A) != 0;
         out->jump_held = (b & PAD_A) != 0;
@@ -1190,6 +1642,9 @@ void game_smash64_update_input(uint64_t frame_count)
             s_special_grace_pending = 0;
             s_forced_airborne_pending = 0;
             s_forced_airborne_frames = 0;
+            s_sonic_x_sub = 0;
+            s_sonic_y_sub = 0;
+            s_sonic_x_history_valid = 0;
             reseed = 1;
         }
         s_prev_ownership = now;
@@ -1205,6 +1660,31 @@ void game_smash64_update_input(uint64_t frame_count)
             game_smash64_sync_persistent_audio();
         }
         s_reseed_this_frame = reseed;
+    }
+
+    if (sonic_selected()) {
+        /* S3K's control half runs inside the guest frame at PlayerPhysicsSub,
+         * so this VBlank only latches the pad. A frame SMB1 never processes
+         * (pause, a scripted handoff) therefore never advances Sonic. */
+        s_sonic_input = fin;
+        s_sonic_reconcile_pending = 0;
+        s_sonic_launch_frame = 0;
+        s_sonic_control_pending =
+            nes_foreign_ownership() == FOREIGN_OWNERSHIP_FOREIGN;
+        if (!s_sonic_control_pending) {
+            memset(&move, 0, sizeof(move));
+            nes_foreign_tick(frame_count, &fin, &move);   /* trace row only */
+            s_xspeed = (int8_t)g_ram[Player_X_Speed];
+            s_wrote_yspeed_valid = 0;
+            s_wrote_y_valid = 0;
+            s_wrote_x_valid = 0;
+            s_sonic_yspeed_written_valid = 0;
+        }
+        if (s_reseed_this_frame) {
+            nes_foreign_trace_note_reseed();
+            s_reseed_this_frame = 0;
+        }
+        return;
     }
 
     fs = nes_foreign_state();
@@ -1481,7 +1961,10 @@ void game_smash64_update_input(uint64_t frame_count)
      * grow rightward.
      */
     if (s_wrote_x_valid) {
-        int now_x = (int)player_native_x();
+        /* Minus the moving platform's carry (see the Sonic reconcile): that
+         * step is still in Platform_X_Scroll until next frame's ScrollHandler. */
+        int now_x = (int)player_native_x() -
+                    (int)(int8_t)g_ram[Platform_X_Scroll];
 
         if (now_x != s_wrote_x) {
             hit.hit_wall = 1;
@@ -1590,6 +2073,564 @@ static void write_xspeed(int8_t xspeed)
         (uint8_t)((xspeed < 0) ? -(int)xspeed : (int)xspeed);
 }
 
+/* Floor division by 256 for S3K's 16.16 position arithmetic: x_pos's whole
+ * pixel is the high word of (x_pos:x_sub + vel << 8), which floors for
+ * negative motion rather than truncating toward zero. */
+static int sonic_floor_div256(int32_t v)
+{
+    return v >= 0 ? (int)(v / 256) : -(int)((-(int64_t)v + 255) / 256);
+}
+
+/* Control half of one S3K frame, run from PlayerPhysicsSub. */
+static void sonic_run_control(void)
+{
+    ForeignMoveResult move;
+    int xs;
+
+    s_sonic_control_pending = 0;
+    s_sonic_launch_frame = 0;
+    s_sonic_frame_dy = 0;
+    sonic_flush_brick_points();
+
+    /* Jumpspring: SMB1's spring object owns the player's Y while it
+     * compresses, then writes its force into Player_Y_Speed. S3K's object
+     * holds still on the spring and takes the launch as Obj_Spring would. */
+    if (s_sonic_spring_armed && g_ram[JumpspringAnimCtrl] == 0) {
+        int8_t force = (int8_t)g_ram[Player_Y_Speed];
+        if (force < 0) game_sonic_adapter_spring_launch(force);
+    }
+    s_sonic_spring_armed = g_ram[JumpspringAnimCtrl] != 0;
+    if (s_sonic_spring_armed) {
+        /* JumpspringHandler reads A for its boosted force. */
+        if (s_sonic_input.jump_pressed)
+            g_ram[A_B_Buttons] |= SMB1_A_BUTTON_BIT;
+        return;
+    }
+
+    game_sonic_adapter_prepare_control();
+    memset(&move, 0, sizeof(move));
+    nes_foreign_tick(s_frame, &s_sonic_input, &move);
+    s_sonic_launch_frame = s3k_sonic_launched_jump();
+
+    /* SMB1 still reads Player_X_Speed for moving direction and scroll
+     * bookkeeping; give it S3K's x_vel in its own 4.4 units. */
+    xs = s3k_sonic_move_dx() / 16;
+    if (xs > SMB1_XSPEED_FIELD_LIMIT) xs = SMB1_XSPEED_FIELD_LIMIT;
+    if (xs < -SMB1_XSPEED_FIELD_LIMIT) xs = -SMB1_XSPEED_FIELD_LIMIT;
+    s_xspeed = (int8_t)xs;
+    write_xspeed(s_xspeed);
+    s_owned_frames++;
+    s_sonic_reconcile_pending = 1;
+    game_sonic_adapter_play_sfx(s_frame);
+}
+
+/* The value MovePlayerHorizontally returns in A becomes Player_X_Scroll, the
+ * amount ScrollHandler moves the screen by. For Sonic it is S3K's
+ * MoveCameraX adapted to SMB1's narrower, forward-only screen:
+ *
+ *  - the camera target is Sonic's x, or while H_scroll_frame_offset is
+ *    counting down (spindash release, Fire Shield dash) his x from
+ *    offset-high-byte frames ago, which is what makes S3K's camera hang back
+ *    and then chase a spindash;
+ *  - the target is held at SMB1's own follow point ($70) and the camera moves
+ *    at most $18 pixels per frame, S3K's clamp;
+ *  - because SMB1's view is 64 pixels narrower than S3K's and ChkPOffscr
+ *    stops a player at the right edge, the camera always scrolls far enough
+ *    to keep Sonic at or left of screen x $D0. */
+/* Signed distance between two 16-bit world x values: SMB1's page byte wraps,
+ * so positions are only meaningful modulo 65536. */
+static int sonic_wrap16(int v)
+{
+    return (int)(int16_t)(uint16_t)v;
+}
+
+static int sonic_camera_scroll(int world_x)
+{
+    S3KPlayer *p = s3k_sonic_player_mut();
+    const int screen_left = ((int)g_ram[ScreenLeft_PageLoc] << 8) |
+                            (int)g_ram[ScreenLeft_X_Pos];
+    int target = world_x;
+    int rel, target_rel, carry;
+    int scroll;
+
+    if (!s_sonic_x_history_valid) {
+        for (unsigned i = 0; i < SONIC_CAMERA_HISTORY; ++i)
+            s_sonic_x_history[i] = world_x;
+        s_sonic_x_history_valid = 1;
+    }
+    s_sonic_x_history_index =
+        (s_sonic_x_history_index + 1u) % SONIC_CAMERA_HISTORY;
+    s_sonic_x_history[s_sonic_x_history_index] = world_x;
+
+    if (p->h_scroll_frame_offset) {
+        unsigned back;
+        p->h_scroll_frame_offset = (uint16_t)(p->h_scroll_frame_offset - 0x100u);
+        back = (unsigned)(p->h_scroll_frame_offset >> 8);
+        if (back >= SONIC_CAMERA_HISTORY) back = SONIC_CAMERA_HISTORY - 1u;
+        target = s_sonic_x_history[(s_sonic_x_history_index +
+                                    SONIC_CAMERA_HISTORY - back) %
+                                   SONIC_CAMERA_HISTORY];
+    }
+
+    /* A lift carries Sonic after this scroll, in the enemy loop; S3K moves
+     * its camera after the platforms. Aim at where the lift will leave him,
+     * or he and the lift twitch a pixel on screen whenever it steps. */
+    carry = game_sonic_adapter_lift_step();
+    rel = sonic_wrap16(world_x + carry - screen_left);
+    target_rel = sonic_wrap16(target + carry - screen_left);
+    scroll = target_rel - 0x70;
+    if (scroll > 0x18) scroll = 0x18;
+    if (scroll < 0) scroll = 0;
+    if (rel - scroll > 0xD0)
+        scroll = rel - 0xD0;
+    if (scroll > 127) scroll = 127;
+    return scroll;
+}
+
+void game_smash64_sonic_save_host(SonicHostSave *out)
+{
+    memset(out, 0, sizeof(*out));
+    memcpy(out->x_history, s_sonic_x_history, sizeof(s_sonic_x_history));
+    out->x_history_index = (uint8_t)s_sonic_x_history_index;
+    out->x_history_valid = (uint8_t)(s_sonic_x_history_valid != 0);
+    out->x_sub = s_sonic_x_sub;
+    out->y_sub = s_sonic_y_sub;
+    out->spring_armed = (uint8_t)(s_sonic_spring_armed != 0);
+}
+
+void game_smash64_sonic_load_host(const SonicHostSave *in)
+{
+    if (!in || in->x_history_index >= SONIC_CAMERA_HISTORY) {
+        /* The next camera update refills the history with Sonic's x. */
+        memset(s_sonic_x_history, 0, sizeof(s_sonic_x_history));
+        s_sonic_x_history_index = 0;
+        s_sonic_x_history_valid = 0;
+        s_sonic_x_sub = 0;
+        s_sonic_y_sub = 0;
+        s_sonic_spring_armed = 0;
+        return;
+    }
+    for (unsigned i = 0; i < SONIC_CAMERA_HISTORY; ++i)
+        s_sonic_x_history[i] = in->x_history[i] & 0xFFFF;
+    s_sonic_x_history_index = in->x_history_index;
+    s_sonic_x_history_valid = in->x_history_valid != 0;
+    s_sonic_x_sub = in->x_sub;
+    s_sonic_y_sub = in->y_sub;
+    s_sonic_spring_armed = in->spring_armed != 0;
+}
+
+/* ExecGameLoopback is about to move the player and the screen `dx` pixels;
+ * keep the host's own world-x records on the same page numbers. */
+void game_smash64_sonic_shift_world_x(int dx)
+{
+    s_wrote_x = (s_wrote_x + dx) & 0xFFFF;
+    s_x_before = (s_x_before + dx) & 0xFFFF;
+    for (unsigned i = 0; i < SONIC_CAMERA_HISTORY; ++i)
+        s_sonic_x_history[i] = (s_sonic_x_history[i] + dx) & 0xFFFF;
+}
+
+/* Swept vertical displacement of Sonic's own move this frame (px, +down). */
+int game_smash64_sonic_frame_dy(void)
+{
+    return s_sonic_frame_dy;
+}
+
+/* MovePlayerHorizontally for Sonic: exact 8.8 integration, one pixel per
+ * probe, S3K breakable-wall rule for SMB bricks. */
+static int sonic_move_horizontally(void)
+{
+    int32_t acc = (int32_t)s_sonic_x_sub + (int32_t)s3k_sonic_move_dx();
+    int whole = sonic_floor_div256(acc);
+    int pos = (int)g_ram[Player_X_Position];
+    int page = (int)g_ram[Player_PageLoc];
+    int step = whole > 0 ? 1 : -1;
+    int left = whole >= 0 ? whole : -whole;
+    /* A foot sunk into a block top lands on it when DoFootCheck finds it
+     * less than 5 pixels deep and not rising. MovePlayerVertically runs
+     * after this, and a fall sinks the foot one pixel more first. */
+    const int16_t move_dy = s3k_sonic_move_dy();
+    const int rising = move_dy < 0 ||
+                       (move_dy == 0 && s3k_sonic_player()->y_vel < 0);
+    const int land_depth = rising ? 0 : move_dy > 0 ? 3 : 4;
+
+    s_sonic_x_sub = (uint8_t)(acc - whole * 256);
+    s_x_before = (int)player_native_x();
+    /* SideCollisionTimer is read only by ScrollHandler, which holds the
+     * screen for 16 frames after ImpedePlayerMove pushed Mario. S3K's
+     * camera has no such hold, and Sonic's own sweep stops him flush. */
+    g_ram[SideCollisionTimer] = 0;
+    sonic_insta_shield_hits();
+
+    while (left-- > 0) {
+        int cand = pos + step;
+        int cand_page = page;
+
+        s_x_swept_ran = 1;
+        while (cand < 0)   { cand += 256; cand_page -= 1; }
+        while (cand > 255) { cand -= 256; cand_page += 1; }
+        /* Player_PageLoc is a byte: a castle loopback or the level's own
+         * extent can carry it through $FF/$00. */
+        cand_page &= 0xFF;
+
+        if (sonic_clear_ball_side_probe_bricks_at(cand, cand_page, step)) {
+            s_pending_flags |= SMASH64_CF_BLOCK_BROKEN;
+            if (s3k_sonic_fire_dashing()) game_sonic_adapter_note_dash_plow();
+        }
+        if (sonic_flagpole_at(cand, cand_page)) {
+            /* Stop on the pixel PlayerBGCollision will grab the pole from. */
+            pos = cand;
+            page = cand_page;
+            break;
+        }
+        if (smb1_side_solid_at(cand, cand_page, step)) {
+            /* S3K stops the player flush against a wall (CheckRightWallDist
+             * and friends add the negative distance back). Stay on the last
+             * clear pixel, so DoPlayerSideCheck never has to eject him and
+             * pushing a wall does not creep a pixel per frame. Side-pipe
+             * mouths are not walls to side_tile_is_wall, so pipe entry still
+             * sees the player inside the tile. */
+            s_x_swept_wall = 1;
+            if (!s_sweep_noblock) break;
+        }
+        /* The head above the side probes meeting a block's bottom corner:
+         * lower Sonic the few pixels under it when all of him fits there
+         * (a rising head then bonks on the corner in the upward sweep, and he
+         * keeps his speed, as S3K's ceiling sensors at both sides of the body
+         * would have it); otherwise it is the block's side. */
+        {
+            const int head_pen = sonic_body_band_wall(cand, cand_page, step, 1);
+            if (head_pen) {
+                const int py = (int)g_ram[Player_Y_Position];
+                if (py + 0x1F + head_pen < 0xF0 &&
+                    sonic_body_fits(cand, cand_page, py + 0x1F + head_pen)) {
+                    g_ram[Player_Y_Position] = (uint8_t)(py + head_pen);
+                } else {
+                    s_x_swept_wall = 1;
+                    if (!s_sweep_noblock) break;
+                }
+            }
+        }
+        /* The feet below them, unless they are landing on the block's top.
+         * S3K carries a ball whose lower body meets a block's top corner on
+         * over it, to land on the top; stopping Sonic there threw away his
+         * speed on every ledge he jumped at. Lift him the few pixels onto
+         * that top when all of him fits there; otherwise it is the side. */
+        {
+            const int feet_pen = sonic_body_band_wall(cand, cand_page, step, 0);
+            if (feet_pen > land_depth) {
+                const int py = (int)g_ram[Player_Y_Position];
+                if (sonic_body_fits(cand, cand_page, py + 0x1F - feet_pen)) {
+                    g_ram[Player_Y_Position] = (uint8_t)(py - feet_pen);
+                } else {
+                    s_x_swept_wall = 1;
+                    if (!s_sweep_noblock) break;
+                }
+            }
+        }
+        pos = cand;
+        page = cand_page;
+    }
+    /* A landing needs a foot probe (x+$03 / x+$0C) over the block; the side
+     * edge one pixel in has none, so step back out flush. */
+    if (whole != 0 && land_depth && sonic_body_band_wall(pos, page, step, 0)) {
+        const int wx = page * 256 + pos;
+        if (((wx + (step < 0 ? 0x02 : 0x0D)) >> 4) !=
+            ((wx + (step < 0 ? 0x03 : 0x0C)) >> 4)) {
+            pos -= step;
+            if (pos < 0)   { pos += 256; page = (page - 1) & 0xFF; }
+            if (pos > 255) { pos -= 256; page = (page + 1) & 0xFF; }
+        }
+    }
+
+    g_ram[Player_X_Position] = (uint8_t)pos;
+    g_ram[Player_PageLoc] = (uint8_t)page;
+    s_wrote_x = page * 256 + pos;
+    s_wrote_x_valid = 1;
+    sonic_ground_block_hits(s_x_before, s_wrote_x);
+    {
+        /* ScrollHandler adds Platform_X_Scroll, last frame's lift carry, to
+         * the returned amount, then eases Mario's scroll: nothing while
+         * Player_Pos_ForScroll (last frame's RenderPlayerSub copy of
+         * Player_Rel_XPos, read nowhere else) is below $50, one pixel less
+         * below $70. Sonic's camera measured his x after that carry and has
+         * already chosen the exact amount, so take the carry back out and
+         * pass the easing gates; otherwise a lift doubles its carry into the
+         * scroll and the easing trims it back, a pixel or two each frame. */
+        const int scroll = sonic_camera_scroll(s_wrote_x);
+        g_cpu.A = (uint8_t)(scroll - (int)(int8_t)g_ram[Platform_X_Scroll]);
+        if (scroll > 0 && g_ram[Player_Pos_ForScroll] < 0x70)
+            g_ram[Player_Pos_ForScroll] = 0x70;
+    }
+    return 1;
+}
+
+/* A rising head's corners. SMB1's head probe is x+8 alone, so a block over
+ * the body's other column (at x+2 or x+13) is only found by the side probes
+ * once the head is inside it, and they push the player out a pixel a frame
+ * while he rises through its corner. Sonic slides out of the corner at once
+ * instead, into the head probe's column: his body already fills it, and the
+ * head check has just found it clear at this row. A slide against the way he
+ * is moving would throw away his speed (holding left under a brick row, he
+ * was pushed back right into a hole his Insta-Shield broke and stopped dead
+ * against its side), so that corner is a ceiling instead, as S3K's ceiling
+ * sensors at both sides of the body make it. Returns 1 for a ceiling. */
+static int sonic_head_corner_slide(int head_y)
+{
+    const int wx = ((int)g_ram[Player_PageLoc] << 8) |
+                   (int)g_ram[Player_X_Position];
+    const int col_l = (wx + 0x02) >> 4;
+    const int col_r = (wx + 0x0D) >> 4;
+    const int col_m = (wx + 0x08) >> 4;
+    const int tile_top = head_y & ~0x0F;
+    const int x_vel = s3k_sonic_player()->x_vel;
+    CPU6502State save;
+    uint8_t tile;
+    int climb, nx;
+
+    if (col_l == col_r || tile_top < 0x20 || tile_top > 0xE0) return 0;
+    tile = sonic_cell_at(col_m == col_l ? col_r : col_l, tile_top);
+    /* Coins are collected and hidden blocks are not there until bumped. */
+    if (tile == 0 || tile == 0xC2 || tile == 0xC3 || tile == 0x5F ||
+        tile == 0x60)
+        return 0;
+    save = g_cpu;
+    g_cpu.A = tile;
+    CheckForClimbMTiles();
+    climb = g_cpu.C;
+    g_cpu = save;
+    if (climb) return 0;
+    nx = col_m == col_l ? col_r * 16 - 0x0E : col_r * 16 - 0x02;
+    if ((nx < wx && x_vel > 0) || (nx > wx && x_vel < 0)) return 1;
+    g_ram[Player_X_Position] = (uint8_t)nx;
+    g_ram[Player_PageLoc] = (uint8_t)(nx >> 8);
+    s_wrote_x = nx & 0xFFFF;
+    return 0;
+}
+
+/* A falling body's edge. The foot probes (x+3, x+12) cover all of the body
+ * (x+2..x+13) but its outermost pixel on each side, so a block whose side
+ * edge lies exactly there is no floor and Sonic sank a pixel into its top
+ * corner until DoFootCheck found it. Step that pixel away, as a head is slid
+ * out of a corner: the body's other edge stays in its own column. */
+static void sonic_feet_corner_slide(int feet_y)
+{
+    const int wx = ((int)g_ram[Player_PageLoc] << 8) |
+                   (int)g_ram[Player_X_Position];
+    const int tile_top = feet_y & ~0x0F;
+    int dx = 0, nx;
+
+    if (tile_top < 0x20 || tile_top > 0xE0) return;
+    for (int side = 0; side < 2 && !dx; ++side) {
+        const int edge = wx + (side ? 0x0D : 0x02);
+        const int probe = wx + (side ? 0x0C : 0x03);
+        CPU6502State save;
+        int wall;
+        if ((edge >> 4) == (probe >> 4)) continue;
+        save = g_cpu;
+        wall = side_tile_is_wall(sonic_cell_at(edge >> 4, tile_top), 0);
+        g_cpu = save;
+        if (wall) dx = side ? -1 : 1;
+    }
+    if (!dx) return;
+    nx = wx + dx;
+    g_ram[Player_X_Position] = (uint8_t)nx;
+    g_ram[Player_PageLoc] = (uint8_t)(nx >> 8);
+    s_wrote_x = nx & 0xFFFF;
+}
+
+/* MovePlayerVertically for Sonic: S3K's y_vel with no SMB fall cap. */
+static int sonic_move_vertically(void)
+{
+    const S3KPlayer *p = s3k_sonic_player();
+    int16_t dy = s3k_sonic_move_dy();
+    int32_t acc = (int32_t)s_sonic_y_sub + (int32_t)dy;
+    int whole = sonic_floor_div256(acc);
+    int pos = (int)g_ram[Player_Y_Position];
+    int high = (int8_t)g_ram[Player_Y_HighPos];
+    int step = whole > 0 ? 1 : -1;
+    int left = whole >= 0 ? whole : -whole;
+    const int feet = whole > 0;
+    /* BlockBuffer_Y_Adder's head probe for the body SMB1 collides. */
+    const int head_ofs = block_adder_index() == 0x0e ? 0x12 : 0x04;
+    int ys;
+
+    s_sonic_y_sub = (uint8_t)(acc - whole * 256);
+    s_y_before = high * 256 + pos;
+
+    if (s_sonic_launch_frame) {
+        /* InitJS queued Mario's jump (or swim-stroke) sound this frame; S3K
+         * plays sfx_Jump from the controller instead. */
+        g_ram[Square1SoundQueue] &= (uint8_t)~(0x01u | 0x80u |
+                                              (g_ram[SwimmingFlag] ? 0x04u : 0u));
+    }
+
+    while (left-- > 0) {
+        int cand = pos + step;
+        int cand_hi = high;
+        int head_barriers = !feet;
+
+        s_swept_ran = 1;
+        while (cand < 0)   { cand += 256; cand_hi -= 1; }
+        while (cand > 255) { cand -= 256; cand_hi += 1; }
+
+        /* Bricks, ? blocks and hidden blocks stop a rising head only as it
+         * comes up into their row from below, which is where HeadChk bumps
+         * them. A head that is already level with one (Sonic moved across
+         * into its column) is inside a tile SMB1 leaves alone. */
+        if (!feet && high == 1 && pos >= head_ofs &&
+            ((cand + head_ofs) & 0xF0) == ((pos + head_ofs) & 0xF0))
+            head_barriers = 0;
+
+        if (cand_hi == 1 &&
+            (feet ? (cand < 0xCF)
+                  : (cand >= (s_profile ? s_profile->head_upper_extent
+                                        : 0x20))) &&
+            (feet ? sonic_feet_floor_at(cand)
+                  : smb1_solid_at(cand, 0, head_barriers))) {
+            pos = cand;
+            high = cand_hi;
+            s_swept_block = feet ? SMASH64_SWEEP_FLOOR : SMASH64_SWEEP_CEILING;
+            if (!s_sweep_noblock) break;
+        }
+        /* The head clear at x+8 entering a new row: its corners. The feet
+         * clear of the floor with the body's bottom pixel entering one: its
+         * edge pixels. */
+        if (!feet && head_barriers && cand_hi == 1 &&
+            sonic_head_corner_slide(cand + head_ofs)) {
+            pos = cand;
+            high = cand_hi;
+            s_swept_block = SMASH64_SWEEP_CEILING;
+            if (!s_sweep_noblock) break;
+        }
+        if (feet && cand_hi == 1 && cand < 0xD0 &&
+            ((cand + 0x1F) & ~0x0F) != ((pos + 0x1F) & ~0x0F))
+            sonic_feet_corner_slide(cand + 0x1F);
+        pos = cand;
+        high = cand_hi;
+    }
+
+    g_ram[Player_Y_Position] = (uint8_t)pos;
+    g_ram[Player_Y_HighPos] = (uint8_t)(int8_t)high;
+    s_wrote_y = high * 256 + pos;
+    s_wrote_y_valid = 1;
+    s_wrote_dy_px = (double)dy / 256.0;
+    s_sonic_frame_dy = s_wrote_y - s_y_before;
+    sonic_flush_brick_points();
+
+    /* SMB1's head and foot checks key off the sign of Player_Y_Speed. On
+     * S3K's jump frame MoveSprite is skipped (dy = 0) but y_vel is already
+     * the launch speed, which is what must keep SMB1 from re-landing. */
+    ys = sonic_floor_div256(dy != 0 ? dy : p->y_vel);
+    if (ys > 127) ys = 127;
+    if (ys < -128) ys = -128;
+    g_ram[Player_Y_Speed] = (uint8_t)(int8_t)ys;
+    s_wrote_yspeed = (int8_t)ys;
+    s_wrote_yspeed_valid = 1;
+
+    if (!s_friction_ran) write_xspeed(s_xspeed);
+    nes_foreign_trace_note_native(player_native_x(),
+                                  (int32_t)g_ram[Player_Y_Position]);
+    s_air_frames++;
+    return 1;
+}
+
+/* A platform lands its rider inside the enemy loop (SetCollisionFlag stores
+ * Player_State 0), after PlayerBGCollision has already set 2 for "no ground
+ * tile below". A collision half reconciled at an earlier slot's enemy touch
+ * would read that transient fall, so a platform in a slot still to run that
+ * carried Sonic last frame counts as the ground under him. That comes from
+ * the adapter's record of the checks, not PlatformCollisionFlag, which a
+ * newly spawned lift inherits from the slot's previous object: read as a
+ * rider, it stopped Sonic's fall in mid-air on a phantom platform. */
+static int sonic_platform_still_to_land(int first_unprocessed_slot)
+{
+    for (int slot = first_unprocessed_slot; slot < 6; ++slot)
+        if (game_sonic_adapter_platform_carried(slot)) return 1;
+    return 0;
+}
+
+static void sonic_reconcile_at(int first_unprocessed_slot)
+{
+    ForeignCollisionResult hit;
+    int wall;
+
+    if (!s_sonic_reconcile_pending) return;
+    s_sonic_reconcile_pending = 0;
+
+    memset(&hit, 0, sizeof(hit));
+    hit.grounded = (g_ram[Player_State] == 0 ||
+                    (g_ram[Player_State] == 2 &&
+                     sonic_platform_still_to_land(first_unprocessed_slot))) &&
+                   !s_sonic_launch_frame && g_ram[JumpspringAnimCtrl] == 0;
+    wall = s_x_swept_wall;
+    if (s_wrote_x_valid) {
+        /* A moving platform carries its rider after the player's own move:
+         * PositionPlayerOnHPlat adds the platform's step to Player_X_Position
+         * and leaves the same step in Platform_X_Scroll, which ScrollHandler
+         * zeroes before the enemy loop runs again. That displacement is the
+         * ground moving under Sonic, not a wall stopping him. */
+        const int carry = (int)(int8_t)g_ram[Platform_X_Scroll];
+        int now_x = (int)player_native_x() - carry;
+        if (sonic_wrap16(now_x - s_wrote_x) != 0) {
+            wall = 1;
+            s_sonic_x_sub = 0;
+        }
+        hit.actual_dx = (double)sonic_wrap16(now_x - s_x_before);
+        s_wrote_x_valid = 0;
+    }
+    hit.hit_wall = wall;
+    if (s_swept_block == SMASH64_SWEEP_CEILING) hit.hit_ceiling = 1;
+
+    if (s_wrote_yspeed_valid) {
+        int8_t now_ys = (int8_t)g_ram[Player_Y_Speed];
+        if (now_ys != s_wrote_yspeed) {
+            /* PlayerHeadCollision / NYSpd stop a rising player with 0 or 1:
+             * that is S3K's Player_HitCeiling. */
+            if (now_ys >= 0 && s_wrote_yspeed < 0) hit.hit_ceiling = 1;
+            s_imposed_frames++;
+        }
+        s_wrote_yspeed_valid = 0;
+    }
+    if (s_wrote_y_valid) {
+        int now_y = ((int)(int8_t)g_ram[Player_Y_HighPos] * 256) +
+                    (int)g_ram[Player_Y_Position];
+        if (now_y != s_wrote_y) {
+            if (s_wrote_dy_px < 0.0) hit.hit_ceiling = 1;
+            s_sonic_y_sub = 0;
+        }
+        hit.actual_dy = -(double)(now_y - s_y_before);
+        s_wrote_y_valid = 0;
+    }
+    if (hit.grounded) s_sonic_y_sub = 0;
+
+    hit.flags = s_pending_flags;
+    s_pending_flags = 0;
+    s_swept_block = SMASH64_SWEEP_NONE;
+    s_swept_ran = 0;
+    s_x_swept_wall = 0;
+    s_x_swept_ran = 0;
+
+    nes_foreign_resolve(&hit);
+    game_sonic_adapter_play_sfx(s_frame);
+}
+
+/* Collision half of the S3K frame. Runs once per guest frame after
+ * PlayerBGCollision: post-NMI, or earlier at the first enemy touch. */
+void game_smash64_sonic_reconcile(void)
+{
+    sonic_reconcile_at(6);
+}
+
+void game_smash64_sonic_reconcile_in_enemy_loop(int slot)
+{
+    sonic_reconcile_at(slot + 1);
+}
+
+int game_smash64_sonic_control_ran(void)
+{
+    return s_sonic_reconcile_pending;
+}
+
 static int impose_friction_hook(uint16_t addr)
 {
     int8_t xspeed;
@@ -1633,6 +2674,7 @@ static int move_player_vertically_hook(uint16_t addr)
     (void)addr;
 
     if (decide_ownership() != FOREIGN_OWNERSHIP_FOREIGN) return 0;
+    if (sonic_selected()) return sonic_move_vertically();
 
     fs = nes_foreign_state();
     if (!fs) return 0;
@@ -2041,6 +3083,7 @@ static int move_player_horizontally_hook(uint16_t addr)
     /* MovePlayerHorizontally's own first act is to leave while a jumpspring
      * animates ($BF09: LDA $070E / BNE ExXMove); declining preserves it. */
     if (g_ram[JumpspringAnimCtrl] != 0) return 0;
+    if (sonic_selected()) return sonic_move_horizontally();
 
     fs = nes_foreign_state();
     if (fs && state_has_trait(fs->state,
@@ -2072,12 +3115,6 @@ static int move_player_horizontally_hook(uint16_t addr)
 
             pos = cand;
             page = cand_page;
-
-            if (sonic_clear_ball_side_probe_bricks_at(cand, cand_page, step))
-                s_pending_flags |= SMASH64_CF_BLOCK_BROKEN;
-            if (cand_page >= 0 &&
-                sonic_clear_ball_attack_bricks_at(cand_page * 256 + cand))
-                s_pending_flags |= SMASH64_CF_BLOCK_BROKEN;
 
             if (cand_page >= 0 &&
                 smb1_side_solid_at(cand, cand_page, step)) {
@@ -2418,6 +3455,14 @@ static int spawn_smb1_brick_debris_from_queue(void)
 
 static void drain_smb1_brick_debris_queue(void)
 {
+    /* Debris owed to an area that is being left or rebuilt must not spawn
+     * over the next one. */
+    if (g_ram[OperMode] != SMB1_OPER_MODE_GAME || g_ram[OperMode_Task] != 3) {
+        memset(s_brick_debris, 0, sizeof(s_brick_debris));
+        s_brick_debris_head = 0;
+        s_brick_debris_count = 0;
+        return;
+    }
     for (int i = 0; i < 2; ++i) {
         if (!spawn_smb1_brick_debris_from_queue()) break;
     }
@@ -2499,62 +3544,6 @@ static int break_bricks_in_attack(double left, double right,
     return break_bricks_in_attack_ex(left, right, top, bottom, max_blocks, 0);
 }
 
-static int sonic_clear_ball_attack_bricks_at(int native_x)
-{
-    const ForeignState *fs;
-    double facing, center_x, foot_y, center_y, half_w, half_h;
-
-    if (!sonic_selected() || !s3k_sonic_breaks_side_blocks() ||
-        !s_attack.active ||
-        !(s_attack.flags & FOREIGN_ATTACK_BREAK_BLOCKS))
-        return 0;
-
-    fs = nes_foreign_state();
-    if (!fs) return 0;
-
-    facing = fs->facing < 0.0f ? -1.0 : 1.0;
-    center_x = (double)native_x + 8.0 +
-               facing * source_units_to_px(s_attack.offset_x);
-    foot_y = (double)g_ram[Player_Y_Position] + 32.0;
-    center_y = foot_y - source_units_to_px(s_attack.offset_y);
-    half_w = source_units_to_px(s_attack.width) * 0.5;
-    half_h = source_units_to_px(s_attack.height) * 0.5;
-
-    return break_bricks_in_attack_ex(center_x - half_w,
-                                     center_x + half_w,
-                                     center_y - half_h,
-                                     center_y + half_h,
-                                     16,
-                                     1);
-}
-
-static void sonic_apply_airborne_enemy_bounce(void)
-{
-    ForeignState *state;
-    int8_t host_yspeed;
-
-    if (!sonic_selected() || !s3k_sonic_is_ball()) return;
-    state = nes_foreign_state();
-    if (!state || state->grounded || state->vy >= 0.0) return;
-
-    /* Touch_EnemyNormal negates downward y_vel when Sonic destroys a normal
-     * enemy from above. Sonic's controller uses positive-up Y, so negate the
-     * falling velocity here before the next controller tick. */
-    state->vy = -state->vy;
-    state->grounded = 0;
-    state->state = S3K_SONIC_JUMP;
-    state->state_frame = 0;
-
-    host_yspeed = (int8_t)source_units_to_px(-state->vy);
-    if (host_yspeed > -1) host_yspeed = -1;
-    g_ram[Player_State] = 1;
-    g_ram[Player_Y_Speed] = (uint8_t)host_yspeed;
-    s_wrote_yspeed_valid = 0;
-    s_forced_airborne_pending = 1;
-    s_forced_airborne_frames = 0;
-    s_pending_flags |= SMASH64_CF_FORCE_AIRBORNE;
-}
-
 int game_smash64_break_bricks(double left, double right,
                               double top, double bottom)
 {
@@ -2574,12 +3563,9 @@ static void apply_pending_attack(void)
     const ForeignController *ctl = nes_foreign_active();
     double facing, center_x, foot_y, center_y, half_w, half_h;
     double left, right, top, bottom;
-    int sonic_ball, sonic_side_break;
     int enemies, blocks = 0;
 
     if (!s_attack.active || !fs) return;
-    sonic_ball = sonic_selected() && s3k_sonic_is_ball();
-    sonic_side_break = sonic_selected() && s3k_sonic_breaks_side_blocks();
     facing = fs->facing < 0.0f ? -1.0 : 1.0;
     center_x = (double)player_native_x() + 8.0 +
                facing * source_units_to_px(s_attack.offset_x);
@@ -2598,23 +3584,10 @@ static void apply_pending_attack(void)
         (s_attack.flags & FOREIGN_ATTACK_CONTACT_ONLY) ? 1 : 0);
     if (!(s_attack.flags & FOREIGN_ATTACK_CONTACT_ONLY) &&
         (s_attack.flags & FOREIGN_ATTACK_BREAK_BLOCKS)) {
-        if (sonic_ball && !sonic_side_break) {
-            if (fs->vy < 0.0) {
-                blocks = break_bricks_in_attack_ex(
-                    center_x - 7.0, center_x + 7.0,
-                    foot_y - 1.0, foot_y + 3.0,
-                    2, 0);
-            }
-        } else {
-            blocks = break_bricks_in_attack_ex(
-                left, right, top, bottom,
-                sonic_side_break ? 16 : 2,
-                sonic_side_break ? 1 : 0);
-        }
+        blocks = break_bricks_in_attack_ex(left, right, top, bottom, 2, 0);
     }
     if (enemies) nes_foreign_trace_note_flags(SMASH64_CF_ENEMY_DEFEATED);
     if (blocks) nes_foreign_trace_note_flags(SMASH64_CF_BLOCK_BROKEN);
-    if (enemies) sonic_apply_airborne_enemy_bounce();
     if (enemies || blocks) {
         const char *name = (ctl && ctl->state_name)
                                ? ctl->state_name(fs->state) : "?";
@@ -2680,13 +3653,26 @@ static int jumpsquat_hook(uint16_t addr)
     fs = nes_foreign_state();
     if (!fs) return 0;
 
-    if (samus_selected() || link_selected() || sonic_selected()) {
+    if (sonic_selected()) {
+        /* A and B are both S3K jump buttons. SMB1 sees its A bit only on the
+         * frame Sonic_Jump runs, which InitJS turns into Player_State 1. */
+        g_ram[A_B_Buttons] &=
+            (uint8_t)~(SMB1_A_BUTTON_BIT | SMB1_B_BUTTON_BIT);
+        if (s_sonic_control_pending) sonic_run_control();
+        if (s_sonic_launch_frame) {
+            g_ram[A_B_Buttons] |= SMB1_A_BUTTON_BIT;
+            s_launch_frames++;
+        }
+        return 0;
+    }
+
+    if (samus_selected() || link_selected()) {
         /* Both face buttons belong to the owner-ROM character. The controller
          * publishes a one-frame LAUNCH handshake, so SMB receives A only on
          * that frame; B never leaks into run/fireball handling. */
         g_ram[A_B_Buttons] &=
             (uint8_t)~(SMB1_A_BUTTON_BIT | SMB1_B_BUTTON_BIT);
-        if (link_selected() || sonic_selected()) {
+        if (link_selected()) {
             apply_pending_attack();
         }
         if (link_selected()) {
@@ -2762,8 +3748,6 @@ static int bounding_box_core_hook(uint16_t addr)
         g_ram[Player_BoundBoxCtrl] = s_profile->player_bbox_ctrl;
         if (samus_selected() && metroid_samus_is_morphed())
             g_ram[Player_BoundBoxCtrl] = 1;
-        if (sonic_selected() && s3k_sonic_is_ball())
-            g_ram[Player_BoundBoxCtrl] = 1;
     }
     return 0;
 }
@@ -2782,6 +3766,9 @@ uint8_t game_smash64_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val)
      * 20-frame Start/aim status; entering either zip through PRESERVE_NONE
      * restores normal hit status. No guest timer is written or extended. */
     fs = nes_foreign_state();
+    if (sonic_selected() && addr == InjuryTimer &&
+        (pc == 0xD913 || pc == 0xD92C))
+        return game_sonic_adapter_injury_read(pc, val);
     if (addr == InjuryTimer && (pc == 0xD913 || pc == 0xD92C) && fs &&
         state_has_trait(fs->state, SMASH64_STATE_TRAIT_INTANGIBLE))
         return 1;
@@ -2789,9 +3776,7 @@ uint8_t game_smash64_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val)
     /* PlayerBGCollision $DC64: geometry selection only.
      * $DC9A/$DC9F choose BlockBufferAdderData and $DCB1/$DCB4 choose
      * PlayerBGUpperExtent. Falcon/Samus keep native PlayerHeadCollision
-     * consequence reads so hidden-small variants bump bricks. Sonic is a
-     * gameplay exception: from below he should trigger blocks exactly like
-     * Big Mario, regardless of the hidden SMB power-up byte. */
+     * consequence reads so hidden-small variants bump bricks. */
     if (samus_selected() && metroid_samus_is_morphed()) {
         if (addr == CrouchingFlag &&
             (pc == 0xDC9A || pc == 0xDCB4 || pc == 0xBD57))
@@ -2800,23 +3785,26 @@ uint8_t game_smash64_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val)
             (pc == 0xDC9F || pc == 0xDCB1 || pc == 0xBD5C))
             return 1;
     }
-    if (sonic_selected() && s3k_sonic_is_ball()) {
-        int sonic_upward_head_hit = (int8_t)g_ram[Player_Y_Speed] < 0;
-        if (addr == CrouchingFlag && (pc == 0xBCF3 || pc == 0xBD57))
+    if (sonic_selected()) {
+        /* PlayerHeadCollision reads PlayerSize twice to pick the outcome:
+         * $BCF3 chooses the block state ($11 bump / $12 shatter) and $BD14
+         * the metatile put back when the block settles (the brick itself /
+         * blank). Both must see the real size, which tracks Sonic's shield
+         * (small = no shield bumps like small Mario, shielded shatters like
+         * Big Mario); forcing only one of them bumped a brick and then
+         * restored it as blank. $BD57/$BD5C only place the bouncing block
+         * against the head probe: the Big one, or the crouching one of a
+         * ball jumping out of a gap. The host's own block hits place a Big
+         * head under the cell. */
+        if (addr == CrouchingFlag && pc == 0xBD57)
+            return !s_sonic_host_head_bump && game_sonic_adapter_low_profile();
+        if (addr == PlayerSize && pc == 0xBD5C)
             return 0;
-        if (addr == PlayerSize && (pc == 0xBD14 || pc == 0xBD5C))
-            return 0;
-        if (sonic_upward_head_hit && addr == CrouchingFlag &&
+        /* A ground roll is a crouching Big Mario to PlayerBGCollision:
+         * ChkCollSize picks the $0E adders and HeadChk the $10 extent,
+         * matching block_adder_index for the host sweeps. */
+        if (game_sonic_adapter_low_profile() && addr == CrouchingFlag &&
             (pc == 0xDC9A || pc == 0xDCB4))
-            return 0;
-        if (sonic_upward_head_hit && addr == PlayerSize &&
-            (pc == 0xDC9F || pc == 0xDCB1))
-            return 0;
-        if (addr == CrouchingFlag &&
-            (pc == 0xDC9A || pc == 0xDCB4))
-            return 1;
-        if (addr == PlayerSize &&
-            (pc == 0xDC9F || pc == 0xDCB1))
             return 1;
     }
     if (!s_profile) return val;
@@ -3195,6 +4183,16 @@ int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
     nes_mod_set_function_hook_enabled(SMASH64_JUMPSQUAT_HOOK_ID, 0);
     nes_mod_set_function_hook_enabled(SMASH64_HORIZONTAL_HOOK_ID, 0);
     nes_mod_set_function_hook_enabled(SMASH64_BOUNDING_BOX_HOOK_ID, 0);
+    game_sonic_adapter_set_enabled(0);
+    s_sonic_control_pending = 0;
+    s_sonic_reconcile_pending = 0;
+    s_sonic_x_sub = 0;
+    s_sonic_y_sub = 0;
+    s_sonic_launch_frame = 0;
+    s_sonic_spring_armed = 0;
+    s_sonic_x_history_valid = 0;
+    s_sonic_brick_points = 0;
+    s_sonic_insta_hit_count = 0;
 
     if (!enabled || !controller_id || !controller_id[0]) {
         game_smash64_assets_clear();
@@ -3300,6 +4298,7 @@ int game_smash64_set_mod_enabled(int enabled, const char *controller_id)
                 "contact bounds may follow hidden Mario size\n");
     }
     s_enabled = 1;
+    if (sonic_selected()) game_sonic_adapter_set_enabled(1);
     if (samus_selected() || link_selected() || sonic_selected())
         game_smash64_audio_set_enabled(0);
     if (!samus_selected() && !link_selected() && !sonic_selected() &&
@@ -3412,6 +4411,11 @@ void game_smash64_update(uint64_t frame_count)
     (void)frame_count;
     if (!s_enabled || !s_selected) return;
 
+    if (sonic_selected()) {
+        game_smash64_sonic_reconcile();
+        game_sonic_adapter_post_frame(frame_count);
+    }
+
     if (!s_announced && s_owned_frames > 0) {
         const ForeignController *ctl = nes_foreign_active();
         const ForeignState *fs = nes_foreign_state();
@@ -3451,6 +4455,7 @@ int game_smash64_register_hooks(void)
     ok &= nes_mod_register_function_entry_plugin(
         SMASH64_BOUNDING_BOX_HOOK_ID, SMB1_BOUNDING_BOX_CORE_ADDR,
         bounding_box_core_hook);
+    ok &= game_sonic_adapter_register_hooks();
 
     /* Unconditional, like the function hooks above: registering a savestate
      * hook does not by itself change behaviour, since get() returns 0 bytes

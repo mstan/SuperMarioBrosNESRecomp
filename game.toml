@@ -177,3 +177,35 @@ addr = 0xE5C8           # DrawLargePlatform: complete platform beyond native cli
 
 [[mod_function_hook]]
 addr = 0xED66           # DrawSmallPlatform: both members of a looping lift
+
+# S3K Sonic replacement (game_sonic_adapter.c). Each callback self-gates and is
+# enabled only while Sonic is the selected player.
+#
+# Underwater whirlpools pull a swimming Mario down every other frame; S3K's
+# water has no equivalent current, so Sonic skips the pull.
+[[mod_function_hook]]
+addr = 0xB7B8           # ProcessWhirlpools
+
+# Lifts and balance platforms are S3K top-solid platforms for Sonic: land from
+# above across the whole frame's fall, pass through from below and the sides.
+# ChkForPlayerC_LargeP is reached by a branch inside $DB45, so the large
+# platform entry is hooked whole.
+[[mod_function_hook]]
+addr = 0xDB45           # LargePlatformCollision
+
+[[mod_function_hook]]
+addr = 0xDB7B           # SmallPlatformCollision
+
+# A castle maze's wrong path moves the player and screen back four pages; the
+# Sonic host keeps world-x state of its own that must move with them.
+[[mod_function_hook]]
+addr = 0xC08C           # ExecGameLoopback
+
+# SMB1 has one power-up slot (enemy slot 5): a new item or vine replaces a
+# power-up still out. While Sonic plays, that power-up moves into a host pool
+# first (game_sonic_items.c), and the stock body then runs unchanged.
+[[mod_function_hook]]
+addr = 0xBC49           # SetupPowerUp
+
+[[mod_function_hook]]
+addr = 0xB91E           # Setup_Vine

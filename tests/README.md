@@ -23,10 +23,15 @@ ctest --test-dir build/falcon_harness -C Release --output-on-failure
 | `smash64_profile` | Fighter profile traits |
 | `samus_harness` | Samus controller and save state |
 | `link_harness` | Link controller and save state |
-| `sonic_harness` | Sonic controller; run the built `sonic_controller_harness` executable directly |
+| `sonic_harness` | S3K Sonic player port and controller; run the built `sonic_controller_harness` executable directly |
 
 These harnesses do not need a ROM or running game. On Visual Studio builds,
 executables are in the build directory's `Release/` subdirectory.
+
+`s3k_sound_harness` is the exception: it renders Sonic 3 & Knuckles sounds
+through the Sonic mod's emulated Genesis sound board, so it needs the owner ROM.
+Run `s3k_sound_harness <s3k.bin> <out.wav> [log.csv] id[@frame] ...`; hex ids
+below `33` are music, the rest sound effects.
 
 ## Owner-ROM tooling
 

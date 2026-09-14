@@ -36,7 +36,9 @@ add_executable(SuperMarioBrosRecomp
     src/game_samus.c
     src/game_samus_audio.c
     src/game_sonic.c
+    src/game_sonic_adapter.c
     src/game_sonic_audio.c
+    src/game_sonic_items.c
     mods/widescreen_plugin.c
     mods/voxel_plugin.c
     mods/smash64_player_plugin.c
@@ -47,7 +49,16 @@ add_executable(SuperMarioBrosRecomp
     mods/smash64/characters/captain_falcon.c
     mods/zelda2/link_controller.c
     mods/metroid/samus_controller.c
+    mods/s3k/s3k_player.c
+    mods/s3k/s3k_rings.c
     mods/s3k/sonic_controller.c
+    mods/s3k/audio/z80.c
+    mods/s3k/audio/sn76489.c
+    mods/s3k/audio/s3k_sound_board.c
+    mods/s3k/audio/ym2612_ymfm.cpp
+    third_party/ymfm/ymfm_opn.cpp
+    third_party/ymfm/ymfm_ssg.cpp
+    third_party/ymfm/ymfm_adpcm.cpp
     mods/smash64/ssb_ported/falcon_locomotion.c
     mods/smash64/characters/pikachu.c
     mods/smash64/ssb_ported/pikachu_locomotion.c

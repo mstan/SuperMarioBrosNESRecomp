@@ -113,16 +113,28 @@ Open **Mods**, enable **Sonic 3 & Knuckles Sonic Player Replacement**, choose
 Sonic from the Character dropdown, and select a legally owned canonical
 **Sonic 3 & Knuckles** Genesis ROM. The launcher verifies normalized SHA-1
 `cfbf98c36c776677290a872547ac47c53d2761d6`. Sonic's Genesis sprites are
-decoded into memory from that verified ROM. No Sonic 3 & Knuckles ROM data or
-derived graphics are shipped or written beside the game.
+decoded into memory from that verified ROM, and his sounds come from Sonic 3 &
+Knuckles' own Z80 sound driver, decompressed from the same ROM and run on an
+emulated Genesis sound board. No Sonic 3 & Knuckles ROM data, derived graphics
+or rendered audio are shipped or written beside the game.
 
-Sonic uses Sonic 3 & Knuckles-style movement adapted to SMB worlds: A jumps,
-Down crouches, Down+B charges a spindash, and spin attacks hurt enemies. A
-spindash-origin roll can break ordinary breakable bricks and preserve momentum
-through block rows; ordinary ground rolls do not break bricks. Fire Flower
-grants a fire shield presentation and enables an airborne double-A fire dash.
-The Sonic, Link, Samus and Smash 64 packages share the `player-controller`
-exclusive group, so the launcher permits only one at a time.
+Optionally, also select a **Sonic the Hedgehog 2 (World) (Rev A)** ROM
+(normalized SHA-1 `8bca5dcef1af3e00098666fd892dc1c2a76333f9`). Sonic 3 &
+Knuckles has no art for the standard shield, so with it the Mushroom shield
+uses Sonic 2's shield instead of a Bubble Shield stand-in.
+
+Sonic's player object is ported routine by routine from the Sonic 3 & Knuckles
+disassembly with its fixed-point math, so movement, rolling and air control
+match the original. A and B both act as the Genesis jump button: Down plus jump
+charges a spindash, and jump again in the air uses the Insta-Shield, or the
+Fire Shield dash while holding a Fire Flower. Coins work as rings (a hit spills
+them), a Mushroom is the standard shield and a Fire Flower the Fire Shield.
+SMB keeps deciding what happens to its own objects: stomps shed Koopa wings and
+shells, spinies and a rising jump into a ground enemy still hurt, shield moves
+and rolls hit blocks, and lifts are top-solid platforms. Bouncing blocks,
+jumping coins and power-ups are no longer limited by SMB's object slots while
+Sonic plays. The Sonic, Link, Samus and Smash 64 packages share the
+`player-controller` exclusive group, so the launcher permits only one at a time.
 
 ## Widescreen mod (experimental)
 

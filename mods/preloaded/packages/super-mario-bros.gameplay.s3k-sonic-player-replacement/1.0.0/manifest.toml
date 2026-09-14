@@ -30,6 +30,17 @@ identity = "Sonic 3 & Knuckles"
 size = 4194304
 normalized_sha1 = "cfbf98c36c776677290a872547ac47c53d2761d6"
 
+[[external_rom]]
+feature = "s3k-sonic-player"
+id = "sonic-2"
+label = "Sonic the Hedgehog 2 ROM"
+description = "Optional: a legally owned Sonic the Hedgehog 2 (World) (Rev A) Genesis ROM. Sonic 3 & Knuckles has no art for the standard shield; with this ROM the Mushroom shield is drawn with Sonic 2's shield art and palette instead of a Bubble Shield stand-in."
+format = "raw"
+identity = "Sonic the Hedgehog 2 (World) (Rev A)"
+size = 1048576
+normalized_sha1 = "8bca5dcef1af3e00098666fd892dc1c2a76333f9"
+required = false
+
 [[option]]
 feature = "s3k-sonic-player"
 id = "character"

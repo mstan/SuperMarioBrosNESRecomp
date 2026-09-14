@@ -221,26 +221,12 @@ static const Smash64FighterProfile kLinkProfile = {
 
 static uint32_t sonic_state_traits(unsigned state)
 {
-    switch (state) {
-    case S3K_SONIC_STAND:
-    case S3K_SONIC_WALK:
-    case S3K_SONIC_RUN:
-    case S3K_SONIC_SKID:
-    case S3K_SONIC_CROUCH:
-        return SMASH64_STATE_TRAIT_STREAM_LIMIT;
-
-    case S3K_SONIC_SPINDASH:
-    case S3K_SONIC_ROLL:
-    case S3K_SONIC_JUMP:
-    case S3K_SONIC_FALL:
-        return SMASH64_STATE_TRAIT_STREAM_LIMIT |
-               SMASH64_STATE_TRAIT_INTANGIBLE;
-    case S3K_SONIC_FIRE_DASH:
-        return SMASH64_STATE_TRAIT_ROOT_BURST |
-               SMASH64_STATE_TRAIT_INTANGIBLE;
-    default:
-        return SMASH64_STATE_TRAIT_NONE;
-    }
+    /* S3K Sonic integrates S3K's own velocities through a dedicated host
+     * path (game_smash64.c) with the area parser serviced post-NMI, and his
+     * touch/hurt rules live in game_sonic_adapter.c. No generic stream
+     * limit or intangibility trait applies. */
+    (void)state;
+    return SMASH64_STATE_TRAIT_NONE;
 }
 
 static const Smash64FighterProfile kSonicProfile = {
