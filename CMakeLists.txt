@@ -206,6 +206,21 @@ recomp_target_launcher_ui(SuperMarioBrosRecomp
     CONSOLE nes
     BOXART ${CMAKE_SOURCE_DIR}/boxart.tga)
 
+# ---- Online play: rollback netplay over recomp-net ----
+# 2-4 player simultaneous co-op online (docs/NETPLAY.md). On by default for
+# Linux builds; the Windows/macOS toolchains have not been verified with the
+# rollback stack yet, so there it stays opt-in.
+if(UNIX AND NOT APPLE)
+    set(_smb_net_default ON)
+else()
+    set(_smb_net_default OFF)
+endif()
+option(SMB_ENABLE_NETPLAY "Build rollback netplay (recomp-net + recomp-ui lobby)"
+    ${_smb_net_default})
+if(SMB_ENABLE_NETPLAY OR NESRECOMP_ENABLE_NET)
+    nesrecomp_enable_recomp_net(SuperMarioBrosRecomp)
+endif()
+
 add_custom_command(TARGET SuperMarioBrosRecomp POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/mods/preloaded"

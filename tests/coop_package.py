@@ -12,7 +12,7 @@ def main():
     ap.add_argument('--exe',type=Path,required=True)
     ap.add_argument('--rom',type=Path,required=True)
     ap.add_argument('--out',type=Path,default=Path('build-coop/package-test'))
-    ap.add_argument('--net-enabled',action='store_true',help='Also test rejection with NESRECOMP_ENABLE_NET=ON')
+    ap.add_argument('--net-enabled',action='store_true',help='Also test the online session seal (netplay builds)')
     a=ap.parse_args();out=a.out.resolve();out.mkdir(parents=True,exist_ok=True)
     exe=out/a.exe.name;shutil.copy2(a.exe,exe)
     for dll in a.exe.parent.glob('*.dll'): shutil.copy2(dll,out/dll.name)
@@ -46,11 +46,24 @@ pause="{pause}"
         assert r.returncode==0
         assert State(save).data[s.mod+5:s.mod+8]==bytes([count,pause=='shared',1])
     if a.net_enabled:
-        env=dict(os.environ,NES_NETPLAY='1')
-        online=subprocess.run(command,creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), capture_output=True,text=True,timeout=15,env=env)
-        (out/'online-rejected.log').write_text(online.stdout+online.stderr)
-        assert online.returncode!=0 and 'requires local play' in online.stderr, 'co-op accepted an online session'
-        print('PASS: online session rejected before connection')
+        # Co-op is online-capable (docs/NETPLAY.md): an online launch commits
+        # no mods, takes the co-op mode from the host's offline SELECTION as
+        # the sealed session configuration, and starts the session. With no
+        # peer it must then give up at the pre-boot barrier -- the same place
+        # any unanswered match stops -- not reject co-op up front.
+        env=dict(os.environ,NES_NETPLAY='1',NES_NET_CONNECT_TIMEOUT_MS='1500',
+                 NES_NET_EXIT_ON_RETURN='1',SDL_VIDEODRIVER='dummy',SDL_AUDIODRIVER='dummy',
+                 NES_NET_BIND='127.0.0.1:0',NES_NET_PEER='127.0.0.1:9')
+        online=subprocess.run([str(exe),str(a.rom.resolve())],creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), capture_output=True,text=True,timeout=30,env=env)
+        (out/'online-session.log').write_text(online.stdout+online.stderr)
+        assert 'requires local play' not in online.stderr, 'co-op was refused online'
+        want=f'session_config="nes-session/1;coop={count}:{pause};widescreen=0;"'
+        assert want in online.stderr, ('session configuration not sealed', want)
+        assert 'connect_timeout' in online.stderr and online.returncode==3, online.returncode
+        # Scripts stay local-only: an input source outside the published rows.
+        scripted=subprocess.run(command,creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), capture_output=True,text=True,timeout=15,env=env)
+        assert scripted.returncode!=0 and 'input scripts requires local play' in scripted.stderr
+        print('PASS: co-op sealed into the online session; scripts refused online')
     print('PASS: shipped package activation and persisted 2/3/4-player/pause options')
 
 
