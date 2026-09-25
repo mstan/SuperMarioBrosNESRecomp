@@ -60,8 +60,8 @@ def main():
     assert (out / 'keybinds.ini').read_bytes() == saved
     # Click the real Reset to Defaults button in the fixed-size controller view.
     launch('reset', ['wait:20', 'view:controller', 'player:2', 'wait:3',
-                     'click:120,440', 'wait:5', 'player:3', 'wait:3',
-                     'click:120,440', 'wait:5', 'quit'])
+                     'click:250,455', 'wait:5', 'player:3', 'wait:3',
+                     'click:250,455', 'wait:5', 'quit'])
     ini.read(out / 'keybinds.ini')
     for player in ('player3', 'player4'):
         assert len(ini[player]) == 8 and set(ini[player].values()) == {'None'}, player
