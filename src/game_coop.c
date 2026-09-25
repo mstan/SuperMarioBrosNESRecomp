@@ -618,16 +618,16 @@ void game_coop_render(uint32_t *fb) {
                     uint8_t color=projectile?g_ppu_pal[0x10+(o[2]&3)*4+pixel]:palettes[i][pixel-1];
                     if(!projectile && a->ram[S_PlayerStatus]==2 && pixel==1) color=0x30;
                     if(!projectile && a->ram[S_StarInvincibleTimer]) color=(uint8_t)((color+(g_ram[S_FrameCounter]/4)%4*0x10)&63);
-                    fb[py*256+px]=g_nes_palette[color&63];
+                    uint32_t rgb=g_nes_palette[color&63];
+                    /* NES $28 is olive in the stock display palette. These
+                       host-drawn sprites can use Wario's warm yellow directly;
+                       keep the native fire/star color changes above. */
+                    if(!projectile && i==2 && pixel==1 && a->ram[S_PlayerStatus]!=2 && !a->ram[S_StarInvincibleTimer])
+                        rgb=0xffffd43b;
+                    fb[py*256+px]=rgb;
                 }
             }
         }
-    }
-    for(int y=32;y<40;++y) for(int x=0;x<256;++x) fb[y*256+x]=0xff000000;
-    for(int i=0;i<s_count;++i) {
-        char label[10]; const Actor *a=&s.actor[i];
-        snprintf(label,sizeof label,"%s %s",i==0?"M":i==1?"L":i==2?"WA":"WL",a->life!=ALIVE?"OUT":a->ram[S_PlayerStatus]==2?"F":a->ram[S_PlayerStatus]==1?"B":"S");
-        text_at(fb,8+i*64,32,label,g_nes_palette[palettes[i][0]]);
     }
 }
 

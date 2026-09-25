@@ -79,6 +79,7 @@ python tests/coop_runtime.py --exe <exe> --rom <rom>
 python tests/coop_rules.py --exe <exe> --rom <rom>
 python tests/coop_campaign.py --exe <exe> --rom <rom>
 python tests/coop_package.py --exe <exe> --rom <rom>
+python tests/coop_launcher.py --exe <exe> --rom <rom>
 python tests/coop_stock_regression.py --stock <pristine-exe> --candidate <exe> --rom <rom>
 ```
 
@@ -93,6 +94,8 @@ game `27ae15e9` plus engine `cfc483fe` through the title, original 2P selection,
 movement, and turn change. Engine tests in `tests/coop_input`, `tests/mod_runtime`,
 and `tests/mod-hooks.test.ts` cover devices, launcher binding persistence, mod
 constraints, and code generation. Generated artifacts stay under `build-coop/`.
+The launcher test captures P3/P4 keys through SDL events, restarts to verify
+their displayed bindings, and clicks Reset to Defaults for each extra seat.
 
 Trace builds also accept `--coop 2|3|4`, `--coop-pause player|shared`, and the TCP
 `coop_state` command. Release users select the package in the launcher.
