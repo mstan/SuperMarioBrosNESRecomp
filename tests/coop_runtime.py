@@ -54,7 +54,7 @@ class Harness:
                  '--smoke','1000000','--smoke-interval','1000000']
         if shared: command+=['--coop-pause','shared']
         try:
-            result=subprocess.run(command,capture_output=True,text=True,timeout=60)
+            result=subprocess.run(command,creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), capture_output=True,text=True,timeout=60)
         except subprocess.TimeoutExpired as e:
             (out/f'{name}.log').write_bytes((e.stdout or b'')+(e.stderr or b''))
             raise

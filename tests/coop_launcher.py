@@ -33,11 +33,12 @@ def main():
     (out / 'keybinds.ini').write_text(original + '[gamepad4]\na=rightshoulder\n')
 
     def launch(name, commands):
-        env = dict(os.environ, LNG_SCRIPT=';'.join(['size:1100x880'] + commands))
+        env = dict(os.environ, LNG_TEST_HIDDEN='1',
+                   LNG_SCRIPT=';'.join(['size:1100x880'] + commands))
         env.pop('NESRECOMP_NO_LAUNCHER', None)
         env.pop('NES_NETPLAY', None)
         r = subprocess.run([str(exe), '--launcher'], cwd=out, env=env,
-                           capture_output=True, text=True, timeout=60)
+                           creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), capture_output=True, text=True, timeout=60)
         (out / f'{name}.log').write_text(r.stdout + r.stderr)
         assert r.returncode == 0, (name, r.returncode, r.stderr)
 

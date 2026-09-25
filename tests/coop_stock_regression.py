@@ -21,7 +21,7 @@ def main():
         body+='HOLD RIGHT\nWAIT 26\nHOLD A\nWAIT 26\nRELEASE A\nWAIT 50\nRELEASE RIGHT\nWAIT 20\n'+snap('motion')
         body+='WRITE_RAM8 00B5 06\nWAIT 430\n'+snap('turn-change')+'EXIT 0\n'
         script=target/'stock.script';script.write_text(body)
-        r=subprocess.run([str(exe.resolve()),str(a.rom.resolve()),'--script',str(script),'--smoke','1000000','--smoke-interval','1000000'],capture_output=True,text=True,timeout=70)
+        r=subprocess.run([str(exe.resolve()),str(a.rom.resolve()),'--script',str(script),'--smoke','1000000','--smoke-interval','1000000'],creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), capture_output=True,text=True,timeout=70)
         (target/'run.log').write_text(r.stdout+r.stderr)
         assert r.returncode==0,(name,r.returncode)
         assert 'dispatch miss' not in (r.stdout+r.stderr).lower(),name

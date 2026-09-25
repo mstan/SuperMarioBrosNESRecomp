@@ -36,18 +36,18 @@ pause="{pause}"
         save=out/f'package-{count}.sav';script=out/'package.script'
         script.write_text(f'WAIT 60\nHOLD START\nWAIT 6\nRELEASE START\nWAIT_RAM8 000E 08\nWAIT 4\nSAVE_STATE {save.as_posix()}\nWAIT 2\nEXIT 0\n')
         command=[str(exe),str(a.rom.resolve()),'--script',str(script),'--smoke','1000000','--smoke-interval','1000000']
-        r=subprocess.run(command,capture_output=True,text=True,timeout=40)
+        r=subprocess.run(command,creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), capture_output=True,text=True,timeout=40)
         (out/f'package-{count}.log').write_text(r.stdout+r.stderr)
         assert r.returncode==0,(count,r.stderr)
         s=State(save)
         assert s.data[s.mod+5:s.mod+8]==bytes([count,pause=='shared',1])
         # A second launch consumes the runtime's rewritten state file.
-        r=subprocess.run(command,capture_output=True,text=True,timeout=40)
+        r=subprocess.run(command,creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), capture_output=True,text=True,timeout=40)
         assert r.returncode==0
         assert State(save).data[s.mod+5:s.mod+8]==bytes([count,pause=='shared',1])
     if a.net_enabled:
         env=dict(os.environ,NES_NETPLAY='1')
-        online=subprocess.run(command,capture_output=True,text=True,timeout=15,env=env)
+        online=subprocess.run(command,creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), capture_output=True,text=True,timeout=15,env=env)
         (out/'online-rejected.log').write_text(online.stdout+online.stderr)
         assert online.returncode!=0 and 'requires local play' in online.stderr, 'co-op accepted an online session'
         print('PASS: online session rejected before connection')

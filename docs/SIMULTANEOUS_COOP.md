@@ -20,6 +20,8 @@ P3/P4 keyboard bindings start empty and can be assigned in Controls.
 
 - One forward 4:3 camera keeps every living player on screen. The leader waits
   when a teammate reaches the rear edge. Players pass through each other.
+  The rear edge advances only as the trailing survivor advances; dead players
+  do not hold it back. Walking left never advances the camera.
 - Score, coins, timer, and three starting attempts belong to the team. A 1-up
   adds one team attempt. Items and enemies retain their original spawn counts.
 - The player hitting a question block determines mushroom versus flower. A
@@ -80,6 +82,7 @@ python tests/coop_rules.py --exe <exe> --rom <rom>
 python tests/coop_campaign.py --exe <exe> --rom <rom>
 python tests/coop_package.py --exe <exe> --rom <rom>
 python tests/coop_launcher.py --exe <exe> --rom <rom>
+python tests/coop_camera_menu.py --exe <exe> --rom <rom>
 python tests/coop_stock_regression.py --stock <pristine-exe> --candidate <exe> --rom <rom>
 ```
 
@@ -96,6 +99,15 @@ and `tests/mod-hooks.test.ts` cover devices, launcher binding persistence, mod
 constraints, and code generation. Generated artifacts stay under `build-coop/`.
 The launcher test captures P3/P4 keys through SDL events, restarts to verify
 their displayed bindings, and clicks Reset to Defaults for each extra seat.
+The camera/menu test records consecutive native frames through Start and checks
+the mushroom cursor, absent legacy menu labels, signed leftward movement with
+one or several survivors, and smooth camera movement as the rear catches up.
+Windows test processes suppress console windows; scripted launcher checks use
+`LNG_TEST_HIDDEN=1` to avoid showing a window or taking desktop focus.
+
+For launch-delay diagnosis, `LNG_BOOT_TIMING=1` logs launcher phases and
+`NESRECOMP_BOOT_TIMING=1` logs runner initialization through the first presented
+frame. Use an actual windowed launch: `--script` and `--smoke` skip SDL startup.
 
 Trace builds also accept `--coop 2|3|4`, `--coop-pause player|shared`, and the TCP
 `coop_state` command. Release users select the package in the launcher.

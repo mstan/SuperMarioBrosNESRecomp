@@ -114,6 +114,7 @@ bank0 = [
     0xB7B8, # co-op native entry: ProcessWhirlpools
     0x8FE4, # co-op native entry: InitializeArea
     0x8245, # co-op native entry: GameMenuRoutine
+    0x86FF, # co-op native entry: DrawTitleScreen
     0xB74F, # co-op native entry: RunGameTimer
     0xB1BB, # co-op native entry: CloudExit
     0x838B, # co-op native entry: VictoryMode
@@ -284,6 +285,10 @@ addr = 0xCE08
 # Native simultaneous co-op: GameMenuRoutine
 [[mod_function_hook]]
 addr = 0x8245
+
+# Native simultaneous co-op: DrawTitleScreen
+[[mod_function_hook]]
+addr = 0x86FF
 
 # Native simultaneous co-op: RunGameTimer
 [[mod_function_hook]]

@@ -69,7 +69,7 @@ static const uint16_t hooks[] = {
     S_GameCoreRoutine, S_GameRoutines, S_ScrollHandler, S_PlayerGfxHandler,
     S_ProcFireball_Bubble, S_EnemiesAndLoopsCore, S_PlayerEnemyCollision,
     S_PlayerHammerCollision, S_FirebarCollision, S_ProcessWhirlpools,
-    S_InitializeArea, S_GameMenuRoutine, S_RunGameTimer, S_KillPlayer,
+    S_InitializeArea, S_GameMenuRoutine, S_DrawTitleScreen, S_RunGameTimer, S_KillPlayer,
     S_RunLargePlatform, S_RunSmallPlatform, S_LargePlatformCollision, S_SmallPlatformCollision,
     S_FlagpoleCollision, S_HandleAxeMetatile, S_HandlePipeEntry, S_PipeDwnS,
     S_VineCollision, S_CloudExit, S_VictoryMode, S_ExecGameLoopback,
@@ -196,7 +196,9 @@ static void scroll_party(void) {
        proposed movement to the room remaining behind the trailing player. */
     int margin=rear-left;
     if(margin<0) margin=0;
-    if(g_ram[S_Player_X_Scroll]>margin) g_ram[S_Player_X_Scroll]=(uint8_t)margin;
+    /* MovePlayerHoriz supplies a signed displacement. Clamping its unsigned
+       byte would turn -1 into a large forward scroll, even with one survivor. */
+    if((int8_t)g_ram[S_Player_X_Scroll]>margin) g_ram[S_Player_X_Scroll]=(uint8_t)margin;
     /* Platform displacement was applied once during the preceding world tick. */
     g_ram[S_Platform_X_Scroll]=0;
     original(S_ScrollHandler);
@@ -423,9 +425,35 @@ static void fireballs_all(void) {
 }
 static int hook(uint16_t address) {
     if(!s_count || s_bypass[address]) return 0;
+    if(address==S_DrawTitleScreen) {
+        original(address);
+        if(g_ram[S_OperMode]==0) {
+            /* DrawTitleScreen copies the native CHR title transfer stream to
+               $0300-$0439. Change its two menu records before the next NMI
+               uploads them. The native mushroom at $2249 is left intact,
+               and these tiles persist throughout the Start transition. */
+            for(int p=0x300;p+3<=0x43a && g_ram[p];) {
+                int dest=g_ram[p]*256+g_ram[p+1], control=g_ram[p+2];
+                int size=(control&0x40)?1:(control&0x3f);
+                p+=3;
+                if(p+size>0x43a) break;
+                if(control==13 && (dest==0x224b || dest==0x228b)) {
+                    memset(g_ram+p,0x24,13);
+                    if(dest==0x224b) {
+                        const char *label="CO-OP PLAY";
+                        for(int j=0;label[j];++j)
+                            g_ram[p+j]=(uint8_t)(label[j]==' '?0x24:label[j]=='-'?0x28:label[j]-'A'+10);
+                    }
+                }
+                p+=size;
+            }
+        }
+        return 1;
+    }
     if(address==S_GameMenuRoutine) {
         g_ram[S_NumberOfPlayers]=0;
         g_ram[S_SavedJoypadBits]&=~0x20;
+        g_ram[S_SavedJoypad2Bits]=0;
         original(address); g_ram[S_NumberOfPlayers]=0;
         if(g_ram[S_OperMode]==1) { memset(&s,0,sizeof s); g_ram[S_NumberofLives]=2; }
         return 1;
@@ -590,11 +618,7 @@ static void text_at(uint32_t *fb,int x,int y,const char *text,uint32_t color) {
 }
 void game_coop_render(uint32_t *fb) {
     if(!s_count || g_render_width!=256) return;
-    if(g_ram[S_OperMode]==0 && g_ram[S_OperMode_Task]>=3) {
-        for(int y=136;y<176;++y) for(int x=72;x<200;++x) fb[y*256+x]=g_nes_palette[g_ppu_pal[0]&63];
-        text_at(fb,88,144,"CO-OP PLAY",g_nes_palette[0x30]);
-        return;
-    }
+    if(g_ram[S_OperMode]==0) return;
     if(!s.ready) return;
     uint32_t background=g_nes_palette[g_ppu_pal[0]&63];
     for(int y=16;y<24;++y) for(int x=24;x<64;++x) fb[y*256+x]=background;

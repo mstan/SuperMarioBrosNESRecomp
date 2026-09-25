@@ -19,6 +19,7 @@
 #define S_CurrentPageLoc 0x0725u
 #define S_CurrentPlayer 0x0753u
 #define S_DisableCollisionDet 0x0716u
+#define S_DrawTitleScreen 0x86ffu
 #define S_EnemiesAndLoopsCore 0xc047u
 #define S_Enemy_CollisionBits 0x0491u
 #define S_Enemy_Flag 0x000fu
@@ -124,6 +125,7 @@
 #define S_RunLargePlatform 0xc965u
 #define S_RunSmallPlatform 0xc94du
 #define S_RunningTimer 0x0783u
+#define S_SavedJoypad2Bits 0x06fdu
 #define S_SavedJoypadBits 0x06fcu
 #define S_ScreenLeft_PageLoc 0x071au
 #define S_ScreenLeft_X_Pos 0x071cu

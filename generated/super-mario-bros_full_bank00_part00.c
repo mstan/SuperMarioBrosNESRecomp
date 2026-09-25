@@ -6816,6 +6816,7 @@ label_864F:; /* NoAltPal */
 }
 
 void func_86FF_b0(void) { /* DrawTitleScreen */
+    if (nes_mod_function_entry(0x86FFu)) return;  /* trusted opt-in game-mod hook */
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_86FF_b0");
 #endif
