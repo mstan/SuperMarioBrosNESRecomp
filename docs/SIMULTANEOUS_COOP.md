@@ -109,6 +109,26 @@ For launch-delay diagnosis, `LNG_BOOT_TIMING=1` logs launcher phases and
 `NESRECOMP_BOOT_TIMING=1` logs runner initialization through the first presented
 frame. Use an actual windowed launch: `--script` and `--smoke` skip SDL startup.
 
+`tests/startup_launch.py` exercises Play, real video/audio initialization, and
+90 game frames through TCP in an isolated copy. It captures the title and exits.
+`NESRECOMP_TEST_HIDDEN=1` keeps the game window hidden, in addition to the
+launcher's `LNG_TEST_HIDDEN=1`; all child consoles are suppressed. For example:
+
+```sh
+python tests/startup_launch.py --exe <exe> --rom <rom> --out build-coop/startup-direct
+python tests/startup_launch.py --exe <exe> --rom <rom> --out build-coop/startup-powershell --powershell --max-startup-ms 3000
+```
+
+Use `--settings-from <existing-build-directory>` to test a copy of its mod and
+controller settings. The optional time limit covers runner entry through the
+first presented frame; it excludes time spent browsing the launcher.
+
+The PowerShell case reproduces a Windows logging regression: forcing redirected
+stdout to be unbuffered made startup messages take seconds to write. The runner
+now buffers redirected stdout and explicitly flushes startup and critical
+messages. The reproduced 22.6-second runtime startup fell below 0.6 seconds;
+normal direct output measured about 0.16 seconds on the test machine.
+
 Trace builds also accept `--coop 2|3|4`, `--coop-pause player|shared`, and the TCP
 `coop_state` command. Release users select the package in the launcher.
 With `NESRECOMP_ENABLE_NET=ON`, add `--net-enabled` to the package test to

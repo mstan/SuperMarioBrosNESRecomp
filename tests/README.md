@@ -49,6 +49,14 @@ ROMs or caches skip when their inputs are absent. See the
 [owner cache guide](../tools/owner_ssb64/README.md) and each test's environment
 variables for optional asset validation. Some checks require Pillow.
 
+## Startup latency
+
+`startup_launch.py` requires a trace-enabled build and an owner ROM. It tests
+actual launcher-to-game initialization with hidden windows and records timings
+and a title screenshot. Add `--powershell` on Windows to cover redirected log
+output, which previously stalled unbuffered stdout. See the
+[co-op validation guide](../docs/SIMULTANEOUS_COOP.md#validation) for commands.
+
 ## Game and release probes
 
 The `*.script` files are reusable input/QA scenarios for the runner's
