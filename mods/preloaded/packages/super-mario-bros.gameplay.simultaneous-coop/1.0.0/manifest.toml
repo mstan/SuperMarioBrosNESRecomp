@@ -1,0 +1,55 @@
+format_version = 1
+id = "super-mario-bros.gameplay.simultaneous-coop"
+version = "1.0.0"
+name = "Simultaneous Co-op"
+author = "NESRecomp"
+description = "Mario, Luigi, Wario and Waluigi share one adventure. Local play for two to four players."
+license = "MIT"
+resolver = "declarative"
+save_compatibility = "coop-v2"
+
+[[target]]
+game_id = "super-mario-bros-world"
+rom_crc32 = "d445f698"
+
+[[feature]]
+id = "coop"
+name = "Simultaneous Co-op"
+description = "Shared 4:3 camera, team lives, scarce items, and no mid-level revival. Players pass through each other; kicked shells can hurt allies."
+group = "Gameplay"
+exclusive_group = "player-controller"
+exclusive_groups = ["display-mode"]
+default_enabled = false
+
+[[plugin]]
+feature = "coop"
+id = "super-mario-bros.coop"
+
+[[option]]
+feature = "coop"
+id = "players"
+label = "Players"
+type = "choice"
+default = "2"
+[[option.choice]]
+value = "2"
+label = "2 - Mario and Luigi"
+[[option.choice]]
+value = "3"
+label = "3 - Add Wario"
+[[option.choice]]
+value = "4"
+label = "4 - Add Waluigi"
+
+[[option]]
+feature = "coop"
+id = "pause"
+label = "Transformation pause"
+type = "choice"
+default = "player"
+[[option.choice]]
+value = "player"
+label = "Affected player only"
+[[option.choice]]
+value = "shared"
+label = "Whole game"

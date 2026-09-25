@@ -6,6 +6,11 @@ or `build_*`; these directories are ignored.
 
 ## Controller and adapter harnesses
 
+For simultaneous co-op, see [the co-op guide](../docs/SIMULTANEOUS_COOP.md#validation).
+`coop_runtime.py`, `coop_rules.py`, `coop_campaign.py`, and `coop_package.py`
+exercise the actual game with a supplied ROM. `coop_stock_regression.py` compares
+mod-off saves and screenshots against a pristine executable.
+
 Each directory below is a standalone CMake project. For example:
 
 ```sh

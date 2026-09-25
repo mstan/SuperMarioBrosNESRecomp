@@ -21,6 +21,8 @@ find_package(SDL2 REQUIRED)
 add_executable(SuperMarioBrosRecomp
     ${NESRECOMP_RUNNER_SOURCES}
     src/extras.c
+    src/game_coop.c
+    mods/coop_plugin.c
     src/game_widescreen.c
     src/smb_ws_world.c
     src/smb_ws_actors.c
@@ -71,7 +73,8 @@ add_executable(SuperMarioBrosRecomp
 
 target_compile_definitions(SuperMarioBrosRecomp PRIVATE
     RECOMP_STACK_TRACKING WATCHDOG_ENABLED
-    NESRECOMP_GAME_PLAYERS=2
+    NESRECOMP_GAME_PLAYERS=4
+    NESRECOMP_INPUT_SEATS=4
     NESRECOMP_GAME_ID="super-mario-bros-world"
     NESRECOMP_GAME_ROM_CRC32="d445f698"
     NESRECOMP_GAME_SDL_EVENT_HOOK=game_voxel_handle_event)
@@ -84,7 +87,7 @@ target_include_directories(SuperMarioBrosRecomp PRIVATE
     ${SDL2_INCLUDE_DIRS}
 )
 
-target_link_libraries(SuperMarioBrosRecomp PRIVATE ${SDL2_LIBRARIES})
+target_link_libraries(SuperMarioBrosRecomp PRIVATE ${SDL2_LIBRARIES} ${NESRECOMP_RUNNER_LIBRARIES})
 
 # The baker is publishable code; its inputs and output remain under the
 # ignored assets_ssb64 quarantine. A checkout without those local assets

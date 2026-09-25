@@ -70,6 +70,7 @@ extern uint16_t g_rts_target;
 #define TopScoreCheck func_8F9E_b0
 #define TitleScreenMode func_8231_b0
 #define GameMode func_AEDC_b0
+#define GameCoreRoutine func_AEEA_b0
 #define VictoryMode func_838B_b0
 #define GameOverMode func_9218_b0
 #define Dump_Squ1_Regs func_F381
@@ -111,20 +112,15 @@ extern uint16_t g_rts_target;
 #define SetFreq_Squ1 func_F38B
 #define SetFreq_Tri func_F3AD
 #define InitializeGame func_8FCF_b0
+#define InitializeArea func_8FE4_b0
 #define ScreenRoutines func_8567_b0
 #define PrimaryGameSetup func_9061_b0
 #define GameMenuRoutine func_8245_b0
-#define InitializeArea func_8FE4_b0
 #define SecondaryGameSetup func_9071_b0
-#define GameCoreRoutine func_AEEA_b0
 #define GameRoutines func_B04A_b0
 #define ProcFireball_Bubble func_B624_b0
-#define EnemiesAndLoopsCore func_C047
+#define ProcAirBubbles func_B66E_b0
 #define FloateyNumbersRoutine func_84C3_b0
-#define GetPlayerOffscreenBits func_F180
-#define RelativePlayerPosition func_F12A
-#define PlayerGfxHandler func_EEE9
-#define PlayerOffscreenChk func_EF7A
 #define BlockObjMT_Updater func_BED4_b0
 #define BlockObjectsCore func_BE70_b0
 #define MiscObjectsCore func_BB96_b0
@@ -184,6 +180,7 @@ extern uint16_t g_rts_target;
 #define PlayerLoseLife func_91CD_b0
 #define PlayerEntrance func_B069_b0
 #define PlayerCtrlRoutine func_B0E9_b0
+#define CloudExit func_B1BB_b0
 #define PlayerChangeSize func_B233_b0
 #define PlayerInjuryBlink func_B245_b0
 #define PlayerDeath func_B269_b0
@@ -194,7 +191,6 @@ extern uint16_t g_rts_target;
 #define MovePlayerYAxis func_B200_b0
 #define PlayerMovementSubs func_B329_b0
 #define ScrollHandler func_AF93_b0
-#define BoundingBoxCore func_E29C
 #define PlayerBGCollision func_DC64
 #define SetEntr func_B1DD_b0
 #define FireballObjCore func_B689_b0
@@ -204,11 +200,6 @@ extern uint16_t g_rts_target;
 #define DrawBubble func_EDE1
 #define ExDBub func_EE06
 #define RunEnemyObjectsCore func_C882
-#define ProcLoopCommand func_C0CC
-#define FindLoop func_C0D8
-#define DoGroup func_C22E
-#define WrongChk func_C115
-#define IncMLoop func_C102
 #define EndExitOne func_8486_b0
 #define AddToScore func_BC27_b0
 #define DumpTwoSpr func_E5C1
@@ -257,6 +248,7 @@ extern uint16_t g_rts_target;
 #define DigitsMathRoutine func_8F5F_b0
 #define PrintStatusBarNumbers func_8F06_b0
 #define ForceInjury func_D931
+#define KillPlayer func_D958
 #define AreaParserTasks func_92C8_b0
 #define RenderAttributeTables func_896A_b0
 #define BridgeCollapse func_CFEC
@@ -305,13 +297,12 @@ extern uint16_t g_rts_target;
 #define BlockBufferColli_Feet func_E3E8
 #define HandleCoinMetatile func_DE05
 #define CheckForClimbMTiles func_DF9A
-#define HandleAxeMetatile func_DE0E
 #define ChkInvisibleMTiles func_DEBD
 #define ImpedePlayerMove func_DF4B
-#define ChkForLandJumpSpring func_DEC4
-#define HandlePipeEntry func_DEE8
 #define BlockBufferColli_Side func_E3EC
 #define HandleClimbing func_DE2E
+#define FlagpoleCollision func_DE41
+#define VineCollision func_DE7A
 #define ChkJumpspringMetatiles func_DEDD
 #define StopPlayerMove func_DDFF
 #define ErACM func_DE1C
@@ -333,8 +324,6 @@ extern uint16_t g_rts_target;
 #define FireworksSoundScore func_D2BD
 #define NoRunCode func_C8D6
 #define RunFirebarObj func_C947
-#define RunLargePlatform func_C965
-#define RunSmallPlatform func_C94D
 #define RunBowser func_D065
 #define GetPRCmp func_D0D1
 #define BowserControl func_D07F
@@ -345,6 +334,7 @@ extern uint16_t g_rts_target;
 #define VineObjectHandler func_B94B_b0
 #define RunStarFlagObj func_D2D9
 #define JumpspringHandler func_B8BA_b0
+#define PosJSpr func_B8D9_b0
 #define WarpZoneObject func_B7A4_b0
 #define RunRetainerObj func_C8D7
 #define ExecGameLoopback func_C08C
@@ -371,8 +361,6 @@ extern uint16_t g_rts_target;
 #define DumpFourSpr func_E5BB
 #define ChkLeftCo func_EC46
 #define RunAllH func_BB28_b0
-#define PlayerHammerCollision func_D7C4
-#define ClHCol func_D7FA
 #define DrawHammer func_E4DC
 #define MiscLoop func_BB98_b0
 #define CheckRightScreenBBox func_E2DE
@@ -385,54 +373,6 @@ extern uint16_t g_rts_target;
 #define MoveFallingPlatform func_BF6B_b0
 #define MoveEnemyHorizontally func_BF02_b0
 #define GetEnemyBoundBox func_E243
-#define PlayerEnemyCollision func_D853
-#define DrawVine func_E435
-#define CheckForRetainerObj func_E8A9
-#define NoBump func_E131
-#define SetBitsMask func_DA25
-#define PlayerPosSPlatData func_DC17
-#define BlockBufferAdderData func_E3AD
-#define PipeDwnS func_DDCE
-#define AreaChangeTimerData func_DE03
-#define FlagpoleYPosData func_DE29
-#define ClimbXPosAdder func_DE25
-#define SolidMTileUpperExt func_DF8B
-#define ClimbMTileUpperExt func_DF96
-#define EnemyBGCStateData func_DFB9
-#define NoCDirF func_E060
-#define AwardTouchedCoin func_DD1A
-#define BlockBuffer_X_Adder func_E3B0
-#define FirstSprYPos func_E4C4
-#define SecondSprYPos func_E4CC
-#define FirstSprXPos func_E4C0
-#define FirstSprTilenum func_E4D0
-#define SecondSprTilenum func_E4D4
-#define FlagpoleScoreNumTiles func_E541
-#define PowerUpGfxTable func_E6BE
-#define JumpingCoinTiles func_E682
-#define HBChk func_DFDF
-#define JumpspringFrameOffsets func_E878
-#define EnemyGfxTableOffsets func_E840
-#define NextVSp func_E4A2
-#define EnemyAnimTimingBMask func_E876
-#define EnemyGraphicsTable func_E73E
-#define Chk2MSBSt func_E0EC
-#define CheckForBulletBillCV func_E8BE
-#define SetWYSpd func_E048
-#define PUpDrawLoop func_E6F7
-#define ExSteChk func_E0A4
-#define ChkSmallPlatLoop func_DB8C
-#define SdeCLoop func_E10A
-#define NoHOffscr func_E540
-#define ChkFTop func_E492
-#define SetFallS func_DC82
-#define CheckLeftScreenBBox func_E30C
-#define ExHC func_DE38
-#define ExCSM func_DE02
-#define NoOfs2 func_E322
-#define TInjE func_D923
-#define StkLp func_E4B0
-#define CollisionCoreLoop func_E32D
 #define EnemyGfxHandler func_E87D
 #define CheckBowserRear func_E94C
 #define SkipToOffScrChk func_EA61
@@ -493,11 +433,9 @@ extern uint16_t g_rts_target;
 #define DrawFbar func_CD9C
 #define NextFbar func_CDB2
 #define LargePlatformBoundBox func_E273
-#define LargePlatformCollision func_DB45
 #define LargePlatformSubroutines func_C982
 #define DrawLargePlatform func_E5C8
 #define SmallPlatformBoundBox func_E24C
-#define SmallPlatformCollision func_DB7B
 #define DrawSmallPlatform func_ED66
 #define SOfs2 func_EDD1
 #define MoveSmallPlatform func_D655
@@ -521,7 +459,6 @@ extern uint16_t g_rts_target;
 #define RaiseFlagSetoffFWorks func_D34E
 #define DSFLoop func_D36D
 #define DelayToAreaEnd func_D3A2
-#define PosJSpr func_B8D9_b0
 #define InitNormalEnemy func_C30E
 #define InitRedKoopa func_C31E
 #define NoInitCode func_C2F0
@@ -648,7 +585,6 @@ extern uint16_t g_rts_target;
 #define ExFl func_D1EA
 #define GetFirebarPosition func_CE8E
 #define GetVAdder func_CEBA
-#define FirebarCollision func_CE08
 #define DrawFirebar_Collision func_CDBB
 #define NoColFB func_CE85
 #define SetVFbr func_CE03
@@ -749,8 +685,6 @@ extern uint16_t g_rts_target;
 #define XMoveCntr_Platform func_CB47
 #define SetPVar func_D628
 #define MoveDropPlatform func_BF88_b0
-#define PositionPlayerOnHPlat func_D614
-#define PositionPlayerOnS_Plat func_DC19
 #define SetupLakitu func_C38A
 #define PutAtRightExtent func_C5D8
 #define ChpChpEx func_C44E
@@ -847,6 +781,11 @@ extern uint16_t g_rts_target;
 #define Bitmasks func_C68A
 #define ContChk func_DD2D
 #define Enemy17YPosData func_C692
+#define ProcLoopCommand func_C0CC
+#define FindLoop func_C0D8
+#define DoGroup func_C22E
+#define WrongChk func_C115
+#define IncMLoop func_C102
 #define FreqRegLookupTbl func_FF00
 #define PlatPosDataLow func_C86B
 #define PlatPosDataHigh func_C86E
@@ -854,20 +793,78 @@ extern uint16_t g_rts_target;
 #define HammerBroJumpLData func_CA10
 #define RevivedXSpeed func_C9D4
 #define SwimCCXMoveData func_CC46
+#define BoundingBoxCore func_E29C
+#define FirebarCollision func_CE08
 #define FirebarYPos func_CD3A
 #define FirebarPosLookupTbl func_CCC7
 #define FirebarMirrorData func_CD2A
 #define PRandomSubtracter func_CED5
 #define FlyCCBPriority func_CEDA
 #define LakituDiffAdj func_CF25
+#define PipeDwnS func_DDCE
 #define BridgeCollapseData func_CFDD
 #define PRandomRange func_D061
 #define ExVMove func_C046
 #define MusicHeaderData func_F90D
+#define LargePlatformCollision func_DB45
+#define SmallPlatformCollision func_DB7B
+#define PositionPlayerOnS_Plat func_DC19
+#define PositionPlayerOnHPlat func_D614
+#define HandleAxeMetatile func_DE0E
+#define ChkForLandJumpSpring func_DEC4
+#define HandlePipeEntry func_DEE8
+#define PlayerEnemyCollision func_D853
+#define DrawVine func_E435
+#define CheckForRetainerObj func_E8A9
+#define NoBump func_E131
+#define SetBitsMask func_DA25
+#define PlayerPosSPlatData func_DC17
+#define BlockBufferAdderData func_E3AD
+#define AreaChangeTimerData func_DE03
+#define FlagpoleYPosData func_DE29
+#define ClimbXPosAdder func_DE25
+#define SolidMTileUpperExt func_DF8B
+#define ClimbMTileUpperExt func_DF96
+#define EnemyBGCStateData func_DFB9
+#define NoCDirF func_E060
+#define AwardTouchedCoin func_DD1A
+#define BlockBuffer_X_Adder func_E3B0
+#define FirstSprYPos func_E4C4
+#define SecondSprYPos func_E4CC
+#define FirstSprXPos func_E4C0
+#define FirstSprTilenum func_E4D0
+#define SecondSprTilenum func_E4D4
+#define FlagpoleScoreNumTiles func_E541
+#define PowerUpGfxTable func_E6BE
+#define JumpingCoinTiles func_E682
+#define HBChk func_DFDF
+#define JumpspringFrameOffsets func_E878
+#define EnemyGfxTableOffsets func_E840
+#define NextVSp func_E4A2
+#define EnemyAnimTimingBMask func_E876
+#define EnemyGraphicsTable func_E73E
+#define Chk2MSBSt func_E0EC
+#define CheckForBulletBillCV func_E8BE
+#define SetWYSpd func_E048
+#define PUpDrawLoop func_E6F7
+#define ExSteChk func_E0A4
+#define ChkSmallPlatLoop func_DB8C
+#define SdeCLoop func_E10A
+#define NoHOffscr func_E540
+#define ChkFTop func_E492
+#define SetFallS func_DC82
+#define CheckLeftScreenBBox func_E30C
+#define ExHC func_DE38
+#define ExCSM func_DE02
+#define NoOfs2 func_E322
+#define TInjE func_D923
+#define StkLp func_E4B0
+#define CollisionCoreLoop func_E32D
 #define KickedShellPtsData func_D892
 #define RevivalRateData func_D9D2
 #define EnemyBGCXSpdData func_DFBF
 #define PlayerBGUpperExtent func_DC62
+#define PlayerHammerCollision func_D7C4
 #define FirebarSpin func_D410
 #define FlameTimerData func_D1D1
 #define StarFlagYPosAdder func_D2CD
@@ -876,6 +873,9 @@ extern uint16_t g_rts_target;
 #define BowserIdentities func_D736
 #define KickedShellXSpdData func_D84F
 #define DemotedKoopaXSpdData func_D851
+#define ClHCol func_D7FA
+#define GetPlayerOffscreenBits func_F180
+#define RelativePlayerPosition func_F12A
 #define BlockBuffer_Y_Adder func_E3CC
 #define VineYPosAdder func_E433
 #define SecondSprXPos func_E4C8
@@ -886,11 +886,15 @@ extern uint16_t g_rts_target;
 #define ExplosionTiles func_ED06
 #define GameOverMusData func_FC45
 #define SwimKickTileNum func_EEE7
+#define PlayerGfxHandler func_EEE9
+#define PlayerOffscreenChk func_EF7A
 #define IntermediatePlayerData func_EF9E
 #define PlayerGraphicsTable func_EE17
 #define ChangeSizeOffsetAdder func_F09C
 #define DefaultYOnscreenOfs func_F234
 #define YOffscreenBitsData func_F22B
+#define RunLargePlatform func_C965
+#define RunSmallPlatform func_C94D
 #define FirebarTblOffsets func_CD2E
 #define PowerUpGrabFreqData func_F4DA
 #define ExtraLifeFreqData func_F4D4
@@ -926,12 +930,14 @@ extern uint16_t g_rts_target;
 #define GroundM_P4CData func_FB74
 #define DeathMusData func_FB72
 #define ChkUpM func_C018
+#define EnemiesAndLoopsCore func_C047
 #define JmpEO func_C88F
 #define SetGfxF func_D220
 #define JumpEngine func_8E04_b0
 #define Palette3Data func_89D1_b1
 #define SolidBlockMetatiles func_9A25_b1
 #define SideCheckLoop func_DD66
+#define SetKRout func_D946
 #define TopStatusBarLine func_8752_b1
 #define RunBBSubs func_BA76_b1
 #define BlstSJp func_F5D1
@@ -1504,6 +1510,7 @@ void func_8E6A_b0(void); /* ReadPortBits */
 void func_8F9E_b0(void); /* TopScoreCheck */
 void func_8231_b0(void); /* TitleScreenMode */
 void func_AEDC_b0(void); /* GameMode */
+void func_AEEA_b0(void); /* GameCoreRoutine */
 void func_838B_b0(void); /* VictoryMode */
 void func_9218_b0(void); /* GameOverMode */
 void func_F381(void); /* Dump_Squ1_Regs */
@@ -1560,36 +1567,16 @@ void func_F8C8(void);
 void func_F38B(void); /* SetFreq_Squ1 */
 void func_F3AD(void); /* SetFreq_Tri */
 void func_8FCF_b0(void); /* InitializeGame */
+void func_8FE4_b0(void); /* InitializeArea */
 void func_8567_b0(void); /* ScreenRoutines */
 void func_9061_b0(void); /* PrimaryGameSetup */
 void func_8245_b0(void); /* GameMenuRoutine */
-void func_8FE4_b0(void); /* InitializeArea */
 void func_9071_b0(void); /* SecondaryGameSetup */
-void func_AEEA_b0(void); /* GameCoreRoutine */
 void func_B04A_b0(void); /* GameRoutines */
 void func_B624_b0(void); /* ProcFireball_Bubble */
-void func_C047(void); /* EnemiesAndLoopsCore */
-void func_C058(void);
-void func_C04E(void);
-void func_C04D(void);
+void func_B66E_b0(void); /* ProcAirBubbles */
 void func_84C3_b0(void); /* FloateyNumbersRoutine */
 void func_8534_b0(void);
-void func_F180(void); /* GetPlayerOffscreenBits */
-void func_F184(void);
-void func_F12A(void); /* RelativePlayerPosition */
-void func_F12C(void);
-void func_EEE9(void); /* PlayerGfxHandler */
-void func_EEF7(void);
-void func_EF85(void);
-void func_EEFC(void);
-void func_EEFE(void);
-void func_EEEE(void);
-void func_EEF0(void);
-void func_EEF1(void);
-void func_EF10(void);
-void func_EF01(void);
-void func_EF42(void);
-void func_EF7A(void); /* PlayerOffscreenChk */
 void func_BED4_b0(void); /* BlockObjMT_Updater */
 void func_BE70_b0(void); /* BlockObjectsCore */
 void func_BB96_b0(void); /* MiscObjectsCore */
@@ -1666,6 +1653,7 @@ void func_B2CA_b0(void); /* PlayerEndLevel */
 void func_91CD_b0(void); /* PlayerLoseLife */
 void func_B069_b0(void); /* PlayerEntrance */
 void func_B0E9_b0(void); /* PlayerCtrlRoutine */
+void func_B1BB_b0(void); /* CloudExit */
 void func_B233_b0(void); /* PlayerChangeSize */
 void func_B245_b0(void); /* PlayerInjuryBlink */
 void func_B269_b0(void); /* PlayerDeath */
@@ -1677,7 +1665,6 @@ void func_B200_b0(void); /* MovePlayerYAxis */
 void func_B329_b0(void); /* PlayerMovementSubs */
 void func_AF93_b0(void); /* ScrollHandler */
 void func_AFB1_b0(void);
-void func_E29C(void); /* BoundingBoxCore */
 void func_DC64(void); /* PlayerBGCollision */
 void func_B1DD_b0(void); /* SetEntr */
 void func_B689_b0(void); /* FireballObjCore */
@@ -1695,25 +1682,6 @@ void func_EE01(void);
 void func_C882(void); /* RunEnemyObjectsCore */
 void func_C888(void);
 void func_C88A(void);
-void func_C0CC(void); /* ProcLoopCommand */
-void func_C0E9(void);
-void func_C0E1(void);
-void func_C1BE(void);
-void func_C0F0(void);
-void func_C14D(void);
-void func_C0CF(void);
-void func_C18E(void);
-void func_C1AE(void);
-void func_C219(void);
-void func_C0D8(void); /* FindLoop */
-void func_C242(void);
-void func_C141(void);
-void func_C124(void);
-void func_C22E(void); /* DoGroup */
-void func_C21E(void);
-void func_C213(void);
-void func_C115(void); /* WrongChk */
-void func_C102(void); /* IncMLoop */
 void func_8486_b0(void); /* EndExitOne */
 void func_BC27_b0(void); /* AddToScore */
 void func_E5C1(void); /* DumpTwoSpr */
@@ -1843,6 +1811,7 @@ void func_E54B(void); /* FlagpoleGfxHandler */
 void func_8F5F_b0(void); /* DigitsMathRoutine */
 void func_8F06_b0(void); /* PrintStatusBarNumbers */
 void func_D931(void); /* ForceInjury */
+void func_D958(void); /* KillPlayer */
 void func_92C8_b0(void); /* AreaParserTasks */
 void func_896A_b0(void); /* RenderAttributeTables */
 void func_CFEC(void); /* BridgeCollapse */
@@ -1923,13 +1892,12 @@ void func_DCF6(void); /* DoFootCheck */
 void func_E3E8(void); /* BlockBufferColli_Feet */
 void func_DE05(void); /* HandleCoinMetatile */
 void func_DF9A(void); /* CheckForClimbMTiles */
-void func_DE0E(void); /* HandleAxeMetatile */
 void func_DEBD(void); /* ChkInvisibleMTiles */
 void func_DF4B(void); /* ImpedePlayerMove */
-void func_DEC4(void); /* ChkForLandJumpSpring */
-void func_DEE8(void); /* HandlePipeEntry */
 void func_E3EC(void); /* BlockBufferColli_Side */
 void func_DE2E(void); /* HandleClimbing */
+void func_DE41(void); /* FlagpoleCollision */
+void func_DE7A(void); /* VineCollision */
 void func_DEDD(void); /* ChkJumpspringMetatiles */
 void func_DDFF(void); /* StopPlayerMove */
 void func_DE1C(void); /* ErACM */
@@ -1968,9 +1936,6 @@ void func_D2BD(void); /* FireworksSoundScore */
 void func_C8D6(void); /* NoRunCode */
 void func_C947(void); /* RunFirebarObj */
 void func_C94A(void);
-void func_C965(void); /* RunLargePlatform */
-void func_C97F(void);
-void func_C94D(void); /* RunSmallPlatform */
 void func_D065(void); /* RunBowser */
 void func_D0C0(void);
 void func_D100(void);
@@ -2014,6 +1979,7 @@ void func_B94B_b0(void); /* VineObjectHandler */
 void func_D2D9(void); /* RunStarFlagObj */
 void func_D301(void);
 void func_B8BA_b0(void); /* JumpspringHandler */
+void func_B8D9_b0(void); /* PosJSpr */
 void func_B7A4_b0(void); /* WarpZoneObject */
 void func_C8D7(void); /* RunRetainerObj */
 void func_C08C(void); /* ExecGameLoopback */
@@ -2054,12 +2020,6 @@ void func_F165(void); /* VariableObjOfsRelPos */
 void func_E5BB(void); /* DumpFourSpr */
 void func_EC46(void); /* ChkLeftCo */
 void func_BB28_b0(void); /* RunAllH */
-void func_D7C4(void); /* PlayerHammerCollision */
-void func_D7CF(void);
-void func_D7D1(void);
-void func_D7D7(void);
-void func_D7F2(void);
-void func_D7FA(void); /* ClHCol */
 void func_E4DC(void); /* DrawHammer */
 void func_BB98_b0(void); /* MiscLoop */
 void func_E2DE(void); /* CheckRightScreenBBox */
@@ -2073,298 +2033,6 @@ void func_BF63_b0(void); /* MoveD_EnemyVertically */
 void func_BF6B_b0(void); /* MoveFallingPlatform */
 void func_BF02_b0(void); /* MoveEnemyHorizontally */
 void func_E243(void); /* GetEnemyBoundBox */
-void func_D853(void); /* PlayerEnemyCollision */
-void func_E435(void); /* DrawVine */
-void func_E539(void);
-void func_D907(void);
-void func_D908(void);
-void func_D9CF(void);
-void func_D9EE(void);
-void func_DAAE(void);
-void func_D9AE(void);
-void func_E6F0(void);
-void func_E6F1(void);
-void func_DA8D(void);
-void func_D98D(void);
-void func_E00F(void);
-void func_D89D(void);
-void func_DFC2(void);
-void func_D94C(void);
-void func_E03D(void);
-void func_E401(void);
-void func_DFA9(void);
-void func_DFAA(void);
-void func_D920(void);
-void func_E058(void);
-void func_DD8E(void);
-void func_DD0D(void);
-void func_E0E8(void);
-void func_DB4D(void);
-void func_E08E(void);
-void func_D8CB(void);
-void func_DFCA(void);
-void func_E800(void);
-void func_DECB(void);
-void func_DF21(void);
-void func_E8A9(void); /* CheckForRetainerObj */
-void func_E003(void);
-void func_E5CF(void);
-void func_E5D0(void);
-void func_E609(void);
-void func_E605(void);
-void func_E6CD(void);
-void func_E802(void);
-void func_DAB9(void);
-void func_DC8E(void);
-void func_DCCD(void);
-void func_E131(void); /* NoBump */
-void func_E603(void);
-void func_E8C9(void);
-void func_D991(void);
-void func_DA10(void);
-void func_D9D6(void);
-void func_E40D(void);
-void func_E029(void);
-void func_DC1A(void);
-void func_E56F(void);
-void func_D8BE(void);
-void func_E818(void);
-void func_E857(void);
-void func_E858(void);
-void func_E1D1(void);
-void func_D966(void);
-void func_DFC0(void);
-void func_DA25(void); /* SetBitsMask */
-void func_DAAB(void);
-void func_DC55(void);
-void func_E60D(void);
-void func_E60E(void);
-void func_DC16(void);
-void func_DC17(void); /* PlayerPosSPlatData */
-void func_E3AD(void); /* BlockBufferAdderData */
-void func_DDCE(void); /* PipeDwnS */
-void func_DF90(void);
-void func_E820(void);
-void func_DF9B(void);
-void func_E4C9(void);
-void func_E4CA(void);
-void func_DE2F(void);
-void func_DD20(void);
-void func_DE03(void); /* AreaChangeTimerData */
-void func_DE8E(void);
-void func_DE29(void); /* FlagpoleYPosData */
-void func_DE25(void); /* ClimbXPosAdder */
-void func_E807(void);
-void func_E80A(void);
-void func_DFB1(void);
-void func_DDE0(void);
-void func_DF8B(void); /* SolidMTileUpperExt */
-void func_DF96(void); /* ClimbMTileUpperExt */
-void func_E090(void);
-void func_DFB9(void); /* EnemyBGCStateData */
-void func_E389(void);
-void func_E791(void);
-void func_E060(void); /* NoCDirF */
-void func_E061(void);
-void func_E8E3(void);
-void func_E1FE(void);
-void func_E1FF(void);
-void func_E804(void);
-void func_DD04(void);
-void func_DD2A(void);
-void func_D905(void);
-void func_DD3B(void);
-void func_DD60(void);
-void func_DD61(void);
-void func_DD1A(void); /* AwardTouchedCoin */
-void func_D913(void);
-void func_E3F1(void);
-void func_E3B0(void); /* BlockBuffer_X_Adder */
-void func_E121(void);
-void func_E3CD(void);
-void func_E1A9(void);
-void func_E0A9(void);
-void func_E4C4(void); /* FirstSprYPos */
-void func_E4C5(void);
-void func_E4CC(void); /* SecondSprYPos */
-void func_E4CD(void);
-void func_E4C0(void); /* FirstSprXPos */
-void func_E4D0(void); /* FirstSprTilenum */
-void func_E4D4(void); /* SecondSprTilenum */
-void func_E541(void); /* FlagpoleScoreNumTiles */
-void func_E8E5(void);
-void func_DBD6(void);
-void func_DBB5(void);
-void func_E6BE(void); /* PowerUpGfxTable */
-void func_E682(void); /* JumpingCoinTiles */
-void func_E683(void);
-void func_E48D(void);
-void func_E4E4(void);
-void func_E6C0(void);
-void func_DCFC(void);
-void func_DCDD(void);
-void func_DFDC(void);
-void func_DFDF(void); /* HBChk */
-void func_DCDF(void);
-void func_DDDC(void);
-void func_DDDE(void);
-void func_DEDF(void);
-void func_DA7B(void);
-void func_DBDA(void);
-void func_D8DB(void);
-void func_D8D9(void);
-void func_E3D4(void);
-void func_E2E4(void);
-void func_E58A(void);
-void func_E6E7(void);
-void func_E7E9(void);
-void func_D8D3(void);
-void func_E878(void); /* JumpspringFrameOffsets */
-void func_E879(void);
-void func_E840(void); /* EnemyGfxTableOffsets */
-void func_DEA3(void);
-void func_E4A2(void); /* NextVSp */
-void func_E4A3(void);
-void func_E0EA(void);
-void func_E67F(void);
-void func_E672(void);
-void func_E667(void);
-void func_E01D(void);
-void func_E646(void);
-void func_E876(void); /* EnemyAnimTimingBMask */
-void func_E877(void);
-void func_E005(void);
-void func_E041(void);
-void func_E007(void);
-void func_E73E(void); /* EnemyGraphicsTable */
-void func_E57D(void);
-void func_E0EC(void); /* Chk2MSBSt */
-void func_E8BE(void); /* CheckForBulletBillCV */
-void func_D903(void);
-void func_E048(void); /* SetWYSpd */
-void func_E0AB(void);
-void func_E4AD(void);
-void func_E7BD(void);
-void func_DC20(void);
-void func_DEF0(void);
-void func_E8E9(void);
-void func_E8A8(void);
-void func_E0D0(void);
-void func_DCD1(void);
-void func_D9B9(void);
-void func_E6F7(void); /* PUpDrawLoop */
-void func_E6FA(void);
-void func_E301(void);
-void func_DDD5(void);
-void func_E3DE(void);
-void func_DFDA(void);
-void func_E0A4(void); /* ExSteChk */
-void func_E763(void);
-void func_E1E4(void);
-void func_E3E1(void);
-void func_E3E2(void);
-void func_DE1E(void);
-void func_E0DF(void);
-void func_DF01(void);
-void func_E7E6(void);
-void func_DE59(void);
-void func_E850(void);
-void func_DF77(void);
-void func_DF71(void);
-void func_DDD3(void);
-void func_DB8C(void); /* ChkSmallPlatLoop */
-void func_E38B(void);
-void func_E10A(void); /* SdeCLoop */
-void func_E3B1(void);
-void func_E3BA(void);
-void func_E540(void); /* NoHOffscr */
-void func_E53B(void);
-void func_E492(void); /* ChkFTop */
-void func_DEC9(void);
-void func_DE8A(void);
-void func_D878(void);
-void func_DEBF(void);
-void func_E629(void);
-void func_E6F5(void);
-void func_E4BD(void);
-void func_E179(void);
-void func_E49D(void);
-void func_E710(void);
-void func_DC82(void); /* SetFallS */
-void func_E385(void);
-void func_DC23(void);
-void func_D927(void);
-void func_DDBD(void);
-void func_D8C0(void);
-void func_E38D(void);
-void func_E28D(void);
-void func_E7B9(void);
-void func_DB93(void);
-void func_D8B9(void);
-void func_DCB9(void);
-void func_DD90(void);
-void func_DFD0(void);
-void func_E59A(void);
-void func_E61B(void);
-void func_E0B9(void);
-void func_E4B9(void);
-void func_E7A5(void);
-void func_D8B3(void);
-void func_DD76(void);
-void func_DB04(void);
-void func_DD3D(void);
-void func_DE82(void);
-void func_E30C(void); /* CheckLeftScreenBBox */
-void func_E528(void);
-void func_DB3B(void);
-void func_DE38(void); /* ExHC */
-void func_DECE(void);
-void func_DBA7(void);
-void func_E730(void);
-void func_E347(void);
-void func_DB47(void);
-void func_E406(void);
-void func_E001(void);
-void func_E431(void);
-void func_DE02(void); /* ExCSM */
-void func_E70A(void);
-void func_D901(void);
-void func_DD06(void);
-void func_DE4B(void);
-void func_DD0A(void);
-void func_DF11(void);
-void func_E139(void);
-void func_DC27(void);
-void func_E722(void);
-void func_E322(void); /* NoOfs2 */
-void func_E372(void);
-void func_E781(void);
-void func_E397(void);
-void func_E723(void);
-void func_DC65(void);
-void func_D923(void); /* TInjE */
-void func_DC67(void);
-void func_DC2F(void);
-void func_E1B9(void);
-void func_E407(void);
-void func_DC73(void);
-void func_DF29(void);
-void func_DF0F(void);
-void func_E50B(void);
-void func_E317(void);
-void func_E884(void);
-void func_D90C(void);
-void func_E6B0(void);
-void func_E495(void);
-void func_E501(void);
-void func_DBAD(void);
-void func_DB95(void);
-void func_E69D(void);
-void func_E89D(void);
-void func_D8BB(void);
-void func_E8D9(void);
-void func_E4B0(void); /* StkLp */
-void func_E32D(void); /* CollisionCoreLoop */
 void func_E87D(void); /* EnemyGfxHandler */
 void func_E9A0(void);
 void func_E939(void);
@@ -2484,13 +2152,11 @@ void func_E273(void); /* LargePlatformBoundBox */
 void func_E27D(void);
 void func_E286(void);
 void func_E278(void);
-void func_DB45(void); /* LargePlatformCollision */
 void func_C982(void); /* LargePlatformSubroutines */
 void func_C987(void);
 void func_C9AC(void);
 void func_E5C8(void); /* DrawLargePlatform */
 void func_E24C(void); /* SmallPlatformBoundBox */
-void func_DB7B(void); /* SmallPlatformCollision */
 void func_ED66(void); /* DrawSmallPlatform */
 void func_EDD1(void); /* SOfs2 */
 void func_ED6F(void);
@@ -2527,7 +2193,6 @@ void func_D36D(void); /* DSFLoop */
 void func_D371(void);
 void func_D3A2(void); /* DelayToAreaEnd */
 void func_D3AD(void);
-void func_B8D9_b0(void); /* PosJSpr */
 void func_C30E(void); /* InitNormalEnemy */
 void func_C31E(void); /* InitRedKoopa */
 void func_C321(void);
@@ -2774,7 +2439,6 @@ void func_CEAB(void);
 void func_CECB(void);
 void func_CEAD(void);
 void func_CE95(void);
-void func_CE08(void); /* FirebarCollision */
 void func_CDBB(void); /* DrawFirebar_Collision */
 void func_CE33(void);
 void func_CE2D(void);
@@ -2988,8 +2652,6 @@ void func_D5FE(void); /* ChkYPCollision */
 void func_CB47(void); /* XMoveCntr_Platform */
 void func_D628(void); /* SetPVar */
 void func_BF88_b0(void); /* MoveDropPlatform */
-void func_D614(void); /* PositionPlayerOnHPlat */
-void func_DC19(void); /* PositionPlayerOnS_Plat */
 void func_C38A(void); /* SetupLakitu */
 void func_C5D8(void); /* PutAtRightExtent */
 void func_C44E(void); /* ChpChpEx */
@@ -3275,6 +2937,25 @@ void func_DD0E(void);
 void func_C692(void); /* Enemy17YPosData */
 void func_C693(void);
 void func_C0C9(void);
+void func_C0CC(void); /* ProcLoopCommand */
+void func_C0E9(void);
+void func_C0E1(void);
+void func_C1BE(void);
+void func_C0F0(void);
+void func_C14D(void);
+void func_C0CF(void);
+void func_C18E(void);
+void func_C1AE(void);
+void func_C219(void);
+void func_C0D8(void); /* FindLoop */
+void func_C242(void);
+void func_C141(void);
+void func_C124(void);
+void func_C22E(void); /* DoGroup */
+void func_C21E(void);
+void func_C213(void);
+void func_C115(void); /* WrongChk */
+void func_C102(void); /* IncMLoop */
 void func_F000(void);
 void func_FEA6(void);
 void func_FE85(void);
@@ -3427,11 +3108,13 @@ void func_E607(void);
 void func_C501(void);
 void func_EDC6(void);
 void func_E290(void);
+void func_E29C(void); /* BoundingBoxCore */
 void func_E291(void);
 void func_CD06(void);
 void func_CD07(void);
 void func_E64C(void);
 void func_CDE7(void);
+void func_CE08(void); /* FirebarCollision */
 void func_ED38(void);
 void func_F0F8(void);
 void func_ED21(void);
@@ -3466,6 +3149,7 @@ void func_EEFD(void);
 void func_D17C(void);
 void func_CED1(void);
 void func_DDBA(void);
+void func_DDCE(void); /* PipeDwnS */
 void func_CFDD(void); /* BridgeCollapseData */
 void func_CFDE(void);
 void func_CD20(void);
@@ -3525,6 +3209,9 @@ void func_D531(void);
 void func_CCAF(void);
 void func_E02A(void);
 void func_DA12(void);
+void func_DB45(void); /* LargePlatformCollision */
+void func_DB7B(void); /* SmallPlatformCollision */
+void func_DC19(void); /* PositionPlayerOnS_Plat */
 void func_FE4C(void);
 void func_D5FF(void);
 void func_CB48(void);
@@ -3555,6 +3242,7 @@ void func_E01C(void);
 void func_C006(void);
 void func_FF85(void);
 void func_D60D(void);
+void func_D614(void); /* PositionPlayerOnHPlat */
 void func_E326(void);
 void func_C939(void);
 void func_C93A(void);
@@ -3567,6 +3255,9 @@ void func_D848(void);
 void func_D949(void);
 void func_E819(void);
 void func_DC42(void);
+void func_DE0E(void); /* HandleAxeMetatile */
+void func_DEC4(void); /* ChkForLandJumpSpring */
+void func_DEE8(void); /* HandlePipeEntry */
 void func_DC53(void);
 void func_FE2A(void);
 void func_D02F(void);
@@ -3580,6 +3271,297 @@ void func_C07A(void);
 void func_C043(void);
 void func_DA06(void);
 void func_D850(void);
+void func_D853(void); /* PlayerEnemyCollision */
+void func_E435(void); /* DrawVine */
+void func_E539(void);
+void func_D907(void);
+void func_D908(void);
+void func_D9CF(void);
+void func_D9EE(void);
+void func_DAAE(void);
+void func_D9AE(void);
+void func_E6F0(void);
+void func_E6F1(void);
+void func_DA8D(void);
+void func_D98D(void);
+void func_E00F(void);
+void func_D89D(void);
+void func_DFC2(void);
+void func_D94C(void);
+void func_E03D(void);
+void func_E401(void);
+void func_DFA9(void);
+void func_DFAA(void);
+void func_D920(void);
+void func_E058(void);
+void func_DD8E(void);
+void func_DD0D(void);
+void func_E0E8(void);
+void func_DB4D(void);
+void func_E08E(void);
+void func_D8CB(void);
+void func_DFCA(void);
+void func_E800(void);
+void func_DECB(void);
+void func_DF21(void);
+void func_E8A9(void); /* CheckForRetainerObj */
+void func_E003(void);
+void func_E5CF(void);
+void func_E5D0(void);
+void func_E609(void);
+void func_E605(void);
+void func_E6CD(void);
+void func_E802(void);
+void func_DAB9(void);
+void func_DC8E(void);
+void func_DCCD(void);
+void func_E131(void); /* NoBump */
+void func_E603(void);
+void func_E8C9(void);
+void func_D991(void);
+void func_DA10(void);
+void func_D9D6(void);
+void func_E40D(void);
+void func_E029(void);
+void func_DC1A(void);
+void func_E56F(void);
+void func_D8BE(void);
+void func_E818(void);
+void func_E857(void);
+void func_E858(void);
+void func_E1D1(void);
+void func_D966(void);
+void func_DFC0(void);
+void func_DA25(void); /* SetBitsMask */
+void func_DAAB(void);
+void func_DC55(void);
+void func_E60D(void);
+void func_E60E(void);
+void func_DC16(void);
+void func_DC17(void); /* PlayerPosSPlatData */
+void func_E3AD(void); /* BlockBufferAdderData */
+void func_DF90(void);
+void func_E820(void);
+void func_DF9B(void);
+void func_E4C9(void);
+void func_E4CA(void);
+void func_DE2F(void);
+void func_DD20(void);
+void func_DE03(void); /* AreaChangeTimerData */
+void func_DE8E(void);
+void func_DE29(void); /* FlagpoleYPosData */
+void func_DE25(void); /* ClimbXPosAdder */
+void func_E807(void);
+void func_E80A(void);
+void func_DFB1(void);
+void func_DDE0(void);
+void func_DF8B(void); /* SolidMTileUpperExt */
+void func_DF96(void); /* ClimbMTileUpperExt */
+void func_E090(void);
+void func_DFB9(void); /* EnemyBGCStateData */
+void func_E389(void);
+void func_E791(void);
+void func_E060(void); /* NoCDirF */
+void func_E061(void);
+void func_E8E3(void);
+void func_E1FE(void);
+void func_E1FF(void);
+void func_E804(void);
+void func_DD04(void);
+void func_DD2A(void);
+void func_D905(void);
+void func_DD3B(void);
+void func_DD60(void);
+void func_DD61(void);
+void func_DD1A(void); /* AwardTouchedCoin */
+void func_D913(void);
+void func_E3F1(void);
+void func_E3B0(void); /* BlockBuffer_X_Adder */
+void func_E121(void);
+void func_E3CD(void);
+void func_E1A9(void);
+void func_E0A9(void);
+void func_E4C4(void); /* FirstSprYPos */
+void func_E4C5(void);
+void func_E4CC(void); /* SecondSprYPos */
+void func_E4CD(void);
+void func_E4C0(void); /* FirstSprXPos */
+void func_E4D0(void); /* FirstSprTilenum */
+void func_E4D4(void); /* SecondSprTilenum */
+void func_E541(void); /* FlagpoleScoreNumTiles */
+void func_E8E5(void);
+void func_DBD6(void);
+void func_DBB5(void);
+void func_E6BE(void); /* PowerUpGfxTable */
+void func_E682(void); /* JumpingCoinTiles */
+void func_E683(void);
+void func_E48D(void);
+void func_E4E4(void);
+void func_E6C0(void);
+void func_DCFC(void);
+void func_DCDD(void);
+void func_DFDC(void);
+void func_DFDF(void); /* HBChk */
+void func_DCDF(void);
+void func_DDDC(void);
+void func_DDDE(void);
+void func_DEDF(void);
+void func_DA7B(void);
+void func_DBDA(void);
+void func_D8DB(void);
+void func_D8D9(void);
+void func_E3D4(void);
+void func_E2E4(void);
+void func_E58A(void);
+void func_E6E7(void);
+void func_E7E9(void);
+void func_D8D3(void);
+void func_E878(void); /* JumpspringFrameOffsets */
+void func_E879(void);
+void func_E840(void); /* EnemyGfxTableOffsets */
+void func_DEA3(void);
+void func_E4A2(void); /* NextVSp */
+void func_E4A3(void);
+void func_E0EA(void);
+void func_E67F(void);
+void func_E672(void);
+void func_E667(void);
+void func_E01D(void);
+void func_E646(void);
+void func_E876(void); /* EnemyAnimTimingBMask */
+void func_E877(void);
+void func_E005(void);
+void func_E041(void);
+void func_E007(void);
+void func_E73E(void); /* EnemyGraphicsTable */
+void func_E57D(void);
+void func_E0EC(void); /* Chk2MSBSt */
+void func_E8BE(void); /* CheckForBulletBillCV */
+void func_D903(void);
+void func_E048(void); /* SetWYSpd */
+void func_E0AB(void);
+void func_E4AD(void);
+void func_E7BD(void);
+void func_DC20(void);
+void func_DEF0(void);
+void func_E8E9(void);
+void func_E8A8(void);
+void func_E0D0(void);
+void func_DCD1(void);
+void func_D9B9(void);
+void func_E6F7(void); /* PUpDrawLoop */
+void func_E6FA(void);
+void func_E301(void);
+void func_DDD5(void);
+void func_E3DE(void);
+void func_DFDA(void);
+void func_E0A4(void); /* ExSteChk */
+void func_E763(void);
+void func_E1E4(void);
+void func_E3E1(void);
+void func_E3E2(void);
+void func_DE1E(void);
+void func_E0DF(void);
+void func_DF01(void);
+void func_E7E6(void);
+void func_DE59(void);
+void func_E850(void);
+void func_DF77(void);
+void func_DF71(void);
+void func_DDD3(void);
+void func_DB8C(void); /* ChkSmallPlatLoop */
+void func_E38B(void);
+void func_E10A(void); /* SdeCLoop */
+void func_E3B1(void);
+void func_E3BA(void);
+void func_E540(void); /* NoHOffscr */
+void func_E53B(void);
+void func_E492(void); /* ChkFTop */
+void func_DEC9(void);
+void func_DE8A(void);
+void func_D878(void);
+void func_DEBF(void);
+void func_E629(void);
+void func_E6F5(void);
+void func_E4BD(void);
+void func_E179(void);
+void func_E49D(void);
+void func_E710(void);
+void func_DC82(void); /* SetFallS */
+void func_E385(void);
+void func_DC23(void);
+void func_D927(void);
+void func_DDBD(void);
+void func_D8C0(void);
+void func_E38D(void);
+void func_E28D(void);
+void func_E7B9(void);
+void func_DB93(void);
+void func_D8B9(void);
+void func_DCB9(void);
+void func_DD90(void);
+void func_DFD0(void);
+void func_E59A(void);
+void func_E61B(void);
+void func_E0B9(void);
+void func_E4B9(void);
+void func_E7A5(void);
+void func_D8B3(void);
+void func_DD76(void);
+void func_DB04(void);
+void func_DD3D(void);
+void func_DE82(void);
+void func_E30C(void); /* CheckLeftScreenBBox */
+void func_E528(void);
+void func_DB3B(void);
+void func_DE38(void); /* ExHC */
+void func_DECE(void);
+void func_DBA7(void);
+void func_E730(void);
+void func_E347(void);
+void func_DB47(void);
+void func_E406(void);
+void func_E001(void);
+void func_E431(void);
+void func_DE02(void); /* ExCSM */
+void func_E70A(void);
+void func_D901(void);
+void func_DD06(void);
+void func_DE4B(void);
+void func_DD0A(void);
+void func_DF11(void);
+void func_E139(void);
+void func_DC27(void);
+void func_E722(void);
+void func_E322(void); /* NoOfs2 */
+void func_E372(void);
+void func_E781(void);
+void func_E397(void);
+void func_E723(void);
+void func_DC65(void);
+void func_D923(void); /* TInjE */
+void func_DC67(void);
+void func_DC2F(void);
+void func_E1B9(void);
+void func_E407(void);
+void func_DC73(void);
+void func_DF29(void);
+void func_DF0F(void);
+void func_E50B(void);
+void func_E317(void);
+void func_E884(void);
+void func_D90C(void);
+void func_E6B0(void);
+void func_E495(void);
+void func_E501(void);
+void func_DBAD(void);
+void func_DB95(void);
+void func_E69D(void);
+void func_E89D(void);
+void func_D8BB(void);
+void func_E8D9(void);
+void func_E4B0(void); /* StkLp */
+void func_E32D(void); /* CollisionCoreLoop */
 void func_D892(void); /* KickedShellPtsData */
 void func_D893(void);
 void func_D89F(void);
@@ -3648,8 +3630,10 @@ void func_DE06(void);
 void func_C938(void);
 void func_C5CA(void);
 void func_D0C6(void);
+void func_D7C4(void); /* PlayerHammerCollision */
 void func_D410(void); /* FirebarSpin */
 void func_D0C7(void);
+void func_D7CF(void);
 void func_D1D1(void); /* FlameTimerData */
 void func_D2CD(void); /* StarFlagYPosAdder */
 void func_D2CE(void);
@@ -3663,7 +3647,11 @@ void func_D852(void);
 void func_D0C9(void);
 void func_D2D3(void);
 void func_D2D4(void);
+void func_D7D1(void);
+void func_D7D7(void);
+void func_D7F2(void);
 void func_D431(void);
+void func_D7FA(void); /* ClHCol */
 void func_D416(void);
 void func_DE0F(void);
 void func_DEC5(void);
@@ -3689,6 +3677,10 @@ void func_F99E(void);
 void func_F9DF(void);
 void func_EE33(void);
 void func_EE34(void);
+void func_F180(void); /* GetPlayerOffscreenBits */
+void func_F12A(void); /* RelativePlayerPosition */
+void func_F184(void);
+void func_F12C(void);
 void func_DD07(void);
 void func_DD08(void);
 void func_CA04(void);
@@ -4004,6 +3996,18 @@ void func_EEB5(void);
 void func_E808(void);
 void func_E7BE(void);
 void func_EEE7(void); /* SwimKickTileNum */
+void func_EEE9(void); /* PlayerGfxHandler */
+void func_EEF7(void);
+void func_EF85(void);
+void func_EEFC(void);
+void func_EEFE(void);
+void func_EEEE(void);
+void func_EEF0(void);
+void func_EEF1(void);
+void func_EF10(void);
+void func_EF01(void);
+void func_EF42(void);
+void func_EF7A(void); /* PlayerOffscreenChk */
 void func_EEE8(void);
 void func_EFED(void);
 void func_EF46(void);
@@ -4067,7 +4071,10 @@ void func_FAA6(void);
 void func_F0FA(void);
 void func_C68D(void);
 void func_C68E(void);
+void func_C965(void); /* RunLargePlatform */
+void func_C94D(void); /* RunSmallPlatform */
 void func_CD2E(void); /* FirebarTblOffsets */
+void func_C97F(void);
 void func_F185(void);
 void func_F186(void);
 void func_F385(void);
@@ -4523,6 +4530,10 @@ void func_C018(void); /* ChkUpM */
 void func_DD79(void);
 void func_E885(void);
 void func_C045(void);
+void func_C047(void); /* EnemiesAndLoopsCore */
+void func_C058(void);
+void func_C04E(void);
+void func_C04D(void);
 void func_D77E(void);
 void func_FA6F(void);
 void func_C99D(void);
@@ -4790,6 +4801,7 @@ void func_F9DA(void);
 void func_FB5D(void);
 void func_FBCB(void);
 void func_B308_b0(void);
+void func_D946(void); /* SetKRout */
 void func_8286_b1(void);
 void func_8288_b1(void);
 void func_828A_b1(void);
@@ -4872,14 +4884,19 @@ void func_B3F9_b1(void);
 /* Multi-entry function body forward declarations */
 void func_81C6_b0_body(int _entry);
 void func_8212_b0_body(int _entry);
+void func_AEDC_b0_body(int _entry);
+void func_8FCF_b0_body(int _entry);
+void func_B624_b0_body(int _entry);
 void func_84C3_b0_body(int _entry);
 void func_B74F_b0_body(int _entry);
 void func_90ED_b0_body(int _entry);
 void func_85E3_b0_body(int _entry);
 void func_8325_b0_body(int _entry);
+void func_B0E9_b0_body(int _entry);
 void func_AF93_b0_body(int _entry);
 void func_83BD_b0_body(int _entry);
 void func_8808_b0_body(int _entry);
+void func_B8BA_b0_body(int _entry);
 void func_8A6D_b0_body(int _entry);
 void func_BF63_b0_body(int _entry);
 void func_93FC_b0_body(int _entry);
@@ -4899,14 +4916,9 @@ void func_F8D8_body(int _entry);
 void func_F39F_body(int _entry);
 void func_F8F4_body(int _entry);
 void func_F8C5_body(int _entry);
-void func_C047_body(int _entry);
-void func_F180_body(int _entry);
-void func_F12A_body(int _entry);
-void func_EEE9_body(int _entry);
 void func_F3A6_body(int _entry);
 void func_EDE1_body(int _entry);
 void func_C882_body(int _entry);
-void func_C0CC_body(int _entry);
 void func_EFEC_body(int _entry);
 void func_F0B0_body(int _entry);
 void func_EFBE_body(int _entry);
@@ -4917,8 +4929,10 @@ void func_EBD1_body(int _entry);
 void func_F148_body(int _entry);
 void func_D67A_body(int _entry);
 void func_F1AF_body(int _entry);
+void func_D931_body(int _entry);
 void func_CFEC_body(int _entry);
 void func_EFA4_body(int _entry);
+void func_DE2E_body(int _entry);
 void func_E1C8_body(int _entry);
 void func_D6D9_body(int _entry);
 void func_ECDE_body(int _entry);
@@ -4927,15 +4941,12 @@ void func_F1A8_body(int _entry);
 void func_C8E0_body(int _entry);
 void func_D295_body(int _entry);
 void func_C947_body(int _entry);
-void func_C965_body(int _entry);
 void func_D065_body(int _entry);
 void func_D2D9_body(int _entry);
 void func_C08C_body(int _entry);
 void func_F091_body(int _entry);
 void func_F06D_body(int _entry);
-void func_D7C4_body(int _entry);
 void func_E655_body(int _entry);
-void func_D853_body(int _entry);
 void func_E87D_body(int _entry);
 void func_E327_body(int _entry);
 void func_D73E_body(int _entry);
@@ -5005,15 +5016,24 @@ void func_D881_body(int _entry);
 void func_C0CD_body(int _entry);
 void func_D072_body(int _entry);
 void func_F911_body(int _entry);
+void func_C0C9_body(int _entry);
 void func_C3A5_body(int _entry);
 void func_C8D8_body(int _entry);
 void func_CF29_body(int _entry);
+void func_E290_body(int _entry);
+void func_CDE7_body(int _entry);
 void func_C505_body(int _entry);
+void func_DDBA_body(int _entry);
+void func_DA12_body(int _entry);
+void func_D60D_body(int _entry);
+void func_DC42_body(int _entry);
 void func_D801_body(int _entry);
+void func_D850_body(int _entry);
 void func_D893_body(int _entry);
 void func_C923_body(int _entry);
 void func_D0C6_body(int _entry);
 void func_F98B_body(int _entry);
+void func_EE34_body(int _entry);
 void func_E1B6_body(int _entry);
 void func_E790_body(int _entry);
 void func_CA38_body(int _entry);
@@ -5024,6 +5044,7 @@ void func_E4E5_body(int _entry);
 void func_E6E6_body(int _entry);
 void func_C0EF_body(int _entry);
 void func_FC10_body(int _entry);
+void func_EEE7_body(int _entry);
 void func_C68E_body(int _entry);
 void func_FA76_body(int _entry);
 void func_FB26_body(int _entry);
@@ -5033,6 +5054,7 @@ void func_FCE1_body(int _entry);
 void func_EE7A_body(int _entry);
 void func_F976_body(int _entry);
 void func_DFE9_body(int _entry);
+void func_C045_body(int _entry);
 void func_DB85_body(int _entry);
 void func_ED74_body(int _entry);
 void func_C153_body(int _entry);

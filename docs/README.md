@@ -11,6 +11,7 @@ stated otherwise.
 | --- | --- |
 | [Debugging protocol](TCP.md) | TCP setup, client tools, game commands, and RAM symbols |
 | [Widescreen](WIDESCREEN.md) | Renderer behavior, camera options, limits, and validation |
+| [Simultaneous Co-op](SIMULTANEOUS_COOP.md) | Two to four local players, team rules, native adapter, and validation |
 | [SMB1 player adapter](smb1_player_adapter.md) | Connecting foreign controllers to native SMB movement and collision |
 | [Scripted handoffs](smb1_scripted_handoffs.md) | Pipes, death, swimming, and other native scripted states |
 

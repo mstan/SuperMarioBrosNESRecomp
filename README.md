@@ -136,6 +136,19 @@ jumping coins and power-ups are no longer limited by SMB's object slots while
 Sonic plays. The Sonic, Link, Samus and Smash 64 packages share the
 `player-controller` exclusive group, so the launcher permits only one at a time.
 
+## Simultaneous Co-op
+
+Enable **Simultaneous Co-op** in the launcher's **Mods** tab and choose two,
+three, or four players. Mario, Luigi, Wario, and Waluigi share the original
+4:3 levels, scarce items, score, and team attempts. Players pass through each
+other; kicked shells can hurt allies. Dead teammates return after a level ends
+or the whole team retries. Assign each device in **Controls**, then select
+**CO-OP PLAY** at the title screen.
+
+Co-op is local and mutually exclusive with widescreen, voxel/first-person, and
+player replacement mods. See the [co-op guide](docs/SIMULTANEOUS_COOP.md) for
+the complete rules, save compatibility, and test coverage.
+
 ## Widescreen mod (experimental)
 
 An experimental custom renderer extends the terrain beyond the NES's 256-pixel

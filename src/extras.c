@@ -8,6 +8,7 @@
  *   Watchdog timer for stuck frames
  */
 #include "game_extras.h"
+#include "game_coop.h"
 #include "nes_runtime.h"
 #include "nes_video.h"
 #include "config.h"
@@ -82,7 +83,7 @@ static void get_exe_relative_path(const char *filename, char *out, int max_len) 
 /* ---- game_extras.h implementation ---- */
 static int suppress_replaced_sprite(int slot,int x,int y,void *user) {
     (void)user;
-    return game_smash64_render_suppress_sprite(slot,x,y) || smb_ws_actors_suppress_sprite(slot);
+    return game_coop_suppress_sprite(slot) || game_smash64_render_suppress_sprite(slot,x,y) || smb_ws_actors_suppress_sprite(slot);
 }
 
 uint32_t game_get_expected_crc32(void) { return 0xD445F698u; }
@@ -91,6 +92,17 @@ const char *game_get_name(void) { return "Super Mario Bros."; }
 
 void game_on_init(void) {
     watchdog_frame_start();
+    /* The package resolver excludes these combinations in the launcher.
+       Apply the same rule after trace-only command-line overrides. */
+    if (game_coop_enabled()) {
+        game_widescreen_set_mod_enabled(0);
+        game_voxel_set_mod_enabled(0);
+        game_smash64_set_mod_enabled(0, NULL);
+        game_link_set_enabled(0, NULL);
+        game_samus_set_enabled(0, NULL);
+        game_sonic_set_enabled(0, NULL);
+        g_nes_config.widescreen = 0;
+    }
     game_widescreen_init();
     game_voxel_init();
     game_smash64_init();
@@ -124,6 +136,7 @@ void game_on_frame(uint64_t frame_count) {
         if (ovr >= 0)
             g_controller1_buttons = (uint8_t)ovr;
     }
+    game_coop_before_frame();
     game_voxel_update_input();
     /* Player replacement samples input and ticks its controller before NMI,
      * so the fighter's intent for this frame exists before SMB1 runs. */
@@ -152,6 +165,7 @@ void game_post_nmi(uint64_t frame_count) {
 }
 
 int game_handle_arg(const char *key, const char *val) {
+    if (game_coop_arg(key, val)) return 1;
     if (game_widescreen_arg(key, val)) return 1;
     if (strcmp(key, "--tcp-port") == 0 && val) {
         s_tcp_port = atoi(val);
@@ -289,6 +303,7 @@ void game_post_render(uint32_t *framebuf) {
     game_link_render_post_render(framebuf);
     game_samus_render_post_render(framebuf);
     game_sonic_render_post_render(framebuf);
+    game_coop_render(framebuf);
 }
 
 /* ---- Debug command handler (SMB-specific) ---- */
@@ -328,6 +343,7 @@ int game_handle_debug_cmd(const char *cmd, int id, const char *json) {
         return 1;
     }
 
+    if (game_coop_debug(cmd, id, json)) return 1;
     if (game_widescreen_debug(cmd, id)) return 1;
 
     if (strcmp(cmd, "smb_demo_state") == 0) {

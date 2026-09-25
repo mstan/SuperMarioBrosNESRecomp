@@ -87,6 +87,7 @@ void func_8E6A_b0(void); /* ReadPortBits */
 void func_8F9E_b0(void); /* TopScoreCheck */
 void func_8231_b0(void); /* TitleScreenMode */
 void func_AEDC_b0(void); /* GameMode */
+void func_AEEA_b0(void); /* GameCoreRoutine */
 void func_838B_b0(void); /* VictoryMode */
 void func_9218_b0(void); /* GameOverMode */
 void func_F381(void); /* Dump_Squ1_Regs */
@@ -143,36 +144,16 @@ void func_F8C8(void);
 void func_F38B(void); /* SetFreq_Squ1 */
 void func_F3AD(void); /* SetFreq_Tri */
 void func_8FCF_b0(void); /* InitializeGame */
+void func_8FE4_b0(void); /* InitializeArea */
 void func_8567_b0(void); /* ScreenRoutines */
 void func_9061_b0(void); /* PrimaryGameSetup */
 void func_8245_b0(void); /* GameMenuRoutine */
-void func_8FE4_b0(void); /* InitializeArea */
 void func_9071_b0(void); /* SecondaryGameSetup */
-void func_AEEA_b0(void); /* GameCoreRoutine */
 void func_B04A_b0(void); /* GameRoutines */
 void func_B624_b0(void); /* ProcFireball_Bubble */
-void func_C047(void); /* EnemiesAndLoopsCore */
-void func_C058(void);
-void func_C04E(void);
-void func_C04D(void);
+void func_B66E_b0(void); /* ProcAirBubbles */
 void func_84C3_b0(void); /* FloateyNumbersRoutine */
 void func_8534_b0(void);
-void func_F180(void); /* GetPlayerOffscreenBits */
-void func_F184(void);
-void func_F12A(void); /* RelativePlayerPosition */
-void func_F12C(void);
-void func_EEE9(void); /* PlayerGfxHandler */
-void func_EEF7(void);
-void func_EF85(void);
-void func_EEFC(void);
-void func_EEFE(void);
-void func_EEEE(void);
-void func_EEF0(void);
-void func_EEF1(void);
-void func_EF10(void);
-void func_EF01(void);
-void func_EF42(void);
-void func_EF7A(void); /* PlayerOffscreenChk */
 void func_BED4_b0(void); /* BlockObjMT_Updater */
 void func_BE70_b0(void); /* BlockObjectsCore */
 void func_BB96_b0(void); /* MiscObjectsCore */
@@ -249,6 +230,7 @@ void func_B2CA_b0(void); /* PlayerEndLevel */
 void func_91CD_b0(void); /* PlayerLoseLife */
 void func_B069_b0(void); /* PlayerEntrance */
 void func_B0E9_b0(void); /* PlayerCtrlRoutine */
+void func_B1BB_b0(void); /* CloudExit */
 void func_B233_b0(void); /* PlayerChangeSize */
 void func_B245_b0(void); /* PlayerInjuryBlink */
 void func_B269_b0(void); /* PlayerDeath */
@@ -260,7 +242,6 @@ void func_B200_b0(void); /* MovePlayerYAxis */
 void func_B329_b0(void); /* PlayerMovementSubs */
 void func_AF93_b0(void); /* ScrollHandler */
 void func_AFB1_b0(void);
-void func_E29C(void); /* BoundingBoxCore */
 void func_DC64(void); /* PlayerBGCollision */
 void func_B1DD_b0(void); /* SetEntr */
 void func_B689_b0(void); /* FireballObjCore */
@@ -278,25 +259,6 @@ void func_EE01(void);
 void func_C882(void); /* RunEnemyObjectsCore */
 void func_C888(void);
 void func_C88A(void);
-void func_C0CC(void); /* ProcLoopCommand */
-void func_C0E9(void);
-void func_C0E1(void);
-void func_C1BE(void);
-void func_C0F0(void);
-void func_C14D(void);
-void func_C0CF(void);
-void func_C18E(void);
-void func_C1AE(void);
-void func_C219(void);
-void func_C0D8(void); /* FindLoop */
-void func_C242(void);
-void func_C141(void);
-void func_C124(void);
-void func_C22E(void); /* DoGroup */
-void func_C21E(void);
-void func_C213(void);
-void func_C115(void); /* WrongChk */
-void func_C102(void); /* IncMLoop */
 void func_8486_b0(void); /* EndExitOne */
 void func_BC27_b0(void); /* AddToScore */
 void func_E5C1(void); /* DumpTwoSpr */
@@ -426,6 +388,7 @@ void func_E54B(void); /* FlagpoleGfxHandler */
 void func_8F5F_b0(void); /* DigitsMathRoutine */
 void func_8F06_b0(void); /* PrintStatusBarNumbers */
 void func_D931(void); /* ForceInjury */
+void func_D958(void); /* KillPlayer */
 void func_92C8_b0(void); /* AreaParserTasks */
 void func_896A_b0(void); /* RenderAttributeTables */
 void func_CFEC(void); /* BridgeCollapse */
@@ -506,13 +469,12 @@ void func_DCF6(void); /* DoFootCheck */
 void func_E3E8(void); /* BlockBufferColli_Feet */
 void func_DE05(void); /* HandleCoinMetatile */
 void func_DF9A(void); /* CheckForClimbMTiles */
-void func_DE0E(void); /* HandleAxeMetatile */
 void func_DEBD(void); /* ChkInvisibleMTiles */
 void func_DF4B(void); /* ImpedePlayerMove */
-void func_DEC4(void); /* ChkForLandJumpSpring */
-void func_DEE8(void); /* HandlePipeEntry */
 void func_E3EC(void); /* BlockBufferColli_Side */
 void func_DE2E(void); /* HandleClimbing */
+void func_DE41(void); /* FlagpoleCollision */
+void func_DE7A(void); /* VineCollision */
 void func_DEDD(void); /* ChkJumpspringMetatiles */
 void func_DDFF(void); /* StopPlayerMove */
 void func_DE1C(void); /* ErACM */
@@ -551,9 +513,6 @@ void func_D2BD(void); /* FireworksSoundScore */
 void func_C8D6(void); /* NoRunCode */
 void func_C947(void); /* RunFirebarObj */
 void func_C94A(void);
-void func_C965(void); /* RunLargePlatform */
-void func_C97F(void);
-void func_C94D(void); /* RunSmallPlatform */
 void func_D065(void); /* RunBowser */
 void func_D0C0(void);
 void func_D100(void);
@@ -597,6 +556,7 @@ void func_B94B_b0(void); /* VineObjectHandler */
 void func_D2D9(void); /* RunStarFlagObj */
 void func_D301(void);
 void func_B8BA_b0(void); /* JumpspringHandler */
+void func_B8D9_b0(void); /* PosJSpr */
 void func_B7A4_b0(void); /* WarpZoneObject */
 void func_C8D7(void); /* RunRetainerObj */
 void func_C08C(void); /* ExecGameLoopback */
@@ -637,12 +597,6 @@ void func_F165(void); /* VariableObjOfsRelPos */
 void func_E5BB(void); /* DumpFourSpr */
 void func_EC46(void); /* ChkLeftCo */
 void func_BB28_b0(void); /* RunAllH */
-void func_D7C4(void); /* PlayerHammerCollision */
-void func_D7CF(void);
-void func_D7D1(void);
-void func_D7D7(void);
-void func_D7F2(void);
-void func_D7FA(void); /* ClHCol */
 void func_E4DC(void); /* DrawHammer */
 void func_BB98_b0(void); /* MiscLoop */
 void func_E2DE(void); /* CheckRightScreenBBox */
@@ -656,298 +610,6 @@ void func_BF63_b0(void); /* MoveD_EnemyVertically */
 void func_BF6B_b0(void); /* MoveFallingPlatform */
 void func_BF02_b0(void); /* MoveEnemyHorizontally */
 void func_E243(void); /* GetEnemyBoundBox */
-void func_D853(void); /* PlayerEnemyCollision */
-void func_E435(void); /* DrawVine */
-void func_E539(void);
-void func_D907(void);
-void func_D908(void);
-void func_D9CF(void);
-void func_D9EE(void);
-void func_DAAE(void);
-void func_D9AE(void);
-void func_E6F0(void);
-void func_E6F1(void);
-void func_DA8D(void);
-void func_D98D(void);
-void func_E00F(void);
-void func_D89D(void);
-void func_DFC2(void);
-void func_D94C(void);
-void func_E03D(void);
-void func_E401(void);
-void func_DFA9(void);
-void func_DFAA(void);
-void func_D920(void);
-void func_E058(void);
-void func_DD8E(void);
-void func_DD0D(void);
-void func_E0E8(void);
-void func_DB4D(void);
-void func_E08E(void);
-void func_D8CB(void);
-void func_DFCA(void);
-void func_E800(void);
-void func_DECB(void);
-void func_DF21(void);
-void func_E8A9(void); /* CheckForRetainerObj */
-void func_E003(void);
-void func_E5CF(void);
-void func_E5D0(void);
-void func_E609(void);
-void func_E605(void);
-void func_E6CD(void);
-void func_E802(void);
-void func_DAB9(void);
-void func_DC8E(void);
-void func_DCCD(void);
-void func_E131(void); /* NoBump */
-void func_E603(void);
-void func_E8C9(void);
-void func_D991(void);
-void func_DA10(void);
-void func_D9D6(void);
-void func_E40D(void);
-void func_E029(void);
-void func_DC1A(void);
-void func_E56F(void);
-void func_D8BE(void);
-void func_E818(void);
-void func_E857(void);
-void func_E858(void);
-void func_E1D1(void);
-void func_D966(void);
-void func_DFC0(void);
-void func_DA25(void); /* SetBitsMask */
-void func_DAAB(void);
-void func_DC55(void);
-void func_E60D(void);
-void func_E60E(void);
-void func_DC16(void);
-void func_DC17(void); /* PlayerPosSPlatData */
-void func_E3AD(void); /* BlockBufferAdderData */
-void func_DDCE(void); /* PipeDwnS */
-void func_DF90(void);
-void func_E820(void);
-void func_DF9B(void);
-void func_E4C9(void);
-void func_E4CA(void);
-void func_DE2F(void);
-void func_DD20(void);
-void func_DE03(void); /* AreaChangeTimerData */
-void func_DE8E(void);
-void func_DE29(void); /* FlagpoleYPosData */
-void func_DE25(void); /* ClimbXPosAdder */
-void func_E807(void);
-void func_E80A(void);
-void func_DFB1(void);
-void func_DDE0(void);
-void func_DF8B(void); /* SolidMTileUpperExt */
-void func_DF96(void); /* ClimbMTileUpperExt */
-void func_E090(void);
-void func_DFB9(void); /* EnemyBGCStateData */
-void func_E389(void);
-void func_E791(void);
-void func_E060(void); /* NoCDirF */
-void func_E061(void);
-void func_E8E3(void);
-void func_E1FE(void);
-void func_E1FF(void);
-void func_E804(void);
-void func_DD04(void);
-void func_DD2A(void);
-void func_D905(void);
-void func_DD3B(void);
-void func_DD60(void);
-void func_DD61(void);
-void func_DD1A(void); /* AwardTouchedCoin */
-void func_D913(void);
-void func_E3F1(void);
-void func_E3B0(void); /* BlockBuffer_X_Adder */
-void func_E121(void);
-void func_E3CD(void);
-void func_E1A9(void);
-void func_E0A9(void);
-void func_E4C4(void); /* FirstSprYPos */
-void func_E4C5(void);
-void func_E4CC(void); /* SecondSprYPos */
-void func_E4CD(void);
-void func_E4C0(void); /* FirstSprXPos */
-void func_E4D0(void); /* FirstSprTilenum */
-void func_E4D4(void); /* SecondSprTilenum */
-void func_E541(void); /* FlagpoleScoreNumTiles */
-void func_E8E5(void);
-void func_DBD6(void);
-void func_DBB5(void);
-void func_E6BE(void); /* PowerUpGfxTable */
-void func_E682(void); /* JumpingCoinTiles */
-void func_E683(void);
-void func_E48D(void);
-void func_E4E4(void);
-void func_E6C0(void);
-void func_DCFC(void);
-void func_DCDD(void);
-void func_DFDC(void);
-void func_DFDF(void); /* HBChk */
-void func_DCDF(void);
-void func_DDDC(void);
-void func_DDDE(void);
-void func_DEDF(void);
-void func_DA7B(void);
-void func_DBDA(void);
-void func_D8DB(void);
-void func_D8D9(void);
-void func_E3D4(void);
-void func_E2E4(void);
-void func_E58A(void);
-void func_E6E7(void);
-void func_E7E9(void);
-void func_D8D3(void);
-void func_E878(void); /* JumpspringFrameOffsets */
-void func_E879(void);
-void func_E840(void); /* EnemyGfxTableOffsets */
-void func_DEA3(void);
-void func_E4A2(void); /* NextVSp */
-void func_E4A3(void);
-void func_E0EA(void);
-void func_E67F(void);
-void func_E672(void);
-void func_E667(void);
-void func_E01D(void);
-void func_E646(void);
-void func_E876(void); /* EnemyAnimTimingBMask */
-void func_E877(void);
-void func_E005(void);
-void func_E041(void);
-void func_E007(void);
-void func_E73E(void); /* EnemyGraphicsTable */
-void func_E57D(void);
-void func_E0EC(void); /* Chk2MSBSt */
-void func_E8BE(void); /* CheckForBulletBillCV */
-void func_D903(void);
-void func_E048(void); /* SetWYSpd */
-void func_E0AB(void);
-void func_E4AD(void);
-void func_E7BD(void);
-void func_DC20(void);
-void func_DEF0(void);
-void func_E8E9(void);
-void func_E8A8(void);
-void func_E0D0(void);
-void func_DCD1(void);
-void func_D9B9(void);
-void func_E6F7(void); /* PUpDrawLoop */
-void func_E6FA(void);
-void func_E301(void);
-void func_DDD5(void);
-void func_E3DE(void);
-void func_DFDA(void);
-void func_E0A4(void); /* ExSteChk */
-void func_E763(void);
-void func_E1E4(void);
-void func_E3E1(void);
-void func_E3E2(void);
-void func_DE1E(void);
-void func_E0DF(void);
-void func_DF01(void);
-void func_E7E6(void);
-void func_DE59(void);
-void func_E850(void);
-void func_DF77(void);
-void func_DF71(void);
-void func_DDD3(void);
-void func_DB8C(void); /* ChkSmallPlatLoop */
-void func_E38B(void);
-void func_E10A(void); /* SdeCLoop */
-void func_E3B1(void);
-void func_E3BA(void);
-void func_E540(void); /* NoHOffscr */
-void func_E53B(void);
-void func_E492(void); /* ChkFTop */
-void func_DEC9(void);
-void func_DE8A(void);
-void func_D878(void);
-void func_DEBF(void);
-void func_E629(void);
-void func_E6F5(void);
-void func_E4BD(void);
-void func_E179(void);
-void func_E49D(void);
-void func_E710(void);
-void func_DC82(void); /* SetFallS */
-void func_E385(void);
-void func_DC23(void);
-void func_D927(void);
-void func_DDBD(void);
-void func_D8C0(void);
-void func_E38D(void);
-void func_E28D(void);
-void func_E7B9(void);
-void func_DB93(void);
-void func_D8B9(void);
-void func_DCB9(void);
-void func_DD90(void);
-void func_DFD0(void);
-void func_E59A(void);
-void func_E61B(void);
-void func_E0B9(void);
-void func_E4B9(void);
-void func_E7A5(void);
-void func_D8B3(void);
-void func_DD76(void);
-void func_DB04(void);
-void func_DD3D(void);
-void func_DE82(void);
-void func_E30C(void); /* CheckLeftScreenBBox */
-void func_E528(void);
-void func_DB3B(void);
-void func_DE38(void); /* ExHC */
-void func_DECE(void);
-void func_DBA7(void);
-void func_E730(void);
-void func_E347(void);
-void func_DB47(void);
-void func_E406(void);
-void func_E001(void);
-void func_E431(void);
-void func_DE02(void); /* ExCSM */
-void func_E70A(void);
-void func_D901(void);
-void func_DD06(void);
-void func_DE4B(void);
-void func_DD0A(void);
-void func_DF11(void);
-void func_E139(void);
-void func_DC27(void);
-void func_E722(void);
-void func_E322(void); /* NoOfs2 */
-void func_E372(void);
-void func_E781(void);
-void func_E397(void);
-void func_E723(void);
-void func_DC65(void);
-void func_D923(void); /* TInjE */
-void func_DC67(void);
-void func_DC2F(void);
-void func_E1B9(void);
-void func_E407(void);
-void func_DC73(void);
-void func_DF29(void);
-void func_DF0F(void);
-void func_E50B(void);
-void func_E317(void);
-void func_E884(void);
-void func_D90C(void);
-void func_E6B0(void);
-void func_E495(void);
-void func_E501(void);
-void func_DBAD(void);
-void func_DB95(void);
-void func_E69D(void);
-void func_E89D(void);
-void func_D8BB(void);
-void func_E8D9(void);
-void func_E4B0(void); /* StkLp */
-void func_E32D(void); /* CollisionCoreLoop */
 void func_E87D(void); /* EnemyGfxHandler */
 void func_E9A0(void);
 void func_E939(void);
@@ -1067,13 +729,11 @@ void func_E273(void); /* LargePlatformBoundBox */
 void func_E27D(void);
 void func_E286(void);
 void func_E278(void);
-void func_DB45(void); /* LargePlatformCollision */
 void func_C982(void); /* LargePlatformSubroutines */
 void func_C987(void);
 void func_C9AC(void);
 void func_E5C8(void); /* DrawLargePlatform */
 void func_E24C(void); /* SmallPlatformBoundBox */
-void func_DB7B(void); /* SmallPlatformCollision */
 void func_ED66(void); /* DrawSmallPlatform */
 void func_EDD1(void); /* SOfs2 */
 void func_ED6F(void);
@@ -1110,7 +770,6 @@ void func_D36D(void); /* DSFLoop */
 void func_D371(void);
 void func_D3A2(void); /* DelayToAreaEnd */
 void func_D3AD(void);
-void func_B8D9_b0(void); /* PosJSpr */
 void func_C30E(void); /* InitNormalEnemy */
 void func_C31E(void); /* InitRedKoopa */
 void func_C321(void);
@@ -1357,7 +1016,6 @@ void func_CEAB(void);
 void func_CECB(void);
 void func_CEAD(void);
 void func_CE95(void);
-void func_CE08(void); /* FirebarCollision */
 void func_CDBB(void); /* DrawFirebar_Collision */
 void func_CE33(void);
 void func_CE2D(void);
@@ -1571,8 +1229,6 @@ void func_D5FE(void); /* ChkYPCollision */
 void func_CB47(void); /* XMoveCntr_Platform */
 void func_D628(void); /* SetPVar */
 void func_BF88_b0(void); /* MoveDropPlatform */
-void func_D614(void); /* PositionPlayerOnHPlat */
-void func_DC19(void); /* PositionPlayerOnS_Plat */
 void func_C38A(void); /* SetupLakitu */
 void func_C5D8(void); /* PutAtRightExtent */
 void func_C44E(void); /* ChpChpEx */
@@ -1858,6 +1514,25 @@ void func_DD0E(void);
 void func_C692(void); /* Enemy17YPosData */
 void func_C693(void);
 void func_C0C9(void);
+void func_C0CC(void); /* ProcLoopCommand */
+void func_C0E9(void);
+void func_C0E1(void);
+void func_C1BE(void);
+void func_C0F0(void);
+void func_C14D(void);
+void func_C0CF(void);
+void func_C18E(void);
+void func_C1AE(void);
+void func_C219(void);
+void func_C0D8(void); /* FindLoop */
+void func_C242(void);
+void func_C141(void);
+void func_C124(void);
+void func_C22E(void); /* DoGroup */
+void func_C21E(void);
+void func_C213(void);
+void func_C115(void); /* WrongChk */
+void func_C102(void); /* IncMLoop */
 void func_F000(void);
 void func_FEA6(void);
 void func_FE85(void);
@@ -2010,11 +1685,13 @@ void func_E607(void);
 void func_C501(void);
 void func_EDC6(void);
 void func_E290(void);
+void func_E29C(void); /* BoundingBoxCore */
 void func_E291(void);
 void func_CD06(void);
 void func_CD07(void);
 void func_E64C(void);
 void func_CDE7(void);
+void func_CE08(void); /* FirebarCollision */
 void func_ED38(void);
 void func_F0F8(void);
 void func_ED21(void);
@@ -2049,6 +1726,7 @@ void func_EEFD(void);
 void func_D17C(void);
 void func_CED1(void);
 void func_DDBA(void);
+void func_DDCE(void); /* PipeDwnS */
 void func_CFDD(void); /* BridgeCollapseData */
 void func_CFDE(void);
 void func_CD20(void);
@@ -2108,6 +1786,9 @@ void func_D531(void);
 void func_CCAF(void);
 void func_E02A(void);
 void func_DA12(void);
+void func_DB45(void); /* LargePlatformCollision */
+void func_DB7B(void); /* SmallPlatformCollision */
+void func_DC19(void); /* PositionPlayerOnS_Plat */
 void func_FE4C(void);
 void func_D5FF(void);
 void func_CB48(void);
@@ -2138,6 +1819,7 @@ void func_E01C(void);
 void func_C006(void);
 void func_FF85(void);
 void func_D60D(void);
+void func_D614(void); /* PositionPlayerOnHPlat */
 void func_E326(void);
 void func_C939(void);
 void func_C93A(void);
@@ -2150,6 +1832,9 @@ void func_D848(void);
 void func_D949(void);
 void func_E819(void);
 void func_DC42(void);
+void func_DE0E(void); /* HandleAxeMetatile */
+void func_DEC4(void); /* ChkForLandJumpSpring */
+void func_DEE8(void); /* HandlePipeEntry */
 void func_DC53(void);
 void func_FE2A(void);
 void func_D02F(void);
@@ -2163,6 +1848,297 @@ void func_C07A(void);
 void func_C043(void);
 void func_DA06(void);
 void func_D850(void);
+void func_D853(void); /* PlayerEnemyCollision */
+void func_E435(void); /* DrawVine */
+void func_E539(void);
+void func_D907(void);
+void func_D908(void);
+void func_D9CF(void);
+void func_D9EE(void);
+void func_DAAE(void);
+void func_D9AE(void);
+void func_E6F0(void);
+void func_E6F1(void);
+void func_DA8D(void);
+void func_D98D(void);
+void func_E00F(void);
+void func_D89D(void);
+void func_DFC2(void);
+void func_D94C(void);
+void func_E03D(void);
+void func_E401(void);
+void func_DFA9(void);
+void func_DFAA(void);
+void func_D920(void);
+void func_E058(void);
+void func_DD8E(void);
+void func_DD0D(void);
+void func_E0E8(void);
+void func_DB4D(void);
+void func_E08E(void);
+void func_D8CB(void);
+void func_DFCA(void);
+void func_E800(void);
+void func_DECB(void);
+void func_DF21(void);
+void func_E8A9(void); /* CheckForRetainerObj */
+void func_E003(void);
+void func_E5CF(void);
+void func_E5D0(void);
+void func_E609(void);
+void func_E605(void);
+void func_E6CD(void);
+void func_E802(void);
+void func_DAB9(void);
+void func_DC8E(void);
+void func_DCCD(void);
+void func_E131(void); /* NoBump */
+void func_E603(void);
+void func_E8C9(void);
+void func_D991(void);
+void func_DA10(void);
+void func_D9D6(void);
+void func_E40D(void);
+void func_E029(void);
+void func_DC1A(void);
+void func_E56F(void);
+void func_D8BE(void);
+void func_E818(void);
+void func_E857(void);
+void func_E858(void);
+void func_E1D1(void);
+void func_D966(void);
+void func_DFC0(void);
+void func_DA25(void); /* SetBitsMask */
+void func_DAAB(void);
+void func_DC55(void);
+void func_E60D(void);
+void func_E60E(void);
+void func_DC16(void);
+void func_DC17(void); /* PlayerPosSPlatData */
+void func_E3AD(void); /* BlockBufferAdderData */
+void func_DF90(void);
+void func_E820(void);
+void func_DF9B(void);
+void func_E4C9(void);
+void func_E4CA(void);
+void func_DE2F(void);
+void func_DD20(void);
+void func_DE03(void); /* AreaChangeTimerData */
+void func_DE8E(void);
+void func_DE29(void); /* FlagpoleYPosData */
+void func_DE25(void); /* ClimbXPosAdder */
+void func_E807(void);
+void func_E80A(void);
+void func_DFB1(void);
+void func_DDE0(void);
+void func_DF8B(void); /* SolidMTileUpperExt */
+void func_DF96(void); /* ClimbMTileUpperExt */
+void func_E090(void);
+void func_DFB9(void); /* EnemyBGCStateData */
+void func_E389(void);
+void func_E791(void);
+void func_E060(void); /* NoCDirF */
+void func_E061(void);
+void func_E8E3(void);
+void func_E1FE(void);
+void func_E1FF(void);
+void func_E804(void);
+void func_DD04(void);
+void func_DD2A(void);
+void func_D905(void);
+void func_DD3B(void);
+void func_DD60(void);
+void func_DD61(void);
+void func_DD1A(void); /* AwardTouchedCoin */
+void func_D913(void);
+void func_E3F1(void);
+void func_E3B0(void); /* BlockBuffer_X_Adder */
+void func_E121(void);
+void func_E3CD(void);
+void func_E1A9(void);
+void func_E0A9(void);
+void func_E4C4(void); /* FirstSprYPos */
+void func_E4C5(void);
+void func_E4CC(void); /* SecondSprYPos */
+void func_E4CD(void);
+void func_E4C0(void); /* FirstSprXPos */
+void func_E4D0(void); /* FirstSprTilenum */
+void func_E4D4(void); /* SecondSprTilenum */
+void func_E541(void); /* FlagpoleScoreNumTiles */
+void func_E8E5(void);
+void func_DBD6(void);
+void func_DBB5(void);
+void func_E6BE(void); /* PowerUpGfxTable */
+void func_E682(void); /* JumpingCoinTiles */
+void func_E683(void);
+void func_E48D(void);
+void func_E4E4(void);
+void func_E6C0(void);
+void func_DCFC(void);
+void func_DCDD(void);
+void func_DFDC(void);
+void func_DFDF(void); /* HBChk */
+void func_DCDF(void);
+void func_DDDC(void);
+void func_DDDE(void);
+void func_DEDF(void);
+void func_DA7B(void);
+void func_DBDA(void);
+void func_D8DB(void);
+void func_D8D9(void);
+void func_E3D4(void);
+void func_E2E4(void);
+void func_E58A(void);
+void func_E6E7(void);
+void func_E7E9(void);
+void func_D8D3(void);
+void func_E878(void); /* JumpspringFrameOffsets */
+void func_E879(void);
+void func_E840(void); /* EnemyGfxTableOffsets */
+void func_DEA3(void);
+void func_E4A2(void); /* NextVSp */
+void func_E4A3(void);
+void func_E0EA(void);
+void func_E67F(void);
+void func_E672(void);
+void func_E667(void);
+void func_E01D(void);
+void func_E646(void);
+void func_E876(void); /* EnemyAnimTimingBMask */
+void func_E877(void);
+void func_E005(void);
+void func_E041(void);
+void func_E007(void);
+void func_E73E(void); /* EnemyGraphicsTable */
+void func_E57D(void);
+void func_E0EC(void); /* Chk2MSBSt */
+void func_E8BE(void); /* CheckForBulletBillCV */
+void func_D903(void);
+void func_E048(void); /* SetWYSpd */
+void func_E0AB(void);
+void func_E4AD(void);
+void func_E7BD(void);
+void func_DC20(void);
+void func_DEF0(void);
+void func_E8E9(void);
+void func_E8A8(void);
+void func_E0D0(void);
+void func_DCD1(void);
+void func_D9B9(void);
+void func_E6F7(void); /* PUpDrawLoop */
+void func_E6FA(void);
+void func_E301(void);
+void func_DDD5(void);
+void func_E3DE(void);
+void func_DFDA(void);
+void func_E0A4(void); /* ExSteChk */
+void func_E763(void);
+void func_E1E4(void);
+void func_E3E1(void);
+void func_E3E2(void);
+void func_DE1E(void);
+void func_E0DF(void);
+void func_DF01(void);
+void func_E7E6(void);
+void func_DE59(void);
+void func_E850(void);
+void func_DF77(void);
+void func_DF71(void);
+void func_DDD3(void);
+void func_DB8C(void); /* ChkSmallPlatLoop */
+void func_E38B(void);
+void func_E10A(void); /* SdeCLoop */
+void func_E3B1(void);
+void func_E3BA(void);
+void func_E540(void); /* NoHOffscr */
+void func_E53B(void);
+void func_E492(void); /* ChkFTop */
+void func_DEC9(void);
+void func_DE8A(void);
+void func_D878(void);
+void func_DEBF(void);
+void func_E629(void);
+void func_E6F5(void);
+void func_E4BD(void);
+void func_E179(void);
+void func_E49D(void);
+void func_E710(void);
+void func_DC82(void); /* SetFallS */
+void func_E385(void);
+void func_DC23(void);
+void func_D927(void);
+void func_DDBD(void);
+void func_D8C0(void);
+void func_E38D(void);
+void func_E28D(void);
+void func_E7B9(void);
+void func_DB93(void);
+void func_D8B9(void);
+void func_DCB9(void);
+void func_DD90(void);
+void func_DFD0(void);
+void func_E59A(void);
+void func_E61B(void);
+void func_E0B9(void);
+void func_E4B9(void);
+void func_E7A5(void);
+void func_D8B3(void);
+void func_DD76(void);
+void func_DB04(void);
+void func_DD3D(void);
+void func_DE82(void);
+void func_E30C(void); /* CheckLeftScreenBBox */
+void func_E528(void);
+void func_DB3B(void);
+void func_DE38(void); /* ExHC */
+void func_DECE(void);
+void func_DBA7(void);
+void func_E730(void);
+void func_E347(void);
+void func_DB47(void);
+void func_E406(void);
+void func_E001(void);
+void func_E431(void);
+void func_DE02(void); /* ExCSM */
+void func_E70A(void);
+void func_D901(void);
+void func_DD06(void);
+void func_DE4B(void);
+void func_DD0A(void);
+void func_DF11(void);
+void func_E139(void);
+void func_DC27(void);
+void func_E722(void);
+void func_E322(void); /* NoOfs2 */
+void func_E372(void);
+void func_E781(void);
+void func_E397(void);
+void func_E723(void);
+void func_DC65(void);
+void func_D923(void); /* TInjE */
+void func_DC67(void);
+void func_DC2F(void);
+void func_E1B9(void);
+void func_E407(void);
+void func_DC73(void);
+void func_DF29(void);
+void func_DF0F(void);
+void func_E50B(void);
+void func_E317(void);
+void func_E884(void);
+void func_D90C(void);
+void func_E6B0(void);
+void func_E495(void);
+void func_E501(void);
+void func_DBAD(void);
+void func_DB95(void);
+void func_E69D(void);
+void func_E89D(void);
+void func_D8BB(void);
+void func_E8D9(void);
+void func_E4B0(void); /* StkLp */
+void func_E32D(void); /* CollisionCoreLoop */
 void func_D892(void); /* KickedShellPtsData */
 void func_D893(void);
 void func_D89F(void);
@@ -2231,8 +2207,10 @@ void func_DE06(void);
 void func_C938(void);
 void func_C5CA(void);
 void func_D0C6(void);
+void func_D7C4(void); /* PlayerHammerCollision */
 void func_D410(void); /* FirebarSpin */
 void func_D0C7(void);
+void func_D7CF(void);
 void func_D1D1(void); /* FlameTimerData */
 void func_D2CD(void); /* StarFlagYPosAdder */
 void func_D2CE(void);
@@ -2246,7 +2224,11 @@ void func_D852(void);
 void func_D0C9(void);
 void func_D2D3(void);
 void func_D2D4(void);
+void func_D7D1(void);
+void func_D7D7(void);
+void func_D7F2(void);
 void func_D431(void);
+void func_D7FA(void); /* ClHCol */
 void func_D416(void);
 void func_DE0F(void);
 void func_DEC5(void);
@@ -2272,6 +2254,10 @@ void func_F99E(void);
 void func_F9DF(void);
 void func_EE33(void);
 void func_EE34(void);
+void func_F180(void); /* GetPlayerOffscreenBits */
+void func_F12A(void); /* RelativePlayerPosition */
+void func_F184(void);
+void func_F12C(void);
 void func_DD07(void);
 void func_DD08(void);
 void func_CA04(void);
@@ -2587,6 +2573,18 @@ void func_EEB5(void);
 void func_E808(void);
 void func_E7BE(void);
 void func_EEE7(void); /* SwimKickTileNum */
+void func_EEE9(void); /* PlayerGfxHandler */
+void func_EEF7(void);
+void func_EF85(void);
+void func_EEFC(void);
+void func_EEFE(void);
+void func_EEEE(void);
+void func_EEF0(void);
+void func_EEF1(void);
+void func_EF10(void);
+void func_EF01(void);
+void func_EF42(void);
+void func_EF7A(void); /* PlayerOffscreenChk */
 void func_EEE8(void);
 void func_EFED(void);
 void func_EF46(void);
@@ -2650,7 +2648,10 @@ void func_FAA6(void);
 void func_F0FA(void);
 void func_C68D(void);
 void func_C68E(void);
+void func_C965(void); /* RunLargePlatform */
+void func_C94D(void); /* RunSmallPlatform */
 void func_CD2E(void); /* FirebarTblOffsets */
+void func_C97F(void);
 void func_F185(void);
 void func_F186(void);
 void func_F385(void);
@@ -3106,6 +3107,10 @@ void func_C018(void); /* ChkUpM */
 void func_DD79(void);
 void func_E885(void);
 void func_C045(void);
+void func_C047(void); /* EnemiesAndLoopsCore */
+void func_C058(void);
+void func_C04E(void);
+void func_C04D(void);
 void func_D77E(void);
 void func_FA6F(void);
 void func_C99D(void);
@@ -3373,6 +3378,7 @@ void func_F9DA(void);
 void func_FB5D(void);
 void func_FBCB(void);
 void func_B308_b0(void);
+void func_D946(void); /* SetKRout */
 void func_8286_b1(void);
 void func_8288_b1(void);
 void func_828A_b1(void);
@@ -3618,6 +3624,8 @@ _dispatch_retry:
             func_8231_b0(); break;
         case 0xAEDC:
             func_AEDC_b0(); break;
+        case 0xAEEA:
+            func_AEEA_b0(); break;
         case 0x838B:
             func_838B_b0(); break;
         case 0x9218:
@@ -3730,66 +3738,26 @@ _dispatch_retry:
             func_F3AD(); break;
         case 0x8FCF:
             func_8FCF_b0(); break;
+        case 0x8FE4:
+            func_8FE4_b0(); break;
         case 0x8567:
             func_8567_b0(); break;
         case 0x9061:
             func_9061_b0(); break;
         case 0x8245:
             func_8245_b0(); break;
-        case 0x8FE4:
-            func_8FE4_b0(); break;
         case 0x9071:
             func_9071_b0(); break;
-        case 0xAEEA:
-            func_AEEA_b0(); break;
         case 0xB04A:
             func_B04A_b0(); break;
         case 0xB624:
             func_B624_b0(); break;
-        case 0xC047:
-            func_C047(); break;
-        case 0xC058:
-            func_C058(); break;
-        case 0xC04E:
-            func_C04E(); break;
-        case 0xC04D:
-            func_C04D(); break;
+        case 0xB66E:
+            func_B66E_b0(); break;
         case 0x84C3:
             func_84C3_b0(); break;
         case 0x8534:
             func_8534_b0(); break;
-        case 0xF180:
-            func_F180(); break;
-        case 0xF184:
-            func_F184(); break;
-        case 0xF12A:
-            func_F12A(); break;
-        case 0xF12C:
-            func_F12C(); break;
-        case 0xEEE9:
-            func_EEE9(); break;
-        case 0xEEF7:
-            func_EEF7(); break;
-        case 0xEF85:
-            func_EF85(); break;
-        case 0xEEFC:
-            func_EEFC(); break;
-        case 0xEEFE:
-            func_EEFE(); break;
-        case 0xEEEE:
-            func_EEEE(); break;
-        case 0xEEF0:
-            func_EEF0(); break;
-        case 0xEEF1:
-            func_EEF1(); break;
-        case 0xEF10:
-            func_EF10(); break;
-        case 0xEF01:
-            func_EF01(); break;
-        case 0xEF42:
-            func_EF42(); break;
-        case 0xEF7A:
-            func_EF7A(); break;
         case 0xBED4:
             func_BED4_b0(); break;
         case 0xBE70:
@@ -3942,6 +3910,8 @@ _dispatch_retry:
             func_B069_b0(); break;
         case 0xB0E9:
             func_B0E9_b0(); break;
+        case 0xB1BB:
+            func_B1BB_b0(); break;
         case 0xB233:
             func_B233_b0(); break;
         case 0xB245:
@@ -3964,8 +3934,6 @@ _dispatch_retry:
             func_AF93_b0(); break;
         case 0xAFB1:
             func_AFB1_b0(); break;
-        case 0xE29C:
-            func_E29C(); break;
         case 0xDC64:
             func_DC64(); break;
         case 0xB1DD:
@@ -4000,44 +3968,6 @@ _dispatch_retry:
             func_C888(); break;
         case 0xC88A:
             func_C88A(); break;
-        case 0xC0CC:
-            func_C0CC(); break;
-        case 0xC0E9:
-            func_C0E9(); break;
-        case 0xC0E1:
-            func_C0E1(); break;
-        case 0xC1BE:
-            func_C1BE(); break;
-        case 0xC0F0:
-            func_C0F0(); break;
-        case 0xC14D:
-            func_C14D(); break;
-        case 0xC0CF:
-            func_C0CF(); break;
-        case 0xC18E:
-            func_C18E(); break;
-        case 0xC1AE:
-            func_C1AE(); break;
-        case 0xC219:
-            func_C219(); break;
-        case 0xC0D8:
-            func_C0D8(); break;
-        case 0xC242:
-            func_C242(); break;
-        case 0xC141:
-            func_C141(); break;
-        case 0xC124:
-            func_C124(); break;
-        case 0xC22E:
-            func_C22E(); break;
-        case 0xC21E:
-            func_C21E(); break;
-        case 0xC213:
-            func_C213(); break;
-        case 0xC115:
-            func_C115(); break;
-        case 0xC102:
-            func_C102(); break;
         case 0x8486:
             func_8486_b0(); break;
         case 0xBC27:
@@ -4296,6 +4226,8 @@ _dispatch_retry:
             func_8F06_b0(); break;
         case 0xD931:
             func_D931(); break;
+        case 0xD958:
+            func_D958(); break;
         case 0x92C8:
             func_92C8_b0(); break;
         case 0x896A:
@@ -4456,20 +4388,18 @@ _dispatch_retry:
             func_DE05(); break;
         case 0xDF9A:
             func_DF9A(); break;
-        case 0xDE0E:
-            func_DE0E(); break;
         case 0xDEBD:
             func_DEBD(); break;
         case 0xDF4B:
             func_DF4B(); break;
-        case 0xDEC4:
-            func_DEC4(); break;
-        case 0xDEE8:
-            func_DEE8(); break;
         case 0xE3EC:
             func_E3EC(); break;
         case 0xDE2E:
             func_DE2E(); break;
+        case 0xDE41:
+            func_DE41(); break;
+        case 0xDE7A:
+            func_DE7A(); break;
         case 0xDEDD:
             func_DEDD(); break;
         case 0xDDFF:
@@ -4546,12 +4476,6 @@ _dispatch_retry:
             func_C947(); break;
         case 0xC94A:
             func_C94A(); break;
-        case 0xC965:
-            func_C965(); break;
-        case 0xC97F:
-            func_C97F(); break;
-        case 0xC94D:
-            func_C94D(); break;
         case 0xD065:
             func_D065(); break;
         case 0xD0C0:
@@ -4643,6 +4567,8 @@ _dispatch_retry:
             func_D301(); break;
         case 0xB8BA:
             func_B8BA_b0(); break;
+        case 0xB8D9:
+            func_B8D9_b0(); break;
         case 0xB7A4:
             func_B7A4_b0(); break;
         case 0xC8D7:
@@ -4723,18 +4649,6 @@ _dispatch_retry:
             func_EC46(); break;
         case 0xBB28:
             func_BB28_b0(); break;
-        case 0xD7C4:
-            func_D7C4(); break;
-        case 0xD7CF:
-            func_D7CF(); break;
-        case 0xD7D1:
-            func_D7D1(); break;
-        case 0xD7D7:
-            func_D7D7(); break;
-        case 0xD7F2:
-            func_D7F2(); break;
-        case 0xD7FA:
-            func_D7FA(); break;
         case 0xE4DC:
             func_E4DC(); break;
         case 0xBB98:
@@ -4761,590 +4675,6 @@ _dispatch_retry:
             func_BF02_b0(); break;
         case 0xE243:
             func_E243(); break;
-        case 0xD853:
-            func_D853(); break;
-        case 0xE435:
-            func_E435(); break;
-        case 0xE539:
-            func_E539(); break;
-        case 0xD907:
-            func_D907(); break;
-        case 0xD908:
-            func_D908(); break;
-        case 0xD9CF:
-            func_D9CF(); break;
-        case 0xD9EE:
-            func_D9EE(); break;
-        case 0xDAAE:
-            func_DAAE(); break;
-        case 0xD9AE:
-            func_D9AE(); break;
-        case 0xE6F0:
-            func_E6F0(); break;
-        case 0xE6F1:
-            func_E6F1(); break;
-        case 0xDA8D:
-            func_DA8D(); break;
-        case 0xD98D:
-            func_D98D(); break;
-        case 0xE00F:
-            func_E00F(); break;
-        case 0xD89D:
-            func_D89D(); break;
-        case 0xDFC2:
-            func_DFC2(); break;
-        case 0xD94C:
-            func_D94C(); break;
-        case 0xE03D:
-            func_E03D(); break;
-        case 0xE401:
-            func_E401(); break;
-        case 0xDFA9:
-            func_DFA9(); break;
-        case 0xDFAA:
-            func_DFAA(); break;
-        case 0xD920:
-            func_D920(); break;
-        case 0xE058:
-            func_E058(); break;
-        case 0xDD8E:
-            func_DD8E(); break;
-        case 0xDD0D:
-            func_DD0D(); break;
-        case 0xE0E8:
-            func_E0E8(); break;
-        case 0xDB4D:
-            func_DB4D(); break;
-        case 0xE08E:
-            func_E08E(); break;
-        case 0xD8CB:
-            func_D8CB(); break;
-        case 0xDFCA:
-            func_DFCA(); break;
-        case 0xE800:
-            func_E800(); break;
-        case 0xDECB:
-            func_DECB(); break;
-        case 0xDF21:
-            func_DF21(); break;
-        case 0xE8A9:
-            func_E8A9(); break;
-        case 0xE003:
-            func_E003(); break;
-        case 0xE5CF:
-            func_E5CF(); break;
-        case 0xE5D0:
-            func_E5D0(); break;
-        case 0xE609:
-            func_E609(); break;
-        case 0xE605:
-            func_E605(); break;
-        case 0xE6CD:
-            func_E6CD(); break;
-        case 0xE802:
-            func_E802(); break;
-        case 0xDAB9:
-            func_DAB9(); break;
-        case 0xDC8E:
-            func_DC8E(); break;
-        case 0xDCCD:
-            func_DCCD(); break;
-        case 0xE131:
-            func_E131(); break;
-        case 0xE603:
-            func_E603(); break;
-        case 0xE8C9:
-            func_E8C9(); break;
-        case 0xD991:
-            func_D991(); break;
-        case 0xDA10:
-            func_DA10(); break;
-        case 0xD9D6:
-            func_D9D6(); break;
-        case 0xE40D:
-            func_E40D(); break;
-        case 0xE029:
-            func_E029(); break;
-        case 0xDC1A:
-            func_DC1A(); break;
-        case 0xE56F:
-            func_E56F(); break;
-        case 0xD8BE:
-            func_D8BE(); break;
-        case 0xE818:
-            func_E818(); break;
-        case 0xE857:
-            func_E857(); break;
-        case 0xE858:
-            func_E858(); break;
-        case 0xE1D1:
-            func_E1D1(); break;
-        case 0xD966:
-            func_D966(); break;
-        case 0xDFC0:
-            func_DFC0(); break;
-        case 0xDA25:
-            func_DA25(); break;
-        case 0xDAAB:
-            func_DAAB(); break;
-        case 0xDC55:
-            func_DC55(); break;
-        case 0xE60D:
-            func_E60D(); break;
-        case 0xE60E:
-            func_E60E(); break;
-        case 0xDC16:
-            func_DC16(); break;
-        case 0xDC17:
-            func_DC17(); break;
-        case 0xE3AD:
-            func_E3AD(); break;
-        case 0xDDCE:
-            func_DDCE(); break;
-        case 0xDF90:
-            func_DF90(); break;
-        case 0xE820:
-            func_E820(); break;
-        case 0xDF9B:
-            func_DF9B(); break;
-        case 0xE4C9:
-            func_E4C9(); break;
-        case 0xE4CA:
-            func_E4CA(); break;
-        case 0xDE2F:
-            func_DE2F(); break;
-        case 0xDD20:
-            func_DD20(); break;
-        case 0xDE03:
-            func_DE03(); break;
-        case 0xDE8E:
-            func_DE8E(); break;
-        case 0xDE29:
-            func_DE29(); break;
-        case 0xDE25:
-            func_DE25(); break;
-        case 0xE807:
-            func_E807(); break;
-        case 0xE80A:
-            func_E80A(); break;
-        case 0xDFB1:
-            func_DFB1(); break;
-        case 0xDDE0:
-            func_DDE0(); break;
-        case 0xDF8B:
-            func_DF8B(); break;
-        case 0xDF96:
-            func_DF96(); break;
-        case 0xE090:
-            func_E090(); break;
-        case 0xDFB9:
-            func_DFB9(); break;
-        case 0xE389:
-            func_E389(); break;
-        case 0xE791:
-            func_E791(); break;
-        case 0xE060:
-            func_E060(); break;
-        case 0xE061:
-            func_E061(); break;
-        case 0xE8E3:
-            func_E8E3(); break;
-        case 0xE1FE:
-            func_E1FE(); break;
-        case 0xE1FF:
-            func_E1FF(); break;
-        case 0xE804:
-            func_E804(); break;
-        case 0xDD04:
-            func_DD04(); break;
-        case 0xDD2A:
-            func_DD2A(); break;
-        case 0xD905:
-            func_D905(); break;
-        case 0xDD3B:
-            func_DD3B(); break;
-        case 0xDD60:
-            func_DD60(); break;
-        case 0xDD61:
-            func_DD61(); break;
-        case 0xDD1A:
-            func_DD1A(); break;
-        case 0xD913:
-            func_D913(); break;
-        case 0xE3F1:
-            func_E3F1(); break;
-        case 0xE3B0:
-            func_E3B0(); break;
-        case 0xE121:
-            func_E121(); break;
-        case 0xE3CD:
-            func_E3CD(); break;
-        case 0xE1A9:
-            func_E1A9(); break;
-        case 0xE0A9:
-            func_E0A9(); break;
-        case 0xE4C4:
-            func_E4C4(); break;
-        case 0xE4C5:
-            func_E4C5(); break;
-        case 0xE4CC:
-            func_E4CC(); break;
-        case 0xE4CD:
-            func_E4CD(); break;
-        case 0xE4C0:
-            func_E4C0(); break;
-        case 0xE4D0:
-            func_E4D0(); break;
-        case 0xE4D4:
-            func_E4D4(); break;
-        case 0xE541:
-            func_E541(); break;
-        case 0xE8E5:
-            func_E8E5(); break;
-        case 0xDBD6:
-            func_DBD6(); break;
-        case 0xDBB5:
-            func_DBB5(); break;
-        case 0xE6BE:
-            func_E6BE(); break;
-        case 0xE682:
-            func_E682(); break;
-        case 0xE683:
-            func_E683(); break;
-        case 0xE48D:
-            func_E48D(); break;
-        case 0xE4E4:
-            func_E4E4(); break;
-        case 0xE6C0:
-            func_E6C0(); break;
-        case 0xDCFC:
-            func_DCFC(); break;
-        case 0xDCDD:
-            func_DCDD(); break;
-        case 0xDFDC:
-            func_DFDC(); break;
-        case 0xDFDF:
-            func_DFDF(); break;
-        case 0xDCDF:
-            func_DCDF(); break;
-        case 0xDDDC:
-            func_DDDC(); break;
-        case 0xDDDE:
-            func_DDDE(); break;
-        case 0xDEDF:
-            func_DEDF(); break;
-        case 0xDA7B:
-            func_DA7B(); break;
-        case 0xDBDA:
-            func_DBDA(); break;
-        case 0xD8DB:
-            func_D8DB(); break;
-        case 0xD8D9:
-            func_D8D9(); break;
-        case 0xE3D4:
-            func_E3D4(); break;
-        case 0xE2E4:
-            func_E2E4(); break;
-        case 0xE58A:
-            func_E58A(); break;
-        case 0xE6E7:
-            func_E6E7(); break;
-        case 0xE7E9:
-            func_E7E9(); break;
-        case 0xD8D3:
-            func_D8D3(); break;
-        case 0xE878:
-            func_E878(); break;
-        case 0xE879:
-            func_E879(); break;
-        case 0xE840:
-            func_E840(); break;
-        case 0xDEA3:
-            func_DEA3(); break;
-        case 0xE4A2:
-            func_E4A2(); break;
-        case 0xE4A3:
-            func_E4A3(); break;
-        case 0xE0EA:
-            func_E0EA(); break;
-        case 0xE67F:
-            func_E67F(); break;
-        case 0xE672:
-            func_E672(); break;
-        case 0xE667:
-            func_E667(); break;
-        case 0xE01D:
-            func_E01D(); break;
-        case 0xE646:
-            func_E646(); break;
-        case 0xE876:
-            func_E876(); break;
-        case 0xE877:
-            func_E877(); break;
-        case 0xE005:
-            func_E005(); break;
-        case 0xE041:
-            func_E041(); break;
-        case 0xE007:
-            func_E007(); break;
-        case 0xE73E:
-            func_E73E(); break;
-        case 0xE57D:
-            func_E57D(); break;
-        case 0xE0EC:
-            func_E0EC(); break;
-        case 0xE8BE:
-            func_E8BE(); break;
-        case 0xD903:
-            func_D903(); break;
-        case 0xE048:
-            func_E048(); break;
-        case 0xE0AB:
-            func_E0AB(); break;
-        case 0xE4AD:
-            func_E4AD(); break;
-        case 0xE7BD:
-            func_E7BD(); break;
-        case 0xDC20:
-            func_DC20(); break;
-        case 0xDEF0:
-            func_DEF0(); break;
-        case 0xE8E9:
-            func_E8E9(); break;
-        case 0xE8A8:
-            func_E8A8(); break;
-        case 0xE0D0:
-            func_E0D0(); break;
-        case 0xDCD1:
-            func_DCD1(); break;
-        case 0xD9B9:
-            func_D9B9(); break;
-        case 0xE6F7:
-            func_E6F7(); break;
-        case 0xE6FA:
-            func_E6FA(); break;
-        case 0xE301:
-            func_E301(); break;
-        case 0xDDD5:
-            func_DDD5(); break;
-        case 0xE3DE:
-            func_E3DE(); break;
-        case 0xDFDA:
-            func_DFDA(); break;
-        case 0xE0A4:
-            func_E0A4(); break;
-        case 0xE763:
-            func_E763(); break;
-        case 0xE1E4:
-            func_E1E4(); break;
-        case 0xE3E1:
-            func_E3E1(); break;
-        case 0xE3E2:
-            func_E3E2(); break;
-        case 0xDE1E:
-            func_DE1E(); break;
-        case 0xE0DF:
-            func_E0DF(); break;
-        case 0xDF01:
-            func_DF01(); break;
-        case 0xE7E6:
-            func_E7E6(); break;
-        case 0xDE59:
-            func_DE59(); break;
-        case 0xE850:
-            func_E850(); break;
-        case 0xDF77:
-            func_DF77(); break;
-        case 0xDF71:
-            func_DF71(); break;
-        case 0xDDD3:
-            func_DDD3(); break;
-        case 0xDB8C:
-            func_DB8C(); break;
-        case 0xE38B:
-            func_E38B(); break;
-        case 0xE10A:
-            func_E10A(); break;
-        case 0xE3B1:
-            func_E3B1(); break;
-        case 0xE3BA:
-            func_E3BA(); break;
-        case 0xE540:
-            func_E540(); break;
-        case 0xE53B:
-            func_E53B(); break;
-        case 0xE492:
-            func_E492(); break;
-        case 0xDEC9:
-            func_DEC9(); break;
-        case 0xDE8A:
-            func_DE8A(); break;
-        case 0xD878:
-            func_D878(); break;
-        case 0xDEBF:
-            func_DEBF(); break;
-        case 0xE629:
-            func_E629(); break;
-        case 0xE6F5:
-            func_E6F5(); break;
-        case 0xE4BD:
-            func_E4BD(); break;
-        case 0xE179:
-            func_E179(); break;
-        case 0xE49D:
-            func_E49D(); break;
-        case 0xE710:
-            func_E710(); break;
-        case 0xDC82:
-            func_DC82(); break;
-        case 0xE385:
-            func_E385(); break;
-        case 0xDC23:
-            func_DC23(); break;
-        case 0xD927:
-            func_D927(); break;
-        case 0xDDBD:
-            func_DDBD(); break;
-        case 0xD8C0:
-            func_D8C0(); break;
-        case 0xE38D:
-            func_E38D(); break;
-        case 0xE28D:
-            func_E28D(); break;
-        case 0xE7B9:
-            func_E7B9(); break;
-        case 0xDB93:
-            func_DB93(); break;
-        case 0xD8B9:
-            func_D8B9(); break;
-        case 0xDCB9:
-            func_DCB9(); break;
-        case 0xDD90:
-            func_DD90(); break;
-        case 0xDFD0:
-            func_DFD0(); break;
-        case 0xE59A:
-            func_E59A(); break;
-        case 0xE61B:
-            func_E61B(); break;
-        case 0xE0B9:
-            func_E0B9(); break;
-        case 0xE4B9:
-            func_E4B9(); break;
-        case 0xE7A5:
-            func_E7A5(); break;
-        case 0xD8B3:
-            func_D8B3(); break;
-        case 0xDD76:
-            func_DD76(); break;
-        case 0xDB04:
-            func_DB04(); break;
-        case 0xDD3D:
-            func_DD3D(); break;
-        case 0xDE82:
-            func_DE82(); break;
-        case 0xE30C:
-            func_E30C(); break;
-        case 0xE528:
-            func_E528(); break;
-        case 0xDB3B:
-            func_DB3B(); break;
-        case 0xDE38:
-            func_DE38(); break;
-        case 0xDECE:
-            func_DECE(); break;
-        case 0xDBA7:
-            func_DBA7(); break;
-        case 0xE730:
-            func_E730(); break;
-        case 0xE347:
-            func_E347(); break;
-        case 0xDB47:
-            func_DB47(); break;
-        case 0xE406:
-            func_E406(); break;
-        case 0xE001:
-            func_E001(); break;
-        case 0xE431:
-            func_E431(); break;
-        case 0xDE02:
-            func_DE02(); break;
-        case 0xE70A:
-            func_E70A(); break;
-        case 0xD901:
-            func_D901(); break;
-        case 0xDD06:
-            func_DD06(); break;
-        case 0xDE4B:
-            func_DE4B(); break;
-        case 0xDD0A:
-            func_DD0A(); break;
-        case 0xDF11:
-            func_DF11(); break;
-        case 0xE139:
-            func_E139(); break;
-        case 0xDC27:
-            func_DC27(); break;
-        case 0xE722:
-            func_E722(); break;
-        case 0xE322:
-            func_E322(); break;
-        case 0xE372:
-            func_E372(); break;
-        case 0xE781:
-            func_E781(); break;
-        case 0xE397:
-            func_E397(); break;
-        case 0xE723:
-            func_E723(); break;
-        case 0xDC65:
-            func_DC65(); break;
-        case 0xD923:
-            func_D923(); break;
-        case 0xDC67:
-            func_DC67(); break;
-        case 0xDC2F:
-            func_DC2F(); break;
-        case 0xE1B9:
-            func_E1B9(); break;
-        case 0xE407:
-            func_E407(); break;
-        case 0xDC73:
-            func_DC73(); break;
-        case 0xDF29:
-            func_DF29(); break;
-        case 0xDF0F:
-            func_DF0F(); break;
-        case 0xE50B:
-            func_E50B(); break;
-        case 0xE317:
-            func_E317(); break;
-        case 0xE884:
-            func_E884(); break;
-        case 0xD90C:
-            func_D90C(); break;
-        case 0xE6B0:
-            func_E6B0(); break;
-        case 0xE495:
-            func_E495(); break;
-        case 0xE501:
-            func_E501(); break;
-        case 0xDBAD:
-            func_DBAD(); break;
-        case 0xDB95:
-            func_DB95(); break;
-        case 0xE69D:
-            func_E69D(); break;
-        case 0xE89D:
-            func_E89D(); break;
-        case 0xD8BB:
-            func_D8BB(); break;
-        case 0xE8D9:
-            func_E8D9(); break;
-        case 0xE4B0:
-            func_E4B0(); break;
-        case 0xE32D:
-            func_E32D(); break;
         case 0xE87D:
             func_E87D(); break;
         case 0xE9A0:
@@ -5583,8 +4913,6 @@ _dispatch_retry:
             func_E286(); break;
         case 0xE278:
             func_E278(); break;
-        case 0xDB45:
-            func_DB45(); break;
         case 0xC982:
             func_C982(); break;
         case 0xC987:
@@ -5595,8 +4923,6 @@ _dispatch_retry:
             func_E5C8(); break;
         case 0xE24C:
             func_E24C(); break;
-        case 0xDB7B:
-            func_DB7B(); break;
         case 0xED66:
             func_ED66(); break;
         case 0xEDD1:
@@ -5669,8 +4995,6 @@ _dispatch_retry:
             func_D3A2(); break;
         case 0xD3AD:
             func_D3AD(); break;
-        case 0xB8D9:
-            func_B8D9_b0(); break;
         case 0xC30E:
             func_C30E(); break;
         case 0xC31E:
@@ -6168,8 +5492,6 @@ _dispatch_retry:
             func_CEAD(); break;
         case 0xCE95:
             func_CE95(); break;
-        case 0xCE08:
-            func_CE08(); break;
         case 0xCDBB:
             func_CDBB(); break;
         case 0xCE33:
@@ -6601,10 +5923,6 @@ _dispatch_retry:
             func_D628(); break;
         case 0xBF88:
             func_BF88_b0(); break;
-        case 0xD614:
-            func_D614(); break;
-        case 0xDC19:
-            func_DC19(); break;
         case 0xC38A:
             func_C38A(); break;
         case 0xC5D8:
@@ -7175,6 +6493,44 @@ _dispatch_retry:
             func_C693(); break;
         case 0xC0C9:
             func_C0C9(); break;
+        case 0xC0CC:
+            func_C0CC(); break;
+        case 0xC0E9:
+            func_C0E9(); break;
+        case 0xC0E1:
+            func_C0E1(); break;
+        case 0xC1BE:
+            func_C1BE(); break;
+        case 0xC0F0:
+            func_C0F0(); break;
+        case 0xC14D:
+            func_C14D(); break;
+        case 0xC0CF:
+            func_C0CF(); break;
+        case 0xC18E:
+            func_C18E(); break;
+        case 0xC1AE:
+            func_C1AE(); break;
+        case 0xC219:
+            func_C219(); break;
+        case 0xC0D8:
+            func_C0D8(); break;
+        case 0xC242:
+            func_C242(); break;
+        case 0xC141:
+            func_C141(); break;
+        case 0xC124:
+            func_C124(); break;
+        case 0xC22E:
+            func_C22E(); break;
+        case 0xC21E:
+            func_C21E(); break;
+        case 0xC213:
+            func_C213(); break;
+        case 0xC115:
+            func_C115(); break;
+        case 0xC102:
+            func_C102(); break;
         case 0xF000:
             func_F000(); break;
         case 0xFEA6:
@@ -7479,6 +6835,8 @@ _dispatch_retry:
             func_EDC6(); break;
         case 0xE290:
             func_E290(); break;
+        case 0xE29C:
+            func_E29C(); break;
         case 0xE291:
             func_E291(); break;
         case 0xCD06:
@@ -7489,6 +6847,8 @@ _dispatch_retry:
             func_E64C(); break;
         case 0xCDE7:
             func_CDE7(); break;
+        case 0xCE08:
+            func_CE08(); break;
         case 0xED38:
             func_ED38(); break;
         case 0xF0F8:
@@ -7557,6 +6917,8 @@ _dispatch_retry:
             func_CED1(); break;
         case 0xDDBA:
             func_DDBA(); break;
+        case 0xDDCE:
+            func_DDCE(); break;
         case 0xCFDD:
             func_CFDD(); break;
         case 0xCFDE:
@@ -7675,6 +7037,12 @@ _dispatch_retry:
             func_E02A(); break;
         case 0xDA12:
             func_DA12(); break;
+        case 0xDB45:
+            func_DB45(); break;
+        case 0xDB7B:
+            func_DB7B(); break;
+        case 0xDC19:
+            func_DC19(); break;
         case 0xFE4C:
             func_FE4C(); break;
         case 0xD5FF:
@@ -7735,6 +7103,8 @@ _dispatch_retry:
             func_FF85(); break;
         case 0xD60D:
             func_D60D(); break;
+        case 0xD614:
+            func_D614(); break;
         case 0xE326:
             func_E326(); break;
         case 0xC939:
@@ -7759,6 +7129,12 @@ _dispatch_retry:
             func_E819(); break;
         case 0xDC42:
             func_DC42(); break;
+        case 0xDE0E:
+            func_DE0E(); break;
+        case 0xDEC4:
+            func_DEC4(); break;
+        case 0xDEE8:
+            func_DEE8(); break;
         case 0xDC53:
             func_DC53(); break;
         case 0xFE2A:
@@ -7785,6 +7161,588 @@ _dispatch_retry:
             func_DA06(); break;
         case 0xD850:
             func_D850(); break;
+        case 0xD853:
+            func_D853(); break;
+        case 0xE435:
+            func_E435(); break;
+        case 0xE539:
+            func_E539(); break;
+        case 0xD907:
+            func_D907(); break;
+        case 0xD908:
+            func_D908(); break;
+        case 0xD9CF:
+            func_D9CF(); break;
+        case 0xD9EE:
+            func_D9EE(); break;
+        case 0xDAAE:
+            func_DAAE(); break;
+        case 0xD9AE:
+            func_D9AE(); break;
+        case 0xE6F0:
+            func_E6F0(); break;
+        case 0xE6F1:
+            func_E6F1(); break;
+        case 0xDA8D:
+            func_DA8D(); break;
+        case 0xD98D:
+            func_D98D(); break;
+        case 0xE00F:
+            func_E00F(); break;
+        case 0xD89D:
+            func_D89D(); break;
+        case 0xDFC2:
+            func_DFC2(); break;
+        case 0xD94C:
+            func_D94C(); break;
+        case 0xE03D:
+            func_E03D(); break;
+        case 0xE401:
+            func_E401(); break;
+        case 0xDFA9:
+            func_DFA9(); break;
+        case 0xDFAA:
+            func_DFAA(); break;
+        case 0xD920:
+            func_D920(); break;
+        case 0xE058:
+            func_E058(); break;
+        case 0xDD8E:
+            func_DD8E(); break;
+        case 0xDD0D:
+            func_DD0D(); break;
+        case 0xE0E8:
+            func_E0E8(); break;
+        case 0xDB4D:
+            func_DB4D(); break;
+        case 0xE08E:
+            func_E08E(); break;
+        case 0xD8CB:
+            func_D8CB(); break;
+        case 0xDFCA:
+            func_DFCA(); break;
+        case 0xE800:
+            func_E800(); break;
+        case 0xDECB:
+            func_DECB(); break;
+        case 0xDF21:
+            func_DF21(); break;
+        case 0xE8A9:
+            func_E8A9(); break;
+        case 0xE003:
+            func_E003(); break;
+        case 0xE5CF:
+            func_E5CF(); break;
+        case 0xE5D0:
+            func_E5D0(); break;
+        case 0xE609:
+            func_E609(); break;
+        case 0xE605:
+            func_E605(); break;
+        case 0xE6CD:
+            func_E6CD(); break;
+        case 0xE802:
+            func_E802(); break;
+        case 0xDAB9:
+            func_DAB9(); break;
+        case 0xDC8E:
+            func_DC8E(); break;
+        case 0xDCCD:
+            func_DCCD(); break;
+        case 0xE131:
+            func_E131(); break;
+        case 0xE603:
+            func_E603(); break;
+        case 0xE8C9:
+            func_E8C9(); break;
+        case 0xD991:
+            func_D991(); break;
+        case 0xDA10:
+            func_DA10(); break;
+        case 0xD9D6:
+            func_D9D6(); break;
+        case 0xE40D:
+            func_E40D(); break;
+        case 0xE029:
+            func_E029(); break;
+        case 0xDC1A:
+            func_DC1A(); break;
+        case 0xE56F:
+            func_E56F(); break;
+        case 0xD8BE:
+            func_D8BE(); break;
+        case 0xE818:
+            func_E818(); break;
+        case 0xE857:
+            func_E857(); break;
+        case 0xE858:
+            func_E858(); break;
+        case 0xE1D1:
+            func_E1D1(); break;
+        case 0xD966:
+            func_D966(); break;
+        case 0xDFC0:
+            func_DFC0(); break;
+        case 0xDA25:
+            func_DA25(); break;
+        case 0xDAAB:
+            func_DAAB(); break;
+        case 0xDC55:
+            func_DC55(); break;
+        case 0xE60D:
+            func_E60D(); break;
+        case 0xE60E:
+            func_E60E(); break;
+        case 0xDC16:
+            func_DC16(); break;
+        case 0xDC17:
+            func_DC17(); break;
+        case 0xE3AD:
+            func_E3AD(); break;
+        case 0xDF90:
+            func_DF90(); break;
+        case 0xE820:
+            func_E820(); break;
+        case 0xDF9B:
+            func_DF9B(); break;
+        case 0xE4C9:
+            func_E4C9(); break;
+        case 0xE4CA:
+            func_E4CA(); break;
+        case 0xDE2F:
+            func_DE2F(); break;
+        case 0xDD20:
+            func_DD20(); break;
+        case 0xDE03:
+            func_DE03(); break;
+        case 0xDE8E:
+            func_DE8E(); break;
+        case 0xDE29:
+            func_DE29(); break;
+        case 0xDE25:
+            func_DE25(); break;
+        case 0xE807:
+            func_E807(); break;
+        case 0xE80A:
+            func_E80A(); break;
+        case 0xDFB1:
+            func_DFB1(); break;
+        case 0xDDE0:
+            func_DDE0(); break;
+        case 0xDF8B:
+            func_DF8B(); break;
+        case 0xDF96:
+            func_DF96(); break;
+        case 0xE090:
+            func_E090(); break;
+        case 0xDFB9:
+            func_DFB9(); break;
+        case 0xE389:
+            func_E389(); break;
+        case 0xE791:
+            func_E791(); break;
+        case 0xE060:
+            func_E060(); break;
+        case 0xE061:
+            func_E061(); break;
+        case 0xE8E3:
+            func_E8E3(); break;
+        case 0xE1FE:
+            func_E1FE(); break;
+        case 0xE1FF:
+            func_E1FF(); break;
+        case 0xE804:
+            func_E804(); break;
+        case 0xDD04:
+            func_DD04(); break;
+        case 0xDD2A:
+            func_DD2A(); break;
+        case 0xD905:
+            func_D905(); break;
+        case 0xDD3B:
+            func_DD3B(); break;
+        case 0xDD60:
+            func_DD60(); break;
+        case 0xDD61:
+            func_DD61(); break;
+        case 0xDD1A:
+            func_DD1A(); break;
+        case 0xD913:
+            func_D913(); break;
+        case 0xE3F1:
+            func_E3F1(); break;
+        case 0xE3B0:
+            func_E3B0(); break;
+        case 0xE121:
+            func_E121(); break;
+        case 0xE3CD:
+            func_E3CD(); break;
+        case 0xE1A9:
+            func_E1A9(); break;
+        case 0xE0A9:
+            func_E0A9(); break;
+        case 0xE4C4:
+            func_E4C4(); break;
+        case 0xE4C5:
+            func_E4C5(); break;
+        case 0xE4CC:
+            func_E4CC(); break;
+        case 0xE4CD:
+            func_E4CD(); break;
+        case 0xE4C0:
+            func_E4C0(); break;
+        case 0xE4D0:
+            func_E4D0(); break;
+        case 0xE4D4:
+            func_E4D4(); break;
+        case 0xE541:
+            func_E541(); break;
+        case 0xE8E5:
+            func_E8E5(); break;
+        case 0xDBD6:
+            func_DBD6(); break;
+        case 0xDBB5:
+            func_DBB5(); break;
+        case 0xE6BE:
+            func_E6BE(); break;
+        case 0xE682:
+            func_E682(); break;
+        case 0xE683:
+            func_E683(); break;
+        case 0xE48D:
+            func_E48D(); break;
+        case 0xE4E4:
+            func_E4E4(); break;
+        case 0xE6C0:
+            func_E6C0(); break;
+        case 0xDCFC:
+            func_DCFC(); break;
+        case 0xDCDD:
+            func_DCDD(); break;
+        case 0xDFDC:
+            func_DFDC(); break;
+        case 0xDFDF:
+            func_DFDF(); break;
+        case 0xDCDF:
+            func_DCDF(); break;
+        case 0xDDDC:
+            func_DDDC(); break;
+        case 0xDDDE:
+            func_DDDE(); break;
+        case 0xDEDF:
+            func_DEDF(); break;
+        case 0xDA7B:
+            func_DA7B(); break;
+        case 0xDBDA:
+            func_DBDA(); break;
+        case 0xD8DB:
+            func_D8DB(); break;
+        case 0xD8D9:
+            func_D8D9(); break;
+        case 0xE3D4:
+            func_E3D4(); break;
+        case 0xE2E4:
+            func_E2E4(); break;
+        case 0xE58A:
+            func_E58A(); break;
+        case 0xE6E7:
+            func_E6E7(); break;
+        case 0xE7E9:
+            func_E7E9(); break;
+        case 0xD8D3:
+            func_D8D3(); break;
+        case 0xE878:
+            func_E878(); break;
+        case 0xE879:
+            func_E879(); break;
+        case 0xE840:
+            func_E840(); break;
+        case 0xDEA3:
+            func_DEA3(); break;
+        case 0xE4A2:
+            func_E4A2(); break;
+        case 0xE4A3:
+            func_E4A3(); break;
+        case 0xE0EA:
+            func_E0EA(); break;
+        case 0xE67F:
+            func_E67F(); break;
+        case 0xE672:
+            func_E672(); break;
+        case 0xE667:
+            func_E667(); break;
+        case 0xE01D:
+            func_E01D(); break;
+        case 0xE646:
+            func_E646(); break;
+        case 0xE876:
+            func_E876(); break;
+        case 0xE877:
+            func_E877(); break;
+        case 0xE005:
+            func_E005(); break;
+        case 0xE041:
+            func_E041(); break;
+        case 0xE007:
+            func_E007(); break;
+        case 0xE73E:
+            func_E73E(); break;
+        case 0xE57D:
+            func_E57D(); break;
+        case 0xE0EC:
+            func_E0EC(); break;
+        case 0xE8BE:
+            func_E8BE(); break;
+        case 0xD903:
+            func_D903(); break;
+        case 0xE048:
+            func_E048(); break;
+        case 0xE0AB:
+            func_E0AB(); break;
+        case 0xE4AD:
+            func_E4AD(); break;
+        case 0xE7BD:
+            func_E7BD(); break;
+        case 0xDC20:
+            func_DC20(); break;
+        case 0xDEF0:
+            func_DEF0(); break;
+        case 0xE8E9:
+            func_E8E9(); break;
+        case 0xE8A8:
+            func_E8A8(); break;
+        case 0xE0D0:
+            func_E0D0(); break;
+        case 0xDCD1:
+            func_DCD1(); break;
+        case 0xD9B9:
+            func_D9B9(); break;
+        case 0xE6F7:
+            func_E6F7(); break;
+        case 0xE6FA:
+            func_E6FA(); break;
+        case 0xE301:
+            func_E301(); break;
+        case 0xDDD5:
+            func_DDD5(); break;
+        case 0xE3DE:
+            func_E3DE(); break;
+        case 0xDFDA:
+            func_DFDA(); break;
+        case 0xE0A4:
+            func_E0A4(); break;
+        case 0xE763:
+            func_E763(); break;
+        case 0xE1E4:
+            func_E1E4(); break;
+        case 0xE3E1:
+            func_E3E1(); break;
+        case 0xE3E2:
+            func_E3E2(); break;
+        case 0xDE1E:
+            func_DE1E(); break;
+        case 0xE0DF:
+            func_E0DF(); break;
+        case 0xDF01:
+            func_DF01(); break;
+        case 0xE7E6:
+            func_E7E6(); break;
+        case 0xDE59:
+            func_DE59(); break;
+        case 0xE850:
+            func_E850(); break;
+        case 0xDF77:
+            func_DF77(); break;
+        case 0xDF71:
+            func_DF71(); break;
+        case 0xDDD3:
+            func_DDD3(); break;
+        case 0xDB8C:
+            func_DB8C(); break;
+        case 0xE38B:
+            func_E38B(); break;
+        case 0xE10A:
+            func_E10A(); break;
+        case 0xE3B1:
+            func_E3B1(); break;
+        case 0xE3BA:
+            func_E3BA(); break;
+        case 0xE540:
+            func_E540(); break;
+        case 0xE53B:
+            func_E53B(); break;
+        case 0xE492:
+            func_E492(); break;
+        case 0xDEC9:
+            func_DEC9(); break;
+        case 0xDE8A:
+            func_DE8A(); break;
+        case 0xD878:
+            func_D878(); break;
+        case 0xDEBF:
+            func_DEBF(); break;
+        case 0xE629:
+            func_E629(); break;
+        case 0xE6F5:
+            func_E6F5(); break;
+        case 0xE4BD:
+            func_E4BD(); break;
+        case 0xE179:
+            func_E179(); break;
+        case 0xE49D:
+            func_E49D(); break;
+        case 0xE710:
+            func_E710(); break;
+        case 0xDC82:
+            func_DC82(); break;
+        case 0xE385:
+            func_E385(); break;
+        case 0xDC23:
+            func_DC23(); break;
+        case 0xD927:
+            func_D927(); break;
+        case 0xDDBD:
+            func_DDBD(); break;
+        case 0xD8C0:
+            func_D8C0(); break;
+        case 0xE38D:
+            func_E38D(); break;
+        case 0xE28D:
+            func_E28D(); break;
+        case 0xE7B9:
+            func_E7B9(); break;
+        case 0xDB93:
+            func_DB93(); break;
+        case 0xD8B9:
+            func_D8B9(); break;
+        case 0xDCB9:
+            func_DCB9(); break;
+        case 0xDD90:
+            func_DD90(); break;
+        case 0xDFD0:
+            func_DFD0(); break;
+        case 0xE59A:
+            func_E59A(); break;
+        case 0xE61B:
+            func_E61B(); break;
+        case 0xE0B9:
+            func_E0B9(); break;
+        case 0xE4B9:
+            func_E4B9(); break;
+        case 0xE7A5:
+            func_E7A5(); break;
+        case 0xD8B3:
+            func_D8B3(); break;
+        case 0xDD76:
+            func_DD76(); break;
+        case 0xDB04:
+            func_DB04(); break;
+        case 0xDD3D:
+            func_DD3D(); break;
+        case 0xDE82:
+            func_DE82(); break;
+        case 0xE30C:
+            func_E30C(); break;
+        case 0xE528:
+            func_E528(); break;
+        case 0xDB3B:
+            func_DB3B(); break;
+        case 0xDE38:
+            func_DE38(); break;
+        case 0xDECE:
+            func_DECE(); break;
+        case 0xDBA7:
+            func_DBA7(); break;
+        case 0xE730:
+            func_E730(); break;
+        case 0xE347:
+            func_E347(); break;
+        case 0xDB47:
+            func_DB47(); break;
+        case 0xE406:
+            func_E406(); break;
+        case 0xE001:
+            func_E001(); break;
+        case 0xE431:
+            func_E431(); break;
+        case 0xDE02:
+            func_DE02(); break;
+        case 0xE70A:
+            func_E70A(); break;
+        case 0xD901:
+            func_D901(); break;
+        case 0xDD06:
+            func_DD06(); break;
+        case 0xDE4B:
+            func_DE4B(); break;
+        case 0xDD0A:
+            func_DD0A(); break;
+        case 0xDF11:
+            func_DF11(); break;
+        case 0xE139:
+            func_E139(); break;
+        case 0xDC27:
+            func_DC27(); break;
+        case 0xE722:
+            func_E722(); break;
+        case 0xE322:
+            func_E322(); break;
+        case 0xE372:
+            func_E372(); break;
+        case 0xE781:
+            func_E781(); break;
+        case 0xE397:
+            func_E397(); break;
+        case 0xE723:
+            func_E723(); break;
+        case 0xDC65:
+            func_DC65(); break;
+        case 0xD923:
+            func_D923(); break;
+        case 0xDC67:
+            func_DC67(); break;
+        case 0xDC2F:
+            func_DC2F(); break;
+        case 0xE1B9:
+            func_E1B9(); break;
+        case 0xE407:
+            func_E407(); break;
+        case 0xDC73:
+            func_DC73(); break;
+        case 0xDF29:
+            func_DF29(); break;
+        case 0xDF0F:
+            func_DF0F(); break;
+        case 0xE50B:
+            func_E50B(); break;
+        case 0xE317:
+            func_E317(); break;
+        case 0xE884:
+            func_E884(); break;
+        case 0xD90C:
+            func_D90C(); break;
+        case 0xE6B0:
+            func_E6B0(); break;
+        case 0xE495:
+            func_E495(); break;
+        case 0xE501:
+            func_E501(); break;
+        case 0xDBAD:
+            func_DBAD(); break;
+        case 0xDB95:
+            func_DB95(); break;
+        case 0xE69D:
+            func_E69D(); break;
+        case 0xE89D:
+            func_E89D(); break;
+        case 0xD8BB:
+            func_D8BB(); break;
+        case 0xE8D9:
+            func_E8D9(); break;
+        case 0xE4B0:
+            func_E4B0(); break;
+        case 0xE32D:
+            func_E32D(); break;
         case 0xD892:
             func_D892(); break;
         case 0xD893:
@@ -7921,10 +7879,14 @@ _dispatch_retry:
             func_C5CA(); break;
         case 0xD0C6:
             func_D0C6(); break;
+        case 0xD7C4:
+            func_D7C4(); break;
         case 0xD410:
             func_D410(); break;
         case 0xD0C7:
             func_D0C7(); break;
+        case 0xD7CF:
+            func_D7CF(); break;
         case 0xD1D1:
             func_D1D1(); break;
         case 0xD2CD:
@@ -7951,8 +7913,16 @@ _dispatch_retry:
             func_D2D3(); break;
         case 0xD2D4:
             func_D2D4(); break;
+        case 0xD7D1:
+            func_D7D1(); break;
+        case 0xD7D7:
+            func_D7D7(); break;
+        case 0xD7F2:
+            func_D7F2(); break;
         case 0xD431:
             func_D431(); break;
+        case 0xD7FA:
+            func_D7FA(); break;
         case 0xD416:
             func_D416(); break;
         case 0xDE0F:
@@ -8003,6 +7973,14 @@ _dispatch_retry:
             func_EE33(); break;
         case 0xEE34:
             func_EE34(); break;
+        case 0xF180:
+            func_F180(); break;
+        case 0xF12A:
+            func_F12A(); break;
+        case 0xF184:
+            func_F184(); break;
+        case 0xF12C:
+            func_F12C(); break;
         case 0xDD07:
             func_DD07(); break;
         case 0xDD08:
@@ -8633,6 +8611,30 @@ _dispatch_retry:
             func_E7BE(); break;
         case 0xEEE7:
             func_EEE7(); break;
+        case 0xEEE9:
+            func_EEE9(); break;
+        case 0xEEF7:
+            func_EEF7(); break;
+        case 0xEF85:
+            func_EF85(); break;
+        case 0xEEFC:
+            func_EEFC(); break;
+        case 0xEEFE:
+            func_EEFE(); break;
+        case 0xEEEE:
+            func_EEEE(); break;
+        case 0xEEF0:
+            func_EEF0(); break;
+        case 0xEEF1:
+            func_EEF1(); break;
+        case 0xEF10:
+            func_EF10(); break;
+        case 0xEF01:
+            func_EF01(); break;
+        case 0xEF42:
+            func_EF42(); break;
+        case 0xEF7A:
+            func_EF7A(); break;
         case 0xEEE8:
             func_EEE8(); break;
         case 0xEFED:
@@ -8759,8 +8761,14 @@ _dispatch_retry:
             func_C68D(); break;
         case 0xC68E:
             func_C68E(); break;
+        case 0xC965:
+            func_C965(); break;
+        case 0xC94D:
+            func_C94D(); break;
         case 0xCD2E:
             func_CD2E(); break;
+        case 0xC97F:
+            func_C97F(); break;
         case 0xF185:
             func_F185(); break;
         case 0xF186:
@@ -9671,6 +9679,14 @@ _dispatch_retry:
             func_E885(); break;
         case 0xC045:
             func_C045(); break;
+        case 0xC047:
+            func_C047(); break;
+        case 0xC058:
+            func_C058(); break;
+        case 0xC04E:
+            func_C04E(); break;
+        case 0xC04D:
+            func_C04D(); break;
         case 0xD77E:
             func_D77E(); break;
         case 0xFA6F:
@@ -10205,6 +10221,8 @@ _dispatch_retry:
             func_FBCB(); break;
         case 0xB308:
             func_B308_b0(); break;
+        case 0xD946:
+            func_D946(); break;
         case 0x8286:
             func_8286_b1(); break;
         case 0x8288:

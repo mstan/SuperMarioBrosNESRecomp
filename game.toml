@@ -44,6 +44,30 @@ addr = 0x8E04
 
 [functions]
 fixed = [
+    0xC0CC, # co-op native entry: ProcLoopCommand
+    0xC047, # co-op native entry: EnemiesAndLoopsCore
+    0xD853, # co-op native entry: PlayerEnemyCollision
+    0xD7C4, # co-op native entry: PlayerHammerCollision
+    0xCE08, # co-op native entry: FirebarCollision
+    0xC965, # co-op native entry: RunLargePlatform
+    0xC94D, # co-op native entry: RunSmallPlatform
+    0xDB45, # co-op native entry: LargePlatformCollision
+    0xDB7B, # co-op native entry: SmallPlatformCollision
+    0xDE41, # co-op native entry: FlagpoleCollision
+    0xDE0E, # co-op native entry: HandleAxeMetatile
+    0xDEE8, # co-op native entry: HandlePipeEntry
+    0xDDCE, # co-op native entry: PipeDwnS
+    0xDE7A, # co-op native entry: VineCollision
+    0xC08C, # co-op native entry: ExecGameLoopback
+    0xDEC4, # co-op native entry: ChkForLandJumpSpring
+    0xDC19, # co-op native entry: PositionPlayerOnS_Plat
+    0xDC21, # co-op native entry: PositionPlayerOnVPlat
+    0xD614, # co-op native entry: PositionPlayerOnHPlat
+    0xD958, # KillPlayer native co-op guard
+    0xF12A,  # co-op native call: RelativePlayerPosition
+    0xEEE9,  # co-op native call: PlayerGfxHandler
+    0xF180,  # co-op native call: GetPlayerOffscreenBits
+    0xE29C,  # co-op native call: BoundingBoxCore
     # Previously known
     0xD969,  # EnemyStateDetermination — cross-function branch target
 
@@ -84,6 +108,21 @@ fixed = [
     0xF914, 0xF99E, 0xF9DA, 0xF9DF, 0xFB2B, 0xFB5D, 0xFBCB,
 ]
 bank0 = [
+    0x90ED, # co-op native entry: GetAreaMusic
+    0xBA33, # co-op native entry: BulletBillHandler
+    0xAEEA, # co-op native entry: GameCoreRoutine
+    0xB7B8, # co-op native entry: ProcessWhirlpools
+    0x8FE4, # co-op native entry: InitializeArea
+    0x8245, # co-op native entry: GameMenuRoutine
+    0xB74F, # co-op native entry: RunGameTimer
+    0xB1BB, # co-op native entry: CloudExit
+    0x838B, # co-op native entry: VictoryMode
+    0xB8BA, # co-op native entry: JumpspringHandler
+    0xAF93,  # co-op native call: ScrollHandler
+    0xB624,  # co-op native call: ProcFireball_Bubble
+    0xB66E,  # co-op native call: ProcAirBubbles
+    0x91CD,  # co-op native call: PlayerLoseLife
+    0xB04A,  # co-op native call: GameRoutines
     0xB308,  # JSR target missing definition — bank0 explicit for correct suffix
 ]
 
@@ -209,3 +248,112 @@ addr = 0xBC49           # SetupPowerUp
 
 [[mod_function_hook]]
 addr = 0xB91E           # Setup_Vine
+
+# Native simultaneous co-op: GameCoreRoutine
+[[mod_function_hook]]
+addr = 0xAEEA
+
+# Native simultaneous co-op: GameRoutines
+[[mod_function_hook]]
+addr = 0xB04A
+
+# Native simultaneous co-op: ScrollHandler
+[[mod_function_hook]]
+addr = 0xAF93
+
+# Native simultaneous co-op: PlayerGfxHandler
+[[mod_function_hook]]
+addr = 0xEEE9
+
+# Native simultaneous co-op: ProcFireball_Bubble
+[[mod_function_hook]]
+addr = 0xB624
+
+# Native simultaneous co-op: EnemiesAndLoopsCore
+[[mod_function_hook]]
+addr = 0xC047
+
+# Native simultaneous co-op: PlayerHammerCollision
+[[mod_function_hook]]
+addr = 0xD7C4
+
+# Native simultaneous co-op: FirebarCollision
+[[mod_function_hook]]
+addr = 0xCE08
+
+# Native simultaneous co-op: GameMenuRoutine
+[[mod_function_hook]]
+addr = 0x8245
+
+# Native simultaneous co-op: RunGameTimer
+[[mod_function_hook]]
+addr = 0xB74F
+
+# Native simultaneous co-op: KillPlayer
+[[mod_function_hook]]
+addr = 0xD958
+include_internal = true
+
+# Native simultaneous co-op: RunLargePlatform
+[[mod_function_hook]]
+addr = 0xC965
+
+# Native simultaneous co-op: RunSmallPlatform
+[[mod_function_hook]]
+addr = 0xC94D
+
+# Native simultaneous co-op: FlagpoleCollision
+[[mod_function_hook]]
+addr = 0xDE41
+include_internal = true
+
+# Native simultaneous co-op: HandleAxeMetatile
+[[mod_function_hook]]
+addr = 0xDE0E
+include_internal = true
+
+# Native simultaneous co-op: HandlePipeEntry
+[[mod_function_hook]]
+addr = 0xDEE8
+include_internal = true
+
+# Native simultaneous co-op: PipeDwnS
+[[mod_function_hook]]
+addr = 0xDDCE
+include_internal = true
+
+# Native simultaneous co-op: VineCollision
+[[mod_function_hook]]
+addr = 0xDE7A
+include_internal = true
+
+# Native simultaneous co-op: CloudExit
+[[mod_function_hook]]
+addr = 0xB1BB
+include_internal = true
+
+# Native simultaneous co-op: VictoryMode
+[[mod_function_hook]]
+addr = 0x838B
+
+# Native simultaneous co-op: JumpspringHandler
+[[mod_function_hook]]
+addr = 0xB8BA
+
+# Native simultaneous co-op: ChkForLandJumpSpring
+[[mod_function_hook]]
+addr = 0xDEC4
+include_internal = true
+
+# Native simultaneous co-op: GetAreaMusic
+[[mod_function_hook]]
+addr = 0x90ED
+include_internal = true
+
+# Native simultaneous co-op: BulletBillHandler
+[[mod_function_hook]]
+addr = 0xBA33
+
+# Native simultaneous co-op: ProcLoopCommand
+[[mod_function_hook]]
+addr = 0xC0CC
