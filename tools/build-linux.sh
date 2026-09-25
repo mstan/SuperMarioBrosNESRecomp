@@ -49,6 +49,7 @@ REQUIRED_MOD_MANIFESTS=(
   "packages/super-mario-bros.enhancement.widescreen/1.0.0/manifest.toml"
   "packages/super-mario-bros.gameplay.metroid-samus-player-replacement/1.0.0/manifest.toml"
   "packages/super-mario-bros.gameplay.s3k-sonic-player-replacement/1.0.0/manifest.toml"
+  "packages/super-mario-bros.gameplay.simultaneous-coop/1.0.0/manifest.toml"
   "packages/super-mario-bros.gameplay.smash64-player-replacement/1.0.0/manifest.toml"
   "packages/super-mario-bros.gameplay.zelda2-link-player-replacement/1.0.0/manifest.toml"
 )
@@ -215,6 +216,9 @@ BUILT_DIR="$(dirname "$BIN")"
 cp -r "$BUILT_DIR/assets" "$APPDIR/usr/bin/assets"
 cp "$BUILT_DIR/falcon_owner_assets" "$APPDIR/usr/bin/falcon_owner_assets"
 chmod 0755 "$APPDIR/usr/bin/falcon_owner_assets"
+mkdir -p "$APPDIR/usr/bin/THIRD-PARTY-LICENSES" "$APPDIR/usr/bin/third_party/ymfm"
+cp "$REPO/THIRD-PARTY-LICENSES/README.md" "$APPDIR/usr/bin/THIRD-PARTY-LICENSES/README.md"
+cp "$REPO/third_party/ymfm/LICENSE" "$APPDIR/usr/bin/third_party/ymfm/LICENSE"
 
 for manifest in "${REQUIRED_MOD_MANIFESTS[@]}"; do
   [ -f "$BUILT_DIR/mods/$manifest" ] || {

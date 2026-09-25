@@ -74,6 +74,13 @@ never included in this package. The first launch derives each selected fighter's
 model, animations, effects, and audio into your local user cache; those
 generated files are not shipped.
 
+Simultaneous Co-op is available in Mods > Gameplay and is disabled by default.
+Choose 2, 3, or 4 players: Mario, Luigi, Wario, and Waluigi. Assign each player's
+keyboard or gamepad in Controls. Co-op uses a shared 4:3 camera, shared resources,
+and team lives. Dead players return at the next level or team retry.
+Co-op is mutually exclusive with widescreen, Voxel 3D, and all character
+replacement mods. Enabling co-op replaces those conflicting selections.
+
 Experimental character replacement mods are default-off and mutually exclusive.
 Samus requires a verified Metroid ROM, Link requires a verified Zelda II ROM,
 and Sonic requires a verified Sonic 3 & Knuckles Genesis ROM. The launcher Mods
@@ -124,7 +131,9 @@ function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods)
     'falcon_owner_assets.exe',
     'SDL2.dll',
     'keybinds.ini',
-    'README.txt'
+    'README.txt',
+    'THIRD-PARTY-LICENSES/README.md',
+    'third_party/ymfm/LICENSE'
   )
   if ($kind -eq 'widescreen') { $required += 'mods/state.toml' }
   $missing = @($required | Where-Object { $_ -notin $relativeFiles })
@@ -140,6 +149,7 @@ function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods)
     'assets/img/boxart.tga',
     'assets/img/brand_mark.tga',
     'assets/img/brand_nes.tga',
+    'assets/img/flags.png',
     'assets/img/pad_nes.tga',
     'assets/img/verdict_bad.tga',
     'assets/img/verdict_none.tga',
@@ -323,6 +333,11 @@ function New-ReleaseZip([string]$kind) {
     $zip = Join-Path $out 'SuperMarioBrosRecomp-windows-x64.zip'
   }
 
+  # Preserve attribution and the license for the bundled Sonic audio library.
+  New-Item -ItemType Directory -Force (Join-Path $stage 'THIRD-PARTY-LICENSES') | Out-Null
+  New-Item -ItemType Directory -Force (Join-Path $stage 'third_party/ymfm') | Out-Null
+  Copy-Item -LiteralPath (Join-Path $root 'THIRD-PARTY-LICENSES/README.md') -Destination (Join-Path $stage 'THIRD-PARTY-LICENSES/README.md')
+  Copy-Item -LiteralPath (Join-Path $root 'third_party/ymfm/LICENSE') -Destination (Join-Path $stage 'third_party/ymfm/LICENSE')
   Assert-ReleaseStage $stage $kind $preloadedMods
 
   if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip }

@@ -13,6 +13,9 @@ helper="$appdir/usr/bin/falcon_owner_assets"
 [ -x "$helper" ] || { echo "missing Linux owner-ROM helper" >&2; exit 1; }
 [ -x "$appdir/AppRun" ] || { echo "missing AppRun" >&2; exit 1; }
 
+for notice in THIRD-PARTY-LICENSES/README.md third_party/ymfm/LICENSE; do
+    [ -s "$appdir/usr/bin/$notice" ] || { echo "missing attribution: $notice" >&2; exit 1; }
+done
 required_assets='fonts/LatoLatin-Bold.ttf
 fonts/LatoLatin-Regular.ttf
 fonts/NotoSansSymbols2-Regular.ttf
@@ -20,6 +23,7 @@ fonts/OpenMoji-black-glyf.ttf
 img/boxart.tga
 img/brand_mark.tga
 img/brand_nes.tga
+img/flags.png
 img/pad_nes.tga
 img/verdict_bad.tga
 img/verdict_none.tga
@@ -33,6 +37,7 @@ required_mods='packages/super-mario-bros.enhancement.voxel-first-person/1.0.0/ma
 packages/super-mario-bros.enhancement.widescreen/1.0.0/manifest.toml
 packages/super-mario-bros.gameplay.metroid-samus-player-replacement/1.0.0/manifest.toml
 packages/super-mario-bros.gameplay.s3k-sonic-player-replacement/1.0.0/manifest.toml
+packages/super-mario-bros.gameplay.simultaneous-coop/1.0.0/manifest.toml
 packages/super-mario-bros.gameplay.smash64-player-replacement/1.0.0/manifest.toml
 packages/super-mario-bros.gameplay.zelda2-link-player-replacement/1.0.0/manifest.toml'
 actual_mods=$(cd "$appdir/usr/bin/mods" && find . -type f -printf '%P\n' | sort)

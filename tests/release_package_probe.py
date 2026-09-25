@@ -15,11 +15,18 @@ for name,variant,extra in [('stock','',[]),('preset','-widescreen',[]),
     directory=out/name;directory.mkdir()
     with zipfile.ZipFile(release/f'SuperMarioBrosRecomp{variant}-windows-x64.zip') as archive:
         names=archive.namelist()
+        assert {'THIRD-PARTY-LICENSES/README.md','third_party/ymfm/LICENSE'} <= set(names)
         assert not any(n.endswith(('.nes','.sav','.srm')) or n=='debug.ini' or n=='widescreen.ini' for n in names)
         binaries.append(archive.read('SuperMarioBrosRecomp.exe'))
         archive.extractall(directory)
     catalog=directory/'mods/packages/super-mario-bros.enhancement.widescreen/1.0.0/manifest.toml'
     manifest=tomllib.loads(catalog.read_text())
+    coop=tomllib.loads((directory/'mods/packages/super-mario-bros.gameplay.simultaneous-coop/1.0.0/manifest.toml').read_text())
+    assert coop['feature'][0]['default_enabled'] is False
+    assert coop['feature'][0]['exclusive_group']=='player-controller'
+    assert coop['feature'][0]['exclusive_groups']==['display-mode']
+    players=next(option for option in coop['option'] if option['id']=='players')
+    assert players['default']=='2' and {choice['value'] for choice in players['choice']}=={'2','3','4'}
     assert 'Experimental' in manifest['name'] and 'Experimental' in manifest['feature'][0]['name']
     assert manifest['feature'][0]['default_enabled'] is False
     camera=next(option for option in manifest['option'] if option['id']=='camera')
@@ -37,7 +44,8 @@ for name,variant,extra in [('stock','',[]),('preset','-widescreen',[]),
     with (directory/'runner.log').open('w') as log:
         subprocess.run([str(directory/'SuperMarioBrosRecomp.exe'),str(rom),'--smoke','1200',
                         '--smoke-interval','10','--smoke-output','smoke.json','--script','route.script',*extra],
-                       cwd=directory,env=env,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=60)
+                       cwd=directory,env=env,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=60,
+                       creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
     results[name]=json.loads((directory/'smoke.json').read_text())
     assert results[name]['frames_run']==1200 and results[name]['dispatch_miss_count']==0
     images[name]=Image.open(directory/'right.png')

@@ -76,3 +76,12 @@ It expects a matching ROM at the repository root, a built recompiler at
 under `build/`. From `tests/`, run `npm install` followed by `npm test`.
 `baseline.json` contains the checked-in reference hashes; review baseline
 changes separately from implementation changes.
+
+For Linux AppImage controller persistence, run under a virtual display:
+
+```sh
+xvfb-run -a python3 tests/appimage_bindings.py --appimage <AppImage> --rom <rom> --out build/appimage-binds
+```
+
+This captures P3/P4 bindings in the packaged launcher, restarts it, and checks
+that the game reads the same persistent file beside the AppImage.
