@@ -11,6 +11,7 @@
 #include "mod_runtime.h"
 #include "debug_server.h"
 #include "config.h"
+#include "nes_session_config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -581,7 +582,9 @@ static int hook(uint16_t address) {
 
 void game_coop_configure(int players,int shared_pause) {
     s_count=players>=2 && players<=4?players:0;
-    nes_mod_set_local_only("Simultaneous Co-op",s_count!=0);
+    /* Co-op is online-capable: a netplay match runs the HOST's co-op mode on
+     * every peer through the session configuration seal below, and every
+     * seat's input comes from the published rows (docs/NETPLAY.md). */
     s_shared_pause=shared_pause!=0;
     memset(&s,0,sizeof s); s_actor=s_world=s_routing=s_scrolling=s_shared_frozen=0;
     for(size_t i=0;i<sizeof hooks/sizeof *hooks;++i) {
@@ -704,8 +707,40 @@ static int decode(const uint8_t *buf,int len,int commit) {
 }
 static int load(const uint8_t *buf,int len) { return decode(buf,len,1); }
 static int validate(const uint8_t *buf,int len) { return decode(buf,len,0); }
+/* Session configuration key "coop" = "<players 0|2..4>:<player|shared>".
+ * A netplay launch applies the host's value before boot; the offline mode is
+ * rebuilt by the mod runtime's next ordinary commit (reset_coop, then the
+ * activation plugin), so restore only has to switch the session's off. */
+static int coop_session_get(char *out,int cap) {
+    return snprintf(out,(size_t)cap,"%d:%s",s_count,s_shared_pause?"shared":"player");
+}
+static int coop_session_apply(const char *v) {
+    int n=-1; char pause[16]="";
+    if(!v || sscanf(v,"%d:%15s",&n,pause)!=2) return 0;
+    if(n!=0 && (n<2 || n>MAX_PLAYERS)) return 0;
+    if(strcmp(pause,"player") && strcmp(pause,"shared")) return 0;
+    game_coop_configure(n,!strcmp(pause,"shared"));
+    return 1;
+}
+static void coop_session_restore(void) { game_coop_configure(0,0); }
+/* The host's offer: the player's OFFLINE selection of the co-op feature (a
+ * match commits no mods, so the activated state says nothing). */
+static int coop_session_offer(char *out,int cap) {
+    const char *package="super-mario-bros.gameplay.simultaneous-coop";
+    char count[16]="2", pause[16]="player";
+    if(!nes_mod_feature_selected(package,"coop")) return snprintf(out,(size_t)cap,"0:player");
+    nes_mod_option_value(package,"coop","players",count,sizeof count);
+    nes_mod_option_value(package,"coop","pause",pause,sizeof pause);
+    return snprintf(out,(size_t)cap,"%d:%s",atoi(count),strcmp(pause,"shared")?"player":"shared");
+}
+/* The package excludes widescreen: whatever the text said, co-op wins. */
+static void coop_session_finalize(void) { if(s_count) g_nes_config.widescreen=0; }
+
 int game_coop_register(void) {
     int ok=nes_mod_register_savestate_hook("smb.coop",save,load);
+    ok&=nes_netplay_session_register("coop",coop_session_get,coop_session_apply,coop_session_restore);
+    ok&=nes_netplay_session_set_offer("coop",coop_session_offer);
+    nes_netplay_session_set_finalize(coop_session_finalize);
     ok&=nes_mod_register_savestate_validator("smb.coop",validate);
     for(size_t i=0;i<sizeof hooks/sizeof *hooks;++i) {
         snprintf(hook_ids[i],sizeof hook_ids[i],"smb.coop.%04x",hooks[i]);

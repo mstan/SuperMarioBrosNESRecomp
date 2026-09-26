@@ -41,8 +41,14 @@ P3/P4 keyboard bindings start empty and can be assigned in Controls.
 - Transformations pause only the affected player by default. The **Whole game**
   option freezes the shared world and other players during that transformation.
 
-This is local play. The package excludes widescreen, voxel/first-person display,
-and player replacement mods. Savestates require matching co-op mode, player
+Co-op runs locally and, since 2026-09-25, online: a rollback netplay match
+(recomp-net; see [NETPLAY.md](NETPLAY.md)) seals the HOST's co-op mode (player
+count and pause policy) into the session configuration every peer applies
+before boot, and each seat's input comes only from the published rows -- seat
+0 is Mario/port 1, seat 1 Luigi/port 2, seats 2-3 Wario/Waluigi. The earlier
+text here said "This is local play" and the runner refused an online launch
+with co-op enabled; that refusal is removed. The package excludes widescreen,
+voxel/first-person display, and player replacement mods. Savestates require matching co-op mode, player
 count, and pause policy; invalid/incompatible records are rejected before changing
 the running game. Turning the mod off restores the original 1P/alternating 2P game.
 
@@ -131,5 +137,8 @@ normal direct output measured about 0.16 seconds on the test machine.
 
 Trace builds also accept `--coop 2|3|4`, `--coop-pause player|shared`, and the TCP
 `coop_state` command. Release users select the package in the launcher.
-With `NESRECOMP_ENABLE_NET=ON`, add `--net-enabled` to the package test to
-verify that co-op rejects an online session before connecting.
+Netplay builds (on by default for Linux, `SMB_ENABLE_NETPLAY`) accept
+`--net-enabled` on the package test: it checks that an online launch seals the
+co-op mode into the session configuration and that input scripts are refused
+online. (Until 2026-09-25 this flag asserted the opposite -- that co-op
+rejected an online session.)
