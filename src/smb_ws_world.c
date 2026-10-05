@@ -3,9 +3,21 @@
  * rendering. No CPU/APU time advances; all guest state is restored afterwards.
  * Live streamed columns validate it and preserve later block/coin edits. */
 #include "smb_ws_world.h"
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "nes_runtime.h"
+#endif
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "mapper.h"
+#endif
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "recomp_stack.h"
+#endif
 #include <string.h>
 
 extern void func_93FC_b0(void); /* AreaParserCore */
@@ -34,12 +46,16 @@ int smb_ws_world_busy(void) { return s_decoding; }
 static void decode(void) {
     SmbWsWorld *w = &g_smb_ws_world;
     uint8_t ram[0x800];
+#ifdef SMB1_CYCLE
+    if(!cyc_mod_isolate_begin()) return;
+#else
     uint8_t runtime[1024];
     int runtime_len = runtime_get_state_blob(runtime, sizeof runtime);
     if (!runtime_len) return;
     CPU6502State cpu = g_cpu;
     int bail = g_bail_active, stack = g_recomp_stack_top;
     uint16_t rts = g_rts_target;
+    #endif
     unsigned data = area_data();
     uint8_t header0 = rom(data - 2), header1 = rom(data - 1);
     memcpy(ram, g_ram, sizeof ram);
@@ -59,7 +75,9 @@ static void decode(void) {
     g_ram[0x742] = (header1 >> 4) & 3;
     g_ram[0x733] = header1 >> 6;
     if (g_ram[0x733] == 3) { g_ram[0x743] = 3; g_ram[0x733] = 0; }
+#ifndef SMB1_CYCLE
     g_bail_active = 0;
+#endif
     int first_lock = -1;
     for (int col = 0; col < SMB_WS_META_COLUMNS; col++) {
         g_ram[0x725] = (uint8_t)(col >> 4);
@@ -105,10 +123,15 @@ static void decode(void) {
      * pipe intro and the underground bonus-room collection. Each bonus
      * entrance selects its own page; adjacent entries are separate rooms. */
     w->fixed_rooms = first_lock >= 0 && first_lock < 24;
+#ifdef SMB1_CYCLE
+    cyc_mod_isolate_end();
+    smb1_cycle_sync();
+#else
     memcpy(g_ram, ram, sizeof ram);
     g_cpu = cpu; g_bail_active = bail; g_recomp_stack_top = stack; g_rts_target = rts;
     runtime_end_unclocked();
     runtime_set_state_blob(runtime, runtime_len);
+#endif
     s_decoding = 0;
     w->valid = 1;
 }

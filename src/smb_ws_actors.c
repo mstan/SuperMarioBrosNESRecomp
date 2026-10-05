@@ -5,9 +5,21 @@
 #include "smb_ws_actors.h"
 #include "smb_ws_world.h"
 #include "game_widescreen.h"
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "nes_runtime.h"
+#endif
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "mapper.h"
+#endif
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "recomp_stack.h"
+#endif
 #include "mod_runtime.h"
 #include "mod_function_hooks.h"
 #include "mod_savestate.h"
@@ -86,13 +98,21 @@ void smb_ws_actors_reset(void) {
     for (int i=0;i<5;i++) s.owner[i]=-1;
 }
 static int begin(Guest *g,const Actor *a) {
+#ifdef SMB1_CYCLE
+    if(!cyc_mod_isolate_begin()) return 0;
+    g->cpu=g_cpu;
+#else
     g->runtime_len=runtime_get_state_blob(g->runtime,sizeof g->runtime);
     if (g->runtime_len<=0) return 0;
     memcpy(g->ram,g_ram,sizeof g->ram); g->cpu=g_cpu;
     g->bail=g_bail_active; g->stack=g_recomp_stack_top; g->rts=g_rts_target;
+#endif
     runtime_begin_unclocked(); s_virtual=1;
     memset(g_ram+0x0f,0,6);
-    push(a,0); g_ram[8]=0; g_cpu.X=0; g_cpu.S=0xfd; g_bail_active=0;
+    push(a,0); g_ram[8]=0; g_cpu.X=0; g_cpu.S=0xfd;
+#ifndef SMB1_CYCLE
+    g_bail_active=0;
+#endif
     /* Local screen projection serves only private graphics/bounding-box work.
      * Player/world coordinates and authored spawn positions remain absolute. */
     int cam=actor_x(a)-128;
@@ -110,9 +130,13 @@ static int begin(Guest *g,const Actor *a) {
     return 1;
 }
 static void end(const Guest *g) {
+#ifdef SMB1_CYCLE
+    (void)g;cyc_mod_isolate_end();smb1_cycle_sync();
+#else
     memcpy(g_ram,g->ram,sizeof g->ram); g_cpu=g->cpu;
     g_bail_active=g->bail; g_recomp_stack_top=g->stack; g_rts_target=g->rts;
     runtime_end_unclocked(); runtime_set_state_blob(g->runtime,g->runtime_len);
+#endif
     s_virtual=0;
 }
 static void capture_packet(Packet *p,int native,int oam_base) {

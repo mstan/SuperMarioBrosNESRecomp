@@ -4,7 +4,11 @@
  */
 #include "game_coop.h"
 #include "coop/smb_symbols.h"
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "nes_runtime.h"
+#endif
 #include "logical_input.h"
 #include "mod_function_hooks.h"
 #include "mod_savestate.h"
@@ -424,9 +428,39 @@ static void fireballs_all(void) {
     bind(owner); g_cpu=cpu;
     original(S_ProcAirBubbles);
 }
+#ifdef SMB1_CYCLE
+void game_coop_cycle_title_ready(void) {
+    if(s_count && g_ram[S_OperMode]==0) {
+            /* DrawTitleScreen copies the native CHR title transfer stream to
+               $0300-$0439. Change its two menu records before the next NMI
+               uploads them. The native mushroom at $2249 is left intact,
+               and these tiles persist throughout the Start transition. */
+            for(int p=0x300;p+3<=0x43a && g_ram[p];) {
+                int dest=g_ram[p]*256+g_ram[p+1], control=g_ram[p+2];
+                int size=(control&0x40)?1:(control&0x3f);
+                p+=3;
+                if(p+size>0x43a) break;
+                if(control==13 && (dest==0x224b || dest==0x228b)) {
+                    memset(g_ram+p,0x24,13);
+                    if(dest==0x224b) {
+                        const char *label="CO-OP PLAY";
+                        for(int j=0;label[j];++j)
+                            g_ram[p+j]=(uint8_t)(label[j]==' '?0x24:label[j]=='-'?0x28:label[j]-'A'+10);
+                    }
+                }
+                p+=size;
+            }
+        }
+}
+#endif
 static int hook(uint16_t address) {
     if(!s_count || s_bypass[address]) return 0;
     if(address==S_DrawTitleScreen) {
+#ifdef SMB1_CYCLE
+        /* This routine reads CHR through $2007. Let its real bus cycles run;
+         * SetVRAMAddr_B observes the finished stream before upload. */
+        return 0;
+#else
         original(address);
         if(g_ram[S_OperMode]==0) {
             /* DrawTitleScreen copies the native CHR title transfer stream to
@@ -450,6 +484,7 @@ static int hook(uint16_t address) {
             }
         }
         return 1;
+#endif
     }
     if(address==S_GameMenuRoutine) {
         g_ram[S_NumberOfPlayers]=0;

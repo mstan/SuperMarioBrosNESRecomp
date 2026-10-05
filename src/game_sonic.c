@@ -34,8 +34,16 @@
 #include "mods/s3k/sonic_controller.h"
 
 #include "foreign_controller.h"
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "nes_runtime.h"
+#endif
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "generated/super-mario-bros_full_decls.h"
+#endif
 
 #include <SDL.h>
 

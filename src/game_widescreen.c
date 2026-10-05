@@ -1,7 +1,11 @@
 #include "game_widescreen.h"
 #include "smb_ws_world.h"
 #include "smb_ws_actors.h"
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "nes_runtime.h"
+#endif
 #include "nes_video.h"
 #include "mod_runtime.h"
 #include "mod_function_hooks.h"
@@ -162,6 +166,11 @@ static int collision_column_hook(uint16_t addr) {
     return 0;
 }
 int game_widescreen_arg(const char *key, const char *value) {
+    if (!strcmp(key,"--widescreen-hud") && value) {
+        if (strcmp(value,"edges") && strcmp(value,"center")) return 0;
+        s_edges = strcmp(value,"center") != 0;
+        apply(); return 1;
+    }
     if (!strcmp(key, "--widescreen-camera") && value) {
         if (!strcmp(value, "edges") || !strcmp(value, "centered")) game_widescreen_set_camera(value);
         else fprintf(stderr, "[Widescreen] camera must be edges or centered\n");

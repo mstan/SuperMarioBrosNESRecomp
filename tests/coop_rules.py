@@ -107,8 +107,12 @@ def main():
     for addr,value in {0x0f:1,0x16:0x32,0x1e:0,0x6e:0,0x87:80,0xb6:1,0xcf:176,0x58:176}.items():fixture.ram[addr]=value
     spring=h.run('spring-owner','WAIT 5',fixture=fixture)
     assert spring.actor(0)[0x70e]>0 and all(spring.actor(p)[0x70e]==0 for p in (1,2,3)), 'spring animation had multiple owners'
-    bounced=h.run('spring-bounce','HOLD A\nWAIT 20',fixture=spring)
-    assert bounced.actor(0)[0xce]<120 and all(bounced.actor(p)[0xce]>=144 for p in (1,2,3)), 'spring did not launch just its owner'
+    # Observe the first bounce before the next standing teammate can acquire
+    # the spring. A later sample tests two successive owners, and an upward
+    # jump may wrap the low Y byte after leaving the top of the screen.
+    bounced=h.run('spring-bounce','HOLD A\nWAIT 12',fixture=spring)
+    world_y=lambda actor:actor[0xb5]*256+actor[0xce]
+    assert world_y(bounced.actor(0))<256+120 and all(world_y(bounced.actor(p))>=256+144 for p in (1,2,3)), 'spring did not launch just its owner'
     print('PASS: contested spring has one owner and native bounce',flush=True)
 
     fixture=fresh();fixture.ram[0x75f]=3

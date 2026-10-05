@@ -1,0 +1,263 @@
+[game]
+output_prefix = "super-mario-bros-cycle"
+cycle_accurate = true
+
+[[mod_function_hook]]
+addr = 0x8082
+length = 16
+crc32 = 0xb4df4fd7
+
+[[mod_function_hook]]
+addr = 0x8245
+length = 16
+crc32 = 0x60f3be43
+
+[[mod_function_hook]]
+addr = 0x838b
+length = 16
+crc32 = 0x36094e18
+
+[[mod_function_hook]]
+addr = 0x86ff
+length = 16
+crc32 = 0x65bfc5cc
+
+[[mod_function_hook]]
+addr = 0x88ae
+length = 16
+crc32 = 0xf1c82fac
+
+[[mod_function_hook]]
+addr = 0x8fe4
+length = 16
+crc32 = 0xb5740c48
+
+[[mod_function_hook]]
+addr = 0x90ed
+length = 16
+crc32 = 0x0930ea32
+
+[[mod_function_hook]]
+addr = 0x93fc
+length = 16
+crc32 = 0x5f5bccc8
+
+[[mod_function_hook]]
+addr = 0xaeea
+length = 16
+crc32 = 0xa5bdfc63
+
+[[mod_function_hook]]
+addr = 0xaf93
+length = 16
+crc32 = 0xebbd4c82
+
+[[mod_function_hook]]
+addr = 0xb04a
+length = 16
+crc32 = 0xb7148d80
+
+[[mod_function_hook]]
+addr = 0xb1bb
+length = 16
+crc32 = 0x6daa2306
+
+[[mod_function_hook]]
+addr = 0xb450
+length = 16
+crc32 = 0x2d5d3596
+
+[[mod_function_hook]]
+addr = 0xb5cc
+length = 16
+crc32 = 0x91ac510b
+
+[[mod_function_hook]]
+addr = 0xb624
+length = 16
+crc32 = 0x7091ea71
+
+[[mod_function_hook]]
+addr = 0xb74f
+length = 16
+crc32 = 0xa644a920
+
+[[mod_function_hook]]
+addr = 0xb7b8
+length = 16
+crc32 = 0x14e56673
+
+[[mod_function_hook]]
+addr = 0xb8ba
+length = 16
+crc32 = 0xecafdac7
+
+[[mod_function_hook]]
+addr = 0xb91e
+length = 16
+crc32 = 0xfdaf7606
+
+[[mod_function_hook]]
+addr = 0xba33
+length = 16
+crc32 = 0x5eacda91
+
+[[mod_function_hook]]
+addr = 0xbc49
+length = 16
+crc32 = 0x89b7469c
+
+[[mod_function_hook]]
+addr = 0xbf09
+length = 16
+crc32 = 0x76289e97
+
+[[mod_function_hook]]
+addr = 0xbf4d
+length = 16
+crc32 = 0x3e0b26c7
+
+[[mod_function_hook]]
+addr = 0xc047
+length = 16
+crc32 = 0xd333f4c1
+
+[[mod_function_hook]]
+addr = 0xc08c
+length = 16
+crc32 = 0x4f15f8cd
+
+[[mod_function_hook]]
+addr = 0xc0cc
+length = 16
+crc32 = 0x45370fe5
+
+[[mod_function_hook]]
+addr = 0xc26c
+length = 16
+crc32 = 0xb8126cc0
+
+[[mod_function_hook]]
+addr = 0xc787
+length = 16
+crc32 = 0x9d420cfe
+
+[[mod_function_hook]]
+addr = 0xc94d
+length = 16
+crc32 = 0xa99e4956
+
+[[mod_function_hook]]
+addr = 0xc965
+length = 16
+crc32 = 0x9ce39bd2
+
+[[mod_function_hook]]
+addr = 0xce08
+length = 16
+crc32 = 0x96152552
+
+[[mod_function_hook]]
+addr = 0xd67a
+length = 16
+crc32 = 0x81fc1e21
+
+[[mod_function_hook]]
+addr = 0xd7c4
+length = 16
+crc32 = 0x1f49c52f
+
+[[mod_function_hook]]
+addr = 0xd800
+length = 16
+crc32 = 0x80ee8f2b
+
+[[mod_function_hook]]
+addr = 0xd853
+length = 16
+crc32 = 0x0720450b
+
+[[mod_function_hook]]
+addr = 0xd92c
+length = 16
+crc32 = 0x4f4590fc
+
+[[mod_function_hook]]
+addr = 0xd958
+length = 16
+crc32 = 0xabe4b055
+
+[[mod_function_hook]]
+addr = 0xdb45
+length = 16
+crc32 = 0x7876242b
+
+[[mod_function_hook]]
+addr = 0xdb7b
+length = 16
+crc32 = 0x3adbd2c4
+
+[[mod_function_hook]]
+addr = 0xddce
+length = 16
+crc32 = 0x4a158c90
+
+[[mod_function_hook]]
+addr = 0xde0e
+length = 16
+crc32 = 0x69018a95
+
+[[mod_function_hook]]
+addr = 0xde41
+length = 16
+crc32 = 0x46bdba63
+
+[[mod_function_hook]]
+addr = 0xde7a
+length = 16
+crc32 = 0x7595333d
+
+[[mod_function_hook]]
+addr = 0xdec4
+length = 16
+crc32 = 0xea9f228c
+
+[[mod_function_hook]]
+addr = 0xdee8
+length = 16
+crc32 = 0xa4d23919
+
+[[mod_function_hook]]
+addr = 0xe29c
+length = 16
+crc32 = 0x7708db6a
+
+[[mod_function_hook]]
+addr = 0xe54b
+length = 16
+crc32 = 0x0ed3d1dc
+
+[[mod_function_hook]]
+addr = 0xe5c8
+length = 16
+crc32 = 0x4a250112
+
+[[mod_function_hook]]
+addr = 0xe87d
+length = 16
+crc32 = 0xd06dd5dc
+
+[[mod_function_hook]]
+addr = 0xed66
+length = 16
+crc32 = 0x7df0d701
+
+[[mod_function_hook]]
+addr = 0xeee9
+length = 16
+crc32 = 0x06de3e1f
+
+[[mod_function_hook]]
+addr = 0x864c
+length = 16
+crc32 = 0x1114a992

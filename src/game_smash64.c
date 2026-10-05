@@ -44,11 +44,19 @@
 #include "foreign_controller.h"
 #include "mod_function_hooks.h"
 #include "mod_savestate.h"
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "nes_runtime.h"
+#endif
 
 /* Brings in the RAM/const symbol defines (Player_X_Speed, GameEngineSubroutine,
  * ...) so nothing below is a bare literal. */
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "generated/super-mario-bros_full_decls.h"
+#endif
 
 #include <float.h>
 
@@ -3965,6 +3973,11 @@ static int game_smash64_savestate_get(uint8_t *buf, int cap)
     if (cap < (int)(SMASH64_ADAPTER_SAVESTATE_HEADER + sizeof f +
                      sizeof plan)) return -1;
 
+    /* The record includes ABI padding. Keep that padding deterministic and
+     * avoid serializing stack contents alongside the trajectory fields. */
+    memset(&f, 0, sizeof f);
+    memset(&plan, 0, sizeof plan);
+
     f.xspeed              = s_xspeed;
     f.y_sub               = s_y_sub;
     f.pending_external_dy = s_pending_external_dy;
@@ -4147,6 +4160,10 @@ static int game_smash64_savestate_set(const uint8_t *buf, int len)
         s_coupled_plan_active = plan.active != 0;
         s_coupled_plan_conservative_chain = plan.conservative_chain != 0;
     }
+    /* Presentation and sprite suppression consult the live ownership latch.
+     * Restoring into a fresh paused session must show the saved fighter before
+     * the next input tick recomputes ownership. */
+    nes_foreign_set_ownership(s_prev_ownership);
     return 1;
 }
 

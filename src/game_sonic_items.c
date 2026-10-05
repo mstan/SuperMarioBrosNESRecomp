@@ -24,9 +24,17 @@
 #include "game_smash64.h"
 
 #include "mod_function_hooks.h"
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "nes_runtime.h"
+#endif
 
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "generated/super-mario-bros_full_decls.h"
+#endif
 
 #include <string.h>
 

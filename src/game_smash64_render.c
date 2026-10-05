@@ -14,10 +14,18 @@
 #include "game_smash64_actions.h"
 #include "game_smash64_pikachu_presentation.h"
 #include "game_smash64.h"
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "nes_runtime.h"
+#endif
 #include "voxel_renderer.h"
 
+#ifdef SMB1_CYCLE
+#include "cycle_bridge.h"
+#else
 #include "generated/super-mario-bros_full_decls.h"
+#endif
 
 #include <math.h>
 #include <stdlib.h>

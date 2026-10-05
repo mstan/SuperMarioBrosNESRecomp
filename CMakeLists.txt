@@ -12,6 +12,72 @@ set(NESRECOMP_ROOT "${CMAKE_SOURCE_DIR}/nesrecomp" CACHE PATH "NESRecomp engine 
 
 set(NESRECOMP_ENABLE_MODS ON CACHE BOOL
     "Enable package mods for Super Mario Bros." FORCE)
+set(NESRECOMP_BACKEND "cycle" CACHE STRING "CPU backend: cycle or legacy")
+set_property(CACHE NESRECOMP_BACKEND PROPERTY STRINGS cycle legacy)
+if(NESRECOMP_BACKEND STREQUAL "cycle")
+    set(NESRECOMP_ROM "" CACHE FILEPATH "Original SMB1 World / USA ROM, not distributed")
+    set(NESRECOMP_HOST_COMPILER "" CACHE FILEPATH "Optional prebuilt compiler")
+    include("${NESRECOMP_ROOT}/runner/cyc/project.cmake")
+    nesrecomp_add_cycle_game(SuperMarioBrosRecomp
+        ROM "${NESRECOMP_ROM}" GAME_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/game-cycle.toml"
+        RECOMPILER "${NESRECOMP_HOST_COMPILER}" SEED_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cyc_seeds.txt"
+        MODS HD_PACKS GAME_ID "super-mario-bros-world" PLAYERS 4 REGION NTSC
+        BOXART "${CMAKE_CURRENT_SOURCE_DIR}/boxart.tga"
+        HOST_EXTRAS src/cycle_extras.c src/cycle_bridge.c src/cycle_calls.c
+            src/game_coop.c
+            mods/coop_plugin.c
+            src/game_widescreen.c
+            src/smb_ws_world.c
+            src/smb_ws_actors.c
+            src/game_voxel.c
+            src/game_smash64.c
+            src/game_smash64_actions.c
+            src/game_smash64_fighter_profile.c
+            src/game_smash64_audio.c
+            src/game_smash64_assets.c
+            src/game_smash64_render.c
+            src/game_link.c
+            src/game_link_audio.c
+            src/game_samus.c
+            src/game_samus_audio.c
+            src/game_sonic.c
+            src/game_sonic_adapter.c
+            src/game_sonic_audio.c
+            src/game_sonic_items.c
+            mods/widescreen_plugin.c
+            mods/voxel_plugin.c
+            mods/smash64_player_plugin.c
+            mods/zelda2_player_plugin.c
+            mods/metroid_player_plugin.c
+            mods/s3k_player_plugin.c
+            mods/smash64_owner_assets.c
+            mods/smash64/characters/captain_falcon.c
+            mods/zelda2/link_controller.c
+            mods/metroid/samus_controller.c
+            mods/s3k/s3k_player.c
+            mods/s3k/s3k_rings.c
+            mods/s3k/sonic_controller.c
+            mods/s3k/audio/z80.c
+            mods/s3k/audio/sn76489.c
+            mods/s3k/audio/s3k_sound_board.c
+            mods/s3k/audio/ym2612_ymfm.cpp
+            third_party/ymfm/ymfm_opn.cpp
+            third_party/ymfm/ymfm_ssg.cpp
+            third_party/ymfm/ymfm_adpcm.cpp
+            mods/smash64/ssb_ported/falcon_locomotion.c
+            mods/smash64/characters/pikachu.c
+            mods/smash64/ssb_ported/pikachu_locomotion.c
+            "${NESRECOMP_ROOT}/runner/cyc/cyc_presentation.c"
+            "${NESRECOMP_ROOT}/runner/cyc/../src/voxel_renderer.c"
+            "${NESRECOMP_ROOT}/runner/cyc/../src/voxel_screen_profile.c"
+            "${NESRECOMP_ROOT}/runner/cyc/../src/keybinds.c"
+            "${NESRECOMP_ROOT}/runner/cyc/../src/foreign_controller.c"
+            "${NESRECOMP_ROOT}/runner/cyc/../src/mod_audio.c"
+            "${NESRECOMP_ROOT}/runner/cyc/../src/rollback/nes_session_config.c"
+)
+    target_include_directories(SuperMarioBrosRecomp PRIVATE "${CMAKE_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}/src" "${NESRECOMP_ROOT}/runner/include")
+    target_compile_definitions(SuperMarioBrosRecomp PRIVATE SMB1_CYCLE NESRECOMP_CYCLE_PRESENTATION NESRECOMP_INPUT_SEATS=4 NESRECOMP_TRACE=1)
+elseif(NESRECOMP_BACKEND STREQUAL "legacy")
 include(${NESRECOMP_ROOT}/runner/runner.cmake)
 
 list(APPEND CMAKE_PREFIX_PATH "${NESRECOMP_ROOT}/runner/external/SDL2/cmake")
@@ -88,6 +154,10 @@ target_include_directories(SuperMarioBrosRecomp PRIVATE
 )
 
 target_link_libraries(SuperMarioBrosRecomp PRIVATE ${SDL2_LIBRARIES} ${NESRECOMP_RUNNER_LIBRARIES})
+
+else()
+    message(FATAL_ERROR "NESRECOMP_BACKEND must be cycle or legacy")
+endif()
 
 # The baker is publishable code; its inputs and output remain under the
 # ignored assets_ssb64 quarantine. A checkout without those local assets
@@ -201,10 +271,18 @@ endif()
 # recomp-ui/ is a pinned submodule. Its
 # module defines RECOMP_LAUNCHER on the target, un-gating the launcher block in
 # launcher.c's main(), and stages the launcher assets next to the exe.
-include(${CMAKE_SOURCE_DIR}/recomp-ui/recomp_ui.cmake)
+if(NESRECOMP_BACKEND STREQUAL "legacy")
+if(NESRECOMP_RECOMP_UI)
+    set(RECOMP_UI_ROOT "${NESRECOMP_RECOMP_UI}" CACHE PATH "recomp-ui checkout" FORCE)
+    include("${NESRECOMP_RECOMP_UI}/recomp_ui.cmake")
+else()
+    include(${CMAKE_SOURCE_DIR}/recomp-ui/recomp_ui.cmake)
+endif()
 recomp_target_launcher_ui(SuperMarioBrosRecomp
     CONSOLE nes
     BOXART ${CMAKE_SOURCE_DIR}/boxart.tga)
+
+endif()
 
 # ---- Online play: rollback netplay over recomp-net ----
 # 2-4 player simultaneous co-op online (docs/NETPLAY.md). On by default for
@@ -217,8 +295,10 @@ else()
 endif()
 option(SMB_ENABLE_NETPLAY "Build rollback netplay (recomp-net + recomp-ui lobby)"
     ${_smb_net_default})
-if(SMB_ENABLE_NETPLAY OR NESRECOMP_ENABLE_NET)
+if((SMB_ENABLE_NETPLAY OR NESRECOMP_ENABLE_NET) AND NESRECOMP_BACKEND STREQUAL "legacy")
     nesrecomp_enable_recomp_net(SuperMarioBrosRecomp)
+elseif(SMB_ENABLE_NETPLAY OR NESRECOMP_ENABLE_NET)
+    message(FATAL_ERROR "Cycle rollback netplay is being ported (beads-2dw.1.93). Use SMB_ENABLE_NETPLAY=OFF for the local cycle preview; requested online support is never silently omitted.")
 endif()
 
 add_custom_command(TARGET SuperMarioBrosRecomp POST_BUILD
