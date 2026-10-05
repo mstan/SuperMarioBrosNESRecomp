@@ -2,7 +2,6 @@
 """Create a local SMB1 LyonHrt HD .nesmod from the owner's stock ROM and pack."""
 import argparse
 from pathlib import Path
-import subprocess
 import sys
 
 def main():
@@ -13,20 +12,19 @@ def main():
     parser.add_argument('--framework', type=Path, default=Path(__file__).resolve().parents[1]/'nesrecomp')
     args = parser.parse_args()
     here = Path(__file__).resolve().parent
-    generator = here/'package_hdpack.py'
-    if not generator.is_file():
-        generator = args.framework/'tools/package_hdpack.py'
-    startup = None
-    if hasattr(subprocess, 'STARTUPINFO'):
-        startup = subprocess.STARTUPINFO()
-        startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startup.wShowWindow = 0
-    return subprocess.call([sys.executable, str(generator), '--pack', str(args.pack),
+    sys.path[:0] = [str(here), str(args.framework/'tools')]
+    from package_hdpack import main as package_main
+    saved_argv = sys.argv
+    sys.argv = ['package_hdpack', '--pack', str(args.pack),
         '--rom', str(args.rom), '--game-id', 'super-mario-bros-world',
         '--id', 'super-mario-bros.lyonhrt-hd', '--name', 'Super Mario Bros. LyonHrt HD',
         '--author', 'LyonHrt', '--license', 'User-supplied pack; original creator terms apply',
-        '--out', str(args.out)], startupinfo=startup,
-        creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        '--out', str(args.out)]
+    try:
+        package_main()
+    finally:
+        sys.argv = saved_argv
+    return 0
 
 if __name__ == '__main__':
     raise SystemExit(main())

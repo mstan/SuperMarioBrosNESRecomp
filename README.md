@@ -14,13 +14,13 @@ Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 
 > **Status:** The game is fully playable. All worlds and levels are believed to be completable, though not every path has been exhaustively tested. If you find a game-breaking bug, please [open an issue](../../issues).
 
-## Known Issues
+## CPU backend
 
-- **Demo sequence non-determinism** — the title screen auto-play demo may behave
-  differently between launches — an item the demo collects on one run can be
-  missed on another. This is a minor frame-timing inconsistency in real-time mode
-  (turbo/fast-forward mode is fully deterministic).
-  Gameplay is unaffected.
+Cycle-accurate execution is the default. Stock gameplay and the existing
+enhancements have cycle adapters; see [migration validation](CYCLE-MIGRATION.md).
+The previous runner remains available with `-DNESRECOMP_BACKEND=legacy` in a
+separate build directory. Legacy save states require the legacy runner;
+cycle states use their own format.
 
 ## Quick Start
 
@@ -145,7 +145,8 @@ other; kicked shells can hurt allies. Dead teammates return after a level ends
 or the whole team retries. Assign each device in **Controls**, then select
 **CO-OP PLAY** at the title screen.
 
-Co-op is local and mutually exclusive with widescreen, voxel/first-person, and
+Co-op supports local and [online play](docs/NETPLAY.md), and is mutually
+exclusive with widescreen, voxel/first-person, and
 player replacement mods. See the [co-op guide](docs/SIMULTANEOUS_COOP.md) for
 the complete rules, save compatibility, and test coverage.
 
@@ -215,9 +216,13 @@ and does not patch the stock ROM or alter save data.
 | Key | Action |
 |-----|--------|
 | Hold Tab | Turbo (fast-forward) |
-| F1–F12 | Load the corresponding save slot |
-| Shift+F1–F12 | Save to the corresponding slot |
+| Escape | Open the menu |
+| F8 | Save state |
+| F9 | Load state |
 | Alt+Enter | Toggle fullscreen |
+
+Configure bindings in Controls; they are saved in `config.ini`. An online
+match continues while the menu is open and disables fast-forward and states.
 
 ## ROM
 
@@ -255,18 +260,19 @@ only needed for reverse engineering; initialize it with
 Then build on Windows:
 
 ```bash
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DNESRECOMP_ROM="C:/Games/Super Mario Bros. (USA).nes"
 cmake --build build --config Release
 ```
 
 On Linux, run `bash tools/build-linux.sh --no-package`; on macOS, run
 `bash tools/build-macos.sh --no-dmg`.
 
-The generated C is committed, so a normal build does not require regeneration.
-The game still needs your ROM at runtime. To regenerate after changing
-`game.toml` or `symbols.sym`, place your ROM at `baserom.nes` and use
-`build_all.bat` on Windows; it builds the recompiler, regenerates the C, and
-builds the game and owner-ROM helper.
+The cycle build generates C in its build directory from your ROM and
+`game-cycle.toml`. It also recognizes `baserom.nes` and the canonical USA/World
+filenames in the repository root. The ROM is still required at runtime.
+`build_all.bat` invokes `tools/build.ps1`, which builds the compiler, game and
+owner-ROM helpers. Legacy-generated C remains committed for explicit legacy
+builds. Windows release packaging uses `tools/make_release.ps1`.
 
 ## Repository layout
 

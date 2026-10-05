@@ -8,10 +8,12 @@ and the measured capability matrix -- is documented in
 [nesrecomp docs/NETPLAY.md](../nesrecomp/docs/NETPLAY.md); this page is what
 is specific to this game.
 
-Status (2026-09-25): built and measured on Linux, headless, over loopback and a
-local lobby server. **Not played by a human yet**, not run between two
-machines, and not built or run on Windows/macOS (netplay is on by default only
-for Linux builds, `SMB_ENABLE_NETPLAY`).
+Cycle migration status: built on Windows with the shared recomp-net lobby and
+rollback driver. Focused local checks passed two-peer stock, four-peer co-op
+with 23 forced rollback episodes, and two LAN lobby/rematch rounds. All peers
+converged to identical complete cycle snapshots and pictures without desyncs.
+Human online playtest is pending; separate-machine/WAN and macOS qualification
+remain outstanding. Netplay defaults on for Windows and Linux builds.
 
 ## Seats
 
@@ -30,17 +32,38 @@ before boot and never saved:
 | Key | Values | Host's offer |
 | --- | --- | --- |
 | `coop` | `0:player`, or `2..4:player` / `2..4:shared` | its offline selection of **Mods → Gameplay → Simultaneous Co-op** |
-| `widescreen` | `0` / `1` | its display setting; forced `0` while co-op is on (the package excludes widescreen) |
+| `vw` (cycle) | fixed even width, 256..864 | the host's selected aspect; Fit settles at 16:9 online, and co-op uses 256 |
+| `ws` (cycle) | enabled, HUD, enemy policy, camera | its offline widescreen options; forced off while co-op is on |
+| `widescreen` (legacy) | `0` / `1` | the older host's display setting |
 
 The lobby publishes the host's offer in the room's match caps; the rollback
 driver's mod-set handshake then confirms every peer is running exactly the same
 text and refuses the match (`mod_set_not_agreed`) otherwise. Everything else a
 mod could change is not allowed to differ, because it is not there.
 
-Input scripts, input recording, `--loadstate`, quick states, turbo and the TCP
-debug server's execution-control verbs are refused while a session is active.
+Cycle input scripts and `--load-state` are refused online. The menu keeps the
+match running while sending neutral local input; it locks Mods and save/load
+states. Resizing a window changes only its displayed size, since all peers run
+the agreed width. Replay restores the full cycle hardware and enhancement
+state and all four logical input seats; it displays and plays no replay frames.
+
+The cycle snapshot domain is about 4 MB for this build (the shared ring retains
+40 snapshots by default). A guest boots with the host's cartridge storage and
+never reads or writes its personal save. Executable and ROM identities must
+agree before the match; the legacy and cycle backends cannot share a match.
 
 ## Testing
+
+Use a bounded cycle check with retained logs and exact complete-state
+comparison. `--window-peer` runs the last peer through hidden SDL; the other
+peers use the headless host. Rollback injection belongs to the host only.
+
+```sh
+python tests/cycle_netplay.py --exe build-cycle/Release/SuperMarioBrosRecomp.exe \
+    --rom smb.nes --out cycle-net-qa --case widescreen --rollback --window-peer
+```
+
+The older legacy harnesses remain available:
 
 ```sh
 # offline determinism probe over 4-player co-op gameplay (trace build)

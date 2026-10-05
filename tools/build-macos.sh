@@ -28,7 +28,7 @@ EXTRA_ARGS=""
 REGEN_CMD=""
 PREBUILD_CMD=""
 POSTBUILD_CMD=""
-PROD_CMAKE_FLAGS=( -DNESRECOMP_ENABLE_TRACE=OFF )
+PROD_CMAKE_FLAGS=( -DNESRECOMP_ENABLE_TRACE=OFF -DNESRECOMP_REQUIRE_FALCON_OWNER_HELPER=ON )
 DEBUG_CMAKE_FLAGS=( -DNESRECOMP_ENABLE_TRACE=ON )
 BUNDLE_ID="com.mstan.supermariobrosrecomp"
 # ============================================================================
@@ -54,6 +54,8 @@ done
 case "$CONFIG" in prod) FLAGS=( "${PROD_CMAKE_FLAGS[@]}" );; debug) FLAGS=( "${DEBUG_CMAKE_FLAGS[@]}" );;
   *) echo "--config must be prod or debug" >&2; exit 2;; esac
 [ "$(uname -s)" = "Darwin" ] || { echo "ERROR: run this on macOS." >&2; exit 1; }
+FLAGS+=( -DNESRECOMP_BACKEND=cycle )
+if [ -n "${NESRECOMP_ROM:-}" ]; then FLAGS+=( "-DNESRECOMP_ROM=$NESRECOMP_ROM" ); fi
 
 case "$ARCH" in
   universal) OSX_ARCHS="x86_64;arm64";;
@@ -90,6 +92,15 @@ mkdir -p "$APPDIR/Contents/MacOS" "$APPDIR/Contents/Resources" "$APPDIR/Contents
 # The real game binary lives next to a launcher that finds the ROM in the same
 # folder as the .app and runs from there (so saves land beside the .app).
 cp "$BIN" "$APPDIR/Contents/MacOS/$CMAKE_TARGET"
+BUILT_DIR="$(dirname "$BIN")"
+for helper in falcon_owner_assets smb_hdpack_importer; do
+    [ -x "$BUILT_DIR/$helper" ] || { echo "ERROR: required helper missing: $helper" >&2; exit 1; }
+    cp "$BUILT_DIR/$helper" "$APPDIR/Contents/MacOS/$helper"
+done
+for directory in assets mods; do
+    [ -d "$BUILT_DIR/$directory" ] || { echo "ERROR: launcher $directory missing" >&2; exit 1; }
+    cp -R "$BUILT_DIR/$directory" "$APPDIR/Contents/MacOS/$directory"
+done
 cat > "$APPDIR/Contents/MacOS/$APP_NAME" <<EOF
 #!/bin/sh
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"

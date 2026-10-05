@@ -13,6 +13,10 @@
 #include "debug_server.h"
 #include <stdio.h>
 #include <string.h>
+#if defined(SMB1_CYCLE) && defined(NESRECOMP_NET)
+#include "cyc_net.h"
+#include <stdlib.h>
+#endif
 
 static int s_enabled, s_ready, s_edges = 1;
 static int s_room_edges = 1;
@@ -20,6 +24,42 @@ static NesAspectMode s_aspect = NES_ASPECT_FIT;
 static uint64_t s_wide_frames, s_native_frames;
 static SmbEnemyMode s_enemies=SMB_ENEMIES_VIEWPORT;
 static uint8_t s_opaque[NES_MAX_RENDER_WIDTH*240];
+#if defined(SMB1_CYCLE) && defined(NESRECOMP_NET)
+/* Compact, complete simulation settings for the room's 64-byte caps field.
+ * Fit settles at 16:9 online; local windows can resize without changing it. */
+static int ws_session_get(char *out,int cap) {
+    return snprintf(out,(size_t)cap,"%d:%d:%d:%d",s_enabled,s_edges,(int)s_enemies,s_room_edges);
+}
+static int ws_session_offer(char *out,int cap) {
+    const char *p="super-mario-bros.enhancement.widescreen";
+    char hud[32]="edges",enemies[32]="viewport",camera[32]="edges";
+    int enabled=nes_mod_feature_selected(p,"widescreen");
+    if(nes_mod_feature_selected("super-mario-bros.gameplay.simultaneous-coop","coop"))enabled=0;
+    nes_mod_option_value(p,"widescreen","hud",hud,sizeof hud);
+    nes_mod_option_value(p,"widescreen","enemy_activation",enemies,sizeof enemies);
+    nes_mod_option_value(p,"widescreen","camera",camera,sizeof camera);
+    return snprintf(out,(size_t)cap,"%d:%d:%d:%d",enabled,strcmp(hud,"center")!=0,!strcmp(enemies,"classic")?SMB_ENEMIES_CLASSIC:SMB_ENEMIES_VIEWPORT,strcmp(camera,"centered")!=0);
+}
+static int ws_width_offer(char *out,int cap) {
+    const char *p="super-mario-bros.enhancement.widescreen";char aspect[32]="fit";
+    if(!nes_mod_feature_selected(p,"widescreen")||nes_mod_feature_selected("super-mario-bros.gameplay.simultaneous-coop","coop"))return snprintf(out,(size_t)cap,"256");
+    nes_mod_option_value(p,"widescreen","aspect",aspect,sizeof aspect);
+    NesAspectMode m=NES_ASPECT_16_9;nes_video_aspect_from_name(aspect,&m);
+    return snprintf(out,(size_t)cap,"%d",m==NES_ASPECT_32_9?854:m==NES_ASPECT_21_9?560:426);
+}
+static int ws_session_apply(const char *v) {
+    int on=-1,hud=-1,enemies=-1,camera=-1;char tail;
+    if(sscanf(v,"%d:%d:%d:%d%c",&on,&hud,&enemies,&camera,&tail)!=4||on<0||on>1||hud<0||hud>1||enemies<0||enemies>2||camera<0||camera>1)return 0;
+    game_widescreen_configure("16:9",hud?"edges":"center",enemies==SMB_ENEMIES_CLASSIC?"classic":"viewport");
+    s_enemies=(SmbEnemyMode)enemies;game_widescreen_set_camera(camera?"edges":"centered");game_widescreen_set_mod_enabled(on);return 1;
+}
+static void ws_session_restore(void){game_widescreen_set_mod_enabled(0);}
+NES_MOD_CONSTRUCTOR(register_cycle_ws_session) {
+    nes_runner_register_session_keys();
+    nes_netplay_session_register("ws",ws_session_get,ws_session_apply,ws_session_restore);
+    nes_netplay_session_set_offer("ws",ws_session_offer);nes_netplay_session_set_offer("vw",ws_width_offer);
+}
+#endif
 static int s_render_camera, s_render_native_x0, s_view_left;
 static int gameplay(void) {
     return (g_ram[0x770] == 1 && g_ram[0x772] == 3) || g_ram[0x770] == 2;

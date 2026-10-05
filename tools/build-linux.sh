@@ -104,6 +104,8 @@ SDL2_CFG_DIR="$( { find /usr/lib /usr/lib64 /usr/local/lib -type d -path '*cmake
 if [ -n "${PYTHON3_EXECUTABLE:-}" ]; then
   FLAGS+=( -DPython3_EXECUTABLE="$PYTHON3_EXECUTABLE" )
 fi
+FLAGS+=( -DNESRECOMP_BACKEND=cycle )
+if [ -n "${NESRECOMP_ROM:-}" ]; then FLAGS+=( "-DNESRECOMP_ROM=$NESRECOMP_ROM" ); fi
 
 # Single cleanup hook: remove the AppDir scratch dir AND restore any .pin files
 # the --nopin bypass moved aside (so a failed build never leaves the repo dirty).
@@ -213,9 +215,12 @@ $LINUXDEPLOY --appdir "$APPDIR" --executable "$BIN" \
 BUILT_DIR="$(dirname "$BIN")"
 [ -d "$BUILT_DIR/assets" ] || { echo "ERROR: launcher assets missing beside $BIN" >&2; exit 1; }
 [ -x "$BUILT_DIR/falcon_owner_assets" ] || { echo "ERROR: Linux Falcon owner-ROM helper missing" >&2; exit 1; }
+[ -x "$BUILT_DIR/smb_hdpack_importer" ] || { echo "ERROR: HD Mod importer missing" >&2; exit 1; }
 cp -r "$BUILT_DIR/assets" "$APPDIR/usr/bin/assets"
 cp "$BUILT_DIR/falcon_owner_assets" "$APPDIR/usr/bin/falcon_owner_assets"
 chmod 0755 "$APPDIR/usr/bin/falcon_owner_assets"
+cp "$BUILT_DIR/smb_hdpack_importer" "$APPDIR/usr/bin/smb_hdpack_importer"
+chmod 0755 "$APPDIR/usr/bin/smb_hdpack_importer"
 mkdir -p "$APPDIR/usr/bin/THIRD-PARTY-LICENSES" "$APPDIR/usr/bin/third_party/ymfm"
 cp "$REPO/THIRD-PARTY-LICENSES/README.md" "$APPDIR/usr/bin/THIRD-PARTY-LICENSES/README.md"
 cp "$REPO/third_party/ymfm/LICENSE" "$APPDIR/usr/bin/third_party/ymfm/LICENSE"

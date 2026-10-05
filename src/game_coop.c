@@ -3,6 +3,9 @@
  * still advances the world exactly once; hooks fan out only player work.
  */
 #include "game_coop.h"
+#ifdef SMB1_CYCLE
+#include "game_widescreen.h"
+#endif
 #include "coop/smb_symbols.h"
 #ifdef SMB1_CYCLE
 #include "cycle_bridge.h"
@@ -769,7 +772,13 @@ static int coop_session_offer(char *out,int cap) {
     return snprintf(out,(size_t)cap,"%d:%s",atoi(count),strcmp(pause,"shared")?"player":"shared");
 }
 /* The package excludes widescreen: whatever the text said, co-op wins. */
-static void coop_session_finalize(void) { if(s_count) g_nes_config.widescreen=0; }
+static void coop_session_finalize(void) { if(s_count) {
+#ifdef SMB1_CYCLE
+    game_widescreen_set_mod_enabled(0);
+#else
+    g_nes_config.widescreen=0;
+#endif
+} }
 
 int game_coop_register(void) {
     int ok=nes_mod_register_savestate_hook("smb.coop",save,load);
@@ -784,7 +793,7 @@ int game_coop_register(void) {
     return ok;
 }
 int game_coop_arg(const char *key,const char *value) {
-#if NESRECOMP_TRACE
+#if NESRECOMP_TRACE || defined(SMB1_CYCLE)
     if(!strcmp(key,"--coop-pause")) {
         game_coop_configure(s_count,value && !strcmp(value,"shared"));return 1;
     }

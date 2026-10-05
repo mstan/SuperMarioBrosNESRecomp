@@ -7,10 +7,10 @@ Falcon, Pikachu, Link, Samus and Sonic replacement Mods. Their existing
 verified owner-ROM extraction and caches remain in use. Enhancements are
 selected in the launcher's Mods screen and start disabled.
 
-The LyonHrt HD pack uses the framework's modern HD Mod provider. Create a
-local package with `tools/import_hdpack.py --pack <folder> --rom <stock-rom>
---out <archive.nesmod>`, then install and select it in Mods. Release staging
-still needs to include the importer and shared `tools/package_hdpack.py`.
+The LyonHrt HD pack uses the framework's modern HD Mod provider. Windows
+releases bundle `smb_hdpack_importer.exe`; run it with
+`--pack <folder> --rom <stock-rom> --out <archive.nesmod>`, then install and
+select the package in Mods. Source checkouts can use `tools/import_hdpack.py`.
 The ROM and third-party pack assets are local inputs. Preserve any notices
 supplied with your pack.
 
@@ -44,11 +44,17 @@ Validation on this branch:
   previews. The host fits pictures below their presentation resolution and
   restores integer scaling after enlargement.
 
-Work still required before migration integration: owner playtests of the
-changed variants, cycle rollback/lobby support (`beads-2dw.1.93`), release
-packaging and dependency/default audit. Requested netplay builds currently
-fail configuration explicitly while that adapter is being ported. Local
-cycle previews use `SMB_ENABLE_NETPLAY=OFF`. No migration merge has occurred.
+The owner accepted the local previews, including corrected Falcon, Pikachu
+and modern HD builds. Windows cycle rollback now uses the shared lobby and
+driver. Two-peer stock and four-peer co-op converged to identical complete
+snapshots and pictures, including 23 forced rollback episodes; two lobby
+launch/return/rematch rounds passed without desyncs. Both production ZIPs
+booted from clean extracted directories and the bundled HD importer converted
+the owner's local pack. These bounded checks do not qualify WAN play.
+
+Integration still awaits the owner's online playtest and final dependency
+pins. No migration merge has occurred. Windows and Linux enable online by
+default; `SMB_ENABLE_NETPLAY=OFF` retains local-only builds.
 
 Regenerate checked-in call aliases with `tools/generate_cycle_symbols.py`;
 `--check` verifies them. The symbol map derives from the pinned SMB

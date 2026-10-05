@@ -14,8 +14,17 @@ set(NESRECOMP_ENABLE_MODS ON CACHE BOOL
     "Enable package mods for Super Mario Bros." FORCE)
 set(NESRECOMP_BACKEND "cycle" CACHE STRING "CPU backend: cycle or legacy")
 set_property(CACHE NESRECOMP_BACKEND PROPERTY STRINGS cycle legacy)
+option(NESRECOMP_ENABLE_TRACE "Enable game diagnostics" OFF)
 if(NESRECOMP_BACKEND STREQUAL "cycle")
     set(NESRECOMP_ROM "" CACHE FILEPATH "Original SMB1 World / USA ROM, not distributed")
+    if(NOT NESRECOMP_ROM)
+        foreach(_rom baserom.nes "Super Mario Bros. (USA).nes" "Super Mario Bros. (World).nes")
+            if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${_rom}")
+                set(NESRECOMP_ROM "${CMAKE_CURRENT_SOURCE_DIR}/${_rom}" CACHE FILEPATH "Original SMB1 World / USA ROM, not distributed" FORCE)
+                break()
+            endif()
+        endforeach()
+    endif()
     set(NESRECOMP_HOST_COMPILER "" CACHE FILEPATH "Optional prebuilt compiler")
     include("${NESRECOMP_ROOT}/runner/cyc/project.cmake")
     nesrecomp_add_cycle_game(SuperMarioBrosRecomp
@@ -73,10 +82,9 @@ if(NESRECOMP_BACKEND STREQUAL "cycle")
             "${NESRECOMP_ROOT}/runner/cyc/../src/keybinds.c"
             "${NESRECOMP_ROOT}/runner/cyc/../src/foreign_controller.c"
             "${NESRECOMP_ROOT}/runner/cyc/../src/mod_audio.c"
-            "${NESRECOMP_ROOT}/runner/cyc/../src/rollback/nes_session_config.c"
 )
     target_include_directories(SuperMarioBrosRecomp PRIVATE "${CMAKE_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}/src" "${NESRECOMP_ROOT}/runner/include")
-    target_compile_definitions(SuperMarioBrosRecomp PRIVATE SMB1_CYCLE NESRECOMP_CYCLE_PRESENTATION NESRECOMP_INPUT_SEATS=4 NESRECOMP_TRACE=1)
+    target_compile_definitions(SuperMarioBrosRecomp PRIVATE SMB1_CYCLE NESRECOMP_CYCLE_PRESENTATION NESRECOMP_INPUT_SEATS=4 NESRECOMP_TRACE=$<BOOL:${NESRECOMP_ENABLE_TRACE}>)
 elseif(NESRECOMP_BACKEND STREQUAL "legacy")
 include(${NESRECOMP_ROOT}/runner/runner.cmake)
 
@@ -201,6 +209,23 @@ if(Python3_Interpreter_FOUND)
         RESULT_VARIABLE FALCON_PYINSTALLER_AVAILABLE
         OUTPUT_QUIET ERROR_QUIET)
     if(FALCON_PYINSTALLER_AVAILABLE EQUAL 0)
+        if(NESRECOMP_BACKEND STREQUAL "cycle")
+            set(_hd_dist "${CMAKE_BINARY_DIR}/hd_importer_dist")
+            set(_hd_work "${CMAKE_BINARY_DIR}/hd_importer_build")
+            set(_hd_exe "${_hd_dist}/smb_hdpack_importer${CMAKE_EXECUTABLE_SUFFIX}")
+            add_custom_command(OUTPUT "${_hd_exe}"
+                COMMAND "${Python3_EXECUTABLE}" -m PyInstaller --noconfirm --clean --onefile
+                    --exclude-module numpy --name smb_hdpack_importer
+                    --distpath "${_hd_dist}" --workpath "${_hd_work}/work" --specpath "${_hd_work}"
+                    --paths "${NESRECOMP_ROOT}/tools" --hidden-import package_hdpack
+                    "${CMAKE_SOURCE_DIR}/tools/import_hdpack.py"
+                DEPENDS "${CMAKE_SOURCE_DIR}/tools/import_hdpack.py" "${NESRECOMP_ROOT}/tools/package_hdpack.py"
+                VERBATIM)
+            add_custom_target(smb_hdpack_importer DEPENDS "${_hd_exe}")
+            add_dependencies(SuperMarioBrosRecomp smb_hdpack_importer)
+            add_custom_command(TARGET SuperMarioBrosRecomp POST_BUILD COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "${_hd_exe}" "$<TARGET_FILE_DIR:SuperMarioBrosRecomp>/smb_hdpack_importer${CMAKE_EXECUTABLE_SUFFIX}")
+        endif()
         file(GLOB FALCON_OWNER_HELPER_SOURCES CONFIGURE_DEPENDS
             "${CMAKE_SOURCE_DIR}/tools/owner_ssb64/*.py")
         set(FALCON_OWNER_HELPER_BUILD
@@ -286,19 +311,16 @@ endif()
 
 # ---- Online play: rollback netplay over recomp-net ----
 # 2-4 player simultaneous co-op online (docs/NETPLAY.md). On by default for
-# Linux builds; the Windows/macOS toolchains have not been verified with the
-# rollback stack yet, so there it stays opt-in.
-if(UNIX AND NOT APPLE)
+# Windows and Linux builds. The macOS rollback toolchain remains opt-in.
+if(WIN32 OR (UNIX AND NOT APPLE))
     set(_smb_net_default ON)
 else()
     set(_smb_net_default OFF)
 endif()
 option(SMB_ENABLE_NETPLAY "Build rollback netplay (recomp-net + recomp-ui lobby)"
     ${_smb_net_default})
-if((SMB_ENABLE_NETPLAY OR NESRECOMP_ENABLE_NET) AND NESRECOMP_BACKEND STREQUAL "legacy")
+if(SMB_ENABLE_NETPLAY OR NESRECOMP_ENABLE_NET)
     nesrecomp_enable_recomp_net(SuperMarioBrosRecomp)
-elseif(SMB_ENABLE_NETPLAY OR NESRECOMP_ENABLE_NET)
-    message(FATAL_ERROR "Cycle rollback netplay is being ported (beads-2dw.1.93). Use SMB_ENABLE_NETPLAY=OFF for the local cycle preview; requested online support is never silently omitted.")
 endif()
 
 add_custom_command(TARGET SuperMarioBrosRecomp POST_BUILD

@@ -42,8 +42,7 @@ $out  = Join-Path $root 'release'
 New-Item -ItemType Directory -Force $out | Out-Null
 
 if (-not $SkipBuild) {
-  & cmd /c (Join-Path $root 'build_all.bat')
-  if ($LASTEXITCODE -ne 0) { throw "build_all.bat failed ($LASTEXITCODE)" }
+  & (Join-Path $root 'tools/build.ps1') -BuildDir $BuildDir
 }
 
 $exe = Join-Path $bin 'SuperMarioBrosRecomp.exe'
@@ -54,6 +53,8 @@ $traceSetting = Select-String -LiteralPath $cmakeCache -Pattern '^NESRECOMP_ENAB
 if (-not $traceSetting) {
   throw 'refusing to package a Windows build with NESRECOMP_ENABLE_TRACE enabled or unset'
 }
+$cycleBuild = Select-String -LiteralPath $cmakeCache -Pattern '^NESRECOMP_BACKEND:STRING=cycle$'
+if (-not $cycleBuild) { throw 'release packaging requires the default cycle backend' }
 
 $readmeCommon = @'
 Super Mario Bros. - Static Recompilation
@@ -88,10 +89,19 @@ screen handles these owner-ROM pickers and verification gates; no owner ROM data
 or derived owner-ROM graphics are shipped in this package.
 
 Controls: arrow keys = D-Pad, Z = A, X = B, Enter = Start,
-Backslash = Select. Hold Tab for turbo. F1-F12 load save slots;
-Shift+F1-F12 save those slots. Alt+Enter toggles fullscreen.
-Gamepads are supported; bindings are
-configurable in keybinds.ini.
+Backslash = Select. Escape opens the menu. F8 saves the current state;
+F9 loads it. Alt+Enter toggles fullscreen. Configure every player's
+keyboard or gamepad in the launcher or menu; settings live in config.ini.
+The cycle CPU is the default, with NTSC timing for this USA/World title.
+
+Online play: host or join a room from the launcher. Two to four seats use
+the host's co-op selection. The menu does not pause an online match;
+load states and changing mods are unavailable during a match.
+
+Modern HD: convert your locally supplied LyonHrt pack with
+smb_hdpack_importer.exe --pack PACK_DIRECTORY --rom SMB_ROM --out HD.nesmod
+Then install HD.nesmod in the launcher's Mods screen. No textures or ROM
+are included. This HD mod is for local play.
 
 Widescreen (Experimental) is available in Mods: adaptive Fit, 16:9, 21:9,
 and 32:9, with original enemy activation or movement on load. The standard
@@ -129,8 +139,8 @@ function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods)
   $required = @(
     'SuperMarioBrosRecomp.exe',
     'falcon_owner_assets.exe',
+    'smb_hdpack_importer.exe',
     'SDL2.dll',
-    'keybinds.ini',
     'README.txt',
     'THIRD-PARTY-LICENSES/README.md',
     'third_party/ymfm/LICENSE'
@@ -294,7 +304,7 @@ function New-ReleaseZip([string]$kind) {
   New-Item -ItemType Directory -Force $stage | Out-Null
 
   Copy-Item $exe $stage
-  foreach ($extra in 'SDL2.dll', 'keybinds.ini', 'falcon_owner_assets.exe') {
+  foreach ($extra in 'SDL2.dll', 'falcon_owner_assets.exe', 'smb_hdpack_importer.exe') {
     $p = Join-Path $bin $extra
     if (-not (Test-Path $p -PathType Leaf)) {
       $p = Join-Path $buildRoot $extra
