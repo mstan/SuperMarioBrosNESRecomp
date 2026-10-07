@@ -22,6 +22,18 @@ The previous runner remains available with `-DNESRECOMP_BACKEND=legacy` in a
 separate build directory. Legacy save states require the legacy runner;
 cycle states use their own format.
 
+## PPU rendering
+
+Windows x64 cycle builds default to the qualified HLE renderer. Matched full-runtime
+measurements improved FPS in both run orders; focused PPU checks and an owner
+playcheck, including adaptive widescreen scrolling, passed. The scroll fix is
+[PR #8](https://github.com/mstan/SuperMarioBrosNESRecomp/pull/8).
+
+The maintained LLE renderer remains the correctness reference and uses the same
+caller interface. Select it explicitly with `-DNESRECOMP_PPU_IMPL=LLE` in a separate
+build directory; this opt-out may lose performance. Other platforms retain the
+framework default. This qualification covers Super Mario Bros. on Windows x64,
+not other games or FDS software. Use `--widescreen fit` for adaptive window sizing.
 ## Quick Start
 
 1. Download `SuperMarioBrosRecomp-windows-x64.zip` from [Releases](../../releases)
