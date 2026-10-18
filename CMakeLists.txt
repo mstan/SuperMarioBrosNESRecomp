@@ -26,6 +26,15 @@ if(NESRECOMP_BACKEND STREQUAL "cycle")
         endforeach()
     endif()
     set(NESRECOMP_HOST_COMPILER "" CACHE FILEPATH "Optional prebuilt compiler")
+    find_package(Python3 3.11 REQUIRED COMPONENTS Interpreter)
+    execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/verify_usa_rom.py"
+        --rom "${NESRECOMP_ROM}" --crc D445F698 --mapper 0 --title "Super Mario Bros."
+        RESULT_VARIABLE _usa_rom_result)
+    if(NOT _usa_rom_result EQUAL 0)
+        message(FATAL_ERROR "The North American ROM profile is required for this build")
+    endif()
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/verify_usa_rom.py" "${NESRECOMP_ROM}")
     include("${NESRECOMP_ROOT}/runner/cyc/project.cmake")
     nesrecomp_add_cycle_game(SuperMarioBrosRecomp
         ROM "${NESRECOMP_ROM}" GAME_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/game-cycle.toml"
