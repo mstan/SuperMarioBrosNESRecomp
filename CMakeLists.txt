@@ -15,6 +15,11 @@ set(NESRECOMP_ENABLE_MODS ON CACHE BOOL
 set(NESRECOMP_BACKEND "cycle" CACHE STRING "CPU backend: cycle or legacy")
 set_property(CACHE NESRECOMP_BACKEND PROPERTY STRINGS cycle legacy)
 option(NESRECOMP_ENABLE_TRACE "Enable game diagnostics" OFF)
+# Qualified Windows x64 renderer default; explicit cache choices remain honored.
+if(WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND
+   CMAKE_SYSTEM_PROCESSOR MATCHES "^(AMD64|amd64|x86_64|X86_64)$")
+    set(NESRECOMP_PPU_IMPL "HLE" CACHE STRING "PPU implementation: LLE or HLE")
+endif()
 if(NESRECOMP_BACKEND STREQUAL "cycle")
     set(NESRECOMP_ROM "" CACHE FILEPATH "Original SMB1 World / USA ROM, not distributed")
     if(NOT NESRECOMP_ROM)

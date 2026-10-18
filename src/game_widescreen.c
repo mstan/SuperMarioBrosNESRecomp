@@ -93,9 +93,17 @@ static int render_camera(void) {
     /* Game logic has already advanced the camera for the next frame. Match
      * the stock pass's captured PPU scroll, then unwrap its two nametables
      * against the absolute level camera. This also survives page crossings. */
+    int cam=camera_x();
+#ifdef SMB1_CYCLE
+    /* The captured rendering address owns the nametable phase. PPUCTRL
+     * describes the base table, which can disagree after wrapping/splitting;
+     * combining that bit with an eight-bit scroll misplaces terrain by 256. */
+    int ppu=cyc_render_line_scroll_x(32);
+#else
     uint8_t ctrl=g_ppuctrl,sx=g_ppuscroll_x;
     runtime_get_visible_frame_start(&ctrl,&sx,NULL,NULL,NULL);
-    int cam=camera_x(),ppu=((ctrl&1)<<8)|sx;
+    int ppu=((ctrl&1)<<8)|sx;
+#endif
     return cam+((ppu-cam+256)&511)-256;
 }
 

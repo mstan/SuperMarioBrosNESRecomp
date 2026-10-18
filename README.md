@@ -22,6 +22,18 @@ The previous runner remains available with `-DNESRECOMP_BACKEND=legacy` in a
 separate build directory. Legacy save states require the legacy runner;
 cycle states use their own format.
 
+## PPU rendering
+
+Windows x64 cycle builds default to the qualified HLE renderer. Matched full-runtime
+measurements improved FPS in both run orders; focused PPU checks and an owner
+playcheck, including adaptive widescreen scrolling, passed. The scroll fix is
+[PR #8](https://github.com/mstan/SuperMarioBrosNESRecomp/pull/8).
+
+The maintained LLE renderer remains the correctness reference and uses the same
+caller interface. Select it explicitly with `-DNESRECOMP_PPU_IMPL=LLE` in a separate
+build directory; this opt-out may lose performance. Other platforms retain the
+framework default. This qualification covers Super Mario Bros. on Windows x64,
+not other games or FDS software. Use `--widescreen fit` for adaptive window sizing.
 ## Quick Start
 
 1. Download `SuperMarioBrosRecomp-windows-x64.zip` from [Releases](../../releases)
@@ -149,6 +161,19 @@ Co-op supports local and [online play](docs/NETPLAY.md), and is mutually
 exclusive with widescreen, voxel/first-person, and
 player replacement mods. See the [co-op guide](docs/SIMULTANEOUS_COOP.md) for
 the complete rules, save compatibility, and test coverage.
+
+## October 2026 coverage pass
+
+The North American/World payload (`D445F698`) is checked before generation.
+The Windows x64 HLE default passed all 32 original area loaders and assisted
+exits in 32:9, including the original 8-4 ending. Native and interpreter runs
+matched every recorded machine hash, final picture and complete state.
+The fixtures assist player form, lives and exit positioning; they do not prove
+obstacle traversal or Bowser combat victories. Widescreen includes the current
+PPU scroll-phase correction for the margins.
+
+HLE and LLE cycle states have different layouts. Older LLE states require an
+LLE build (`NESRECOMP_PPU_IMPL=LLE`); a renderer mismatch is refused on load.
 
 ## Widescreen mod (experimental)
 
