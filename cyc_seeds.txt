@@ -1989,3 +1989,20 @@
 0xffa2
 0xffca
 0xffea
+
+# Observed in the October 2026 progression coverage campaign.
+4k:00:8FFE 85
+4k:01:9001 85
+4k:01:9004 85
+4k:01:9007 85
+4k:01:900A 85
+4k:01:900C 85
+4k:01:900E 85
+4k:01:9010 23
+4k:05:DFFF 34397
+4k:06:E001 34397
+4k:06:EFFF 5
+4k:07:F001 5
+4k:07:F004 5
+4k:07:F006 5
+4k:07:F008 5

@@ -31,6 +31,15 @@ if(NESRECOMP_BACKEND STREQUAL "cycle")
         endforeach()
     endif()
     set(NESRECOMP_HOST_COMPILER "" CACHE FILEPATH "Optional prebuilt compiler")
+    find_package(Python3 3.11 REQUIRED COMPONENTS Interpreter)
+    execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/verify_usa_rom.py"
+        --rom "${NESRECOMP_ROM}" --crc D445F698 --mapper 0 --title "Super Mario Bros."
+        RESULT_VARIABLE _usa_rom_result)
+    if(NOT _usa_rom_result EQUAL 0)
+        message(FATAL_ERROR "The North American ROM profile is required for this build")
+    endif()
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/verify_usa_rom.py" "${NESRECOMP_ROM}")
     include("${NESRECOMP_ROOT}/runner/cyc/project.cmake")
     nesrecomp_add_cycle_game(SuperMarioBrosRecomp
         ROM "${NESRECOMP_ROM}" GAME_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/game-cycle.toml"
@@ -214,12 +223,7 @@ if(Python3_Interpreter_FOUND)
         RESULT_VARIABLE FALCON_PYINSTALLER_AVAILABLE
         OUTPUT_QUIET ERROR_QUIET)
     if(FALCON_PYINSTALLER_AVAILABLE EQUAL 0)
-        # Qualified Windows x64 renderer default; explicit cache choices remain honored.
-if(WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND
-   CMAKE_SYSTEM_PROCESSOR MATCHES "^(AMD64|amd64|x86_64|X86_64)$")
-    set(NESRECOMP_PPU_IMPL "HLE" CACHE STRING "PPU implementation: LLE or HLE")
-endif()
-if(NESRECOMP_BACKEND STREQUAL "cycle")
+        if(NESRECOMP_BACKEND STREQUAL "cycle")
             set(_hd_dist "${CMAKE_BINARY_DIR}/hd_importer_dist")
             set(_hd_work "${CMAKE_BINARY_DIR}/hd_importer_build")
             set(_hd_exe "${_hd_dist}/smb_hdpack_importer${CMAKE_EXECUTABLE_SUFFIX}")
