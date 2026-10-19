@@ -45,6 +45,19 @@ not other games or FDS software. Use `--widescreen fit` for adaptive window sizi
 2. Extract and run `SuperMarioBrosRecomp.exe`
 3. Select your Super Mario Bros. (World) ROM when prompted — the path is saved for future launches
 
+Both the older iNES header and the modern NES 2.0 World header are supported:
+
+| File format | File CRC32 | File SHA-1 |
+| --- | --- | --- |
+| NES 2.0 World | `393A432F` | `33d23c2f2cfa4c9efec87f7bc1321ce3ce6c89bd` |
+| Legacy iNES | `3337EC46` | `ea343f4e445a9050d4b4fbac2c77d0693b1d0922` |
+
+These files contain identical USA-compatible World game data: PRG+CHR CRC32
+`D445F698`, SHA-1 `facee9c577a5262dbe33ac4930bb0b58c8c037f7`.
+Keep the `.nes` header; no conversion is required. The launcher checks the
+game data, and the runtime accepts equivalent header encodings while retaining
+checks for different cartridge hardware and PAL-only timing.
+
 For contributors: [build from source](#building-from-source), browse the
 [repository layout](#repository-layout), or start with the
 [developer guides](docs/README.md) and [test instructions](tests/README.md).
