@@ -12,6 +12,11 @@
 Static recompilation of Super Mario Bros. (NES) for native PC.
 Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 
+Windows builds record startup diagnostics automatically. After a failed launch,
+send the `diagnostics` folder beside the executable. See
+[collecting startup diagnostics](DIAGNOSTICS.md), including the helper for
+Windows loader failures before the launcher appears.
+
 > **Status:** The game is fully playable. All worlds and levels are believed to be completable, though not every path has been exhaustively tested. If you find a game-breaking bug, please [open an issue](../../issues).
 
 ## CPU backend
