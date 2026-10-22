@@ -1,3 +1,12 @@
+# Cycle backend migration — historical validation
+
+> This record preserves the migration branch's bounded validation and pre-merge
+> integration checkpoint. Its preview and pending-merge statements describe
+> that time. Cycle execution is now the default on the main branch; use the
+> [project README](../../README.md#cpu-backend) and [current test guide](../../tests/README.md)
+> for current builds and validation. Paths below are relative to the repository
+> root. These checks do not establish full campaign or WAN coverage.
+
 SMB1's migration branch defaults to the cycle backend. Select
 `-DNESRECOMP_BACKEND=legacy` to build the retained legacy runner.
 

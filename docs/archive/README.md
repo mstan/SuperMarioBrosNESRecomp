@@ -5,6 +5,8 @@ and build instructions describe the time they were written.
 
 - [Early issue investigations](ISSUES.md): bug symptoms, root causes, and fixes
   from the original bring-up.
+- [Cycle backend migration](CYCLE_MIGRATION.md): bounded qualification and
+  the original pre-merge integration checkpoint.
 - [Captain Falcon handoff, 2026-08-09](HANDOFF-2026-08-09.md): implementation and
   release QA notes through v1.6.1.
 

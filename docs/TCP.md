@@ -1,7 +1,7 @@
 # Super Mario Bros. debug server protocol
 
 The TCP debug server is the debugging interface for this project. See the
-[framework protocol reference](../nesrecomp/TCP.md) for shared commands.
+[framework protocol reference](https://github.com/mstan/nesrecomp/blob/master/docs/TCP.md) for shared commands.
 This guide covers SMB-specific configuration and commands. Paths below are
 relative to the repository root.
 
@@ -166,7 +166,7 @@ send_cmd({'cmd':'clear_input','id':6})
 
 ## Built-in Commands
 
-See the [framework reference](../nesrecomp/TCP.md) for the full list. Key ones
+See the [framework reference](https://github.com/mstan/nesrecomp/blob/master/docs/TCP.md) for the full list. Key ones
 for SMB work:
 
 - `ping`, `frame` — heartbeat

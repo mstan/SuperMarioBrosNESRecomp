@@ -22,7 +22,8 @@ Windows loader failures before the launcher appears.
 ## CPU backend
 
 Cycle-accurate execution is the default. Stock gameplay and the existing
-enhancements have cycle adapters; see [migration validation](CYCLE-MIGRATION.md).
+enhancements have cycle adapters; see the
+[historical migration validation](docs/archive/CYCLE_MIGRATION.md).
 The previous runner remains available with `-DNESRECOMP_BACKEND=legacy` in a
 separate build directory. Legacy save states require the legacy runner;
 cycle states use their own format.
