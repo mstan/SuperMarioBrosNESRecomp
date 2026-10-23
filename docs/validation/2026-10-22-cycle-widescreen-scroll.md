@@ -12,7 +12,8 @@ placing the extended world 256 pixels away from the native picture.
 
 The cycle bridge now derives the page from the complete captured 9-bit X
 scroll. Other control bits, the Y result and all simulation code are unchanged.
-This adapter is consumed only by the widescreen renderer.
+On the qualified pilot revision (`88424dd`), this adapter is consumed only by
+the widescreen renderer.
 
 Targeted qualification, not a renewed performance/campaign matrix:
 
@@ -33,5 +34,12 @@ owner screenshot, `phase1200/before.*`, `phase1200/after.*`, and `fixed/`.
 The preserved reference and candidate builds reproduce the same early phase.
 The existing captured reference at frame 1200 shows the faulty seam.
 
-SMB3 passed owner QA and was not changed. SMB1's corrected handoff still needs
-the owner's visual recheck. No final integration is approved.
+SMB3 passed owner QA. The owner then accepted the corrected SMB1 presentation
+and explicitly approved integration on 2026-10-23.
+
+Current master already contains `072cd2d`, which reads the complete captured
+scroll directly in the renderer. That active fix is preserved; the approved
+bridge correction keeps the adapter consistent as well. Existing renderer
+defaults and the recomp-ui pin are unchanged. The framework pin includes the
+approved performance bundle; no new performance claim is made for the current
+Windows HLE default.
