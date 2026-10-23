@@ -79,7 +79,13 @@ static int compositor(uint32_t *out,int w,int h,int x0,const uint32_t *native,vo
 int ppu_renderer_set_custom_render(CycCompositorFn fn,void *user) {native_opaque();compositor_fn=fn;compositor_user=user;cyc_render_set_compositor(fn?compositor:NULL,NULL);return 1;}
 int ppu_renderer_custom_render_active(void) {return compositor_fn!=NULL;}
 void runtime_get_visible_frame_start(uint8_t *ctrl,uint8_t *x,uint8_t *y,void *a,void *b) {
-    (void)a;(void)b;if(ctrl)*ctrl=cyc_frame_lines()[32].ctrl;if(x)*x=(uint8_t)cyc_render_line_scroll_x(32);if(y)*y=(uint8_t)(cyc_render_line_scroll_y(32)%240);
+    (void)a;(void)b;
+    int scroll_x=cyc_render_line_scroll_x(32);
+    /* The frame's v latch owns the rendered nametable page. SMB can change
+     * it through scroll/address writes without matching PPUCTRL bit 0. */
+    if(ctrl)*ctrl=(uint8_t)((cyc_frame_lines()[32].ctrl&~1u)|((unsigned)scroll_x>>8));
+    if(x)*x=(uint8_t)scroll_x;
+    if(y)*y=(uint8_t)(cyc_render_line_scroll_y(32)%240);
 }
 static int title_ready(uint16_t address) {(void)address;if(g_cpu.A==5)game_coop_cycle_title_ready();return 0;}
 static int nmi(uint16_t address) {(void)address;game_coop_before_frame();game_widescreen_begin_frame();return 0;}
