@@ -344,3 +344,37 @@ add_custom_command(TARGET SuperMarioBrosRecomp POST_BUILD
         "${CMAKE_SOURCE_DIR}/mods/preloaded"
         "$<TARGET_FILE_DIR:SuperMarioBrosRecomp>/mods"
     COMMENT "Staging SMB's preloaded NES mod packages")
+
+# Qualified for this title and the exact Release profile below. Do not enable
+# global CMAKE_INTERPROCEDURAL_OPTIMIZATION: dependency libraries and other
+# titles keep their existing compiler policy. Other toolchains/configurations
+# retain the normal portable build, including the historical O2 profile whose
+# whole-program IPO divergence is still tracked separately.
+option(SMB_ENABLE_QUALIFIED_IPO "Use qualified Win64 GNU 15.2 O3 target IPO" ON)
+set(_smb_target_ipo FALSE)
+if(SMB_ENABLE_QUALIFIED_IPO AND NESRECOMP_BACKEND STREQUAL "cycle"
+   AND NESRECOMP_PPU_IMPL STREQUAL "HLE" AND NESRECOMP_CYC_RECOMP_UI_ROOT
+   AND (SMB_ENABLE_NETPLAY OR NESRECOMP_ENABLE_NET)
+   AND WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8
+   AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(AMD64|amd64|x86_64|X86_64)$"
+   AND CMAKE_C_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
+   AND CMAKE_C_COMPILER_VERSION VERSION_EQUAL "15.2.0"
+   AND CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "15.2.0"
+   AND CMAKE_BUILD_TYPE STREQUAL "Release"
+   AND CMAKE_C_FLAGS_RELEASE STREQUAL "-O3 -DNDEBUG"
+   AND CMAKE_CXX_FLAGS_RELEASE STREQUAL "-O3 -DNDEBUG")
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT _smb_ipo_supported OUTPUT _smb_ipo_reason LANGUAGES C CXX)
+    if(_smb_ipo_supported)
+        set_property(TARGET SuperMarioBrosRecomp PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+        # One link-time compilation worker; do not consume the build host's
+        # entire CPU pool through CMake's otherwise automatic -flto setting.
+        target_link_options(SuperMarioBrosRecomp PRIVATE "$<$<CONFIG:Release>:-flto=1>")
+        set(_smb_target_ipo TRUE)
+    endif()
+endif()
+if(_smb_target_ipo)
+    message(STATUS "SMB1 compiler profile: qualified Win64 GNU 15.2 O3 target IPO")
+else()
+    message(STATUS "SMB1 compiler profile: standard portable compiler settings")
+endif()
