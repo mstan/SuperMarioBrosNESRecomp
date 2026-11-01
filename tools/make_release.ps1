@@ -55,6 +55,7 @@ if (-not $traceSetting) {
 }
 $cycleBuild = Select-String -LiteralPath $cmakeCache -Pattern '^NESRECOMP_BACKEND:STRING=cycle$'
 if (-not $cycleBuild) { throw 'release packaging requires the default cycle backend' }
+$mingwRuntimeFiles = @('libgcc_s_seh-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll')
 
 $readmeCommon = @'
 Super Mario Bros. - Static Recompilation
@@ -178,6 +179,7 @@ function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods)
   $unexpected = @($relativeFiles | Where-Object {
     if ($_ -in $required) { return $false }
     if ($_ -in $requiredAssets) { return $false }
+    if ($_ -in $mingwRuntimeFiles) { return $false }
     if ($_ -match '^mods/packages/[^/]+/[^/]+/manifest\.toml$') { return $false }
     return $true
   })
@@ -295,7 +297,39 @@ function Remove-ReleaseStage([string]$stage) {
     [IO.Path]::GetFullPath((Join-Path $out $_))
   }
   if ($full -notin $allowed) { throw "refusing to remove an unexpected release stage: $full" }
-  if (Test-Path -LiteralPath $full) { Remove-Item -LiteralPath $full -Recurse -Force }
+  foreach ($ancestor in @($root, $out)) {
+    if ([IO.File]::GetAttributes($ancestor) -band [IO.FileAttributes]::ReparsePoint) {
+      throw "refusing release cleanup through a reparse point: $ancestor"
+    }
+  }
+  try { $attributes = [IO.File]::GetAttributes($full) }
+  catch [IO.FileNotFoundException] { return }
+  catch [IO.DirectoryNotFoundException] { return }
+  if (($attributes -band [IO.FileAttributes]::ReparsePoint) -or
+      -not ($attributes -band [IO.FileAttributes]::Directory)) {
+    throw "refusing release cleanup of a reparse point or non-directory: $full"
+  }
+  $pending = New-Object 'System.Collections.Generic.Stack[string]'
+  $pending.Push($full)
+  while ($pending.Count) {
+    $directory = $pending.Pop()
+    if ([IO.File]::Exists((Join-Path $directory 'HEAD')) -and
+        [IO.Directory]::Exists((Join-Path $directory 'objects'))) {
+      throw "refusing release cleanup of a nested repository: $directory"
+    }
+    foreach ($entry in [IO.Directory]::EnumerateFileSystemEntries($directory)) {
+      if ([IO.Path]::GetFileName($entry) -ieq '.git') {
+        throw "refusing release cleanup of a nested repository: $entry"
+      }
+      $attributes = [IO.File]::GetAttributes($entry)
+      if ($attributes -band [IO.FileAttributes]::ReparsePoint) {
+        throw "refusing release cleanup of a reparse point: $entry"
+      }
+      if ($attributes -band [IO.FileAttributes]::Directory) { $pending.Push($entry) }
+    }
+  }
+  Remove-Item -LiteralPath $full -Recurse -ErrorAction Stop
+  if (Test-Path -LiteralPath $full) { throw "release stage was not removed: $full" }
 }
 
 function New-ReleaseZip([string]$kind) {
@@ -314,6 +348,15 @@ function New-ReleaseZip([string]$kind) {
     }
     if (-not (Test-Path $p -PathType Leaf)) { throw "missing required runtime file at $p" }
     Copy-Item $p $stage
+  }
+  foreach ($runtime in $mingwRuntimeFiles) {
+    $runtimePath = Join-Path $bin $runtime
+    if (-not (Test-Path -LiteralPath $runtimePath -PathType Leaf)) {
+      $runtimePath = Join-Path $buildRoot $runtime
+    }
+    if (Test-Path -LiteralPath $runtimePath -PathType Leaf) {
+      Copy-Item -LiteralPath $runtimePath -Destination $stage
+    }
   }
 
   # The launcher resolves its fonts/images beside the executable. Copy the
