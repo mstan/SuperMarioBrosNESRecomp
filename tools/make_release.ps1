@@ -56,6 +56,17 @@ if (-not $traceSetting) {
 $cycleBuild = Select-String -LiteralPath $cmakeCache -Pattern '^NESRECOMP_BACKEND:STRING=cycle$'
 if (-not $cycleBuild) { throw 'release packaging requires the default cycle backend' }
 $mingwRuntimeFiles = @('libgcc_s_seh-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll')
+$cacheText = Get-Content -LiteralPath $cmakeCache -Raw
+$engineSetting = [regex]::Match($cacheText, '(?m)^NESRECOMP_ROOT:[^=]+=(.*)\r?$')
+$uiSetting = [regex]::Match($cacheText, '(?m)^NESRECOMP_RECOMP_UI:[^=]+=(.*)\r?$')
+$engineRoot = if ($engineSetting.Success) { $engineSetting.Groups[1].Value.TrimEnd("`r") } else { Join-Path $root 'nesrecomp' }
+$uiRoot = if ($uiSetting.Success) { $uiSetting.Groups[1].Value.TrimEnd("`r") } else { Join-Path $root 'recomp-ui' }
+$releaseLicenses = @{
+  'Game-LICENSE.txt' = (Join-Path $root 'LICENSE')
+  'NESRecomp-LICENSE.txt' = (Join-Path $engineRoot 'LICENSE')
+  'SDL2-COPYING.txt' = (Join-Path $engineRoot 'runner/external/SDL2/COPYING.txt')
+  'ImGui-LICENSE.txt' = (Join-Path $uiRoot 'src/third_party/imgui/LICENSE.txt')
+}
 
 $readmeCommon = @'
 Super Mario Bros. - Static Recompilation
@@ -143,6 +154,10 @@ function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods)
     'smb_hdpack_importer.exe',
     'SDL2.dll',
     'README.txt',
+    'licenses/Game-LICENSE.txt',
+    'licenses/NESRecomp-LICENSE.txt',
+    'licenses/SDL2-COPYING.txt',
+    'licenses/ImGui-LICENSE.txt',
     'THIRD-PARTY-LICENSES/README.md',
     'third_party/ymfm/LICENSE'
   )
@@ -224,7 +239,7 @@ function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods)
   # file itself has an otherwise permitted release name.
   foreach ($file in $files | Where-Object { $_.Extension -in '.txt', '.ini', '.toml' }) {
     $text = Get-Content -Raw -LiteralPath $file.FullName
-    if ($text -match '(?im)(?:[a-z]:[\\/]|/(?:home|users|tmp)/)') {
+    if ($text -match '(?im)(?:(?<![a-z0-9_])[a-z]:[\\/]|/(?:home|users|tmp)/)') {
       throw "release text contains a machine-local absolute path: $(Get-StageRelativePath $stage $file.FullName)"
     }
   }
@@ -386,6 +401,13 @@ function New-ReleaseZip([string]$kind) {
     $zip = Join-Path $out 'SuperMarioBrosRecomp-windows-x64.zip'
   }
 
+  New-Item -ItemType Directory -Path (Join-Path $stage 'licenses') | Out-Null
+  foreach ($name in $releaseLicenses.Keys) {
+    if (-not (Test-Path -LiteralPath $releaseLicenses[$name] -PathType Leaf)) {
+      throw "missing required license: $($releaseLicenses[$name])"
+    }
+    Copy-Item -LiteralPath $releaseLicenses[$name] -Destination (Join-Path $stage "licenses/$name")
+  }
   # Preserve attribution and the license for the bundled Sonic audio library.
   New-Item -ItemType Directory -Force (Join-Path $stage 'THIRD-PARTY-LICENSES') | Out-Null
   New-Item -ItemType Directory -Force (Join-Path $stage 'third_party/ymfm') | Out-Null
