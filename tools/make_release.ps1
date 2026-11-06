@@ -63,6 +63,7 @@ $engineRoot = if ($engineSetting.Success) { $engineSetting.Groups[1].Value.TrimE
 $uiRoot = if ($uiSetting.Success) { $uiSetting.Groups[1].Value.TrimEnd("`r") } else { Join-Path $root 'recomp-ui' }
 $releaseLicenses = @{
   'Game-LICENSE.txt' = (Join-Path $root 'LICENSE')
+  'Game-PERMISSIONS.md' = (Join-Path $root 'PERMISSIONS.md')
   'NESRecomp-LICENSE.txt' = (Join-Path $engineRoot 'LICENSE')
   'SDL2-COPYING.txt' = (Join-Path $engineRoot 'runner/external/SDL2/COPYING.txt')
   'ImGui-LICENSE.txt' = (Join-Path $uiRoot 'src/third_party/imgui/LICENSE.txt')
