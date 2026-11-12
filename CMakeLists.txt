@@ -339,6 +339,10 @@ if(SMB_ENABLE_NETPLAY OR NESRECOMP_ENABLE_NET)
     nesrecomp_enable_recomp_net(SuperMarioBrosRecomp)
 endif()
 
+file(GLOB SMB_PRELOADED_MANIFESTS CONFIGURE_DEPENDS
+    "${CMAKE_SOURCE_DIR}/mods/preloaded/packages/*/*/manifest.toml")
+set_property(TARGET SuperMarioBrosRecomp APPEND PROPERTY LINK_DEPENDS
+    ${SMB_PRELOADED_MANIFESTS})
 add_custom_command(TARGET SuperMarioBrosRecomp POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/mods/preloaded"

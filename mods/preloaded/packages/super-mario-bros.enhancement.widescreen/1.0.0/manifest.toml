@@ -18,7 +18,7 @@ name = "Widescreen (Experimental)"
 description = "Render extended terrain, ordinary enemies and independent moving platforms. Choose original activation timing or movement throughout the visible area. Experimental; bosses, linked balance platforms and frenzy spawners still use native loading."
 group = "Display"
 exclusive_group = "display-mode"
-default_enabled = false
+default_enabled = true
 
 [[plugin]]
 feature = "widescreen"

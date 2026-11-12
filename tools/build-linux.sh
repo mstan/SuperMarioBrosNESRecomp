@@ -55,10 +55,11 @@ REQUIRED_MOD_MANIFESTS=(
 )
 # ============================================================================
 
-LINUXDEPLOY_URL=https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-LINUXDEPLOY_SHA=36a2d7e274d12e1050d0e9ecfe11d339ed54720b2bec464c286d53f8b07f5c62
-APPIMAGETOOL_URL=https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
-APPIMAGETOOL_SHA=a6d71e2b6cd66f8e8d16c37ad164658985e0cf5fcaa950c90a482890cb9d13e0
+# Versioned releases keep the verified content independent of continuous builds.
+LINUXDEPLOY_URL=https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20251107-1/linuxdeploy-x86_64.AppImage
+LINUXDEPLOY_SHA=c20cd71e3a4e3b80c3483cef793cda3f4e990aca14014d23c544ca3ce1270b4d
+APPIMAGETOOL_URL=https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage
+APPIMAGETOOL_SHA=ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0
 
 CONFIG="prod"
 DO_REGEN=0
@@ -106,6 +107,8 @@ if [ -n "${PYTHON3_EXECUTABLE:-}" ]; then
 fi
 FLAGS+=( -DNESRECOMP_BACKEND=cycle )
 if [ -n "${NESRECOMP_ROM:-}" ]; then FLAGS+=( "-DNESRECOMP_ROM=$NESRECOMP_ROM" ); fi
+if [ -n "${NESRECOMP_ROOT:-}" ]; then FLAGS+=( "-DNESRECOMP_ROOT=$NESRECOMP_ROOT" ); fi
+if [ -n "${NESRECOMP_RECOMP_UI:-}" ]; then FLAGS+=( "-DNESRECOMP_RECOMP_UI=$NESRECOMP_RECOMP_UI" ); fi
 
 # Single cleanup hook: remove the AppDir scratch dir AND restore any .pin files
 # the --nopin bypass moved aside (so a failed build never leaves the repo dirty).
@@ -279,7 +282,7 @@ chmod +x "$APPDIR/AppRun"
 
 APP="$OUT/$RELEASE_SLUG-linux-$VERSION-x86_64.AppImage"
 rm -f "$APP"
-ARCH=x86_64 $APPIMAGETOOL "$APPDIR" "$APP"
+ARCH=x86_64 $APPIMAGETOOL --mksquashfs-opt=-processors --mksquashfs-opt="$JOBS" "$APPDIR" "$APP"
 chmod +x "$APP"
 echo "      BUILT: $APP ($(du -h "$APP" | cut -f1))"
 
