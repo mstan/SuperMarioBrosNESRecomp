@@ -1,32 +1,15 @@
 <#
-make_release.ps1 -- build the dual-zip release assets.
-
-Every release ships TWO windows zips (never a bare exe -- the exe needs
-SDL2.dll):
-
-  standard    SuperMarioBrosRecomp-windows-x64.zip
-              Default-off Mods catalog -- boots the authentic stock game.
-
-  widescreen  SuperMarioBrosRecomp-widescreen-windows-x64.zip
-              Same exe plus a portable mods/state.toml selecting experimental
-              widescreen with 16:9 and viewport enemy activation.
-              Both zips share one build; configure widescreen in Mods.
-
-The script builds build_release\ via build_all.bat (plain regen, oracle
-OFF, reverse-debug OFF), then stages and zips. Zips land in release\
-(gitignored). Neither zip ever contains debug.ini or a ROM.
-
-Publish AFTER smoke-testing both zips from a scratch directory:
-
-  gh release create vX.Y.Z release\SuperMarioBrosRecomp-windows-x64.zip `
-      release\SuperMarioBrosRecomp-widescreen-windows-x64.zip `
-      --title "vX.Y.Z -- <headline>" --notes-file <notes.md>
-
-Usage: powershell -File tools\make_release.ps1 [-Variant standard|widescreen|both] [-SkipBuild]
+Build the single Windows release ZIP with the source-controlled mod catalog.
+Fresh profiles use Widescreen (Experimental), adaptive Fit to screen. The ZIP
+contains no mods/state.toml, so updating preserves explicit player selections.
+The stock view remains available by disabling Widescreen in Mods.
+Usage: powershell -File tools/make_release.ps1 [-BuildDir DIR] [-SkipBuild]
+Variant is retained as a deprecated compatibility argument; every value emits
+the same single Windows archive. No ROM, save, owner cache or dev config ships.
 #>
 param(
   [ValidateSet('standard', 'widescreen', 'both')]
-  [string]$Variant = 'both',
+  [string]$Variant = 'standard',
   [string]$BuildDir = 'build_release',
   [switch]$SkipBuild
 )
@@ -67,6 +50,23 @@ $releaseLicenses = @{
   'NESRecomp-LICENSE.txt' = (Join-Path $engineRoot 'LICENSE')
   'SDL2-COPYING.txt' = (Join-Path $engineRoot 'runner/external/SDL2/COPYING.txt')
   'ImGui-LICENSE.txt' = (Join-Path $uiRoot 'src/third_party/imgui/LICENSE.txt')
+  'RecompUI-LICENSE.txt' = (Join-Path $uiRoot 'LICENSE')
+  'RecompNet-LICENSE.txt' = (Join-Path $engineRoot 'lib/recomp-net/LICENSE')
+  'RBEngine-LICENSE.txt' = (Join-Path $engineRoot 'lib/retcomm-rbengine/LICENSE')
+  'LatoLatin-OFL.txt' = (Join-Path $root 'tools/release-licenses/LatoLatin-OFL.txt')
+  'NotoSansSymbols2-OFL.txt' = (Join-Path $root 'tools/release-licenses/NotoSansSymbols2-OFL.txt')
+  'OpenMoji-LICENSE.txt' = (Join-Path $root 'tools/release-licenses/OpenMoji-LICENSE.txt')
+}
+# Match the notices to the compiler runtime actually staged by a GNU build.
+if (Test-Path -LiteralPath (Join-Path $bin 'libstdc++-6.dll')) {
+  $compilerSetting = [regex]::Match($cacheText, '(?m)^CMAKE_CXX_COMPILER:[^=]+=(.*)\r?$')
+  if (-not $compilerSetting.Success) { throw 'missing C++ compiler identity for runtime notices' }
+  $compilerPrefix = Split-Path -Parent (Split-Path -Parent $compilerSetting.Groups[1].Value.TrimEnd("`r"))
+  foreach ($name in 'COPYING.LIB', 'COPYING.RUNTIME', 'COPYING3', 'README') {
+    $releaseLicenses["GCC-$name.txt"] = Join-Path $compilerPrefix "share/licenses/gcc-libs/$name"
+  }
+  $releaseLicenses['libwinpthread-COPYING.txt'] = Join-Path $compilerPrefix 'share/licenses/libwinpthread/COPYING'
+  $releaseLicenses['SDL2-runtime-LICENSE.txt'] = Join-Path $compilerPrefix 'share/licenses/SDL2/LICENSE.txt'
 }
 
 $readmeCommon = @'
@@ -117,35 +117,19 @@ Then install HD.nesmod in the launcher's Mods screen. No textures or ROM
 are included. This HD mod is for local play.
 
 Widescreen (Experimental) is available in Mods: adaptive Fit, 16:9, 21:9,
-and 32:9, with original enemy activation or movement on load. The standard
-package leaves it disabled. The camera anchors at area edges and centers small
+and 32:9, with original enemy activation or movement on load. Fresh profiles
+enable adaptive Fit to screen. Disable it in Mods for the original view; updates
+preserve explicit saved selections. The camera anchors at area edges and centers small
 fixed rooms; Mods also offers the previous centered camera. Special objects and linked balance platforms
 still have native limits; this has not been validated through every world.
 Experimental mod savestates are not compatible across all builds.
-'@
-
-# Authored release preset, never copied from a user's Mods selections.
-$widescreenPreset = @'
-format_version = 1
-[[package]]
-id = "super-mario-bros.enhancement.widescreen"
-version = "1.0.0"
-[[feature]]
-package_id = "super-mario-bros.enhancement.widescreen"
-id = "widescreen"
-enabled = true
-[feature.values]
-aspect = "16-9"
-hud = "edges"
-enemy_activation = "viewport"
-camera = "edges"
 '@
 
 function Get-StageRelativePath([string]$stage, [string]$path) {
   return $path.Substring($stage.Length).TrimStart('\', '/').Replace('\', '/')
 }
 
-function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods) {
+function Assert-ReleaseStage([string]$stage, [string]$sourceMods) {
   $files = @(Get-ChildItem $stage -Recurse -File)
   $relativeFiles = @($files | ForEach-Object { Get-StageRelativePath $stage $_.FullName })
 
@@ -162,7 +146,7 @@ function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods)
     'THIRD-PARTY-LICENSES/README.md',
     'third_party/ymfm/LICENSE'
   )
-  if ($kind -eq 'widescreen') { $required += 'mods/state.toml' }
+  $required += @($releaseLicenses.Keys | ForEach-Object { "licenses/$_" })
   $missing = @($required | Where-Object { $_ -notin $relativeFiles })
   if ($missing.Count -ne 0) {
     throw "release staging is missing required payload: $($missing -join ', ')"
@@ -204,7 +188,7 @@ function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods)
   }
 
   # The staged catalog must be a byte-for-byte mirror of source-controlled
-  # mods/preloaded. Only the authored widescreen preset may accompany it.
+  # mods/preloaded. Player selections are never authored into an archive.
   $sourceManifestRoot = (Resolve-Path $sourceMods).Path
   $sourceManifests = @(Get-ChildItem $sourceManifestRoot -Recurse -File)
   if ($sourceManifests.Count -eq 0) { throw 'source preloaded mod catalog is empty' }
@@ -226,11 +210,6 @@ function Assert-ReleaseStage([string]$stage, [string]$kind, [string]$sourceMods)
     }
   }
   $stagedModPaths = @($relativeFiles | Where-Object { $_ -like 'mods/*' })
-  if ($kind -eq 'widescreen') {
-    $expectedModPaths += 'mods/state.toml'
-    $preset = Get-Content -Raw -LiteralPath (Join-Path $stage 'mods/state.toml')
-    if ($preset -cne $widescreenPreset) { throw 'widescreen preset differs from the authored release selection' }
-  }
   $modDifference = @(Compare-Object $expectedModPaths $stagedModPaths)
   if ($modDifference.Count -ne 0) {
     throw "release staging mod inventory differs from pristine mods/preloaded"
@@ -296,17 +275,6 @@ function Assert-ReleaseArchive([string]$zip, [string]$stage) {
   }
 }
 
-$readmeWidescreen = @'
-
-WIDESCREEN (EXPERIMENTAL)
--------------------------
-This variant enables Widescreen (Experimental) through mods/state.toml.
-The preset is 16:9 with an edge-anchored camera, and enemies move as soon as they load.
-Use Mods to select adaptive Fit, 21:9, 32:9, original enemy activation, or disable
-widescreen. --widescreen off is also available as a command-line override.
-The old widescreen.ini file and arbitrary margin syntax are retired.
-'@
-
 function Remove-ReleaseStage([string]$stage) {
   $full = [IO.Path]::GetFullPath($stage)
   $allowed = @('stage_standard', 'stage_widescreen') | ForEach-Object {
@@ -348,8 +316,8 @@ function Remove-ReleaseStage([string]$stage) {
   if (Test-Path -LiteralPath $full) { throw "release stage was not removed: $full" }
 }
 
-function New-ReleaseZip([string]$kind) {
-  $stage = Join-Path $out "stage_$kind"
+function New-ReleaseZip {
+  $stage = Join-Path $out "stage_standard"
   Remove-ReleaseStage $stage
   New-Item -ItemType Directory -Force $stage | Out-Null
 
@@ -392,15 +360,8 @@ function New-ReleaseZip([string]$kind) {
   }
   Copy-Item $preloadedMods (Join-Path $stage 'mods') -Recurse
 
-  if ($kind -eq 'widescreen') {
-    [IO.File]::WriteAllText((Join-Path $stage 'mods/state.toml'), $widescreenPreset, [Text.Encoding]::ASCII)
-    ($readmeCommon + $readmeWidescreen) |
-      Out-File -Encoding ascii (Join-Path $stage 'README.txt')
-    $zip = Join-Path $out 'SuperMarioBrosRecomp-widescreen-windows-x64.zip'
-  } else {
-    $readmeCommon | Out-File -Encoding ascii (Join-Path $stage 'README.txt')
-    $zip = Join-Path $out 'SuperMarioBrosRecomp-windows-x64.zip'
-  }
+  $readmeCommon | Out-File -Encoding ascii (Join-Path $stage 'README.txt')
+  $zip = Join-Path $out 'SuperMarioBrosRecomp-windows-x64.zip'
 
   New-Item -ItemType Directory -Path (Join-Path $stage 'licenses') | Out-Null
   foreach ($name in $releaseLicenses.Keys) {
@@ -414,7 +375,7 @@ function New-ReleaseZip([string]$kind) {
   New-Item -ItemType Directory -Force (Join-Path $stage 'third_party/ymfm') | Out-Null
   Copy-Item -LiteralPath (Join-Path $root 'THIRD-PARTY-LICENSES/README.md') -Destination (Join-Path $stage 'THIRD-PARTY-LICENSES/README.md')
   Copy-Item -LiteralPath (Join-Path $root 'third_party/ymfm/LICENSE') -Destination (Join-Path $stage 'third_party/ymfm/LICENSE')
-  Assert-ReleaseStage $stage $kind $preloadedMods
+  Assert-ReleaseStage $stage $preloadedMods
 
   if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip }
   Add-Type -AssemblyName System.IO.Compression
@@ -444,5 +405,7 @@ function New-ReleaseZip([string]$kind) {
   Write-Host "staged $zip"
 }
 
-if ($Variant -eq 'standard' -or $Variant -eq 'both') { New-ReleaseZip 'standard' }
-if ($Variant -eq 'widescreen' -or $Variant -eq 'both') { New-ReleaseZip 'widescreen' }
+if ($Variant -ne 'standard') {
+  Write-Warning 'Variant is deprecated; emitting the single Windows ZIP with catalog defaults.'
+}
+New-ReleaseZip

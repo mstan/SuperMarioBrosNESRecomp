@@ -6,6 +6,8 @@ cycle-evidence/
 release/
 release-*/
 release_*/
+!tools/release-licenses/
+!tools/release-licenses/*.txt
 cmake-build-*/
 /CMakeUserPresets.json
 
