@@ -376,7 +376,7 @@ static int cull_hook(uint16_t addr) {
 }
 void smb_ws_actors_begin_frame(void) {
     if (!s_enabled || runtime_get_vblank_depth()>1) return;
-    s_render_wide=g_render_width>256;
+    s_render_wide=g_render_width>256 || game_backtracking_active();
     memcpy(s.display,s.next,sizeof s.display); memset(s.next,0,sizeof s.next);
     s.flag_display=s.flag_next; memset(&s.flag_next,0,sizeof s.flag_next);
     s.camera=camera();
@@ -406,7 +406,10 @@ void smb_ws_actors_update(void) {
             a->active=s_mode==SMB_ENEMIES_VIEWPORT;
         }
         int x=actor_x(a);
-        if (a->active && (x<left-32 || x>right+32)) { a->dead=1; continue; }
+        if (game_backtracking_active()) {
+            if (a->active && (x<left-32 || x>right+32)) { a->active=2; continue; }
+            if (a->active==2) a->active=1; /* sleep retains position, phase and defeat history */
+        } else if (a->active && (x<left-32 || x>right+32)) { a->dead=1; continue; }
         if (native_ticked[n]) continue; /* already advanced by this frame's native routine */
         Guest g;
         if (!begin(&g,a)) continue;
@@ -520,7 +523,7 @@ int smb_ws_actors_debug(const char *cmd,int id) {
             s.flag_display.count?s.flag_display.sprite[0].y:-1);
         return 1;
     }
-    if (strcmp(cmd,"smb_ws_enemies")) return 0;
+    if (strcmp(cmd,"smb_ws_enemies") && strcmp(cmd,"smb_ws_actors")) return 0;
     char buf[7800]; int loaded=0,native=0,active=0,sprites=0;
     for (int i=0;i<s.count;i++) if (s.actor[i].loaded && !s.actor[i].dead) {
         loaded++; native+=s.actor[i].native_slot>=0; active+=s.actor[i].active; sprites+=s.display[i].count;

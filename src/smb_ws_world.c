@@ -223,3 +223,40 @@ void smb_ws_world_begin_column(void) {
     if (!s_decoding && g_smb_ws_world.valid)
         g_smb_ws_world.block_world[g_ram[0x6a0]&31]=-1;
 }
+void smb_ws_world_bind_collision(int native_camera) {
+    SmbWsWorld *w=&g_smb_ws_world;
+    if (!w->valid || s_decoding) return;
+    int first=native_camera/16-4;
+    if (first<0) first=0;
+    if (first>SMB_WS_META_COLUMNS-32) first=SMB_WS_META_COLUMNS-32;
+    for (int col=first;col<first+32;col++) {
+        int physical=col&31;
+        int address=0x500+((physical&16)?0xd0:0)+(physical&15);
+        w->block_world[physical]=(int16_t)col;
+        for (int row=0;row<13;row++) g_ram[address+row*16]=w->collision[col][row];
+    }
+}
+void smb_ws_world_write_block(uint8_t metatile) {
+    SmbWsWorld *w=&g_smb_ws_world;
+    if (!w->valid || s_decoding) return;
+    int address=g_ram[6]+(g_ram[7]<<8),offset=address-0x500;
+    int plane=offset>=0xd0;
+    int physical=offset-(plane?0xd0:0)+(plane?16:0),row=g_ram[2]/16;
+    if (physical<0 || physical>=32 || row>=13 || (g_ram[2]&15)) return;
+    int col=w->block_world[physical];
+    if (col<0 || col>=SMB_WS_META_COLUMNS) return;
+    /* WriteBlockMetatile selects this exact four-tile native graphics table;
+     * the existing attribute palette stays in place, including brick styles. */
+    int style=!metatile?3:(metatile==0x58 || metatile==0x51)?0:
+        (metatile==0x5d || metatile==0x52)?1:2;
+    unsigned table=0x8a39+style*4; /* pinned USA BlockGfxData */
+    for (int y=0;y<2;y++) for (int x=0;x<2;x++)
+        w->tiles[col*2+x][row*2+y]=rom(table+y*2+x);
+    /* A revisit writes to the same physical nametable address as a later
+     * page. Do not attribute that edit to the later page's old binding. */
+    int nt=(col>>4)&1,tx=(col&15)*2;
+    for (int x=0;x<2;x++) if (w->nt_world[nt][tx+x]!=col*2+x) {
+        w->nt_world[nt][tx+x]=-1;
+        w->pending_world[nt][tx+x]=-1;
+    }
+}
