@@ -64,7 +64,9 @@ static int ws_session_apply(const char *v) {
 static void ws_session_restore(void){game_widescreen_set_mod_enabled(0);}
 static int bt_session_get(char *out,int cap) { return snprintf(out,(size_t)cap,"%d",s_backtracking); }
 static int bt_session_offer(char *out,int cap) {
-    return snprintf(out,(size_t)cap,"%d",nes_mod_feature_selected("super-mario-bros.gameplay.free-backtracking","backtracking"));
+    int on=nes_mod_feature_selected("super-mario-bros.gameplay.free-backtracking","backtracking");
+    if(nes_mod_feature_selected("super-mario-bros.gameplay.simultaneous-coop","coop"))on=0;
+    return snprintf(out,(size_t)cap,"%d",on);
 }
 static int bt_session_apply(const char *v) {
     if (strcmp(v,"0") && strcmp(v,"1")) return 0;
@@ -232,6 +234,7 @@ static void apply(void) {
     nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.parser",s_backtracking);
     nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.block",s_backtracking);
     nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.destroy",s_backtracking);
+    nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.loopback",s_backtracking);
     smb_ws_actors_configure(infrastructure,s_enemies);
 }
 void game_backtracking_set_enabled(int enabled) {
@@ -339,6 +342,19 @@ static int backtracking_block(uint16_t addr) {
     if (cyc_mod_isolated()) return 0;
 #endif
     smb_ws_world_write_block(addr==0x8a6b?0:g_cpu.A);
+    return 0;
+}
+static int backtracking_loopback(uint16_t addr) {
+    (void)addr;
+    if (!s_backtracking || smb_ws_world_busy()) return 0;
+#ifdef SMB1_CYCLE
+    if (cyc_mod_isolated()) return 0;
+#endif
+    /* The native castle maze deliberately moves both parser and camera back
+     * four pages. That is a new native area pass, not a player revisit: retain
+     * the factory reset/reparse behavior and adopt its new high-water mark. */
+    smb_ws_world_reset();smb_ws_actors_reset();
+    memset(&s_backtrack,0,sizeof s_backtrack);s_backtrack.version=1;
     return 0;
 }
 int game_widescreen_arg(const char *key, const char *value) {
@@ -452,6 +468,7 @@ NES_MOD_CONSTRUCTOR(register_custom_widescreen) {
         !nes_mod_register_function_entry_plugin("super-mario-bros.backtracking.parser",0xaf6f,backtracking_parser) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.backtracking.block",0x8a6d,backtracking_block) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.backtracking.destroy",0x8a6b,backtracking_block) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.backtracking.loopback",0xc08c,backtracking_loopback) ||
         !nes_mod_register_savestate_hook("super-mario-bros.backtracking",save_backtrack,load_backtrack) ||
         !nes_mod_register_savestate_hook("super-mario-bros.widescreen.world",save_world,load_world))
         fprintf(stderr, "[Widescreen] Failed to register custom renderer hooks\n");
