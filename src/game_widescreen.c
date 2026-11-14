@@ -107,6 +107,19 @@ static int render_camera(void) {
     return cam+((ppu-cam+256)&511)-256;
 }
 
+#ifdef SMB1_CYCLE
+typedef struct { int play_x0, hud_x0, width; } HudSpritePlacement;
+static int place_hud_sprite(int slot, int x, int y, int *out_x, void *user) {
+    const HudSpritePlacement *p = user;
+    if (ppu_renderer_sprite_suppressed(slot,x,y)) return 0;
+    /* Only sprite zero is part of SMB's fixed status-bar split. All other
+     * sprites, including Mario jumping above the bar, keep world placement. */
+    *out_x = x + p->play_x0;
+    if (slot == 0) *out_x = s_edges ? x + (x >= 128 ? p->width-256 : 0) : x + p->hud_x0;
+    return 1;
+}
+#endif
+
 static int render(uint32_t *out, int width, int height, int native_x0,
                   const uint32_t *native, void *user) {
     (void)user;
@@ -144,13 +157,31 @@ static int render(uint32_t *out, int width, int height, int native_x0,
         s_opaque[y*width+x+play_x0]=(uint8_t)ppu_renderer_background_opaque(x,y);
     }
     smb_ws_actors_draw(out,width,play_x0,cam,s_opaque);
-    ppu_renderer_set_background_opaque_frame(s_opaque,width,height);
+    const uint32_t *hud = native;
+#ifdef SMB1_CYCLE
+    static uint32_t hud_background[256*240];
+    int separate_sprites = cyc_render_background(hud_background);
+    if (separate_sprites) hud = hud_background;
+#endif
+    /* Position the status background independently of world sprites. Copying
+     * the combined native picture here used to move Mario with the HUD. */
     for (int y = 0; y < 32; y++) {
         if (s_edges) {
-            memcpy(out+y*width, native+y*256, 128*sizeof(uint32_t));
-            memcpy(out+y*width+width-128, native+y*256+128, 128*sizeof(uint32_t));
-        } else memcpy(out+y*width+native_x0, native+y*256, 256*sizeof(uint32_t));
+            memcpy(out+y*width, hud+y*256, 128*sizeof(uint32_t));
+            memcpy(out+y*width+width-128, hud+y*256+128, 128*sizeof(uint32_t));
+        } else memcpy(out+y*width+native_x0, hud+y*256, 256*sizeof(uint32_t));
+        for (int x = 0; x < 256; x++) {
+            int dx = s_edges ? x + (x >= 128 ? width-256 : 0) : x + native_x0;
+            s_opaque[y*width+dx] = (uint8_t)ppu_renderer_background_opaque(x,y);
+        }
     }
+#ifdef SMB1_CYCLE
+    if (separate_sprites) {
+        HudSpritePlacement p = {play_x0,native_x0,width};
+        cyc_render_sprites(out,width,32,play_x0,s_opaque,place_hud_sprite,&p);
+    }
+#endif
+    ppu_renderer_set_background_opaque_frame(s_opaque,width,height);
     s_wide_frames++;
     return 1;
 }

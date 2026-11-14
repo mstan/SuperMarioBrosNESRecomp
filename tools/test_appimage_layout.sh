@@ -70,14 +70,41 @@ for manifest in $required_mods; do
 done
 mkdir -p "$state/mods/packages/user.example/1.0.0"
 printf 'user-owned\n' > "$state/mods/packages/user.example/1.0.0/marker.txt"
-printf 'user-state\n' > "$state/mods/state.toml"
+cat > "$state/mods/state.toml" <<'STATE'
+format_version = 1
+[[package]]
+id = "super-mario-bros.enhancement.widescreen"
+version = "1.0.0"
+[[feature]]
+package_id = "super-mario-bros.enhancement.widescreen"
+id = "widescreen"
+enabled = false
+[feature.values]
+aspect = "21-9"
+hud = "center"
+STATE
 APPIMAGE="$state/SuperMarioBrosRecomp.AppImage" \
 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy NESRECOMP_NO_LAUNCHER=1 \
 timeout 20 "$appdir/AppRun" >/dev/null 2>&1 || true
 [ "$(cat "$state/mods/packages/user.example/1.0.0/marker.txt")" = user-owned ] || {
     echo "AppRun overwrote a user-installed mod" >&2; exit 1; }
-[ "$(cat "$state/mods/state.toml")" = user-state ] || {
-    echo "AppRun overwrote user mod state" >&2; exit 1; }
+# The runtime normalizes valid selections on startup. Check the actual saved
+# choice rather than an invalid-TOML sentinel or incidental file formatting.
+python3 - "$state/mods/state.toml" <<'PY'
+import re, sys
+with open(sys.argv[1], encoding='utf-8') as stream:
+    state = stream.read()
+def field(block, key, value):
+    return re.search(r'(?m)^\s*' + re.escape(key) + r'\s*=\s*' + re.escape(value) + r'\s*$', block)
+# Check the engine's canonical selection output using the standard library;
+# packaging must not acquire an additional Python 3.11 requirement.
+assert any(field(block, 'package_id', '"super-mario-bros.enhancement.widescreen"')
+           and field(block, 'id', '"widescreen"')
+           and field(block, 'enabled', 'false')
+           and field(block, 'aspect', '"21-9"')
+           and field(block, 'hud', '"center"')
+           for block in re.split(r'(?m)^\[\[feature\]\]\s*$', state)[1:]), 'AppRun lost the saved widescreen choice'
+PY
 
 (cd "$appdir" && find . -type f -print0 | sort -z | xargs -0 sha256sum) > "$after"
 cmp -s "$before" "$after" || { echo "AppRun modified its read-only payload" >&2; exit 1; }
