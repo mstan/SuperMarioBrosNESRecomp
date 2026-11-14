@@ -1,6 +1,6 @@
-"""Pre-mutation ownstate -> real outcomes -> same-process earlier restore."""
+"""Native stomp/coin outcomes, ordinary revisit persistence and stock-Off clamp."""
 from pathlib import Path
-import argparse,hashlib,json,os,shutil,socket,struct,subprocess,sys,time
+import argparse,hashlib,json,os,shutil,struct,subprocess,sys
 parser=argparse.ArgumentParser(description='Actual native stomp, coin, ordinary right-left revisit and stock-Off clamp regression')
 parser.add_argument('--exe',type=Path,required=True)
 parser.add_argument('--rom',type=Path,required=True)
@@ -16,9 +16,9 @@ if (exe.parent/'SDL2.dll').is_file():shutil.copy2(exe.parent/'SDL2.dll',app/'SDL
 if (exe.parent/'assets').is_dir():shutil.copytree(exe.parent/'assets',app/'assets')
 shutil.copytree(args.mods,app/'mods');mods=R/'headless-mods';shutil.copytree(args.mods,mods)
 env={k:v for k,v in os.environ.items()if not k.startswith(('NESRECOMP_','LNG_','SDL_'))};env.update(PATH=str(exe.parent)+os.pathsep+os.environ['PATH'],SDL_AUDIODRIVER='dummy',SDL_VIDEODRIVER='dummy',SDL_RENDER_DRIVER='software',NESRECOMP_NO_LAUNCHER='1',LNG_TEST_HIDDEN='1',SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT='0xfeed/0xbeef')
-for k in ['APPDATA','LOCALAPPDATA','TEMP','TMP']:
+for k in ['APPDATA','LOCALAPPDATA','TEMP','TMP','TMPDIR','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_CACHE_HOME']:
  p=R/k.lower();p.mkdir();env[k]=str(p)
-report=dict(binary=dict(path=str(exe),sha256=hashlib.sha256(exe.read_bytes()).hexdigest()),scope='Current-build fixture and player/contact-protection positions are prerequisites; normal native gravity/stomp and jump collision produce actual enemy retirement/score and used coin block. Ordinary right-left controls revisit both. No block, collision, coin, enemy or score outputs are assigned.',routes={},commands=[])
+report=dict(binary=dict(path=str(exe),sha256=hashlib.sha256(exe.read_bytes()).hexdigest()),scope='Current-build fixture and player/contact-protection positions are prerequisites; normal native gravity/stomp and jump collision produce actual enemy retirement/score and used coin block. Ordinary right-left controls revisit both. No block, collision, coin, enemy or score outputs are assigned.')
 def save():(R/'result.json').write_text(json.dumps(report,indent=2)+'\n')
 def payload(s,key):a,n=s.chunks[key];return bytes(s.data[a:a+n])
 def status(s):

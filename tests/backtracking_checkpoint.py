@@ -12,7 +12,7 @@ R=args.out.resolve();R.mkdir(parents=True,exist_ok=False);exe=args.exe.resolve()
 assert hashlib.sha256(rom.read_bytes()).hexdigest()=='f61548fdf1670cffefcc4f0b7bdcdd9eaba0c226e3b74f8666071496988248de','Only the supported USA profile is qualified'
 assert rom.read_bytes()[16+0x1206:16+0x1209]==bytes.fromhex('cd1a07'),'Native midpoint operand changed'
 env={k:v for k,v in os.environ.items()if not k.startswith(('NESRECOMP_','LNG_','SDL_'))};env.update(NESRECOMP_NO_LAUNCHER='1',SDL_AUDIODRIVER='dummy',SDL_VIDEODRIVER='dummy',SDL_RENDER_DRIVER='software')
-for k in ['APPDATA','LOCALAPPDATA','TEMP','TMP']:
+for k in ['APPDATA','LOCALAPPDATA','TEMP','TMP','TMPDIR','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_CACHE_HOME']:
  p=R/k.lower();p.mkdir();env[k]=str(p)
 report=dict(binary=dict(path=str(exe),sha256=hashlib.sha256(exe.read_bytes()).hexdigest()),scope='Native InitializeArea entrance page4 is a traversal bypass. After loader clears HalfwayPage, player position1200 and contact protection are setup only. Ordinary controller input crosses real native page5 threshold, returns left, falls in an actual pit, loses a life and retries; no checkpoint/result/death/terrain flags assigned.',cases={})
 def save():(R/'result.json').write_text(json.dumps(report,indent=2)+'\n')
