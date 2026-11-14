@@ -15,7 +15,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$buildRoot = Join-Path $root $BuildDir
+$buildRoot = if ([IO.Path]::IsPathRooted($BuildDir)) { [IO.Path]::GetFullPath($BuildDir) } else { Join-Path $root $BuildDir }
 $bin  = $buildRoot
 if (-not (Test-Path (Join-Path $bin 'SuperMarioBrosRecomp.exe')) -and
     (Test-Path (Join-Path $buildRoot 'Release\SuperMarioBrosRecomp.exe'))) {
@@ -56,6 +56,13 @@ $releaseLicenses = @{
   'LatoLatin-OFL.txt' = (Join-Path $root 'tools/release-licenses/LatoLatin-OFL.txt')
   'NotoSansSymbols2-OFL.txt' = (Join-Path $root 'tools/release-licenses/NotoSansSymbols2-OFL.txt')
   'OpenMoji-LICENSE.txt' = (Join-Path $root 'tools/release-licenses/OpenMoji-LICENSE.txt')
+}
+foreach ($dependency in @(
+  @{ Cache = 'recomp_net_SOURCE_DIR'; Notice = 'RecompNet-LICENSE.txt' },
+  @{ Cache = 'retcomm_rbengine_SOURCE_DIR'; Notice = 'RBEngine-LICENSE.txt' }
+)) {
+  $configured = [regex]::Match($cacheText, '(?m)^'+[regex]::Escape($dependency.Cache)+':[^=]+=(.+)\r?$')
+  if ($configured.Success) { $releaseLicenses[$dependency.Notice] = Join-Path ($configured.Groups[1].Value.TrimEnd("`r")) 'LICENSE' }
 }
 # Match the notices to the compiler runtime actually staged by a GNU build.
 if (Test-Path -LiteralPath (Join-Path $bin 'libstdc++-6.dll')) {
@@ -209,6 +216,17 @@ function Assert-ReleaseStage([string]$stage, [string]$sourceMods) {
       throw "release staging modified preloaded manifest: $stagedRelative"
     }
   }
+  foreach ($packageId in 'nesrecomp.developer.replay', 'nesrecomp.twitch-chat') {
+    $relative = "mods/packages/$packageId/1.0.0/manifest.toml"
+    $generated = Join-Path $bin $relative
+    $packaged = Join-Path $stage $relative
+    if (-not (Test-Path -LiteralPath $generated -PathType Leaf) -or
+        -not (Test-Path -LiteralPath $packaged -PathType Leaf) -or
+        (Get-FileHash -LiteralPath $generated).Hash -ne (Get-FileHash -LiteralPath $packaged).Hash) {
+      throw "Missing or changed generated framework manifest: $packageId"
+    }
+    $expectedModPaths += $relative
+  }
   $stagedModPaths = @($relativeFiles | Where-Object { $_ -like 'mods/*' })
   $modDifference = @(Compare-Object $expectedModPaths $stagedModPaths)
   if ($modDifference.Count -ne 0) {
@@ -359,6 +377,13 @@ function New-ReleaseZip {
     throw "missing preloaded mod catalog at $preloadedMods"
   }
   Copy-Item $preloadedMods (Join-Path $stage 'mods') -Recurse
+  foreach ($packageId in 'nesrecomp.developer.replay', 'nesrecomp.twitch-chat') {
+    $generated = Join-Path $bin "mods/packages/$packageId/1.0.0/manifest.toml"
+    if (-not (Test-Path -LiteralPath $generated -PathType Leaf)) { throw "Missing generated framework manifest: $packageId" }
+    $destination = Join-Path $stage "mods/packages/$packageId/1.0.0"
+    New-Item -ItemType Directory -Path $destination | Out-Null
+    Copy-Item -LiteralPath $generated -Destination $destination
+  }
 
   $readmeCommon | Out-File -Encoding ascii (Join-Path $stage 'README.txt')
   $zip = Join-Path $out 'SuperMarioBrosRecomp-windows-x64.zip'
