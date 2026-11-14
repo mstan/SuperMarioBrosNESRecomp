@@ -15,7 +15,7 @@ rom_crc32 = "d445f698"
 [[feature]]
 id = "backtracking"
 name = "Free Backtracking"
-description = "Scroll left through the current area without restoring earlier progress. Collected coins, changed blocks and defeated ordinary enemies stay changed. Distant ordinary enemies sleep and resume their saved state when revisited. Uses Mario or Luigi's single-player controls; fixed pipe rooms and scripted transitions keep their original bounds."
+description = "Scroll left through the current area without restoring earlier progress. Collected coins, changed blocks, earned checkpoints and defeated ordinary enemies stay changed. Distant ordinary enemies sleep and resume their saved state when revisited. Native enemy diagnostics use original activation timing with revisit bookkeeping. Single-player Mario or Luigi only; fixed pipe rooms and scripted transitions keep their original bounds."
 group = "Gameplay"
 exclusive_group = "world-traversal"
 exclusive_groups = ["player-controller"]

@@ -17,3 +17,4 @@ int game_widescreen_column_hook(uint16_t addr);
 void game_backtracking_set_enabled(int enabled);
 int game_backtracking_active(void);
 int game_backtracking_compose_native(uint32_t *out,const uint32_t *native);
+uint8_t game_backtracking_ram_read_hook(uint16_t pc,uint16_t addr,uint8_t value);

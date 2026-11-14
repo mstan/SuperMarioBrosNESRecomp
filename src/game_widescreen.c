@@ -235,7 +235,12 @@ static void apply(void) {
     nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.block",s_backtracking);
     nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.destroy",s_backtracking);
     nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.loopback",s_backtracking);
-    smb_ws_actors_configure(infrastructure,s_enemies);
+    /* Native diagnostics normally bypass residents. Backtracking still needs
+     * their retirement/sleep ledger; Classic keeps original activation timing
+     * without changing the stored enemy policy. */
+    SmbEnemyMode effective=s_backtracking && s_enemies==SMB_ENEMIES_NATIVE
+        ? SMB_ENEMIES_CLASSIC : s_enemies;
+    smb_ws_actors_configure(infrastructure,effective);
 }
 void game_backtracking_set_enabled(int enabled) {
 #ifdef SMB1_CYCLE
@@ -248,6 +253,24 @@ void game_backtracking_set_enabled(int enabled) {
 }
 int game_backtracking_compose_native(uint32_t *out,const uint32_t *native) {
     return game_backtracking_active()?render(out,256,240,0,native,NULL):0;
+}
+uint8_t game_backtracking_ram_read_hook(uint16_t pc,uint16_t addr,uint8_t value) {
+#ifdef SMB1_CYCLE
+    /* PlayerLoseLife's CMP ScreenLeft_PageLoc at $9206 decides midpoint
+     * eligibility. The stock camera only advances, so this operand represented
+     * furthest progress. Give only that comparison the retained parser view;
+     * the real camera and the remaining native death/retry routine stay intact. */
+    if (pc==0x9206 && addr==0x071a && s_backtracking &&
+        s_backtrack.initialized && !cyc_mod_isolated() &&
+        s_backtrack.area==((g_ram[0xe8]<<8)|g_ram[0xe7]) &&
+        s_backtrack.world==g_ram[0x75f]) {
+        int page=s_backtrack.high_water>>8;
+        if (page>value) return (uint8_t)page;
+    }
+#else
+    (void)pc;(void)addr;
+#endif
+    return value;
 }
 void game_widescreen_set_mod_enabled(int enabled) {
     s_enabled = enabled != 0;
