@@ -228,6 +228,22 @@ mkdir -p "$APPDIR/usr/bin/THIRD-PARTY-LICENSES" "$APPDIR/usr/bin/third_party/ymf
 cp "$REPO/THIRD-PARTY-LICENSES/README.md" "$APPDIR/usr/bin/THIRD-PARTY-LICENSES/README.md"
 cp "$REPO/third_party/ymfm/LICENSE" "$APPDIR/usr/bin/third_party/ymfm/LICENSE"
 
+# Keep the component and font notices with the exact packaged assets.
+ENGINE_SOURCE="${NESRECOMP_ROOT:-$REPO/nesrecomp}"
+UI_SOURCE="${NESRECOMP_RECOMP_UI:-$REPO/recomp-ui}"
+mkdir -p "$APPDIR/usr/bin/licenses"
+cp "$REPO/LICENSE" "$APPDIR/usr/bin/licenses/Game-LICENSE.txt"
+cp "$REPO/PERMISSIONS.md" "$APPDIR/usr/bin/licenses/Game-PERMISSIONS.md"
+cp "$ENGINE_SOURCE/LICENSE" "$APPDIR/usr/bin/licenses/NESRecomp-LICENSE.txt"
+cp "$ENGINE_SOURCE/runner/external/SDL2/COPYING.txt" "$APPDIR/usr/bin/licenses/SDL2-COPYING.txt"
+cp "$UI_SOURCE/LICENSE" "$APPDIR/usr/bin/licenses/RecompUI-LICENSE.txt"
+cp "$UI_SOURCE/src/third_party/imgui/LICENSE.txt" "$APPDIR/usr/bin/licenses/ImGui-LICENSE.txt"
+cp "$ENGINE_SOURCE/lib/recomp-net/LICENSE" "$APPDIR/usr/bin/licenses/RecompNet-LICENSE.txt"
+cp "$ENGINE_SOURCE/lib/retcomm-rbengine/LICENSE" "$APPDIR/usr/bin/licenses/RBEngine-LICENSE.txt"
+for notice in LatoLatin-OFL.txt NotoSansSymbols2-OFL.txt OpenMoji-LICENSE.txt; do
+  cp "$REPO/tools/release-licenses/$notice" "$APPDIR/usr/bin/licenses/$notice"
+done
+
 for manifest in "${REQUIRED_MOD_MANIFESTS[@]}"; do
   [ -f "$BUILT_DIR/mods/$manifest" ] || {
     echo "ERROR: built-in mod manifest missing: $manifest" >&2

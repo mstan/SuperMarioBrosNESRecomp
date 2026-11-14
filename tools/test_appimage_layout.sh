@@ -13,7 +13,13 @@ helper="$appdir/usr/bin/falcon_owner_assets"
 [ -x "$helper" ] || { echo "missing Linux owner-ROM helper" >&2; exit 1; }
 [ -x "$appdir/AppRun" ] || { echo "missing AppRun" >&2; exit 1; }
 
-for notice in THIRD-PARTY-LICENSES/README.md third_party/ymfm/LICENSE; do
+for notice in THIRD-PARTY-LICENSES/README.md third_party/ymfm/LICENSE \
+    licenses/Game-LICENSE.txt licenses/Game-PERMISSIONS.md \
+    licenses/NESRecomp-LICENSE.txt licenses/SDL2-COPYING.txt \
+    licenses/RecompUI-LICENSE.txt licenses/ImGui-LICENSE.txt \
+    licenses/RecompNet-LICENSE.txt licenses/RBEngine-LICENSE.txt \
+    licenses/LatoLatin-OFL.txt licenses/NotoSansSymbols2-OFL.txt \
+    licenses/OpenMoji-LICENSE.txt; do
     [ -s "$appdir/usr/bin/$notice" ] || { echo "missing attribution: $notice" >&2; exit 1; }
 done
 required_assets='fonts/LatoLatin-Bold.ttf
