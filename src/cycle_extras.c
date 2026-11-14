@@ -65,5 +65,5 @@ const CycHostExtras *cyc_host_extras(void) {
         {"--widescreen",true,"fit|16:9|21:9|32:9|off"},{"--widescreen-hud",true,"edges|center"},{"--widescreen-enemies",true,"viewport|classic|native"},{"--widescreen-camera",true,"edges|centered"},
         {"--coop",true,"0|2|3|4 logical simultaneous players"},{"--coop-pause",true,"player|shared"}
     };
-    static const CycHostExtras x={.present=present,.power_on=power_on,.input=input,.frame_begin=frame_begin,.frame_end=frame_end,.event=event,.options=options,.option_count=sizeof options/sizeof options[0],.option=option,.tcp_setup=tcp_setup,.audio_rate=NES_MOD_AUDIO_SAMPLE_RATE,.audio_mix=audio_mix,.state_loaded=state_loaded};return &x;
+    static const CycHostExtras x={.present=present,.power_on=power_on,.input=input,.frame_begin=frame_begin,.frame_end=frame_end,.event=event,.options=options,.option_count=sizeof options/sizeof options[0],.option=option,.tcp_setup=tcp_setup,.audio_rate=NES_MOD_AUDIO_SAMPLE_RATE,.audio_mix=audio_mix,.state_loaded=state_loaded,.initial_fit_width=426};return &x;
 }
