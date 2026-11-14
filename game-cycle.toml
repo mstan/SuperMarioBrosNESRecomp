@@ -261,3 +261,21 @@ crc32 = 0x06de3e1f
 addr = 0x864c
 length = 16
 crc32 = 0x1114a992
+
+# Free backtracking: original UpdScrollVar entry.
+[[mod_function_hook]]
+addr = 0xaf6f
+length = 16
+crc32 = 0xd1039639
+
+# Free backtracking: original WriteBlockMetatile entry.
+[[mod_function_hook]]
+addr = 0x8a6d
+length = 16
+crc32 = 0x6441b266
+
+# Free backtracking: original DestroyBlockMetatile entry.
+[[mod_function_hook]]
+addr = 0x8a6b
+length = 16
+crc32 = 0xbbd74fa1
