@@ -47,6 +47,7 @@ DEBUG_CMAKE_FLAGS=( -DNESRECOMP_ENABLE_TRACE=ON )
 REQUIRED_MOD_MANIFESTS=(
   "packages/super-mario-bros.enhancement.voxel-first-person/1.0.0/manifest.toml"
   "packages/super-mario-bros.enhancement.widescreen/1.0.0/manifest.toml"
+  "packages/super-mario-bros.gameplay.free-backtracking/1.0.0/manifest.toml"
   "packages/super-mario-bros.gameplay.metroid-samus-player-replacement/1.0.0/manifest.toml"
   "packages/super-mario-bros.gameplay.s3k-sonic-player-replacement/1.0.0/manifest.toml"
   "packages/super-mario-bros.gameplay.simultaneous-coop/1.0.0/manifest.toml"

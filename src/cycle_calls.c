@@ -6,6 +6,7 @@ void func_8231_b0(void) { smb1_cycle_call(0x8231); }
 void func_838B_b0(void) { smb1_cycle_call(0x838b); }
 void func_864C_b0(void) { smb1_cycle_call(0x864c); }
 void func_86FF_b0(void) { smb1_cycle_call(0x86ff); }
+void func_8A39_b0(void) { smb1_cycle_call(0x8a39); }
 void func_8A6B_b0(void) { smb1_cycle_call(0x8a6b); }
 void func_8A6D_b0(void) { smb1_cycle_call(0x8a6d); }
 void func_8EDD_b0(void) { smb1_cycle_call(0x8edd); }

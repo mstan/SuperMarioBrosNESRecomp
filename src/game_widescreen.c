@@ -19,6 +19,14 @@
 #endif
 
 static int s_enabled, s_ready, s_edges = 1;
+static int s_backtracking;
+typedef struct {
+    uint32_t version;
+    int32_t high_water;
+    uint16_t area;
+    uint8_t world, initialized, scroll_before, pending;
+} BacktrackState;
+static BacktrackState s_backtrack;
 static int s_room_edges = 1;
 static NesAspectMode s_aspect = NES_ASPECT_FIT;
 static uint64_t s_wide_frames, s_native_frames;
@@ -54,10 +62,23 @@ static int ws_session_apply(const char *v) {
     s_enemies=(SmbEnemyMode)enemies;game_widescreen_set_camera(camera?"edges":"centered");game_widescreen_set_mod_enabled(on);return 1;
 }
 static void ws_session_restore(void){game_widescreen_set_mod_enabled(0);}
+static int bt_session_get(char *out,int cap) { return snprintf(out,(size_t)cap,"%d",s_backtracking); }
+static int bt_session_offer(char *out,int cap) {
+    int on=nes_mod_feature_selected("super-mario-bros.gameplay.free-backtracking","backtracking");
+    if(nes_mod_feature_selected("super-mario-bros.gameplay.simultaneous-coop","coop"))on=0;
+    return snprintf(out,(size_t)cap,"%d",on);
+}
+static int bt_session_apply(const char *v) {
+    if (strcmp(v,"0") && strcmp(v,"1")) return 0;
+    game_backtracking_set_enabled(*v=='1'); return 1;
+}
+static void bt_session_restore(void) { game_backtracking_set_enabled(0); }
 NES_MOD_CONSTRUCTOR(register_cycle_ws_session) {
     nes_runner_register_session_keys();
     nes_netplay_session_register("ws",ws_session_get,ws_session_apply,ws_session_restore);
     nes_netplay_session_set_offer("ws",ws_session_offer);nes_netplay_session_set_offer("vw",ws_width_offer);
+    nes_netplay_session_register("bk",bt_session_get,bt_session_apply,bt_session_restore);
+    nes_netplay_session_set_offer("bk",bt_session_offer);
 }
 #endif
 static int s_render_camera, s_render_native_x0, s_view_left;
@@ -65,8 +86,12 @@ static int gameplay(void) {
     return (g_ram[0x770] == 1 && g_ram[0x772] == 3) || g_ram[0x770] == 2;
 }
 static int camera_x(void) { return (g_ram[0x71a] << 8) | g_ram[0x71c]; }
+int game_backtracking_active(void) {
+    return s_backtracking && gameplay() && g_smb_ws_world.valid &&
+        !g_smb_ws_world.fixed_rooms && !smb_ws_world_busy();
+}
 static int anchor_camera(int width) {
-    return s_enabled && s_room_edges && width > 256 &&
+    return (s_enabled || s_backtracking) && s_room_edges && width > 256 &&
         s_enemies != SMB_ENEMIES_NATIVE && gameplay() && g_smb_ws_world.valid;
 }
 int game_widescreen_view_left(int native_camera, int width) {
@@ -123,7 +148,8 @@ static int place_hud_sprite(int slot, int x, int y, int *out_x, void *user) {
 static int render(uint32_t *out, int width, int height, int native_x0,
                   const uint32_t *native, void *user) {
     (void)user;
-    if (!s_enabled || !gameplay() || !g_smb_ws_world.valid || !(g_ppumask & 8)) {
+    int cached = game_backtracking_active() && g_ram[0x0e]>=7;
+    if ((!s_enabled && !cached) || !gameplay() || !g_smb_ws_world.valid || !(g_ppumask & 8)) {
         s_native_frames++; return 0;
     }
     int cam = render_camera();
@@ -152,11 +178,10 @@ static int render(uint32_t *out, int width, int height, int native_x0,
      * sprite-zero timing, transient tiles and the original play area. */
     int first = play_x0 < 0 ? -play_x0 : 0;
     int last = play_x0 + 256 > width ? width - play_x0 : 256;
-    for (int y = 32; y < height; y++) for (int x = first; x < last; x++) {
+    for (int y = 32; !cached && y < height; y++) for (int x = first; x < last; x++) {
         out[y*width+x+play_x0] = native[y*256+x];
         s_opaque[y*width+x+play_x0]=(uint8_t)ppu_renderer_background_opaque(x,y);
     }
-    smb_ws_actors_draw(out,width,play_x0,cam,s_opaque);
     const uint32_t *hud = native;
 #ifdef SMB1_CYCLE
     static uint32_t hud_background[256*240];
@@ -178,9 +203,10 @@ static int render(uint32_t *out, int width, int height, int native_x0,
 #ifdef SMB1_CYCLE
     if (separate_sprites) {
         HudSpritePlacement p = {play_x0,native_x0,width};
-        cyc_render_sprites(out,width,32,play_x0,s_opaque,place_hud_sprite,&p);
+        cyc_render_sprites(out,width,cached?height:32,play_x0,s_opaque,place_hud_sprite,&p);
     }
 #endif
+    smb_ws_actors_draw(out,width,play_x0,cam,s_opaque);
     ppu_renderer_set_background_opaque_frame(s_opaque,width,height);
     s_wide_frames++;
     return 1;
@@ -191,19 +217,60 @@ static void apply(void) {
     g_ws_oam_sidecar = 0;
     g_ws_obj_ctx_valid = 0;
     g_ws_eff_left = g_ws_eff_right = -1;
-    if (s_enabled) {
+    int infrastructure=s_enabled || s_backtracking;
+    if (infrastructure) {
         if (!ppu_renderer_set_custom_render(render, NULL)) {
             s_enabled = 0;
             nes_video_set_aspect_mode(NES_ASPECT_STOCK);
-        } else nes_video_set_aspect_mode(s_aspect);
+        } else nes_video_set_aspect_mode(s_enabled?s_aspect:NES_ASPECT_STOCK);
     } else {
         ppu_renderer_set_custom_render(NULL, NULL);
         nes_video_set_aspect_mode(NES_ASPECT_STOCK);
     }
-    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.column", s_enabled);
-    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.area", s_enabled);
-    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.collision-column", s_enabled);
-    smb_ws_actors_configure(s_enabled,s_enemies);
+    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.column", infrastructure);
+    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.area", infrastructure);
+    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.collision-column", infrastructure);
+    nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.scroll",s_backtracking);
+    nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.parser",s_backtracking);
+    nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.block",s_backtracking);
+    nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.destroy",s_backtracking);
+    nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.loopback",s_backtracking);
+    /* Native diagnostics normally bypass residents. Backtracking still needs
+     * their retirement/sleep ledger; Classic keeps original activation timing
+     * without changing the stored enemy policy. */
+    SmbEnemyMode effective=s_backtracking && s_enemies==SMB_ENEMIES_NATIVE
+        ? SMB_ENEMIES_CLASSIC : s_enemies;
+    smb_ws_actors_configure(infrastructure,effective);
+}
+void game_backtracking_set_enabled(int enabled) {
+#ifdef SMB1_CYCLE
+    s_backtracking=enabled!=0;
+#else
+    (void)enabled; s_backtracking=0;
+#endif
+    memset(&s_backtrack,0,sizeof s_backtrack);s_backtrack.version=1;
+    apply();
+}
+int game_backtracking_compose_native(uint32_t *out,const uint32_t *native) {
+    return game_backtracking_active()?render(out,256,240,0,native,NULL):0;
+}
+uint8_t game_backtracking_ram_read_hook(uint16_t pc,uint16_t addr,uint8_t value) {
+#ifdef SMB1_CYCLE
+    /* PlayerLoseLife's CMP ScreenLeft_PageLoc at $9206 decides midpoint
+     * eligibility. The stock camera only advances, so this operand represented
+     * furthest progress. Give only that comparison the retained parser view;
+     * the real camera and the remaining native death/retry routine stay intact. */
+    if (pc==0x9206 && addr==0x071a && s_backtracking &&
+        s_backtrack.initialized && !cyc_mod_isolated() &&
+        s_backtrack.area==((g_ram[0xe8]<<8)|g_ram[0xe7]) &&
+        s_backtrack.world==g_ram[0x75f]) {
+        int page=s_backtrack.high_water>>8;
+        if (page>value) return (uint8_t)page;
+    }
+#else
+    (void)pc;(void)addr;
+#endif
+    return value;
 }
 void game_widescreen_set_mod_enabled(int enabled) {
     s_enabled = enabled != 0;
@@ -222,26 +289,95 @@ void game_widescreen_set_camera(const char *camera) {
 }
 void game_widescreen_init(void) {
     smb_ws_world_reset(); smb_ws_actors_reset(); s_wide_frames = s_native_frames = 0;
+    memset(&s_backtrack,0,sizeof s_backtrack);s_backtrack.version=1;
     s_ready = 1; apply();
 }
 void game_widescreen_update(void) {
-    if (s_enabled && gameplay()) { smb_ws_world_update(); smb_ws_actors_update(); }
+    if ((s_enabled || s_backtracking) && gameplay()) { smb_ws_world_update(); smb_ws_actors_update(); }
 }
-void game_widescreen_begin_frame(void) { if (s_enabled) smb_ws_actors_begin_frame(); }
+void game_widescreen_begin_frame(void) {
+    if (s_enabled || s_backtracking) {
+        if (game_backtracking_active()) smb_ws_world_bind_collision(camera_x());
+        smb_ws_actors_begin_frame();
+    }
+}
 int game_widescreen_column_hook(uint16_t addr) {
     (void)addr;
-    if (s_enabled && !smb_ws_world_busy() && g_ram[0x770] != 0)
+    if ((s_enabled || s_backtracking) && !smb_ws_world_busy() && g_ram[0x770] != 0)
         smb_ws_world_observe_column();
     return 0; /* Observe only; the original routine always executes. */
 }
 static int area_hook(uint16_t addr) {
     (void)addr;
-    if (s_enabled && !smb_ws_world_busy()) { smb_ws_world_reset(); smb_ws_actors_reset(); }
+    if ((s_enabled || s_backtracking) && !smb_ws_world_busy()) {
+        smb_ws_world_reset(); smb_ws_actors_reset();
+        memset(&s_backtrack,0,sizeof s_backtrack);s_backtrack.version=1;
+    }
     return 0;
 }
 static int collision_column_hook(uint16_t addr) {
     (void)addr;
-    if (s_enabled) smb_ws_world_begin_column();
+    if (s_enabled || s_backtracking) smb_ws_world_begin_column();
+    return 0;
+}
+static int backtracking_scroll(uint16_t addr) {
+    (void)addr;
+    if (!game_backtracking_active() || g_ram[0x0e]!=8) return 0;
+#ifdef SMB1_CYCLE
+    if (cyc_mod_isolated()) return 0;
+#endif
+    int cam=camera_x();
+    if (!s_backtrack.initialized || s_backtrack.area!=g_smb_ws_world.area_data || s_backtrack.world!=g_ram[0x75f]) {
+        s_backtrack.high_water=cam;s_backtrack.area=g_smb_ws_world.area_data;
+        s_backtrack.world=g_ram[0x75f];s_backtrack.initialized=1;
+    }
+    s_backtrack.scroll_before=g_ram[0x73d];s_backtrack.pending=1;
+    int dx=(int8_t)(g_ram[0x6ff]+g_ram[0x3a1]);
+    int player=(g_ram[0x6d]<<8)|g_ram[0x86];
+    if (dx<0 && player-cam<=80 && !g_ram[0x723] && !g_ram[0x785]) {
+        int left,right;smb_ws_world_bounds(cam,&left,&right);
+        int next=cam+dx;if(next<left)next=left;
+        g_ram[ScreenLeft_PageLoc]=(uint8_t)(next>>8);
+        g_ram[ScreenLeft_X_Pos]=g_ram[HorizontalScroll]=(uint8_t)next;
+        g_ram[ScreenRight_PageLoc]=(uint8_t)((next+255)>>8);
+        g_ram[ScreenRight_X_Pos]=(uint8_t)(next+255);
+        g_ram[Mirror_PPU_CTRL_REG1]=(uint8_t)((g_ram[Mirror_PPU_CTRL_REG1]&~1)|((next>>8)&1));
+    }
+    /* The native routine still owns screen clamping, platform-force clearing,
+     * rightward camera movement, and its normal register/cycle contract. */
+    return 0;
+}
+static int backtracking_parser(uint16_t addr) {
+    (void)addr;
+    if (!s_backtracking || !s_backtrack.pending || smb_ws_world_busy()) return 0;
+#ifdef SMB1_CYCLE
+    if (cyc_mod_isolated()) return 0;
+#endif
+    int cam=camera_x(),new_distance=cam>s_backtrack.high_water?cam-s_backtrack.high_water:0;
+    g_ram[0x73d]=(uint8_t)(s_backtrack.scroll_before+new_distance);
+    if (cam>s_backtrack.high_water) s_backtrack.high_water=cam;
+    s_backtrack.pending=0;
+    return 0; /* Pending native parser tasks still finish in the normal way. */
+}
+static int backtracking_block(uint16_t addr) {
+    if (!game_backtracking_active()) return 0;
+#ifdef SMB1_CYCLE
+    if (cyc_mod_isolated()) return 0;
+#endif
+    smb_ws_world_write_block(addr==0x8a6b?0:g_cpu.A);
+    return 0;
+}
+static int backtracking_loopback(uint16_t addr) {
+    (void)addr;
+    if (!s_backtracking || smb_ws_world_busy()) return 0;
+#ifdef SMB1_CYCLE
+    if (cyc_mod_isolated()) return 0;
+#endif
+    /* The native castle maze deliberately moves both parser and camera back
+     * four pages. That is a new native area pass, not a player revisit: retain
+     * the factory reset/reparse behavior and adopt its new high-water mark. */
+    smb_ws_world_reset();smb_ws_actors_reset();
+    memset(&s_backtrack,0,sizeof s_backtrack);s_backtrack.version=1;
     return 0;
 }
 int game_widescreen_arg(const char *key, const char *value) {
@@ -305,12 +441,12 @@ int game_widescreen_debug(const char *cmd, int id) {
     if (strcmp(cmd, "smb_ws_state")) return 0;
     const SmbWsWorld *w = &g_smb_ws_world;
     debug_server_send_fmt("{\"id\":%d,\"enabled\":%d,\"custom_renderer\":%d,"
-        "\"render_width\":%d,\"camera_x\":%d,\"area_data\":%u,"
+        "\"render_width\":%d,\"camera_x\":%d,\"area_data\":%u,\"backtracking\":%d,\"parser_high_water\":%d,"
         "\"view_left\":%d,\"native_x0\":%d,\"room_edges\":%d,\"area_end\":%u,\"fixed_rooms\":%u,"
         "\"decoded_columns\":%u,\"verified_columns\":%u,\"mismatched_columns\":%u,"
         "\"first_mismatch_column\":%d,\"first_mismatch_row\":%d,"
         "\"expected\":%u,\"actual\":%u,\"wide_frames\":%llu,\"native_frames\":%llu}",
-        id,s_enabled,ppu_renderer_custom_render_active(),g_render_width,camera_x(),w->area_data,
+        id,s_enabled,ppu_renderer_custom_render_active(),g_render_width,camera_x(),w->area_data,s_backtracking,s_backtrack.high_water,
         s_view_left,s_render_native_x0,s_room_edges,w->area_end,w->fixed_rooms,
         w->decoded_columns,w->verified_columns,w->mismatched_columns,w->first_mismatch_column,
         w->first_mismatch_row,w->first_expected,w->first_actual,
@@ -336,10 +472,27 @@ static int load_world(const uint8_t *data, int len) {
     /* Settings belong to Mods, never to the save being loaded. */
     return 1;
 }
+static int save_backtrack(uint8_t *data,int cap) {
+    if (cap<(int)sizeof s_backtrack) return -1;
+    memcpy(data,&s_backtrack,sizeof s_backtrack);return sizeof s_backtrack;
+}
+static int load_backtrack(const uint8_t *data,int len) {
+    if (!len) {memset(&s_backtrack,0,sizeof s_backtrack);s_backtrack.version=1;return 1;}
+    if (len!=sizeof s_backtrack) return 0;
+    BacktrackState candidate;memcpy(&candidate,data,sizeof candidate);
+    if (candidate.version!=1 || candidate.high_water<0 || candidate.high_water>=SMB_WS_META_COLUMNS*16 || candidate.initialized>1 || candidate.pending>1) return 0;
+    s_backtrack=candidate;return 1;
+}
 NES_MOD_CONSTRUCTOR(register_custom_widescreen) {
     if (!nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.column",0x88ae,game_widescreen_column_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.area",0x8fe4,area_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.collision-column",0x93fc,collision_column_hook) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.backtracking.scroll",0xaf93,backtracking_scroll) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.backtracking.parser",0xaf6f,backtracking_parser) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.backtracking.block",0x8a6d,backtracking_block) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.backtracking.destroy",0x8a6b,backtracking_block) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.backtracking.loopback",0xc08c,backtracking_loopback) ||
+        !nes_mod_register_savestate_hook("super-mario-bros.backtracking",save_backtrack,load_backtrack) ||
         !nes_mod_register_savestate_hook("super-mario-bros.widescreen.world",save_world,load_world))
         fprintf(stderr, "[Widescreen] Failed to register custom renderer hooks\n");
 }

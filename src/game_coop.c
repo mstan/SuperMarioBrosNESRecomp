@@ -774,6 +774,7 @@ static int coop_session_offer(char *out,int cap) {
 /* The package excludes widescreen: whatever the text said, co-op wins. */
 static void coop_session_finalize(void) { if(s_count) {
 #ifdef SMB1_CYCLE
+    game_backtracking_set_enabled(0);
     game_widescreen_set_mod_enabled(0);
 #else
     g_nes_config.widescreen=0;
