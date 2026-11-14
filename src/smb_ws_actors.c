@@ -410,7 +410,9 @@ void smb_ws_actors_update(void) {
         if (native_ticked[n]) continue; /* already advanced by this frame's native routine */
         Guest g;
         if (!begin(&g,a)) continue;
-        int run=a->active && !(g.ram[0x776]&1);
+        /* Cycle isolation does not populate Guest.ram; the live isolated RAM
+         * retains the current game's pause flag on both backends. */
+        int run=a->active && !(g_ram[0x776]&1);
         if (run && !g_ram[0x747]) {
             if (g_ram[0x78a]) g_ram[0x78a]--;
             if (g_ram[0x77f]==0x14 && g_ram[0x796]) g_ram[0x796]--;
