@@ -92,7 +92,7 @@ Simultaneous Co-op is available in Mods > Gameplay and is disabled by default.
 Choose 2, 3, or 4 players: Mario, Luigi, Wario, and Waluigi. Assign each player's
 keyboard or gamepad in Controls. Co-op uses a shared 4:3 camera, shared resources,
 and team lives. Dead players return at the next level or team retry.
-Co-op is mutually exclusive with widescreen, Voxel 3D, and all character
+Co-op is mutually exclusive with Free Backtracking, widescreen, Voxel 3D, and all character
 replacement mods. Enabling co-op replaces those conflicting selections.
 
 Experimental character replacement mods are default-off and mutually exclusive.
@@ -123,6 +123,14 @@ preserve explicit saved selections. The camera anchors at area edges and centers
 fixed rooms; Mods also offers the previous centered camera. Special objects and linked balance platforms
 still have native limits; this has not been validated through every world.
 Experimental mod savestates are not compatible across all builds.
+
+Free Backtracking is enabled for fresh profiles. In single-player Mario or Luigi
+play, the camera follows travel left and right within the current area. Coins,
+changed blocks, earned checkpoints and defeated ordinary enemies retain progress;
+distant ordinary enemies sleep and resume when revisited. Disable it separately
+in Mods for the original one-way scrolling. It also works with the original 4:3
+view. Fixed pipe rooms and scripted transitions keep their original bounds.
+Updates preserve an explicit saved Off choice. Whole-world coverage is incomplete.
 '@
 
 function Get-StageRelativePath([string]$stage, [string]$path) {
