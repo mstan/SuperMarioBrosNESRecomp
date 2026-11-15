@@ -1,0 +1,26 @@
+format_version = 1
+id = "super-mario-bros.gameplay.free-backtracking"
+version = "1.0.0"
+name = "Free Backtracking"
+author = "NESRecomp"
+description = "Return to earlier parts of the current area with a camera that follows left and right."
+license = "MIT"
+resolver = "declarative"
+save_compatibility = "free-backtracking-v1"
+
+[[target]]
+game_id = "super-mario-bros-world"
+rom_crc32 = "d445f698"
+
+[[feature]]
+id = "backtracking"
+name = "Free Backtracking"
+description = "Scroll left through the current area without restoring earlier progress. Collected coins, changed blocks, earned checkpoints and defeated ordinary enemies stay changed. Distant ordinary enemies sleep and resume their saved state when revisited. Single-player Mario or Luigi only; fixed pipe rooms and scripted transitions keep their original bounds."
+group = "Gameplay"
+exclusive_group = "world-traversal"
+exclusive_groups = ["player-controller"]
+default_enabled = true
+
+[[plugin]]
+feature = "backtracking"
+id = "super-mario-bros.backtracking"

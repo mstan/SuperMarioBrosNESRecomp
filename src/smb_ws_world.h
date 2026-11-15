@@ -34,3 +34,6 @@ int smb_ws_world_busy(void);
 int smb_ws_world_flag_x(void);
 void smb_ws_world_begin_column(void);
 void smb_ws_world_bounds(int native_camera, int *left, int *right);
+/* Reuse current progress when the camera returns to an older native page. */
+void smb_ws_world_bind_collision(int native_camera);
+void smb_ws_world_write_block(uint8_t metatile);

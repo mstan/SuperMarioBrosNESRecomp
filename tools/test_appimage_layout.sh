@@ -41,6 +41,7 @@ actual_assets=$(cd "$appdir/usr/bin/assets" && find . -type f -printf '%P\n' | s
 
 required_mods='packages/super-mario-bros.enhancement.voxel-first-person/1.0.0/manifest.toml
 packages/super-mario-bros.enhancement.widescreen/1.0.0/manifest.toml
+packages/super-mario-bros.gameplay.free-backtracking/1.0.0/manifest.toml
 packages/super-mario-bros.gameplay.metroid-samus-player-replacement/1.0.0/manifest.toml
 packages/super-mario-bros.gameplay.s3k-sonic-player-replacement/1.0.0/manifest.toml
 packages/super-mario-bros.gameplay.simultaneous-coop/1.0.0/manifest.toml
@@ -88,6 +89,13 @@ enabled = false
 [feature.values]
 aspect = "21-9"
 hud = "center"
+[[package]]
+id = "super-mario-bros.gameplay.free-backtracking"
+version = "1.0.0"
+[[feature]]
+package_id = "super-mario-bros.gameplay.free-backtracking"
+id = "backtracking"
+enabled = false
 STATE
 APPIMAGE="$state/SuperMarioBrosRecomp.AppImage" \
 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy NESRECOMP_NO_LAUNCHER=1 \
@@ -110,6 +118,10 @@ assert any(field(block, 'package_id', '"super-mario-bros.enhancement.widescreen"
            and field(block, 'aspect', '"21-9"')
            and field(block, 'hud', '"center"')
            for block in re.split(r'(?m)^\[\[feature\]\]\s*$', state)[1:]), 'AppRun lost the saved widescreen choice'
+assert any(field(block, 'package_id', '"super-mario-bros.gameplay.free-backtracking"')
+           and field(block, 'id', '"backtracking"')
+           and field(block, 'enabled', 'false')
+           for block in re.split(r'(?m)^\[\[feature\]\]\s*$', state)[1:]), 'AppRun lost the saved backtracking choice'
 PY
 
 (cd "$appdir" && find . -type f -print0 | sort -z | xargs -0 sha256sum) > "$after"

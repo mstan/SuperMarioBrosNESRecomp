@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(NESRECOMP_ROOT "${CMAKE_SOURCE_DIR}/nesrecomp" CACHE PATH "NESRecomp engine checkout")
 option(NESRECOMP_STARTUP_DIAGNOSTICS "Record startup logs and Windows crash dumps" ON)
-set(NESRECOMP_GAME_VERSION "1.12.8" CACHE STRING "Game release version")
+set(NESRECOMP_GAME_VERSION "1.12.9" CACHE STRING "Game release version")
 
 # nesrecomp/ and recomp-ui/ are git submodules (see .gitmodules); the pinned
 # commit is the gitlink recorded in this repo. After cloning run setup.sh/.bat
@@ -72,6 +72,7 @@ if(NESRECOMP_BACKEND STREQUAL "cycle")
             src/game_sonic_audio.c
             src/game_sonic_items.c
             mods/widescreen_plugin.c
+            mods/backtracking_plugin.c
             mods/voxel_plugin.c
             mods/smash64_player_plugin.c
             mods/zelda2_player_plugin.c
@@ -134,6 +135,7 @@ add_executable(SuperMarioBrosRecomp
     src/game_sonic_audio.c
     src/game_sonic_items.c
     mods/widescreen_plugin.c
+    mods/backtracking_plugin.c
     mods/voxel_plugin.c
     mods/smash64_player_plugin.c
     mods/zelda2_player_plugin.c
