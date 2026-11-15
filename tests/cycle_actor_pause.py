@@ -46,8 +46,11 @@ class Snapshot:
             if spawn == 352 and kind == 6 and member == 0:
                 # Movement, fractions and timers must freeze during guest pause.
                 motion = [state[n] for n in (3,4,5,6,7,8,9,11,12,13,17,18)]
+                # Actor v4 stores 384 records followed by 40-byte packets.
+                packet = self.residents[22+384*38+i*40:22+384*38+(i+1)*40]
                 return dict(spawn_x=spawn, x=state[5]*256+state[6], y=state[9]+(state[8]-1)*256,
-                            loaded=loaded, active=active, dead=dead, slot=slot, motion=motion)
+                            loaded=loaded, active=active, dead=dead, slot=slot, motion=motion,
+                            displayed_sprites=packet[0], packet=list(packet))
         raise AssertionError('Authored opening Goomba was not found')
 
 
@@ -89,6 +92,7 @@ def main():
     assert a.ram[0x776]&1 and b.ram[0x776]&1 and not end.ram[0x776]&1, poses
     assert poses['paused_a']['loaded'] and poses['paused_a']['active'] and not poses['paused_a']['dead'] and poses['paused_a']['slot'] == -1, poses
     assert poses['paused_a']['motion'] == poses['paused_b']['motion'] and poses['paused_b']['slot'] == -1, 'Detached actor advanced while the game was paused: '+json.dumps(poses)
+    assert poses['paused_a']['displayed_sprites'] > 0 and poses['paused_a']['packet'] == poses['paused_b']['packet'], 'Paused detached actor lost its displayed packet: '+json.dumps(poses)
     assert poses['resumed']['x'] < poses['paused_b']['x'], 'Detached actor did not resume: '+json.dumps(poses)
     run('restored', ['--load-state', str(out/'paused-a.state'), '--save-state', '479:'+str(out/'restored.state'),
                      '--hash-out', str(out/'restored.hash'), '--screenshot', str(out/'restored.png'),
@@ -99,8 +103,42 @@ def main():
     assert Snapshot(out/'restored.state').residents == end.residents
     assert (out/'continuous.png').read_bytes() == (out/'restored.png').read_bytes()
     assert (out/'continuous-present.png').read_bytes() == (out/'restored-present.png').read_bytes()
-    (out/'result.json').write_text(json.dumps(dict(passed=True, observations=poses, continuation_frames=90), indent=2))
-    print('PASS: detached actor pause/resume and current-build continuation')
+    (out/'result.json').write_text(json.dumps(dict(passed=False, observations=poses, continuation_frames=90, native_margin_pending=True), indent=2))
+    # At this later ordinary cadence the same Goomba owns a native slot but
+    # remains in the extended right margin. Paused OAM cannot draw that margin.
+    schedule.write_text('120 START\n122 -\n420 START\n422 -\n480 START\n482 -\n')
+    run('native-margin', ['--frames', '540', '--save-state', '449:'+str(out/'native-paused-a.state'),
+                          '--save-state', '469:'+str(out/'native-paused-b.state'),
+                          '--save-state', '539:'+str(out/'native-end.state'),
+                          '--hash-out', str(out/'native-margin.hash'),
+                          '--screenshot', str(out/'native-margin-native.png'),
+                          '--present-out', str(out/'native-margin.png')])
+    na, nb, ne = [Snapshot(out/name) for name in ('native-paused-a.state', 'native-paused-b.state', 'native-end.state')]
+    native = dict(paused_a=na.first_goomba(), paused_b=nb.first_goomba(), resumed=ne.first_goomba())
+    assert na.ram[0x776]&1 and nb.ram[0x776]&1 and not ne.ram[0x776]&1
+    assert native['paused_a']['slot'] >= 0 and 256 <= native['paused_a']['x'] <= 304, native
+    assert native['paused_a']['displayed_sprites'] > 0, native
+    assert native['paused_a']['packet'] == native['paused_b']['packet'], native
+    assert native['paused_a']['motion'] == native['paused_b']['motion'], native
+    assert native['resumed']['x'] < native['paused_b']['x'], native
+    result = json.loads((out/'result.json').read_text())
+    run('native-restored', ['--frames', '540', '--load-state', str(out/'native-paused-a.state'),
+                            '--save-state', '539:'+str(out/'native-restored.state'),
+                            '--hash-out', str(out/'native-restored.hash'),
+                            '--screenshot', str(out/'native-restored-native.png'),
+                            '--present-out', str(out/'native-restored.png')])
+    reference = {line.split()[0]:line for line in (out/'native-margin.hash').read_bytes().splitlines()}
+    resumed = (out/'native-restored.hash').read_bytes().splitlines()
+    assert len(resumed) == 90 and all(reference[line.split()[0]] == line for line in resumed)
+    assert Snapshot(out/'native-restored.state').residents == ne.residents
+    assert (out/'native-restored-native.png').read_bytes() == (out/'native-margin-native.png').read_bytes()
+    assert (out/'native-restored.png').read_bytes() == (out/'native-margin.png').read_bytes()
+    result['passed'] = True
+    result.pop('native_margin_pending', None)
+    result['native_margin'] = native
+    result['native_continuation_frames'] = 90
+    (out/'result.json').write_text(json.dumps(result, indent=2))
+    print('PASS: detached/native-margin packets pause and resume; current-build continuation')
 
 
 if __name__ == '__main__':

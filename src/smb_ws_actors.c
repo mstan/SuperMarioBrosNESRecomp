@@ -377,12 +377,16 @@ static int cull_hook(uint16_t addr) {
 void smb_ws_actors_begin_frame(void) {
     if (!s_enabled || runtime_get_vblank_depth()>1) return;
     s_render_wide=g_render_width>256 || game_backtracking_active();
+    /* SMB retains OAM while native pause skips object graphics. Keep the
+     * matching resident packets instead of consuming an empty next bank. */
+    if (g_ram[0x776]&1) return;
     memcpy(s.display,s.next,sizeof s.display); memset(s.next,0,sizeof s.next);
     s.flag_display=s.flag_next; memset(&s.flag_next,0,sizeof s.flag_next);
     s.camera=camera();
 }
 void smb_ws_actors_update(void) {
-    if (!s_enabled || !gameplay() || !ensure() || runtime_get_vblank_depth()>1) return;
+    if (!s_enabled || !gameplay() || (g_ram[0x776]&1) ||
+        !ensure() || runtime_get_vblank_depth()>1) return;
     int cam=camera(),left,right;
     game_widescreen_actor_range(cam,g_render_width,PAD,&left,&right);
     uint8_t native_ticked[MAX_ACTORS]={0};
