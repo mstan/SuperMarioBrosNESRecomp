@@ -40,6 +40,9 @@ $cycleBuild = Select-String -LiteralPath $cmakeCache -Pattern '^NESRECOMP_BACKEN
 if (-not $cycleBuild) { throw 'release packaging requires the default cycle backend' }
 $mingwRuntimeFiles = @('libgcc_s_seh-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll')
 $cacheText = Get-Content -LiteralPath $cmakeCache -Raw
+$compilerSetting = [regex]::Match($cacheText, '(?m)^CMAKE_CXX_COMPILER:[^=]+=(.*)\r?$')
+$compilerRuntimeDir = if ($compilerSetting.Success) { Split-Path -Parent $compilerSetting.Groups[1].Value.TrimEnd("`r") } else { '' }
+$hasMingwRuntimes = $compilerRuntimeDir -and (Test-Path -LiteralPath (Join-Path $compilerRuntimeDir 'libstdc++-6.dll') -PathType Leaf)
 $engineSetting = [regex]::Match($cacheText, '(?m)^NESRECOMP_ROOT:[^=]+=(.*)\r?$')
 $uiSetting = [regex]::Match($cacheText, '(?m)^NESRECOMP_RECOMP_UI:[^=]+=(.*)\r?$')
 $engineRoot = if ($engineSetting.Success) { $engineSetting.Groups[1].Value.TrimEnd("`r") } else { Join-Path $root 'nesrecomp' }
@@ -65,7 +68,7 @@ foreach ($dependency in @(
   if ($configured.Success) { $releaseLicenses[$dependency.Notice] = Join-Path ($configured.Groups[1].Value.TrimEnd("`r")) 'LICENSE' }
 }
 # Match the notices to the compiler runtime actually staged by a GNU build.
-if (Test-Path -LiteralPath (Join-Path $bin 'libstdc++-6.dll')) {
+if ($hasMingwRuntimes) {
   $compilerSetting = [regex]::Match($cacheText, '(?m)^CMAKE_CXX_COMPILER:[^=]+=(.*)\r?$')
   if (-not $compilerSetting.Success) { throw 'missing C++ compiler identity for runtime notices' }
   $compilerPrefix = Split-Path -Parent (Split-Path -Parent $compilerSetting.Groups[1].Value.TrimEnd("`r"))
@@ -363,6 +366,12 @@ function New-ReleaseZip {
     $runtimePath = Join-Path $bin $runtime
     if (-not (Test-Path -LiteralPath $runtimePath -PathType Leaf)) {
       $runtimePath = Join-Path $buildRoot $runtime
+    }
+    if ($hasMingwRuntimes) {
+      $runtimePath = Join-Path $compilerRuntimeDir $runtime
+      if (-not (Test-Path -LiteralPath $runtimePath -PathType Leaf)) {
+        throw "missing configured compiler runtime at $runtimePath"
+      }
     }
     if (Test-Path -LiteralPath $runtimePath -PathType Leaf) {
       Copy-Item -LiteralPath $runtimePath -Destination $stage
