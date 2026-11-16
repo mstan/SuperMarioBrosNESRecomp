@@ -47,6 +47,7 @@ DEBUG_CMAKE_FLAGS=( -DNESRECOMP_ENABLE_TRACE=ON )
 REQUIRED_MOD_MANIFESTS=(
   "packages/super-mario-bros.enhancement.voxel-first-person/1.0.0/manifest.toml"
   "packages/super-mario-bros.enhancement.widescreen/1.0.0/manifest.toml"
+  "packages/super-mario-bros.gameplay.free-backtracking/1.0.0/manifest.toml"
   "packages/super-mario-bros.gameplay.metroid-samus-player-replacement/1.0.0/manifest.toml"
   "packages/super-mario-bros.gameplay.s3k-sonic-player-replacement/1.0.0/manifest.toml"
   "packages/super-mario-bros.gameplay.simultaneous-coop/1.0.0/manifest.toml"
@@ -265,6 +266,8 @@ export SDL_JOYSTICK_HIDAPI_STEAM=1
 export SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD=1
 SELF="\${APPIMAGE:-\$0}"
 ROMDIR="\$(dirname "\$(readlink -f "\$SELF")")"
+# Keep diagnostic and replay output outside the AppImage payload.
+export NESRECOMP_DIAGNOSTICS_DIR="\${NESRECOMP_DIAGNOSTICS_DIR:-\$ROMDIR/diagnostics}"
 ROM=""
 for ext in $ROM_EXTS; do
     [ "\$ext" = "none" ] && break

@@ -244,7 +244,7 @@ static void collide_residents(void) {
         uint8_t *contact=&s.contacts[n][m/8],mask=(uint8_t)(1u<<(m&7));
         int ay=a->state[F_Y]+a->state[F_YH]*256,by=b->state[F_Y]+b->state[F_YH]*256;
         if (platform(a->kind) || platform(b->kind) ||
-            !a->loaded || !b->loaded || !a->active || !b->active || a->dead || b->dead ||
+            !a->loaded || !b->loaded || a->active!=1 || b->active!=1 || a->dead || b->dead ||
             abs(actor_x(a)-actor_x(b))>48 || abs(ay-by)>48) { *contact&=(uint8_t)~mask; continue; }
         if (a->native_slot>=0 && b->native_slot>=0) continue; /* native game handled this pair */
         Guest g;
@@ -376,13 +376,17 @@ static int cull_hook(uint16_t addr) {
 }
 void smb_ws_actors_begin_frame(void) {
     if (!s_enabled || runtime_get_vblank_depth()>1) return;
-    s_render_wide=g_render_width>256;
+    s_render_wide=g_render_width>256 || game_backtracking_active();
+    /* SMB retains OAM while native pause skips object graphics. Keep the
+     * matching resident packets instead of consuming an empty next bank. */
+    if (g_ram[0x776]&1) return;
     memcpy(s.display,s.next,sizeof s.display); memset(s.next,0,sizeof s.next);
     s.flag_display=s.flag_next; memset(&s.flag_next,0,sizeof s.flag_next);
     s.camera=camera();
 }
 void smb_ws_actors_update(void) {
-    if (!s_enabled || !gameplay() || !ensure() || runtime_get_vblank_depth()>1) return;
+    if (!s_enabled || !gameplay() || (g_ram[0x776]&1) ||
+        !ensure() || runtime_get_vblank_depth()>1) return;
     int cam=camera(),left,right;
     game_widescreen_actor_range(cam,g_render_width,PAD,&left,&right);
     uint8_t native_ticked[MAX_ACTORS]={0};
@@ -406,7 +410,10 @@ void smb_ws_actors_update(void) {
             a->active=s_mode==SMB_ENEMIES_VIEWPORT;
         }
         int x=actor_x(a);
-        if (a->active && (x<left-32 || x>right+32)) { a->dead=1; continue; }
+        if (game_backtracking_active()) {
+            if (a->active && (x<left-32 || x>right+32)) { a->active=2; continue; }
+            if (a->active==2) a->active=1; /* sleep retains position, phase and defeat history */
+        } else if (a->active && (x<left-32 || x>right+32)) { a->dead=1; continue; }
         if (native_ticked[n]) continue; /* already advanced by this frame's native routine */
         Guest g;
         if (!begin(&g,a)) continue;
@@ -520,10 +527,10 @@ int smb_ws_actors_debug(const char *cmd,int id) {
             s.flag_display.count?s.flag_display.sprite[0].y:-1);
         return 1;
     }
-    if (strcmp(cmd,"smb_ws_enemies")) return 0;
+    if (strcmp(cmd,"smb_ws_enemies") && strcmp(cmd,"smb_ws_actors")) return 0;
     char buf[7800]; int loaded=0,native=0,active=0,sprites=0;
     for (int i=0;i<s.count;i++) if (s.actor[i].loaded && !s.actor[i].dead) {
-        loaded++; native+=s.actor[i].native_slot>=0; active+=s.actor[i].active; sprites+=s.display[i].count;
+        loaded++; native+=s.actor[i].native_slot>=0; active+=s.actor[i].active==1; sprites+=s.display[i].count;
     }
     int len=snprintf(buf,sizeof buf,"{\"id\":%d,\"enabled\":%d,\"policy\":%d,\"authored\":%d,\"loaded\":%d,\"active\":%d,\"native\":%d,\"sprites\":%d,\"updates\":%llu,\"transfers\":%llu,\"camera\":%d,\"enemies\":[",id,s_enabled,s_mode,s.count,loaded,active,native,sprites,(unsigned long long)s.updates,(unsigned long long)s.transfers,s.camera);
     int comma=0;

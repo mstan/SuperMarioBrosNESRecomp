@@ -6,6 +6,7 @@
 #define VictoryMode func_838B_b0
 #define SetVRAMAddr_B func_864C_b0
 #define DrawTitleScreen func_86FF_b0
+#define BlockGfxData func_8A39_b0
 #define DestroyBlockMetatile func_8A6B_b0
 #define WriteBlockMetatile func_8A6D_b0
 #define UpdateScreen func_8EDD_b0
@@ -279,12 +280,15 @@
 #define CrouchingFlag 0x0714u
 #define DisableCollisionDet 0x0716u
 #define ScreenLeft_PageLoc 0x071Au
+#define ScreenRight_PageLoc 0x071Bu
 #define ScreenLeft_X_Pos 0x071Cu
+#define ScreenRight_X_Pos 0x071Du
 #define AreaParserTaskNum 0x071Fu
 #define ScrollLock 0x0723u
 #define CurrentPageLoc 0x0725u
 #define CurrentColumnPos 0x0726u
 #define ScrollThirtyTwo 0x073Du
+#define HorizontalScroll 0x073Fu
 #define TimerControl 0x0747u
 #define AreaType 0x074Eu
 #define AreaPointer 0x0750u
@@ -300,6 +304,7 @@
 #define VRAM_Buffer_AddrCtrl 0x0773u
 #define ScrollAmount 0x0775u
 #define GamePauseStatus 0x0776u
+#define Mirror_PPU_CTRL_REG1 0x0778u
 #define PlayerAnimTimer 0x0781u
 #define BlockBounceTimer 0x0784u
 #define SideCollisionTimer 0x0785u
@@ -340,6 +345,7 @@ void func_8231_b0(void);
 void func_838B_b0(void);
 void func_864C_b0(void);
 void func_86FF_b0(void);
+void func_8A39_b0(void);
 void func_8A6B_b0(void);
 void func_8A6D_b0(void);
 void func_8EDD_b0(void);

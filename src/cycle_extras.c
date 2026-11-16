@@ -21,7 +21,7 @@ static uint32_t picture[NES_MAX_RENDER_WIDTH*240];
 static int suppress(int slot,int x,int y,void *user) {(void)user;return game_coop_suppress_sprite(slot)||game_smash64_render_suppress_sprite(slot,x,y)||smb_ws_actors_suppress_sprite(slot);}
 static void power_on(void *ctx) {
     (void)ctx;smb1_cycle_init();cyc_render_capture_background(true);g_frame_count=0;
-    if(game_coop_enabled()){game_widescreen_set_mod_enabled(0);game_voxel_set_mod_enabled(0);game_smash64_set_mod_enabled(0,NULL);game_link_set_enabled(0,NULL);game_samus_set_enabled(0,NULL);game_sonic_set_enabled(0,NULL);}
+    if(game_coop_enabled()){game_backtracking_set_enabled(0);game_widescreen_set_mod_enabled(0);game_voxel_set_mod_enabled(0);game_smash64_set_mod_enabled(0,NULL);game_link_set_enabled(0,NULL);game_samus_set_enabled(0,NULL);game_sonic_set_enabled(0,NULL);}
     game_widescreen_init();game_voxel_init();game_smash64_init();game_smash64_render_init();ppu_renderer_set_sprite_suppress(suppress,NULL);
 }
 static void input(void *ctx,uint8_t buttons[2]) {
@@ -37,6 +37,7 @@ static const uint32_t *present(void *ctx,int *width,int *height) {
     (void)ctx;smb1_cycle_sync();const uint32_t *source=cyc_render_present(width,height);
     if(*width==256)source=smb1_cycle_native_picture();
     memcpy(picture,source,(size_t)*width**height*sizeof(*picture));
+    if(*width==256)game_backtracking_compose_native(picture,source);
     game_voxel_post_render(picture);game_smash64_render_post_render(picture);game_link_render_post_render(picture);game_samus_render_post_render(picture);game_sonic_render_post_render(picture);game_coop_render(picture);return picture;
 }
 static bool option(void *ctx,const char *key,const char *value) {
