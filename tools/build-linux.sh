@@ -266,6 +266,8 @@ export SDL_JOYSTICK_HIDAPI_STEAM=1
 export SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD=1
 SELF="\${APPIMAGE:-\$0}"
 ROMDIR="\$(dirname "\$(readlink -f "\$SELF")")"
+# Keep diagnostic and replay output outside the AppImage payload.
+export NESRECOMP_DIAGNOSTICS_DIR="\${NESRECOMP_DIAGNOSTICS_DIR:-\$ROMDIR/diagnostics}"
 ROM=""
 for ext in $ROM_EXTS; do
     [ "\$ext" = "none" ] && break
