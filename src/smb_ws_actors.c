@@ -178,14 +178,19 @@ static int ensure(void) {
     if (enemy<0x8000) return 0;
     if (s.area==g_smb_ws_world.area_data && s.enemy_data==enemy && s.world==g_ram[0x75f]) return 1;
     smb_ws_actors_reset(); s.area=g_smb_ws_world.area_data; s.enemy_data=(uint16_t)enemy; s.world=g_ram[0x75f];
+    /* Native enemy parsing retires records behind the initial right edge.
+     * A midpoint/pipe reload must not revive those bodies beside Mario before
+     * he receives control. Keep viewport activation for the remaining records. */
+    const int entrance_right=camera()+255;
     int page=0,selected=0;
     for (int ofs=0;ofs<255;) {
         int b0=rom(enemy+ofs),b1=rom(enemy+ofs+1),row=b0&15;
         if (b0==0xff) break;
         if ((b1&128) && !selected) { page++; selected=1; }
         if (row==15 && !selected) { page=b1&63; selected=1; ofs+=2; continue; }
-        if (row<14 && (!(b1&64) || g_ram[0x6cc])) {
-            int id=b1&63,wx=page*256+(b0&0xf0);
+        int wx=page*256+(b0&0xf0);
+        if (row<14 && wx>=entrance_right && (!(b1&64) || g_ram[0x6cc])) {
+            int id=b1&63;
             if (managed(id)) add(ofs,0,wx,row*16,(id==6 && g_ram[0x76a])?2:id);
             else if (id>=0x37 && id<=0x3e) {
                 int group=id-0x37,kind=group<4?(g_ram[0x76a]?2:6):0;
