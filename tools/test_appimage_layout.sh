@@ -39,7 +39,9 @@ actual_assets=$(cd "$appdir/usr/bin/assets" && find . -type f -printf '%P\n' | s
 [ "$actual_assets" = "$required_assets" ] || {
     echo "launcher asset inventory differs from the approved list" >&2; exit 1; }
 
-required_mods='packages/super-mario-bros.enhancement.voxel-first-person/1.0.0/manifest.toml
+required_mods='packages/nesrecomp.developer.replay/1.0.0/manifest.toml
+packages/nesrecomp.twitch-chat/1.0.0/manifest.toml
+packages/super-mario-bros.enhancement.voxel-first-person/1.0.0/manifest.toml
 packages/super-mario-bros.enhancement.widescreen/1.0.0/manifest.toml
 packages/super-mario-bros.gameplay.free-backtracking/1.0.0/manifest.toml
 packages/super-mario-bros.gameplay.metroid-samus-player-replacement/1.0.0/manifest.toml
