@@ -178,14 +178,19 @@ static int ensure(void) {
     if (enemy<0x8000) return 0;
     if (s.area==g_smb_ws_world.area_data && s.enemy_data==enemy && s.world==g_ram[0x75f]) return 1;
     smb_ws_actors_reset(); s.area=g_smb_ws_world.area_data; s.enemy_data=(uint16_t)enemy; s.world=g_ram[0x75f];
+    /* Native enemy parsing retires records behind the initial right edge.
+     * A midpoint/pipe reload must not revive those bodies beside Mario before
+     * he receives control. Keep viewport activation for the remaining records. */
+    const int entrance_right=camera()+255;
     int page=0,selected=0;
     for (int ofs=0;ofs<255;) {
         int b0=rom(enemy+ofs),b1=rom(enemy+ofs+1),row=b0&15;
         if (b0==0xff) break;
         if ((b1&128) && !selected) { page++; selected=1; }
         if (row==15 && !selected) { page=b1&63; selected=1; ofs+=2; continue; }
-        if (row<14 && (!(b1&64) || g_ram[0x6cc])) {
-            int id=b1&63,wx=page*256+(b0&0xf0);
+        int wx=page*256+(b0&0xf0);
+        if (row<14 && wx>=entrance_right && (!(b1&64) || g_ram[0x6cc])) {
+            int id=b1&63;
             if (managed(id)) add(ofs,0,wx,row*16,(id==6 && g_ram[0x76a])?2:id);
             else if (id>=0x37 && id<=0x3e) {
                 int group=id-0x37,kind=group<4?(g_ram[0x76a]?2:6):0;
@@ -299,19 +304,27 @@ static int spawn_hook(uint16_t addr) {
     }
     return 1;
 }
+/* Area construction can leave a live plant before its graphics hook runs.
+ * Claim that original object before any resident preview can create a twin. */
+static int adopt_plant(int slot) {
+    int n=s.owner[slot];
+    if (n>=0 || !g_ram[0x0f+slot] || g_ram[0x16+slot]!=0x0d) return n;
+    for (int i=0;i<s.count;i++) {
+        Actor *a=&s.actor[i];
+        if (a->offset!=255 || a->spawn_x!=live_x(slot) || a->native_slot>=0) continue;
+        a->loaded=a->active=1; a->dead=0;
+        a->native_slot=(int16_t)slot; s.owner[slot]=(int16_t)i;
+        pull(a,slot); return i;
+    }
+    return n;
+}
 static int gfx_hook(uint16_t addr) {
     (void)addr;
     if (!s_enabled || s_virtual || !gameplay() || g_cpu.X>=5) return 0;
     int slot=g_cpu.X,n=s.owner[slot];
     /* Initial screen construction can create a plant before gameplay starts.
      * Adopt that live object before considering any preview of the same pipe. */
-    if (n<0 && g_ram[0x16+slot]==0x0d && g_ram[0x0f+slot] && ensure()) {
-        for (int i=0;i<s.count;i++) if (s.actor[i].offset==255 && s.actor[i].spawn_x==live_x(slot) && s.actor[i].native_slot<0) {
-            n=i; Actor *a=&s.actor[n];
-            a->loaded=a->active=1; a->dead=0; a->native_slot=(int16_t)slot; s.owner[slot]=(int16_t)n;
-            pull(a,slot); break;
-        }
-    }
+    if (n<0 && g_ram[0x16+slot]==0x0d && g_ram[0x0f+slot] && ensure()) n=adopt_plant(slot);
     /* Adopt native platforms already present when loading a machine-only
      * checkpoint. Multiple lifts may share X; claim a distinct resident for
      * each live slot, preserving its current phase instead of reinitializing. */
@@ -390,6 +403,7 @@ void smb_ws_actors_update(void) {
     int cam=camera(),left,right;
     game_widescreen_actor_range(cam,g_render_width,PAD,&left,&right);
     uint8_t native_ticked[MAX_ACTORS]={0};
+    for (int slot=0;slot<5;slot++) adopt_plant(slot);
     for (int slot=0;slot<5;slot++) {
         int n=s.owner[slot];
         if (n==-2) { g_ram[0x0f+slot]=0; s.owner[slot]=-1; continue; }
