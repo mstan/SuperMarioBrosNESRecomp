@@ -59,6 +59,15 @@ output, which previously stalled unbuffered stdout. See the
 
 ## Game and release probes
 
+`castle_maze_cycle.py --exe <cycle-build> --rom <usa-world-rom> --out <new-directory>`
+checks native failed-route rewinds in 4-4, 7-4 and 8-4, the original aspect and
+widescreen with backtracking, complete native playfield pixels, and exact
+current-build state continuation. It uses Pillow, isolated profiles and muted
+headless processes. Forced position/speed/collision protection bypass traversal;
+the original parser and maze routine decide the rewind. No maze counters or
+completion flags are assigned. `--worlds 4` selects the wrapped-camera case.
+These boundary checks do not claim ordinary platforming, combat or full routes.
+
 The `*.script` files are reusable input/QA scenarios for the runner's
 `--script` option. Some load a maintainer save slot or expect a particular mod
 and world; read the scenario before running it. They are test inputs, not

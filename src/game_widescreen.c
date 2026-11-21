@@ -20,6 +20,7 @@
 
 static int s_enabled, s_ready, s_edges = 1;
 static int s_backtracking;
+static int s_loopback_pending;
 typedef struct {
     uint32_t version;
     int32_t high_water;
@@ -85,7 +86,8 @@ static int s_render_camera, s_render_native_x0, s_view_left;
 static int gameplay(void) {
     return (g_ram[0x770] == 1 && g_ram[0x772] == 3) || g_ram[0x770] == 2;
 }
-static int camera_x(void) { return (g_ram[0x71a] << 8) | g_ram[0x71c]; }
+/* Castle loopback can put the camera just left of zero for a few frames. */
+static int camera_x(void) { return (int16_t)((g_ram[0x71a] << 8) | g_ram[0x71c]); }
 int game_backtracking_active(void) {
     return s_backtracking && gameplay() && g_smb_ws_world.valid &&
         !g_smb_ws_world.fixed_rooms && !smb_ws_world_busy();
@@ -178,16 +180,22 @@ static int render(uint32_t *out, int width, int height, int native_x0,
      * sprite-zero timing, transient tiles and the original play area. */
     int first = play_x0 < 0 ? -play_x0 : 0;
     int last = play_x0 + 256 > width ? width - play_x0 : 256;
-    for (int y = 32; !cached && y < height; y++) for (int x = first; x < last; x++) {
-        out[y*width+x+play_x0] = native[y*256+x];
-        s_opaque[y*width+x+play_x0]=(uint8_t)ppu_renderer_background_opaque(x,y);
-    }
     const uint32_t *hud = native;
 #ifdef SMB1_CYCLE
     static uint32_t hud_background[256*240];
     int separate_sprites = cyc_render_background(hud_background);
     if (separate_sprites) hud = hud_background;
 #endif
+    if (!cached || cam<0) for (int y = 32; y < height; y++) for (int x = first; x < last; x++) {
+        /* A native maze rewind briefly wraps the camera left of world zero.
+         * Those already drawn negative columns have no authored cache index;
+         * keep the native background there, including in the original aspect.
+         * Sprites retain their independent world placement below. */
+        if (!cached || cam+x<0) {
+            out[y*width+x+play_x0] = (cached?hud:native)[y*256+x];
+            s_opaque[y*width+x+play_x0]=(uint8_t)ppu_renderer_background_opaque(x,y);
+        }
+    }
     /* Position the status background independently of world sprites. Copying
      * the combined native picture here used to move Mario with the HUD. */
     for (int y = 0; y < 32; y++) {
@@ -234,7 +242,8 @@ static void apply(void) {
     nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.parser",s_backtracking);
     nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.block",s_backtracking);
     nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.destroy",s_backtracking);
-    nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.loopback",s_backtracking);
+    nes_mod_set_function_hook_enabled("super-mario-bros.backtracking.loopback",s_enabled || s_backtracking);
+    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.after-loopback",s_enabled || s_backtracking);
     /* Native diagnostics normally bypass residents. Backtracking still needs
      * their retirement/sleep ledger; Classic keeps original activation timing
      * without changing the stored enemy policy. */
@@ -290,6 +299,7 @@ void game_widescreen_set_camera(const char *camera) {
 void game_widescreen_init(void) {
     smb_ws_world_reset(); smb_ws_actors_reset(); s_wide_frames = s_native_frames = 0;
     memset(&s_backtrack,0,sizeof s_backtrack);s_backtrack.version=1;
+    s_loopback_pending=0;
     s_ready = 1; apply();
 }
 void game_widescreen_update(void) {
@@ -312,6 +322,7 @@ static int area_hook(uint16_t addr) {
     if ((s_enabled || s_backtracking) && !smb_ws_world_busy()) {
         smb_ws_world_reset(); smb_ws_actors_reset();
         memset(&s_backtrack,0,sizeof s_backtrack);s_backtrack.version=1;
+        s_loopback_pending=0;
     }
     return 0;
 }
@@ -369,14 +380,23 @@ static int backtracking_block(uint16_t addr) {
 }
 static int backtracking_loopback(uint16_t addr) {
     (void)addr;
-    if (!s_backtracking || smb_ws_world_busy()) return 0;
+    if (!(s_enabled || s_backtracking) || smb_ws_world_busy()) return 0;
 #ifdef SMB1_CYCLE
     if (cyc_mod_isolated()) return 0;
 #endif
-    /* The native castle maze deliberately moves both parser and camera back
-     * four pages. That is a new native area pass, not a player revisit: retain
-     * the factory reset/reparse behavior and adopt its new high-water mark. */
-    smb_ws_world_reset();smb_ws_actors_reset();
+    s_loopback_pending=1;
+    return 0;
+}
+static int after_loopback(uint16_t addr) {
+    (void)addr;
+    if (!s_loopback_pending || smb_ws_world_busy()) return 0;
+#ifdef SMB1_CYCLE
+    if (cyc_mod_isolated()) return 0;
+#endif
+    /* KillAllEnemies immediately follows the native loopback subroutine.
+     * Its actual output owns this new parser pass, not InitializeArea. */
+    s_loopback_pending=0;
+    smb_ws_world_loopback();smb_ws_actors_reset();
     memset(&s_backtrack,0,sizeof s_backtrack);s_backtrack.version=1;
     return 0;
 }
@@ -477,10 +497,11 @@ static int save_backtrack(uint8_t *data,int cap) {
     memcpy(data,&s_backtrack,sizeof s_backtrack);return sizeof s_backtrack;
 }
 static int load_backtrack(const uint8_t *data,int len) {
+    s_loopback_pending=0;
     if (!len) {memset(&s_backtrack,0,sizeof s_backtrack);s_backtrack.version=1;return 1;}
     if (len!=sizeof s_backtrack) return 0;
     BacktrackState candidate;memcpy(&candidate,data,sizeof candidate);
-    if (candidate.version!=1 || candidate.high_water<0 || candidate.high_water>=SMB_WS_META_COLUMNS*16 || candidate.initialized>1 || candidate.pending>1) return 0;
+    if (candidate.version!=1 || candidate.high_water< -1024 || candidate.high_water>=SMB_WS_META_COLUMNS*16 || candidate.initialized>1 || candidate.pending>1) return 0;
     s_backtrack=candidate;return 1;
 }
 NES_MOD_CONSTRUCTOR(register_custom_widescreen) {
@@ -492,6 +513,7 @@ NES_MOD_CONSTRUCTOR(register_custom_widescreen) {
         !nes_mod_register_function_entry_plugin("super-mario-bros.backtracking.block",0x8a6d,backtracking_block) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.backtracking.destroy",0x8a6b,backtracking_block) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.backtracking.loopback",0xc08c,backtracking_loopback) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.after-loopback",0xd071,after_loopback) ||
         !nes_mod_register_savestate_hook("super-mario-bros.backtracking",save_backtrack,load_backtrack) ||
         !nes_mod_register_savestate_hook("super-mario-bros.widescreen.world",save_world,load_world))
         fprintf(stderr, "[Widescreen] Failed to register custom renderer hooks\n");

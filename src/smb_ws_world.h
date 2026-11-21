@@ -27,6 +27,9 @@ typedef struct {
 
 extern SmbWsWorld g_smb_ws_world;
 void smb_ws_world_reset(void);
+/* Adopt the native maze's completed page/stream rewind, including its live
+ * buffered parser state. The resulting cache is saved by the existing hook. */
+void smb_ws_world_loopback(void);
 void smb_ws_world_update(void);
 void smb_ws_world_observe_column(void);
 int smb_ws_world_pixel(int world_x, int y, uint8_t *palette, uint8_t *tile);
