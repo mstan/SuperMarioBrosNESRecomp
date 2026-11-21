@@ -279,3 +279,9 @@ crc32 = 0x6441b266
 addr = 0x8a6b
 length = 16
 crc32 = 0xbbd74fa1
+
+# Observe completed native maze rewind before enemy retirement.
+[[mod_function_hook]]
+addr = 0xd071
+length = 16
+crc32 = 0x5e6edd03

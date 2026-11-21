@@ -43,7 +43,7 @@ void smb_ws_world_reset(void) {
 }
 int smb_ws_world_busy(void) { return s_decoding; }
 
-static void decode(void) {
+static void decode(const SmbWsWorld *previous, int first_column) {
     SmbWsWorld *w = &g_smb_ws_world;
     uint8_t ram[0x800];
 #ifdef SMB1_CYCLE
@@ -61,25 +61,47 @@ static void decode(void) {
     memcpy(ram, g_ram, sizeof ram);
     smb_ws_world_reset();
     w->area_data = (uint16_t)data; w->area_type = ram[0x74e]; w->world = ram[0x75f];
+    if (previous) {
+        /* Native loopback reuses the already drawn columns four pages to
+         * their left, then resumes its object stream at CurrentPageLoc.
+         * Retain that prefix; compile the rest from the actual post-loop
+         * working RAM, including buffered object lengths and scenery. */
+        for (int col=0;col<first_column;col++) {
+            int source=col+64;
+            memcpy(w->tiles[col*2],previous->tiles[source*2],sizeof w->tiles[0]*2);
+            memcpy(w->palettes[col*2],previous->palettes[source*2],sizeof w->palettes[0]*2);
+            memcpy(w->metatiles[col],previous->metatiles[source],sizeof w->metatiles[0]);
+            memcpy(w->collision[col],previous->collision[source],sizeof w->collision[0]);
+        }
+        for (int n=0;n<previous->plant_count;n++) {
+            SmbWsPlant p=previous->plants[n];
+            if (p.x>=1024 && p.x<1024+first_column*16) {
+                p.x-=1024;w->plants[w->plant_count++]=p;
+            }
+        }
+        w->decoded_columns=(uint32_t)first_column;
+    }
     s_decoding = 1;
     runtime_begin_unclocked();
     /* Match InitializeArea's cleared working set and original area header.
      * AreaPointer can already refer to the next pipe destination; the live
      * AreaData pointer identifies the area actually being rendered. */
-    memset(g_ram, 0, 0x74c);
-    g_ram[0xe7] = (uint8_t)data; g_ram[0xe8] = (uint8_t)(data >> 8);
-    g_ram[0x730] = g_ram[0x731] = g_ram[0x732] = 0xff;
-    g_ram[0x741] = (header0 & 7) < 4 ? header0 & 7 : 0;
-    g_ram[0x744] = (header0 & 7) >= 4 ? header0 & 7 : 0;
-    g_ram[0x727] = header1 & 15;
-    g_ram[0x742] = (header1 >> 4) & 3;
-    g_ram[0x733] = header1 >> 6;
-    if (g_ram[0x733] == 3) { g_ram[0x743] = 3; g_ram[0x733] = 0; }
+    if (!previous) {
+        memset(g_ram, 0, 0x74c);
+        g_ram[0xe7] = (uint8_t)data; g_ram[0xe8] = (uint8_t)(data >> 8);
+        g_ram[0x730] = g_ram[0x731] = g_ram[0x732] = 0xff;
+        g_ram[0x741] = (header0 & 7) < 4 ? header0 & 7 : 0;
+        g_ram[0x744] = (header0 & 7) >= 4 ? header0 & 7 : 0;
+        g_ram[0x727] = header1 & 15;
+        g_ram[0x742] = (header1 >> 4) & 3;
+        g_ram[0x733] = header1 >> 6;
+        if (g_ram[0x733] == 3) { g_ram[0x743] = 3; g_ram[0x733] = 0; }
+    }
 #ifndef SMB1_CYCLE
     g_bail_active = 0;
 #endif
     int first_lock = -1;
-    for (int col = 0; col < SMB_WS_META_COLUMNS; col++) {
+    for (int col = first_column; col < SMB_WS_META_COLUMNS; col++) {
         g_ram[0x725] = (uint8_t)(col >> 4);
         g_ram[0x726] = (uint8_t)(col & 15);
         g_ram[0x6a0] = (uint8_t)(col & 31);
@@ -122,7 +144,7 @@ static void decode(void) {
      * the native view cannot scroll. In the supported ROM these are the
      * pipe intro and the underground bonus-room collection. Each bonus
      * entrance selects its own page; adjacent entries are separate rooms. */
-    w->fixed_rooms = first_lock >= 0 && first_lock < 24;
+    w->fixed_rooms = previous ? previous->fixed_rooms : first_lock >= 0 && first_lock < 24;
 #ifdef SMB1_CYCLE
     cyc_mod_isolate_end();
     smb1_cycle_sync();
@@ -139,8 +161,15 @@ static int ensure_world(void) {
     unsigned data = area_data();
     if (s_decoding || data < 0x8002 || data > 0xff00) return 0;
     SmbWsWorld *w = &g_smb_ws_world;
-    if (!w->valid || w->area_data != data || w->area_type != g_ram[0x74e] || w->world != g_ram[0x75f]) decode();
+    if (!w->valid || w->area_data != data || w->area_type != g_ram[0x74e] || w->world != g_ram[0x75f]) decode(NULL,0);
     return w->valid;
+}
+void smb_ws_world_loopback(void) {
+    if (!ensure_world()) return;
+    int first=g_ram[0x725]*16+g_ram[0x726];
+    if (first<0 || first>SMB_WS_META_COLUMNS-64) return;
+    SmbWsWorld previous=g_smb_ws_world;
+    decode(&previous,first);
 }
 void smb_ws_world_observe_column(void) {
     if (!ensure_world()) return;
@@ -208,8 +237,10 @@ void smb_ws_world_bounds(int native_camera, int *left, int *right) {
     const SmbWsWorld *w = &g_smb_ws_world;
     *left = w->fixed_rooms ? native_camera & ~255 : 0;
     *right = w->fixed_rooms ? *left + 256 : w->area_end;
-    /* Native scripted movement can continue past the last authored object.
-     * Always keep its full playfield visible, including the castle walk. */
+    /* Native scripted movement can extend beyond either authored edge. A
+     * maze rewind briefly wraps the left border below zero. Retain the full
+     * native playfield there as well as during the final castle walk. */
+    if (*left > native_camera) *left = native_camera;
     if (*right < native_camera + 256) *right = native_camera + 256;
 }
 int smb_ws_world_pixel(int world_x, int y, uint8_t *palette, uint8_t *tile) {

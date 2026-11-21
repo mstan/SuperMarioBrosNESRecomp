@@ -362,3 +362,7 @@ addr = 0xBA33
 # Native simultaneous co-op: ProcLoopCommand
 [[mod_function_hook]]
 addr = 0xC0CC
+
+# Observe completed native maze rewind before enemy retirement.
+[[mod_function_hook]]
+addr = 0xd071
