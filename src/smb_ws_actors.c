@@ -36,7 +36,7 @@ extern void func_C787(void);
 extern void func_E5C8(void), func_ED66(void), func_C982(void), func_D65B(void);
 extern uint16_t g_rts_target;
 
-enum { MAX_ACTORS=384, SPRITES=6, PAD=48, FRENZY_SWIM_SLOTS=3 };
+enum { MAX_ACTORS=384, SPRITES=6, PAD=48, FRENZY_SWIM_SLOTS=3, FRENZY_SLOTS=4 };
 /* Every independently indexed normal-enemy field, including aliases used by
  * plants, flying koopas, squids, hammers and score popups. Slot zero is the
  * workspace; a transfer copies fields, never the surrounding shared RAM. */
@@ -68,7 +68,7 @@ typedef struct {
     int camera;
     uint64_t updates,loads,transfers;
     uint64_t score_display,score_next;
-    Packet swim_display[FRENZY_SWIM_SLOTS],swim_next[FRENZY_SWIM_SLOTS];
+    Packet frenzy_display[FRENZY_SLOTS],frenzy_next[FRENZY_SLOTS];
     uint8_t swim_slots,swim_births;
 } Actors;
 static Actors s;
@@ -103,7 +103,7 @@ static void push(const Actor *a,int slot) {
     for (int i=0;i<FIELD_COUNT;i++) g_ram[fields[i]+slot]=a->state[i];
 }
 void smb_ws_actors_reset(void) {
-    memset(&s,0,sizeof s); s.version=6;
+    memset(&s,0,sizeof s); s.version=7;
     for (int i=0;i<5;i++) s.owner[i]=-1;
 }
 static int begin(Guest *g,const Actor *a) {
@@ -355,7 +355,17 @@ static int gfx_hook(uint16_t addr) {
     if (!s_enabled || s_virtual || !gameplay() || g_cpu.X>=5) return 0;
     int slot=g_cpu.X,n=s.owner[slot];
     if (swim_scope(slot) && (s.swim_slots&(1u<<slot))) {
-        capture_live_packet(&s.swim_next[slot],slot);
+        capture_live_packet(&s.frenzy_next[slot],slot);
+        return 0;
+    }
+    if (slot<FRENZY_SLOTS && g_render_width>256 &&
+        g_ram[0x0f+slot] && g_ram[0x16+slot]==0x14) {
+        int x=live_x(slot),cam=camera(),left,right;
+        game_widescreen_actor_range(cam,g_render_width,8,&left,&right);
+        /* Native flying fish already keep moving beyond the camera. Recover
+         * sprite columns at its edges without changing frenzy or motion. */
+        if (x+16>left && x<right && (x<cam+8 || x+24>cam+256))
+            capture_live_packet(&s.frenzy_next[slot],slot);
         return 0;
     }
     /* Initial screen construction can create a plant before gameplay starts.
@@ -465,8 +475,8 @@ void smb_ws_actors_begin_frame(void) {
     memcpy(s.display,s.next,sizeof s.display); memset(s.next,0,sizeof s.next);
     s.flag_display=s.flag_next; memset(&s.flag_next,0,sizeof s.flag_next);
     s.score_display=s.score_next; s.score_next=0;
-    memcpy(s.swim_display,s.swim_next,sizeof s.swim_display);
-    memset(s.swim_next,0,sizeof s.swim_next);
+    memcpy(s.frenzy_display,s.frenzy_next,sizeof s.frenzy_display);
+    memset(s.frenzy_next,0,sizeof s.frenzy_next);
     s.camera=camera();
 }
 void smb_ws_actors_update(void) {
@@ -558,8 +568,8 @@ int smb_ws_actors_suppress_sprite(int slot) {
         const Packet *p=&s.display[n];
         if (p->native && slot>=p->oam_base && slot<p->oam_base+SPRITES) return 1;
     }
-    for (int n=0;n<FRENZY_SWIM_SLOTS;n++) {
-        const Packet *p=&s.swim_display[n];
+    for (int n=0;n<FRENZY_SLOTS;n++) {
+        const Packet *p=&s.frenzy_display[n];
         if (p->native && slot>=p->oam_base && slot<p->oam_base+SPRITES) return 1;
     }
     return s.flag_display.native && slot>=s.flag_display.oam_base && slot<s.flag_display.oam_base+SPRITES;
@@ -581,11 +591,11 @@ void smb_ws_actors_draw(uint32_t *out,int width,int native_x0,int render_camera,
             if (color) native_priority[dy*256+dx]=(uint8_t)slot;
         }
     }
-    for (int n=s.count+FRENZY_SWIM_SLOTS;n>=0;n--) {
+    for (int n=s.count+FRENZY_SLOTS;n>=0;n--) {
         const Packet *p;
         if (n<s.count) p=&s.display[n];
         else if (n==s.count) p=&s.flag_display;
-        else p=&s.swim_display[n-s.count-1];
+        else p=&s.frenzy_display[n-s.count-1];
         for (int i=p->count-1;i>=0;i--) {
             const Sprite *v=&p->sprite[i];
             for (int y=0;y<8;y++) for (int x=0;x<8;x++) {
@@ -646,14 +656,14 @@ static int load(const uint8_t *data,int len) {
     uint32_t version;
     if (!len) { smb_ws_actors_reset(); return 1; }
     if (len!=sizeof s) return 0;
-    memcpy(&version,data,sizeof version); if (version!=6) return 0;
+    memcpy(&version,data,sizeof version); if (version!=7) return 0;
     Actors candidate; memcpy(&candidate,data,sizeof candidate);
     if (candidate.count>MAX_ACTORS) return 0;
     for (int i=0;i<5;i++) if (candidate.owner[i]<-2 || candidate.owner[i]>=candidate.count) return 0;
     for (int i=0;i<candidate.count;i++) if (candidate.display[i].count>SPRITES || candidate.next[i].count>SPRITES) return 0;
     if (candidate.flag_display.count>SPRITES || candidate.flag_next.count>SPRITES) return 0;
-    for (int i=0;i<FRENZY_SWIM_SLOTS;i++)
-        if (candidate.swim_display[i].count>SPRITES || candidate.swim_next[i].count>SPRITES) return 0;
+    for (int i=0;i<FRENZY_SLOTS;i++)
+        if (candidate.frenzy_display[i].count>SPRITES || candidate.frenzy_next[i].count>SPRITES) return 0;
     s=candidate; return 1;
 }
 NES_MOD_CONSTRUCTOR(register_enemies) {

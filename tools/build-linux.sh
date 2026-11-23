@@ -106,7 +106,11 @@ SDL2_CFG_DIR="$( { find /usr/lib /usr/lib64 /usr/local/lib -type d -path '*cmake
 if [ -n "${PYTHON3_EXECUTABLE:-}" ]; then
   FLAGS+=( -DPython3_EXECUTABLE="$PYTHON3_EXECUTABLE" )
 fi
-FLAGS+=( -DNESRECOMP_BACKEND=cycle )
+# Select the native profile explicitly in reused build directories.
+FLAGS+=( -DNESRECOMP_BACKEND=cycle
+         "-DNESRECOMP_PPU_IMPL=${NESRECOMP_PPU_IMPL:-HLE}"
+         "-DNESRECOMP_APU_OPERATION=${NESRECOMP_APU_OPERATION:-ON}"
+         "-DNESRECOMP_NATIVE_WAIT_LOOPS=${NESRECOMP_NATIVE_WAIT_LOOPS:-ON}" )
 if [ -n "${NESRECOMP_ROM:-}" ]; then FLAGS+=( "-DNESRECOMP_ROM=$NESRECOMP_ROM" ); fi
 if [ -n "${NESRECOMP_ROOT:-}" ]; then FLAGS+=( "-DNESRECOMP_ROOT=$NESRECOMP_ROOT" ); fi
 if [ -n "${NESRECOMP_RECOMP_UI:-}" ]; then FLAGS+=( "-DNESRECOMP_RECOMP_UI=$NESRECOMP_RECOMP_UI" ); fi
