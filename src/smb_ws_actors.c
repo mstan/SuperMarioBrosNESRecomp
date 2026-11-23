@@ -37,7 +37,8 @@ extern void func_E5C8(void), func_ED66(void), func_C982(void), func_D65B(void);
 extern uint16_t g_rts_target;
 
 enum { MAX_ACTORS=384, SPRITES=6, PAD=48, FRENZY_SWIM_SLOTS=3, FRENZY_SLOTS=4,
-       TRANSIENT_PACKETS=FRENZY_SLOTS+5*2 };
+       BOWSER_PACKET_OFFSET=FRENZY_SLOTS+5*2, TRANSIENT_PACKETS=BOWSER_PACKET_OFFSET+2,
+       ACTORS_STATE_VERSION=9 };
 /* Every independently indexed normal-enemy field, including aliases used by
  * plants, flying koopas, squids, hammers and score popups. Slot zero is the
  * workspace; a transfer copies fields, never the surrounding shared RAM. */
@@ -104,7 +105,7 @@ static void push(const Actor *a,int slot) {
     for (int i=0;i<FIELD_COUNT;i++) g_ram[fields[i]+slot]=a->state[i];
 }
 void smb_ws_actors_reset(void) {
-    memset(&s,0,sizeof s); s.version=8;
+    memset(&s,0,sizeof s); s.version=ACTORS_STATE_VERSION;
     for (int i=0;i<5;i++) s.owner[i]=-1;
 }
 static int begin(Guest *g,const Actor *a) {
@@ -394,6 +395,34 @@ static int gfx_hook(uint16_t addr) {
     if (n>=0) capture_live_packet(&s.next[n],slot);
     return 0;
 }
+static int bowser_clip_hook(uint16_t addr) {
+    (void)addr;
+    int half=g_ram[0x36a];
+    if (!half || half>2 || !s_enabled || s_virtual || g_render_width<=256 || !gameplay()) return 0;
+    int slot=g_ram[8];
+    if (slot>=6 || g_ram[0x16+slot]!=0x2d || g_ram[0xb6+slot]!=1) return 0;
+    int offscreen=g_ram[0x3d1];
+    if (offscreen&0x80) return 0;
+    int x=live_x(slot),cam=camera(),left,right;
+    game_widescreen_actor_range(cam,g_render_width,8,&left,&right);
+    if (x+16<=left || x>=right || (x>=cam+8 && x+24<=cam+256)) return 0;
+
+    /* Bowser's native draw has finished animating and flipping all six
+     * sprites. Capture the result before the original clip hides columns. */
+    int oam=g_ram[0x6e5+slot];
+    if (oam>256-SPRITES*4) return 0;
+    Packet *p=&s.transient_next[BOWSER_PACKET_OFFSET+half-1];
+    p->count=0; p->oam_base=(uint8_t)(oam/4);
+    for (int i=0;i<SPRITES;i++) {
+        const uint8_t *o=g_ram+0x200+oam+i*4;
+        if (o[0]>=0xef || (i>=2 && (offscreen&0x40)) || (i>=4 && (offscreen&0x20))) continue;
+        Sprite *v=&p->sprite[p->count++];
+        v->x=(int16_t)(x+(int8_t)(o[3]-(uint8_t)(x-cam)));
+        v->y=o[0]+1; v->tile=o[1]; v->attr=o[2];
+    }
+    p->native=p->count!=0;
+    return 0;
+}
 static int firebar_scope(int slot) {
     return s_enabled && !s_virtual && gameplay() && g_render_width>256 && slot<5 &&
            g_ram[0x0f+slot] && g_ram[0x16+slot]>=0x1b && g_ram[0x16+slot]<=0x21;
@@ -679,6 +708,7 @@ void smb_ws_actors_configure(int enabled,SmbEnemyMode mode) {
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.swim-birth",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.transient-cull",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.firebar-gfx",active);
+    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.bowser-clip",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.flag-gfx",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.plant-init",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.large-platform-gfx",active);
@@ -712,7 +742,7 @@ static int load(const uint8_t *data,int len) {
     uint32_t version;
     if (!len) { smb_ws_actors_reset(); return 1; }
     if (len!=sizeof s) return 0;
-    memcpy(&version,data,sizeof version); if (version!=8) return 0;
+    memcpy(&version,data,sizeof version); if (version!=ACTORS_STATE_VERSION) return 0;
     Actors candidate; memcpy(&candidate,data,sizeof candidate);
     if (candidate.count>MAX_ACTORS) return 0;
     for (int i=0;i<5;i++) if (candidate.owner[i]<-2 || candidate.owner[i]>=candidate.count) return 0;
@@ -730,6 +760,7 @@ NES_MOD_CONSTRUCTOR(register_enemies) {
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.swim-birth",0xc6f5,swim_birth_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.transient-cull",0xd6a8,transient_cull_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.firebar-gfx",0xcd3c,firebar_hook) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.bowser-clip",0xeb64,bowser_clip_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.flag-gfx",0xe54b,flag_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.plant-init",0xc787,plant_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.large-platform-gfx",0xe5c8,gfx_hook) ||
