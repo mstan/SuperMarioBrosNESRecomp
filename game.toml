@@ -23,6 +23,10 @@ addr = 0xE87D           # EnemyGfxHandler: capture full sprites before native cu
 addr = 0x8537           # SetupNumSpr: floating scores claim their native OAM pair
 [[mod_function_hook]]
 addr = 0xD67A           # OffscreenBoundsCheck: retire residents through the host
+[[mod_function_hook]]
+addr = 0xC6F5           # Swimming frenzy: position after native PutAtRightExtent
+[[mod_function_hook]]
+addr = 0xD6A8           # OffscreenBoundsCheck: native enemy X comparisons
 
 # Falcon presents one stable Big-Mario collision envelope even when hidden
 # Mario health says small/crouched. game_smash64_ram_read_hook changes these
