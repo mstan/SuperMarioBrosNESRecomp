@@ -24,6 +24,8 @@ addr = 0xE87D           # EnemyGfxHandler: capture full sprites before native cu
 [[mod_function_hook]]
 addr = 0xEB64           # SprObjectOffscrChk: observe Bowser's drawn sprites
 [[mod_function_hook]]
+addr = 0xD263           # ProcBowserFlame: observe the three drawn flame sprites
+[[mod_function_hook]]
 addr = 0x8537           # SetupNumSpr: floating scores claim their native OAM pair
 [[mod_function_hook]]
 addr = 0xD67A           # OffscreenBoundsCheck: retire residents through the host
