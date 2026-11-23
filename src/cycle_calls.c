@@ -98,6 +98,7 @@ void func_C982(void) { smb1_cycle_call(0xc982); }
 void func_C998(void) { smb1_cycle_call(0xc998); }
 void func_CB47(void) { smb1_cycle_call(0xcb47); }
 void func_CB66(void) { smb1_cycle_call(0xcb66); }
+void func_CD3C(void) { smb1_cycle_call(0xcd3c); }
 void func_CE08(void) { smb1_cycle_call(0xce08); }
 void func_D607(void) { smb1_cycle_call(0xd607); }
 void func_D614(void) { smb1_cycle_call(0xd614); }

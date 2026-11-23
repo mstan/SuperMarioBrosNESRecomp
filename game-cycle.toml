@@ -163,6 +163,11 @@ length = 16
 crc32 = 0x9ce39bd2
 
 [[mod_function_hook]]
+addr = 0xcd3c           # ProcFirebar: project edge sprites
+length = 16
+crc32 = 0x91043522
+
+[[mod_function_hook]]
 addr = 0xce08
 length = 16
 crc32 = 0x96152552
