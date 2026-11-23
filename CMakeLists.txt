@@ -17,13 +17,17 @@ set(NESRECOMP_ENABLE_MODS ON CACHE BOOL
 set(NESRECOMP_BACKEND "cycle" CACHE STRING "CPU backend: cycle or legacy")
 set_property(CACHE NESRECOMP_BACKEND PROPERTY STRINGS cycle legacy)
 option(NESRECOMP_ENABLE_TRACE "Enable game diagnostics" OFF)
-# Qualified Windows x64 renderer default; explicit cache choices remain honored.
+# The original NTSC NROM image can use the Windows x64 native frame provider.
+# Other targets select the portable HLE PPU kernels by default.
+set(_SMB_PPU_DEFAULT "HLE")
 if(WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND
    CMAKE_SYSTEM_PROCESSOR MATCHES "^(AMD64|amd64|x86_64|X86_64)$")
-    set(NESRECOMP_PPU_IMPL "FRAME" CACHE STRING "PPU implementation: LLE, HLE or FRAME")
-    option(NESRECOMP_APU_OPERATION "Use the native APU operation profile" OFF)
-    option(NESRECOMP_NATIVE_WAIT_LOOPS "Use qualified native wait operations" OFF)
+    set(_SMB_PPU_DEFAULT "FRAME")
 endif()
+set(NESRECOMP_PPU_IMPL "${_SMB_PPU_DEFAULT}" CACHE STRING "PPU implementation: LLE, HLE or FRAME")
+unset(_SMB_PPU_DEFAULT)
+option(NESRECOMP_APU_OPERATION "Use the native APU operation profile" ON)
+option(NESRECOMP_NATIVE_WAIT_LOOPS "Use qualified native wait operations" ON)
 if(NESRECOMP_BACKEND STREQUAL "cycle")
     set(NESRECOMP_ROM "" CACHE FILEPATH "Original SMB1 World / USA ROM, not distributed")
     if(NOT NESRECOMP_ROM)
