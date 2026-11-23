@@ -29,14 +29,15 @@
 #include <stdlib.h>
 
 extern void func_C26C(void), func_E87D(void), func_DFC1(void), func_C905(void);
-extern void func_F1AF(void), func_F152(void);
+extern void func_F1AF(void), func_F152(void), func_CD3C(void);
 extern void func_E243(void), func_DA33(void);
 extern void func_E54B(void);
 extern void func_C787(void);
 extern void func_E5C8(void), func_ED66(void), func_C982(void), func_D65B(void);
 extern uint16_t g_rts_target;
 
-enum { MAX_ACTORS=384, SPRITES=6, PAD=48, FRENZY_SWIM_SLOTS=3, FRENZY_SLOTS=4 };
+enum { MAX_ACTORS=384, SPRITES=6, PAD=48, FRENZY_SWIM_SLOTS=3, FRENZY_SLOTS=4,
+       TRANSIENT_PACKETS=FRENZY_SLOTS+5*2 };
 /* Every independently indexed normal-enemy field, including aliases used by
  * plants, flying koopas, squids, hammers and score popups. Slot zero is the
  * workspace; a transfer copies fields, never the surrounding shared RAM. */
@@ -68,7 +69,7 @@ typedef struct {
     int camera;
     uint64_t updates,loads,transfers;
     uint64_t score_display,score_next;
-    Packet frenzy_display[FRENZY_SLOTS],frenzy_next[FRENZY_SLOTS];
+    Packet transient_display[TRANSIENT_PACKETS],transient_next[TRANSIENT_PACKETS];
     uint8_t swim_slots,swim_births;
 } Actors;
 static Actors s;
@@ -103,7 +104,7 @@ static void push(const Actor *a,int slot) {
     for (int i=0;i<FIELD_COUNT;i++) g_ram[fields[i]+slot]=a->state[i];
 }
 void smb_ws_actors_reset(void) {
-    memset(&s,0,sizeof s); s.version=7;
+    memset(&s,0,sizeof s); s.version=8;
     for (int i=0;i<5;i++) s.owner[i]=-1;
 }
 static int begin(Guest *g,const Actor *a) {
@@ -148,11 +149,11 @@ static void end(const Guest *g) {
 #endif
     s_virtual=0;
 }
-static void capture_packet(Packet *p,int native,int oam_base) {
+static void capture_packet(Packet *p,int native,int oam_base,int offset) {
     int wx=live_x(0);
     p->count=0; p->native=(uint8_t)native; p->oam_base=(uint8_t)oam_base;
     for (int i=0;i<SPRITES;i++) {
-        const uint8_t *o=g_ram+0x240+i*4;
+        const uint8_t *o=g_ram+0x200+offset+i*4;
         if (o[0]>=0xef) continue;
         Sprite *v=&p->sprite[p->count++];
         v->x=(int16_t)(wx+(int)o[3]-128); v->y=o[0]+1;
@@ -166,7 +167,7 @@ static void graphics(Packet *p,int native,int oam_base) {
         if (g_ram[0x16]>=0x2b) func_ED66();
         else func_E5C8();
     } else func_E87D();
-    capture_packet(p,native,oam_base);
+    capture_packet(p,native,oam_base,0x40);
 }
 static void capture_live_packet(Packet *p,int slot) {
     Actor current={0};
@@ -180,7 +181,7 @@ static void flag_graphics(Packet *p,const Actor *a,int native,int oam_base) {
     if (!begin(&g,a)) return;
     if (!native) { g_ram[0x70f]=0; g_ram[0x10d]=0xb0; }
     g_cpu.X=0; func_F1AF(); g_cpu.X=0; func_F152();
-    g_cpu.X=0; func_E54B(); capture_packet(p,native,oam_base); end(&g);
+    g_cpu.X=0; func_E54B(); capture_packet(p,native,oam_base,0x40); end(&g);
 }
 static void add(int ofs,int member,int wx,int y,int kind) {
     if (s.count>=MAX_ACTORS) return;
@@ -355,7 +356,7 @@ static int gfx_hook(uint16_t addr) {
     if (!s_enabled || s_virtual || !gameplay() || g_cpu.X>=5) return 0;
     int slot=g_cpu.X,n=s.owner[slot];
     if (swim_scope(slot) && (s.swim_slots&(1u<<slot))) {
-        capture_live_packet(&s.frenzy_next[slot],slot);
+        capture_live_packet(&s.transient_next[slot],slot);
         return 0;
     }
     if (slot<FRENZY_SLOTS && g_render_width>256 &&
@@ -365,7 +366,7 @@ static int gfx_hook(uint16_t addr) {
         /* Native flying fish already keep moving beyond the camera. Recover
          * sprite columns at its edges without changing frenzy or motion. */
         if (x+16>left && x<right && (x<cam+8 || x+24>cam+256))
-            capture_live_packet(&s.frenzy_next[slot],slot);
+            capture_live_packet(&s.transient_next[slot],slot);
         return 0;
     }
     /* Initial screen construction can create a plant before gameplay starts.
@@ -391,6 +392,59 @@ static int gfx_hook(uint16_t addr) {
         }
     }
     if (n>=0) capture_live_packet(&s.next[n],slot);
+    return 0;
+}
+static int firebar_scope(int slot) {
+    return s_enabled && !s_virtual && gameplay() && g_render_width>256 && slot<5 &&
+           g_ram[0x0f+slot] && g_ram[0x16+slot]>=0x1b && g_ram[0x16+slot]<=0x21;
+}
+static int firebar_hook(uint16_t addr) {
+    (void)addr;
+    int slot=g_cpu.X;
+    if (!firebar_scope(slot) || g_ram[0xb6+slot]!=1 || !ensure()) return 0;
+    int long_bar=g_ram[0x16+slot]>=0x1f;
+    int reach=long_bar?96:48;
+    int x=live_x(slot),cam=camera(),left,right;
+    game_widescreen_actor_range(cam,g_render_width,8,&left,&right);
+    if (x+reach<left || x-reach>=right || (x-reach>=cam && x+reach<cam+256)) return 0;
+    int extra=g_ram[0x6cf];
+    if (long_bar && (extra>5 || g_ram[0x0f+extra]!=(0x80|slot))) return 0;
+    int original_oam=g_ram[0x6e5+slot]/4;
+    int second_oam=long_bar?g_ram[0x6e5+extra]/4:0;
+    uint8_t speed=g_ram[0x388+slot],direction=g_ram[0x34+slot];
+    uint8_t native_screen[4],projected_screen[4];
+    memcpy(native_screen,g_ram+0x71a,sizeof native_screen);
+    Actor current={0}; pull(&current,slot);
+    Guest g;
+    if (!begin(&g,&current)) return 0;
+    memcpy(projected_screen,g_ram+0x71a,sizeof projected_screen);
+    memcpy(g_ram+0x71a,native_screen,sizeof native_screen);
+    func_F1AF();
+    int native_clipped=g_ram[0x3d1]&8;
+    memcpy(g_ram+0x71a,projected_screen,sizeof projected_screen);
+    g_ram[0x388]=speed;
+    g_ram[0x34]=direction;
+    g_ram[0x79f]=1; /* The original pass owns player contact. */
+    if (native_clipped && s_mode==SMB_ENEMIES_CLASSIC) g_ram[0x747]=1;
+    g_ram[0x6cf]=1;
+    g_ram[0x6e6]=0x58;
+    g_cpu.X=0;
+    func_CD3C();
+    Packet *p=&s.transient_next[FRENZY_SLOTS+slot*2];
+    capture_packet(p,1,original_oam,0x40);
+    if (!p->count) p->native=0;
+    if (long_bar) {
+        capture_packet(p+1,1,second_oam,0x58);
+        if (!p[1].count) p[1].native=0;
+    }
+    uint8_t spin_low=g_ram[0x58],spin_high=g_ram[0xa0];
+    end(&g);
+    /* The stock tick advances visible bars. In viewport mode the projected
+     * tick owns the phase only on frames the stock screen would skip. */
+    if (native_clipped && s_mode==SMB_ENEMIES_VIEWPORT) {
+        g_ram[0x58+slot]=spin_low;
+        g_ram[0xa0+slot]=spin_high;
+    }
     return 0;
 }
 static int plant_hook(uint16_t addr) {
@@ -451,10 +505,11 @@ static int swim_birth_hook(uint16_t addr) {
     }
     return 0;
 }
-static int swim_cull_hook(uint16_t addr) {
+static int transient_cull_hook(uint16_t addr) {
     (void)addr;
     int slot=g_cpu.X;
-    if (!swim_scope(slot) || s_mode!=SMB_ENEMIES_VIEWPORT || !(s.swim_slots&(1u<<slot))) return 0;
+    if (s_mode!=SMB_ENEMIES_VIEWPORT ||
+        !(firebar_scope(slot) || (swim_scope(slot) && (s.swim_slots&(1u<<slot))))) return 0;
     int left,right;
     game_widescreen_actor_range(camera(),g_render_width,0,&left,&right);
     int native_right=(g_ram[0x71b]<<8)|g_ram[0x71d];
@@ -475,8 +530,8 @@ void smb_ws_actors_begin_frame(void) {
     memcpy(s.display,s.next,sizeof s.display); memset(s.next,0,sizeof s.next);
     s.flag_display=s.flag_next; memset(&s.flag_next,0,sizeof s.flag_next);
     s.score_display=s.score_next; s.score_next=0;
-    memcpy(s.frenzy_display,s.frenzy_next,sizeof s.frenzy_display);
-    memset(s.frenzy_next,0,sizeof s.frenzy_next);
+    memcpy(s.transient_display,s.transient_next,sizeof s.transient_display);
+    memset(s.transient_next,0,sizeof s.transient_next);
     s.camera=camera();
 }
 void smb_ws_actors_update(void) {
@@ -568,8 +623,8 @@ int smb_ws_actors_suppress_sprite(int slot) {
         const Packet *p=&s.display[n];
         if (p->native && slot>=p->oam_base && slot<p->oam_base+SPRITES) return 1;
     }
-    for (int n=0;n<FRENZY_SLOTS;n++) {
-        const Packet *p=&s.frenzy_display[n];
+    for (int n=0;n<TRANSIENT_PACKETS;n++) {
+        const Packet *p=&s.transient_display[n];
         if (p->native && slot>=p->oam_base && slot<p->oam_base+SPRITES) return 1;
     }
     return s.flag_display.native && slot>=s.flag_display.oam_base && slot<s.flag_display.oam_base+SPRITES;
@@ -591,11 +646,11 @@ void smb_ws_actors_draw(uint32_t *out,int width,int native_x0,int render_camera,
             if (color) native_priority[dy*256+dx]=(uint8_t)slot;
         }
     }
-    for (int n=s.count+FRENZY_SLOTS;n>=0;n--) {
+    for (int n=s.count+TRANSIENT_PACKETS;n>=0;n--) {
         const Packet *p;
         if (n<s.count) p=&s.display[n];
         else if (n==s.count) p=&s.flag_display;
-        else p=&s.frenzy_display[n-s.count-1];
+        else p=&s.transient_display[n-s.count-1];
         for (int i=p->count-1;i>=0;i--) {
             const Sprite *v=&p->sprite[i];
             for (int y=0;y<8;y++) for (int x=0;x<8;x++) {
@@ -622,7 +677,8 @@ void smb_ws_actors_configure(int enabled,SmbEnemyMode mode) {
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.enemy-cull",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.score-gfx",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.swim-birth",active);
-    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.swim-cull",active);
+    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.transient-cull",active);
+    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.firebar-gfx",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.flag-gfx",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.plant-init",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.large-platform-gfx",active);
@@ -656,14 +712,14 @@ static int load(const uint8_t *data,int len) {
     uint32_t version;
     if (!len) { smb_ws_actors_reset(); return 1; }
     if (len!=sizeof s) return 0;
-    memcpy(&version,data,sizeof version); if (version!=7) return 0;
+    memcpy(&version,data,sizeof version); if (version!=8) return 0;
     Actors candidate; memcpy(&candidate,data,sizeof candidate);
     if (candidate.count>MAX_ACTORS) return 0;
     for (int i=0;i<5;i++) if (candidate.owner[i]<-2 || candidate.owner[i]>=candidate.count) return 0;
     for (int i=0;i<candidate.count;i++) if (candidate.display[i].count>SPRITES || candidate.next[i].count>SPRITES) return 0;
     if (candidate.flag_display.count>SPRITES || candidate.flag_next.count>SPRITES) return 0;
-    for (int i=0;i<FRENZY_SLOTS;i++)
-        if (candidate.frenzy_display[i].count>SPRITES || candidate.frenzy_next[i].count>SPRITES) return 0;
+    for (int i=0;i<TRANSIENT_PACKETS;i++)
+        if (candidate.transient_display[i].count>SPRITES || candidate.transient_next[i].count>SPRITES) return 0;
     s=candidate; return 1;
 }
 NES_MOD_CONSTRUCTOR(register_enemies) {
@@ -672,7 +728,8 @@ NES_MOD_CONSTRUCTOR(register_enemies) {
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.enemy-cull",0xd67a,cull_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.score-gfx",0x8537,score_gfx_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.swim-birth",0xc6f5,swim_birth_hook) ||
-        !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.swim-cull",0xd6a8,swim_cull_hook) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.transient-cull",0xd6a8,transient_cull_hook) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.firebar-gfx",0xcd3c,firebar_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.flag-gfx",0xe54b,flag_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.plant-init",0xc787,plant_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.large-platform-gfx",0xe5c8,gfx_hook) ||
