@@ -18,6 +18,11 @@ length = 16
 crc32 = 0x36094e18
 
 [[mod_function_hook]]
+addr = 0x8537           # SetupNumSpr: floating scores claim their native OAM pair
+length = 16
+crc32 = 0x6dcea733
+
+[[mod_function_hook]]
 addr = 0x86ff
 length = 16
 crc32 = 0x65bfc5cc

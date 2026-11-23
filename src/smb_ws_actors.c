@@ -67,6 +67,7 @@ typedef struct {
     uint8_t contacts[MAX_ACTORS][MAX_ACTORS/8];
     int camera;
     uint64_t updates,loads,transfers;
+    uint64_t score_display,score_next;
 } Actors;
 static Actors s;
 static int s_enabled,s_virtual,s_render_wide;
@@ -94,7 +95,7 @@ static void push(const Actor *a,int slot) {
     for (int i=0;i<FIELD_COUNT;i++) g_ram[fields[i]+slot]=a->state[i];
 }
 void smb_ws_actors_reset(void) {
-    memset(&s,0,sizeof s); s.version=4;
+    memset(&s,0,sizeof s); s.version=5;
     for (int i=0;i<5;i++) s.owner[i]=-1;
 }
 static int begin(Guest *g,const Actor *a) {
@@ -387,6 +388,14 @@ static int cull_hook(uint16_t addr) {
     int x=live_x(g_cpu.X),cam=camera();
     return x<cam || x>cam+304;
 }
+static int score_gfx_hook(uint16_t addr) {
+    (void)addr;
+    if (!s_enabled || s_virtual || !gameplay()) return 0;
+    /* SetupNumSpr writes a score glyph pair at the native OAM offset in Y. */
+    unsigned slot=g_cpu.Y/4;
+    if (slot<63) s.score_next|=UINT64_C(3)<<slot;
+    return 0;
+}
 void smb_ws_actors_begin_frame(void) {
     if (!s_enabled || runtime_get_vblank_depth()>1) return;
     s_render_wide=g_render_width>256 || game_backtracking_active();
@@ -395,6 +404,7 @@ void smb_ws_actors_begin_frame(void) {
     if (g_ram[0x776]&1) return;
     memcpy(s.display,s.next,sizeof s.display); memset(s.next,0,sizeof s.next);
     s.flag_display=s.flag_next; memset(&s.flag_next,0,sizeof s.flag_next);
+    s.score_display=s.score_next; s.score_next=0;
     s.camera=camera();
 }
 void smb_ws_actors_update(void) {
@@ -481,6 +491,7 @@ void smb_ws_actors_update(void) {
 }
 int smb_ws_actors_suppress_sprite(int slot) {
     if (!s_enabled || !s_render_wide || !gameplay() || !g_smb_ws_world.valid) return 0;
+    if ((unsigned)slot<64 && ((s.score_display>>slot)&1)) return 0;
     for (int n=0;n<s.count;n++) {
         const Packet *p=&s.display[n];
         if (p->native && slot>=p->oam_base && slot<p->oam_base+SPRITES) return 1;
@@ -490,8 +501,8 @@ int smb_ws_actors_suppress_sprite(int slot) {
 void smb_ws_actors_draw(uint32_t *out,int width,int native_x0,int render_camera,const uint8_t *opaque) {
     if (!s_enabled || !gameplay() || !(g_ppumask&16)) return;
     int pattern=(g_ppuctrl&8)?0x1000:0;
-    /* Native OAM owners draw first when they have higher sprite priority.
-     * Preserve their opaque pixels when replacing an enemy behind them. */
+    /* Respect native sprite priority, including score glyphs that now own
+     * the same OAM slot as the replaced enemy packet. */
     uint8_t native_priority[256*240]; memset(native_priority,255,sizeof native_priority);
     for (int slot=63;slot>=0;slot--) {
         const uint8_t *o=g_ppu_oam+slot*4;
@@ -512,7 +523,7 @@ void smb_ws_actors_draw(uint32_t *out,int width,int native_x0,int render_camera,
                 int dx=v->x-render_camera+native_x0+x,dy=v->y+y;
                 if (dx<0 || dx>=width || dy<32 || dy>=240) continue;
                 if (dx>=native_x0 && dx<native_x0+256 &&
-                    native_priority[dy*256+dx-native_x0]<(p->native?p->oam_base:64)) continue;
+                    native_priority[dy*256+dx-native_x0]<=(p->native?p->oam_base:64)) continue;
                 int off=pattern+v->tile*16+((v->attr&128)?7-y:y),bit=(v->attr&64)?x:7-x;
                 int color=((g_chr_ram[off]>>bit)&1)|(((g_chr_ram[off+8]>>bit)&1)<<1);
                 if (!color || ((v->attr&32) && opaque[dy*width+dx])) continue;
@@ -528,6 +539,7 @@ void smb_ws_actors_configure(int enabled,SmbEnemyMode mode) {
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.enemy-init",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.enemy-gfx",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.enemy-cull",active);
+    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.score-gfx",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.flag-gfx",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.plant-init",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.large-platform-gfx",active);
@@ -561,7 +573,7 @@ static int load(const uint8_t *data,int len) {
     uint32_t version;
     if (!len) { smb_ws_actors_reset(); return 1; }
     if (len!=sizeof s) return 0;
-    memcpy(&version,data,sizeof version); if (version!=4) return 0;
+    memcpy(&version,data,sizeof version); if (version!=5) return 0;
     Actors candidate; memcpy(&candidate,data,sizeof candidate);
     if (candidate.count>MAX_ACTORS) return 0;
     for (int i=0;i<5;i++) if (candidate.owner[i]<-2 || candidate.owner[i]>=candidate.count) return 0;
@@ -573,6 +585,7 @@ NES_MOD_CONSTRUCTOR(register_enemies) {
     if (!nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.enemy-init",0xc26c,spawn_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.enemy-gfx",0xe87d,gfx_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.enemy-cull",0xd67a,cull_hook) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.score-gfx",0x8537,score_gfx_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.flag-gfx",0xe54b,flag_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.plant-init",0xc787,plant_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.large-platform-gfx",0xe5c8,gfx_hook) ||
