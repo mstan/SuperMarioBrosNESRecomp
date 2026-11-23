@@ -170,16 +170,12 @@ static void graphics(Packet *p,int native,int oam_base) {
     } else func_E87D();
     capture_packet(p,native,oam_base,0x40);
 }
-static void capture_live_packet(Packet *p,int slot,uint8_t bowser_half) {
+static void capture_live_packet(Packet *p,int slot) {
     Actor current={0};
     pull(&current,slot);
     int oam_base=g_ram[0x6e5+slot]/4;
     Guest g;
-    if (begin(&g,&current)) {
-        g_ram[0x36a]=bowser_half;
-        graphics(p,1,oam_base);
-        end(&g);
-    }
+    if (begin(&g,&current)) { graphics(p,1,oam_base); end(&g); }
 }
 static void flag_graphics(Packet *p,const Actor *a,int native,int oam_base) {
     Guest g;
@@ -358,24 +354,10 @@ static int adopt_plant(int slot) {
 }
 static int gfx_hook(uint16_t addr) {
     (void)addr;
-    if (!s_enabled || s_virtual || !gameplay() || g_cpu.X>=6) return 0;
-    int slot=g_cpu.X;
-    uint8_t bowser_half=g_ram[0x36a];
-    if (g_ram[0x16+slot]==0x2d && bowser_half>=1 && bowser_half<=2) {
-        if (g_render_width>256 && g_ram[0xb6+slot]==1) {
-            int x=live_x(slot),cam=camera(),left,right;
-            game_widescreen_actor_range(cam,g_render_width,8,&left,&right);
-            /* The original renderer selects Bowser's front or rear from this
-             * flag. Keep each part's native animation and OAM priority. */
-            if (x+16>left && x<right && (x<cam+8 || x+24>cam+256))
-                capture_live_packet(&s.transient_next[BOWSER_PACKET_OFFSET+bowser_half-1],slot,bowser_half);
-        }
-        return 0;
-    }
-    if (slot>=5) return 0;
-    int n=s.owner[slot];
+    if (!s_enabled || s_virtual || !gameplay() || g_cpu.X>=5) return 0;
+    int slot=g_cpu.X,n=s.owner[slot];
     if (swim_scope(slot) && (s.swim_slots&(1u<<slot))) {
-        capture_live_packet(&s.transient_next[slot],slot,0);
+        capture_live_packet(&s.transient_next[slot],slot);
         return 0;
     }
     if (slot<FRENZY_SLOTS && g_render_width>256 &&
@@ -385,7 +367,7 @@ static int gfx_hook(uint16_t addr) {
         /* Native flying fish already keep moving beyond the camera. Recover
          * sprite columns at its edges without changing frenzy or motion. */
         if (x+16>left && x<right && (x<cam+8 || x+24>cam+256))
-            capture_live_packet(&s.transient_next[slot],slot,0);
+            capture_live_packet(&s.transient_next[slot],slot);
         return 0;
     }
     /* Initial screen construction can create a plant before gameplay starts.
@@ -410,7 +392,35 @@ static int gfx_hook(uint16_t addr) {
             a->native_slot=(int16_t)slot; s.owner[slot]=(int16_t)n; pull(a,slot);
         }
     }
-    if (n>=0) capture_live_packet(&s.next[n],slot,0);
+    if (n>=0) capture_live_packet(&s.next[n],slot);
+    return 0;
+}
+static int bowser_clip_hook(uint16_t addr) {
+    (void)addr;
+    int half=g_ram[0x36a];
+    if (!half || half>2 || !s_enabled || s_virtual || g_render_width<=256 || !gameplay()) return 0;
+    int slot=g_ram[8];
+    if (slot>=6 || g_ram[0x16+slot]!=0x2d || g_ram[0xb6+slot]!=1) return 0;
+    int offscreen=g_ram[0x3d1];
+    if (offscreen&0x80) return 0;
+    int x=live_x(slot),cam=camera(),left,right;
+    game_widescreen_actor_range(cam,g_render_width,8,&left,&right);
+    if (x+16<=left || x>=right || (x>=cam+8 && x+24<=cam+256)) return 0;
+
+    /* Bowser's native draw has finished animating and flipping all six
+     * sprites. Capture the result before the original clip hides columns. */
+    int oam=g_ram[0x6e5+slot];
+    if (oam>256-SPRITES*4) return 0;
+    Packet *p=&s.transient_next[BOWSER_PACKET_OFFSET+half-1];
+    p->count=0; p->oam_base=(uint8_t)(oam/4);
+    for (int i=0;i<SPRITES;i++) {
+        const uint8_t *o=g_ram+0x200+oam+i*4;
+        if (o[0]>=0xef || (i>=2 && (offscreen&0x40)) || (i>=4 && (offscreen&0x20))) continue;
+        Sprite *v=&p->sprite[p->count++];
+        v->x=(int16_t)(x+(int8_t)(o[3]-(uint8_t)(x-cam)));
+        v->y=o[0]+1; v->tile=o[1]; v->attr=o[2];
+    }
+    p->native=p->count!=0;
     return 0;
 }
 static int firebar_scope(int slot) {
@@ -698,6 +708,7 @@ void smb_ws_actors_configure(int enabled,SmbEnemyMode mode) {
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.swim-birth",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.transient-cull",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.firebar-gfx",active);
+    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.bowser-clip",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.flag-gfx",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.plant-init",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.large-platform-gfx",active);
@@ -749,6 +760,7 @@ NES_MOD_CONSTRUCTOR(register_enemies) {
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.swim-birth",0xc6f5,swim_birth_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.transient-cull",0xd6a8,transient_cull_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.firebar-gfx",0xcd3c,firebar_hook) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.bowser-clip",0xeb64,bowser_clip_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.flag-gfx",0xe54b,flag_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.plant-init",0xc787,plant_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.large-platform-gfx",0xe5c8,gfx_hook) ||
