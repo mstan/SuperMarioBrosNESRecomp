@@ -37,7 +37,8 @@ extern void func_E5C8(void), func_ED66(void), func_C982(void), func_D65B(void);
 extern uint16_t g_rts_target;
 
 enum { MAX_ACTORS=384, SPRITES=6, PAD=48, FRENZY_SWIM_SLOTS=3, FRENZY_SLOTS=4,
-       TRANSIENT_PACKETS=FRENZY_SLOTS+5*2 };
+       BOWSER_PACKET_OFFSET=FRENZY_SLOTS+5*2, TRANSIENT_PACKETS=BOWSER_PACKET_OFFSET+2,
+       ACTORS_STATE_VERSION=9 };
 /* Every independently indexed normal-enemy field, including aliases used by
  * plants, flying koopas, squids, hammers and score popups. Slot zero is the
  * workspace; a transfer copies fields, never the surrounding shared RAM. */
@@ -104,7 +105,7 @@ static void push(const Actor *a,int slot) {
     for (int i=0;i<FIELD_COUNT;i++) g_ram[fields[i]+slot]=a->state[i];
 }
 void smb_ws_actors_reset(void) {
-    memset(&s,0,sizeof s); s.version=8;
+    memset(&s,0,sizeof s); s.version=ACTORS_STATE_VERSION;
     for (int i=0;i<5;i++) s.owner[i]=-1;
 }
 static int begin(Guest *g,const Actor *a) {
@@ -169,12 +170,16 @@ static void graphics(Packet *p,int native,int oam_base) {
     } else func_E87D();
     capture_packet(p,native,oam_base,0x40);
 }
-static void capture_live_packet(Packet *p,int slot) {
+static void capture_live_packet(Packet *p,int slot,uint8_t bowser_half) {
     Actor current={0};
     pull(&current,slot);
     int oam_base=g_ram[0x6e5+slot]/4;
     Guest g;
-    if (begin(&g,&current)) { graphics(p,1,oam_base); end(&g); }
+    if (begin(&g,&current)) {
+        g_ram[0x36a]=bowser_half;
+        graphics(p,1,oam_base);
+        end(&g);
+    }
 }
 static void flag_graphics(Packet *p,const Actor *a,int native,int oam_base) {
     Guest g;
@@ -353,10 +358,24 @@ static int adopt_plant(int slot) {
 }
 static int gfx_hook(uint16_t addr) {
     (void)addr;
-    if (!s_enabled || s_virtual || !gameplay() || g_cpu.X>=5) return 0;
-    int slot=g_cpu.X,n=s.owner[slot];
+    if (!s_enabled || s_virtual || !gameplay() || g_cpu.X>=6) return 0;
+    int slot=g_cpu.X;
+    uint8_t bowser_half=g_ram[0x36a];
+    if (g_ram[0x16+slot]==0x2d && bowser_half>=1 && bowser_half<=2) {
+        if (g_render_width>256 && g_ram[0xb6+slot]==1) {
+            int x=live_x(slot),cam=camera(),left,right;
+            game_widescreen_actor_range(cam,g_render_width,8,&left,&right);
+            /* The original renderer selects Bowser's front or rear from this
+             * flag. Keep each part's native animation and OAM priority. */
+            if (x+16>left && x<right && (x<cam+8 || x+24>cam+256))
+                capture_live_packet(&s.transient_next[BOWSER_PACKET_OFFSET+bowser_half-1],slot,bowser_half);
+        }
+        return 0;
+    }
+    if (slot>=5) return 0;
+    int n=s.owner[slot];
     if (swim_scope(slot) && (s.swim_slots&(1u<<slot))) {
-        capture_live_packet(&s.transient_next[slot],slot);
+        capture_live_packet(&s.transient_next[slot],slot,0);
         return 0;
     }
     if (slot<FRENZY_SLOTS && g_render_width>256 &&
@@ -366,7 +385,7 @@ static int gfx_hook(uint16_t addr) {
         /* Native flying fish already keep moving beyond the camera. Recover
          * sprite columns at its edges without changing frenzy or motion. */
         if (x+16>left && x<right && (x<cam+8 || x+24>cam+256))
-            capture_live_packet(&s.transient_next[slot],slot);
+            capture_live_packet(&s.transient_next[slot],slot,0);
         return 0;
     }
     /* Initial screen construction can create a plant before gameplay starts.
@@ -391,7 +410,7 @@ static int gfx_hook(uint16_t addr) {
             a->native_slot=(int16_t)slot; s.owner[slot]=(int16_t)n; pull(a,slot);
         }
     }
-    if (n>=0) capture_live_packet(&s.next[n],slot);
+    if (n>=0) capture_live_packet(&s.next[n],slot,0);
     return 0;
 }
 static int firebar_scope(int slot) {
@@ -712,7 +731,7 @@ static int load(const uint8_t *data,int len) {
     uint32_t version;
     if (!len) { smb_ws_actors_reset(); return 1; }
     if (len!=sizeof s) return 0;
-    memcpy(&version,data,sizeof version); if (version!=8) return 0;
+    memcpy(&version,data,sizeof version); if (version!=ACTORS_STATE_VERSION) return 0;
     Actors candidate; memcpy(&candidate,data,sizeof candidate);
     if (candidate.count>MAX_ACTORS) return 0;
     for (int i=0;i<5;i++) if (candidate.owner[i]<-2 || candidate.owner[i]>=candidate.count) return 0;
