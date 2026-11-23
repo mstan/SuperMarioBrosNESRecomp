@@ -143,6 +143,11 @@ length = 16
 crc32 = 0xb8126cc0
 
 [[mod_function_hook]]
+addr = 0xc6f5           # Swimming frenzy: position after native PutAtRightExtent
+length = 16
+crc32 = 0x6d328d69
+
+[[mod_function_hook]]
 addr = 0xc787
 length = 16
 crc32 = 0x9d420cfe
@@ -166,6 +171,11 @@ crc32 = 0x96152552
 addr = 0xd67a
 length = 16
 crc32 = 0x81fc1e21
+
+[[mod_function_hook]]
+addr = 0xd6a8           # OffscreenBoundsCheck: native enemy X comparisons
+length = 16
+crc32 = 0x3986099b
 
 [[mod_function_hook]]
 addr = 0xd7c4
