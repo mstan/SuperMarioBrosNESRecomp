@@ -173,6 +173,11 @@ length = 16
 crc32 = 0x96152552
 
 [[mod_function_hook]]
+addr = 0xd263           # ProcBowserFlame: observe the three drawn flame sprites
+length = 16
+crc32 = 0x33eca5f1
+
+[[mod_function_hook]]
 addr = 0xd67a
 length = 16
 crc32 = 0x81fc1e21
