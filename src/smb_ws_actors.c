@@ -39,7 +39,8 @@ extern uint16_t g_rts_target;
 enum { MAX_ACTORS=384, SPRITES=6, PAD=48, FRENZY_SWIM_SLOTS=3, FRENZY_SLOTS=4,
        BOWSER_PACKET_OFFSET=FRENZY_SLOTS+5*2, FLAME_PACKET_OFFSET=BOWSER_PACKET_OFFSET+2,
        POWERUP_PACKET_OFFSET=FLAME_PACKET_OFFSET+6,
-       TRANSIENT_PACKETS=POWERUP_PACKET_OFFSET+1, ACTORS_STATE_VERSION=11 };
+       SPRINGBOARD_PACKET_OFFSET=POWERUP_PACKET_OFFSET+1,
+       TRANSIENT_PACKETS=SPRINGBOARD_PACKET_OFFSET+5, ACTORS_STATE_VERSION=12 };
 /* Every independently indexed normal-enemy field, including aliases used by
  * plants, flying koopas, squids, hammers and score popups. Slot zero is the
  * workspace; a transfer copies fields, never the surrounding shared RAM. */
@@ -415,9 +416,11 @@ static int sprite_clip_hook(uint16_t addr) {
     int slot=g_ram[8];
     if (slot>=6 || g_ram[0xb6+slot]!=1) return 0;
     int half=g_ram[0x36a];
-    int bowser=g_ram[0x16+slot]==0x2d && half>0 && half<=2;
-    int powerup=slot==5 && g_ram[0x16+slot]==0x2e && g_ram[0x0f+slot];
-    if (!bowser && !powerup) return 0;
+    int kind=g_ram[0x16+slot];
+    int bowser=kind==0x2d && half>0 && half<=2;
+    int powerup=kind==0x2e && slot==5 && g_ram[0x0f+slot];
+    int springboard=kind==0x32 && slot<5 && g_ram[0x0f+slot];
+    if (!bowser && !powerup && !springboard) return 0;
     int offscreen=g_ram[0x3d1];
     if (offscreen&0x80) return 0;
     int x=live_x(slot),cam=camera(),left,right;
@@ -431,12 +434,13 @@ static int sprite_clip_hook(uint16_t addr) {
         capture_preclip_packet(&s.transient_next[POWERUP_PACKET_OFFSET],slot,4,drawn,x,cam);
         return 0;
     }
-    /* Bowser's native draw has finished animating and flipping all six
-     * sprites. Capture the result before the original clip hides columns. */
+    /* Bowser and springboards have six native sprites. The draw routine has
+     * finished choosing the animation frame and flipping the sprite rows. */
+    int packet=bowser?BOWSER_PACKET_OFFSET+half-1:SPRINGBOARD_PACKET_OFFSET+slot;
     int drawn=SPRITES;
     if (offscreen&0x40) drawn=2;
     else if (offscreen&0x20) drawn=4;
-    capture_preclip_packet(&s.transient_next[BOWSER_PACKET_OFFSET+half-1],slot,SPRITES,drawn,x,cam);
+    capture_preclip_packet(&s.transient_next[packet],slot,SPRITES,drawn,x,cam);
     return 0;
 }
 static int flame_clip_hook(uint16_t addr) {
