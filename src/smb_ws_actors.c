@@ -40,7 +40,8 @@ enum { MAX_ACTORS=384, SPRITES=6, PAD=48, FRENZY_SWIM_SLOTS=3, FRENZY_SLOTS=4,
        BOWSER_PACKET_OFFSET=FRENZY_SLOTS+5*2, FLAME_PACKET_OFFSET=BOWSER_PACKET_OFFSET+2,
        POWERUP_PACKET_OFFSET=FLAME_PACKET_OFFSET+6,
        SPRINGBOARD_PACKET_OFFSET=POWERUP_PACKET_OFFSET+1,
-       TRANSIENT_PACKETS=SPRINGBOARD_PACKET_OFFSET+5, ACTORS_STATE_VERSION=12 };
+       RETAINER_PACKET_OFFSET=SPRINGBOARD_PACKET_OFFSET+5,
+       TRANSIENT_PACKETS=RETAINER_PACKET_OFFSET+5, ACTORS_STATE_VERSION=13 };
 /* Every independently indexed normal-enemy field, including aliases used by
  * plants, flying koopas, squids, hammers and score popups. Slot zero is the
  * workspace; a transfer copies fields, never the surrounding shared RAM. */
@@ -415,32 +416,40 @@ static int sprite_clip_hook(uint16_t addr) {
     if (!s_enabled || s_virtual || g_render_width<=256 || !gameplay()) return 0;
     int slot=g_ram[8];
     if (slot>=6 || g_ram[0xb6+slot]!=1) return 0;
-    int half=g_ram[0x36a];
     int kind=g_ram[0x16+slot];
-    int bowser=kind==0x2d && half>0 && half<=2;
-    int powerup=kind==0x2e && slot==5 && g_ram[0x0f+slot];
-    int springboard=kind==0x32 && slot<5 && g_ram[0x0f+slot];
-    if (!bowser && !powerup && !springboard) return 0;
+    int packet,span=SPRITES;
+    switch (kind) {
+    case 0x2d: {
+        int half=g_ram[0x36a];
+        if (!half || half>2) return 0;
+        packet=BOWSER_PACKET_OFFSET+half-1;
+        break;
+    }
+    case 0x2e:
+        if (slot!=5 || !g_ram[0x0f+slot]) return 0;
+        packet=POWERUP_PACKET_OFFSET;
+        span=4;
+        break;
+    case 0x32:
+    case 0x35:
+        if (slot>=5 || !g_ram[0x0f+slot]) return 0;
+        packet=(kind==0x32?SPRINGBOARD_PACKET_OFFSET:RETAINER_PACKET_OFFSET)+slot;
+        break;
+    default:
+        return 0;
+    }
     int offscreen=g_ram[0x3d1];
     if (offscreen&0x80) return 0;
     int x=live_x(slot),cam=camera(),left,right;
     game_widescreen_actor_range(cam,g_render_width,8,&left,&right);
     if (x+16<=left || x>=right || (x>=cam+8 && x+24<=cam+256)) return 0;
 
-    if (powerup) {
-        /* The original draw has already selected the tiles, priority, flips
-         * and cycling palette for this power-up. Keep its two rows. */
-        int drawn=(offscreen&0x40)?2:4;
-        capture_preclip_packet(&s.transient_next[POWERUP_PACKET_OFFSET],slot,4,drawn,x,cam);
-        return 0;
-    }
-    /* Bowser and springboards have six native sprites. The draw routine has
-     * finished choosing the animation frame and flipping the sprite rows. */
-    int packet=bowser?BOWSER_PACKET_OFFSET+half-1:SPRINGBOARD_PACKET_OFFSET+slot;
-    int drawn=SPRITES;
+    /* The native draw has selected the tiles, palette, priority and flips.
+     * Keep the rows still on screen before the original column clip. */
+    int drawn=span;
     if (offscreen&0x40) drawn=2;
     else if (offscreen&0x20) drawn=4;
-    capture_preclip_packet(&s.transient_next[packet],slot,SPRITES,drawn,x,cam);
+    capture_preclip_packet(&s.transient_next[packet],slot,span,drawn,x,cam);
     return 0;
 }
 static int flame_clip_hook(uint16_t addr) {
