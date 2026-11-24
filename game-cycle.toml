@@ -268,6 +268,11 @@ length = 16
 crc32 = 0x4a250112
 
 [[mod_function_hook]]
+addr = 0xe60d           # DrawLargePlatform: before hiding columns
+length = 16
+crc32 = 0x3de9a246
+
+[[mod_function_hook]]
 addr = 0xe87d
 length = 16
 crc32 = 0xd06dd5dc
