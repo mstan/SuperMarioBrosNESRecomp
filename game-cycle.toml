@@ -283,6 +283,11 @@ length = 16
 crc32 = 0x5dfb162e
 
 [[mod_function_hook]]
+addr = 0xb982           # VineObjectHandler: after drawing, before cull
+length = 16
+crc32 = 0x2e40eb9e
+
+[[mod_function_hook]]
 addr = 0xed66
 length = 16
 crc32 = 0x7df0d701

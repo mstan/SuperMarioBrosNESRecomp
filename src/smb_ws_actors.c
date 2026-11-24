@@ -423,6 +423,32 @@ static int balance_platform_clip_hook(uint16_t addr) {
     capture_preclip_packet(&s.transient_next[CLIPPED_PACKET_OFFSET+slot],slot,SPRITES,SPRITES,x,cam);
     return 0;
 }
+static int vine_clip_hook(uint16_t addr) {
+    (void)addr;
+    if (!s_enabled || s_virtual || g_render_width<=256 || !gameplay()) return 0;
+    int parts=g_ram[0x398];
+    if (parts<1 || parts>2 || g_ram[0x1b]!=0x2f) return 0;
+    int x=live_x(5),cam=camera(),left,right;
+    int end=x+14; /* Alternating 8-pixel tiles use offsets 0 and 6. */
+    if (x>=cam && end<=cam+256) return 0;
+    game_widescreen_actor_range(cam,g_render_width,0,&left,&right);
+
+    /* Preserve both native chunks and discard wrapped columns, including on
+     * the frame the vine leaves the wide view. */
+    for (int part=0;part<parts;part++) {
+        int slot=g_ram[0x39a+part];
+        if (slot<6 && g_ram[0x16+slot]==0x2f)
+            capture_preclip_packet(&s.transient_next[CLIPPED_PACKET_OFFSET+slot],slot,SPRITES,SPRITES,x,cam);
+    }
+    if (end<=left || x>=right || !(g_ram[0x3d1]&0x0c)) return 0;
+
+    /* Return as ExitVH while the vine is still visible. This skips both the
+     * early erase and the write to the narrow climbing block buffer. */
+    g_cpu.X=g_ram[8];
+    g_cpu.Z=g_cpu.X==0;
+    g_cpu.N=g_cpu.X>>7;
+    return 1;
+}
 static int sprite_clip_hook(uint16_t addr) {
     (void)addr;
     if (!s_enabled || s_virtual || g_render_width<=256 || !gameplay()) return 0;
@@ -775,6 +801,7 @@ void smb_ws_actors_configure(int enabled,SmbEnemyMode mode) {
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.plant-init",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.large-platform-gfx",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.balance-platform-clip",active);
+    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.vine-clip",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.small-platform-gfx",active);
 }
 int smb_ws_actors_debug(const char *cmd,int id) {
@@ -830,6 +857,7 @@ NES_MOD_CONSTRUCTOR(register_enemies) {
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.plant-init",0xc787,plant_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.large-platform-gfx",0xe5c8,gfx_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.balance-platform-clip",0xe60d,balance_platform_clip_hook) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.vine-clip",0xb982,vine_clip_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.small-platform-gfx",0xed66,gfx_hook) ||
         !nes_mod_register_savestate_hook("super-mario-bros.widescreen.actors",save,load))
         fprintf(stderr,"[Widescreen] Failed to register enemy residents\n");
