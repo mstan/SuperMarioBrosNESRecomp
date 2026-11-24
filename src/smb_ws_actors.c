@@ -37,11 +37,8 @@ extern void func_E5C8(void), func_ED66(void), func_C982(void), func_D65B(void);
 extern uint16_t g_rts_target;
 
 enum { MAX_ACTORS=384, SPRITES=6, PAD=48, FRENZY_SWIM_SLOTS=3, FRENZY_SLOTS=4,
-       BOWSER_PACKET_OFFSET=FRENZY_SLOTS+5*2, FLAME_PACKET_OFFSET=BOWSER_PACKET_OFFSET+2,
-       POWERUP_PACKET_OFFSET=FLAME_PACKET_OFFSET+6,
-       SPRINGBOARD_PACKET_OFFSET=POWERUP_PACKET_OFFSET+1,
-       RETAINER_PACKET_OFFSET=SPRINGBOARD_PACKET_OFFSET+5,
-       TRANSIENT_PACKETS=RETAINER_PACKET_OFFSET+5, ACTORS_STATE_VERSION=13 };
+       BOWSER_PACKET_OFFSET=FRENZY_SLOTS+5*2, CLIPPED_PACKET_OFFSET=BOWSER_PACKET_OFFSET+2,
+       TRANSIENT_PACKETS=CLIPPED_PACKET_OFFSET+6, ACTORS_STATE_VERSION=14 };
 /* Every independently indexed normal-enemy field, including aliases used by
  * plants, flying koopas, squids, hammers and score popups. Slot zero is the
  * workspace; a transfer copies fields, never the surrounding shared RAM. */
@@ -417,7 +414,7 @@ static int sprite_clip_hook(uint16_t addr) {
     int slot=g_ram[8];
     if (slot>=6 || g_ram[0xb6+slot]!=1) return 0;
     int kind=g_ram[0x16+slot];
-    int packet,span=SPRITES;
+    int packet=CLIPPED_PACKET_OFFSET+slot,span=SPRITES;
     switch (kind) {
     case 0x2d: {
         int half=g_ram[0x36a];
@@ -427,13 +424,13 @@ static int sprite_clip_hook(uint16_t addr) {
     }
     case 0x2e:
         if (slot!=5 || !g_ram[0x0f+slot]) return 0;
-        packet=POWERUP_PACKET_OFFSET;
         span=4;
         break;
+    case 0x11:
+    case 0x12:
     case 0x32:
     case 0x35:
         if (slot>=5 || !g_ram[0x0f+slot]) return 0;
-        packet=(kind==0x32?SPRINGBOARD_PACKET_OFFSET:RETAINER_PACKET_OFFSET)+slot;
         break;
     default:
         return 0;
@@ -445,7 +442,8 @@ static int sprite_clip_hook(uint16_t addr) {
     if (x+16<=left || x>=right || (x>=cam+8 && x+24<=cam+256)) return 0;
 
     /* The native draw has selected the tiles, palette, priority and flips.
-     * Keep the rows still on screen before the original column clip. */
+     * Keep the rows still on screen before the original column clip. One
+     * packet per native slot follows the OAM used by its current actor. */
     int drawn=span;
     if (offscreen&0x40) drawn=2;
     else if (offscreen&0x20) drawn=4;
@@ -462,7 +460,7 @@ static int flame_clip_hook(uint16_t addr) {
     if (x+24<=left || x>=right || (x>=cam+8 && x+24<=cam+256)) return 0;
     /* The flame routine has drawn all three tiles. The original code still
      * clips them and controls motion, collision, and lifetime. */
-    capture_preclip_packet(&s.transient_next[FLAME_PACKET_OFFSET+slot],slot,3,3,x,cam);
+    capture_preclip_packet(&s.transient_next[CLIPPED_PACKET_OFFSET+slot],slot,3,3,x,cam);
     return 0;
 }
 static int firebar_scope(int slot) {
