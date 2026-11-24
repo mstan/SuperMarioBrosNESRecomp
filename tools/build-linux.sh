@@ -28,6 +28,7 @@
 # Python 3 with PyInstaller/Pillow, and FUSE support for AppImage tooling.
 # Pinned linuxdeploy/appimagetool binaries are downloaded and SHA-256 checked.
 # Regen needs a verified ROM at the repo root (see tools/regen.sh).
+# Set NESRECOMP_SHADER_PRESET_DIR to bundle the shared GLSL catalog.
 set -euo pipefail
 
 # ============================ PER-GAME CONFIG ===============================
@@ -114,6 +115,11 @@ FLAGS+=( -DNESRECOMP_BACKEND=cycle
 if [ -n "${NESRECOMP_ROM:-}" ]; then FLAGS+=( "-DNESRECOMP_ROM=$NESRECOMP_ROM" ); fi
 if [ -n "${NESRECOMP_ROOT:-}" ]; then FLAGS+=( "-DNESRECOMP_ROOT=$NESRECOMP_ROOT" ); fi
 if [ -n "${NESRECOMP_RECOMP_UI:-}" ]; then FLAGS+=( "-DNESRECOMP_RECOMP_UI=$NESRECOMP_RECOMP_UI" ); fi
+SHADER_PRESET_DIR="${NESRECOMP_SHADER_PRESET_DIR:-}"
+if [ -n "$SHADER_PRESET_DIR" ]; then
+  SHADER_PRESET_DIR="$(cd -- "$SHADER_PRESET_DIR" && pwd)"
+fi
+FLAGS+=( "-DNESRECOMP_SHADER_PRESET_DIR=$SHADER_PRESET_DIR" )
 
 # Single cleanup hook: remove the AppDir scratch dir AND restore any .pin files
 # the --nopin bypass moved aside (so a failed build never leaves the repo dirty).
@@ -224,7 +230,17 @@ BUILT_DIR="$(dirname "$BIN")"
 [ -d "$BUILT_DIR/assets" ] || { echo "ERROR: launcher assets missing beside $BIN" >&2; exit 1; }
 [ -x "$BUILT_DIR/falcon_owner_assets" ] || { echo "ERROR: Linux Falcon owner-ROM helper missing" >&2; exit 1; }
 [ -x "$BUILT_DIR/smb_hdpack_importer" ] || { echo "ERROR: HD Mod importer missing" >&2; exit 1; }
-cp -r "$BUILT_DIR/assets" "$APPDIR/usr/bin/assets"
+mkdir -p "$APPDIR/usr/bin/assets"
+(
+  shopt -s dotglob nullglob
+  for asset in "$BUILT_DIR/assets/"*; do
+    if [[ ${asset##*/} == shaders ]]; then continue; fi
+    cp -r -- "$asset" "$APPDIR/usr/bin/assets/"
+  done
+)
+if [ -n "$SHADER_PRESET_DIR" ]; then
+  cp -r -- "$SHADER_PRESET_DIR" "$APPDIR/usr/bin/assets/shaders"
+fi
 cp "$BUILT_DIR/falcon_owner_assets" "$APPDIR/usr/bin/falcon_owner_assets"
 chmod 0755 "$APPDIR/usr/bin/falcon_owner_assets"
 cp "$BUILT_DIR/smb_hdpack_importer" "$APPDIR/usr/bin/smb_hdpack_importer"
@@ -303,13 +319,13 @@ exec "\$HERE/usr/bin/$EXE" "\$@"
 EOF
 chmod +x "$APPDIR/AppRun"
 
+echo "      checking AppDir layout and payload"
+bash "$REPO/tools/test_appimage_layout.sh" "$APPDIR" "$SHADER_PRESET_DIR"
+
 APP="$OUT/$RELEASE_SLUG-linux-$VERSION-x86_64.AppImage"
 rm -f "$APP"
 ARCH=x86_64 $APPIMAGETOOL --mksquashfs-opt=-processors --mksquashfs-opt="$JOBS" "$APPDIR" "$APP"
 chmod +x "$APP"
 echo "      BUILT: $APP ($(du -h "$APP" | cut -f1))"
-
-echo "[4/4] layout and payload test"
-bash "$REPO/tools/test_appimage_layout.sh" "$APPDIR"
 
 if [ "$DO_RUN" = "1" ]; then echo "[run] $APP"; "$APP" || true; fi
