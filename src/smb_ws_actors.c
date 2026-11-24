@@ -426,6 +426,10 @@ static int sprite_clip_hook(uint16_t addr) {
         if (slot!=5 || !g_ram[0x0f+slot]) return 0;
         span=4;
         break;
+    case 0x08:
+        /* Area-managed objects already have their own wide draw packet. */
+        if (slot>=5 || s.owner[slot]>=0 || !g_ram[0x0f+slot]) return 0;
+        break;
     case 0x11:
     case 0x12:
     case 0x32:
