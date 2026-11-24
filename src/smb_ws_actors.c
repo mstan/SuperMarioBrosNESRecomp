@@ -37,8 +37,8 @@ extern void func_E5C8(void), func_ED66(void), func_C982(void), func_D65B(void);
 extern uint16_t g_rts_target;
 
 enum { MAX_ACTORS=384, SPRITES=6, PAD=48, FRENZY_SWIM_SLOTS=3, FRENZY_SLOTS=4,
-       BOWSER_PACKET_OFFSET=FRENZY_SLOTS+5*2, FLAME_PACKET_OFFSET=BOWSER_PACKET_OFFSET+2,
-       TRANSIENT_PACKETS=FLAME_PACKET_OFFSET+6, ACTORS_STATE_VERSION=10 };
+       BOWSER_PACKET_OFFSET=FRENZY_SLOTS+5*2, CLIPPED_PACKET_OFFSET=BOWSER_PACKET_OFFSET+2,
+       TRANSIENT_PACKETS=CLIPPED_PACKET_OFFSET+6, ACTORS_STATE_VERSION=14 };
 /* Every independently indexed normal-enemy field, including aliases used by
  * plants, flying koopas, squids, hammers and score popups. Slot zero is the
  * workspace; a transfer copies fields, never the surrounding shared RAM. */
@@ -408,24 +408,91 @@ static void capture_preclip_packet(Packet *p,int slot,int span,int drawn,int x,i
     }
     p->native=p->count!=0;
 }
-static int bowser_clip_hook(uint16_t addr) {
+static int balance_platform_clip_hook(uint16_t addr) {
     (void)addr;
-    int half=g_ram[0x36a];
-    if (!half || half>2 || !s_enabled || s_virtual || g_render_width<=256 || !gameplay()) return 0;
+    if (!s_enabled || s_virtual || g_render_width<=256 || !gameplay()) return 0;
     int slot=g_ram[8];
-    if (slot>=6 || g_ram[0x16+slot]!=0x2d || g_ram[0xb6+slot]!=1) return 0;
+    if (slot>=5 || g_ram[0x16+slot]!=0x24 || (g_ram[0x3d1]&0x80)) return 0;
+    int x=live_x(slot),cam=camera(),left,right;
+    int end=x+SPRITES*8;
+    game_widescreen_actor_range(cam,g_render_width,8,&left,&right);
+    if (end<=left || x>=right || (x>=cam && end<=cam+256)) return 0;
+
+    /* Both lifts have already run their native collision and linked motion.
+     * Carry only the columns drawn before stock horizontal clipping. */
+    capture_preclip_packet(&s.transient_next[CLIPPED_PACKET_OFFSET+slot],slot,SPRITES,SPRITES,x,cam);
+    return 0;
+}
+static int vine_clip_hook(uint16_t addr) {
+    (void)addr;
+    if (!s_enabled || s_virtual || g_render_width<=256 || !gameplay()) return 0;
+    int parts=g_ram[0x398];
+    if (parts<1 || parts>2 || g_ram[0x1b]!=0x2f) return 0;
+    int x=live_x(5),cam=camera(),left,right;
+    int end=x+14; /* Alternating 8-pixel tiles use offsets 0 and 6. */
+    if (x>=cam && end<=cam+256) return 0;
+    game_widescreen_actor_range(cam,g_render_width,0,&left,&right);
+
+    /* Preserve both native chunks and discard wrapped columns, including on
+     * the frame the vine leaves the wide view. */
+    for (int part=0;part<parts;part++) {
+        int slot=g_ram[0x39a+part];
+        if (slot<6 && g_ram[0x16+slot]==0x2f)
+            capture_preclip_packet(&s.transient_next[CLIPPED_PACKET_OFFSET+slot],slot,SPRITES,SPRITES,x,cam);
+    }
+    if (end<=left || x>=right || !(g_ram[0x3d1]&0x0c)) return 0;
+
+    /* Return as ExitVH while the vine is still visible. This skips both the
+     * early erase and the write to the narrow climbing block buffer. */
+    g_cpu.X=g_ram[8];
+    g_cpu.Z=g_cpu.X==0;
+    g_cpu.N=g_cpu.X>>7;
+    return 1;
+}
+static int sprite_clip_hook(uint16_t addr) {
+    (void)addr;
+    if (!s_enabled || s_virtual || g_render_width<=256 || !gameplay()) return 0;
+    int slot=g_ram[8];
+    if (slot>=6 || g_ram[0xb6+slot]!=1) return 0;
+    int kind=g_ram[0x16+slot];
+    int packet=CLIPPED_PACKET_OFFSET+slot,span=SPRITES;
+    switch (kind) {
+    case 0x2d: {
+        int half=g_ram[0x36a];
+        if (!half || half>2) return 0;
+        packet=BOWSER_PACKET_OFFSET+half-1;
+        break;
+    }
+    case 0x2e:
+        if (slot!=5 || !g_ram[0x0f+slot]) return 0;
+        span=4;
+        break;
+    case 0x08:
+        /* Area-managed objects already have their own wide draw packet. */
+        if (slot>=5 || s.owner[slot]>=0 || !g_ram[0x0f+slot]) return 0;
+        break;
+    case 0x11:
+    case 0x12:
+    case 0x32:
+    case 0x35:
+        if (slot>=5 || !g_ram[0x0f+slot]) return 0;
+        break;
+    default:
+        return 0;
+    }
     int offscreen=g_ram[0x3d1];
     if (offscreen&0x80) return 0;
     int x=live_x(slot),cam=camera(),left,right;
     game_widescreen_actor_range(cam,g_render_width,8,&left,&right);
     if (x+16<=left || x>=right || (x>=cam+8 && x+24<=cam+256)) return 0;
 
-    /* Bowser's native draw has finished animating and flipping all six
-     * sprites. Capture the result before the original clip hides columns. */
-    int drawn=SPRITES;
+    /* The native draw has selected the tiles, palette, priority and flips.
+     * Keep the rows still on screen before the original column clip. One
+     * packet per native slot follows the OAM used by its current actor. */
+    int drawn=span;
     if (offscreen&0x40) drawn=2;
     else if (offscreen&0x20) drawn=4;
-    capture_preclip_packet(&s.transient_next[BOWSER_PACKET_OFFSET+half-1],slot,SPRITES,drawn,x,cam);
+    capture_preclip_packet(&s.transient_next[packet],slot,span,drawn,x,cam);
     return 0;
 }
 static int flame_clip_hook(uint16_t addr) {
@@ -438,7 +505,7 @@ static int flame_clip_hook(uint16_t addr) {
     if (x+24<=left || x>=right || (x>=cam+8 && x+24<=cam+256)) return 0;
     /* The flame routine has drawn all three tiles. The original code still
      * clips them and controls motion, collision, and lifetime. */
-    capture_preclip_packet(&s.transient_next[FLAME_PACKET_OFFSET+slot],slot,3,3,x,cam);
+    capture_preclip_packet(&s.transient_next[CLIPPED_PACKET_OFFSET+slot],slot,3,3,x,cam);
     return 0;
 }
 static int firebar_scope(int slot) {
@@ -728,11 +795,13 @@ void smb_ws_actors_configure(int enabled,SmbEnemyMode mode) {
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.swim-birth",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.transient-cull",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.firebar-gfx",active);
-    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.bowser-clip",active);
+    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.sprite-clip",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.flame-clip",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.flag-gfx",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.plant-init",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.large-platform-gfx",active);
+    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.balance-platform-clip",active);
+    nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.vine-clip",active);
     nes_mod_set_function_hook_enabled("super-mario-bros.widescreen.small-platform-gfx",active);
 }
 int smb_ws_actors_debug(const char *cmd,int id) {
@@ -782,11 +851,13 @@ NES_MOD_CONSTRUCTOR(register_enemies) {
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.swim-birth",0xc6f5,swim_birth_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.transient-cull",0xd6a8,transient_cull_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.firebar-gfx",0xcd3c,firebar_hook) ||
-        !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.bowser-clip",0xeb64,bowser_clip_hook) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.sprite-clip",0xeb64,sprite_clip_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.flame-clip",0xd263,flame_clip_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.flag-gfx",0xe54b,flag_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.plant-init",0xc787,plant_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.large-platform-gfx",0xe5c8,gfx_hook) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.balance-platform-clip",0xe60d,balance_platform_clip_hook) ||
+        !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.vine-clip",0xb982,vine_clip_hook) ||
         !nes_mod_register_function_entry_plugin("super-mario-bros.widescreen.small-platform-gfx",0xed66,gfx_hook) ||
         !nes_mod_register_savestate_hook("super-mario-bros.widescreen.actors",save,load))
         fprintf(stderr,"[Widescreen] Failed to register enemy residents\n");
