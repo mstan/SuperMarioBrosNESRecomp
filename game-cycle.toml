@@ -273,7 +273,7 @@ length = 16
 crc32 = 0xd06dd5dc
 
 [[mod_function_hook]]
-addr = 0xeb64           # SprObjectOffscrChk: observe Bowser's drawn sprites
+addr = 0xeb64           # SprObjectOffscrChk: observe drawn Bowser and power-up sprites
 length = 16
 crc32 = 0x5dfb162e
 
