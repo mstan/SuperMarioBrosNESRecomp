@@ -40,6 +40,16 @@ $cycleBuild = Select-String -LiteralPath $cmakeCache -Pattern '^NESRECOMP_BACKEN
 if (-not $cycleBuild) { throw 'release packaging requires the default cycle backend' }
 $mingwRuntimeFiles = @('libgcc_s_seh-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll')
 $cacheText = Get-Content -LiteralPath $cmakeCache -Raw
+$shaderSetting = [regex]::Match($cacheText, '(?m)^NESRECOMP_SHADER_PRESET_DIR:PATH=([^\r\n]*)')
+$shaderPresetSource = $shaderSetting.Groups[1].Value
+$shaderAssets = @()
+if ($shaderPresetSource) {
+  $shaderAssets += 'README.md'
+  foreach ($preset in 'crt-soft', 'lcd-grid', 'sharp', 'warm-composite') {
+    $shaderAssets += "$preset.glslp"
+    $shaderAssets += "_passes/$preset-pass.glsl"
+  }
+}
 $compilerSetting = [regex]::Match($cacheText, '(?m)^CMAKE_CXX_COMPILER:[^=]+=(.*)\r?$')
 $compilerRuntimeDir = if ($compilerSetting.Success) { Split-Path -Parent $compilerSetting.Groups[1].Value.TrimEnd("`r") } else { '' }
 $hasMingwRuntimes = $compilerRuntimeDir -and (Test-Path -LiteralPath (Join-Path $compilerRuntimeDir 'libstdc++-6.dll') -PathType Leaf)
@@ -185,6 +195,20 @@ function Assert-ReleaseStage([string]$stage, [string]$sourceMods) {
     'assets/img/verdict_ok.tga',
     'assets/img/verdict_warn.tga'
   )
+  foreach ($shader in $shaderAssets) {
+    $relative = "assets/shaders/$shader"
+    $requiredAssets += $relative
+    $sourceShader = Join-Path $shaderPresetSource $shader
+    $stagedShader = Join-Path $stage $relative
+    if (-not (Test-Path -LiteralPath $sourceShader -PathType Leaf) -or
+        -not (Test-Path -LiteralPath $stagedShader -PathType Leaf)) {
+      throw "release staging is missing bundled shader: $relative"
+    }
+    if ((Get-FileHash -LiteralPath $sourceShader -Algorithm SHA256).Hash -ne
+        (Get-FileHash -LiteralPath $stagedShader -Algorithm SHA256).Hash) {
+      throw "release staging changed bundled shader: $relative"
+    }
+  }
   $stagedAssets = @($relativeFiles | Where-Object { $_ -like 'assets/*' })
   $assetDifference = @(Compare-Object $requiredAssets $stagedAssets)
   if ($assetDifference.Count -ne 0) {
@@ -384,7 +408,11 @@ function New-ReleaseZip {
   if (-not (Test-Path $launcherAssets)) {
     throw "missing launcher assets at $launcherAssets"
   }
-  Copy-Item $launcherAssets (Join-Path $stage 'assets') -Recurse
+  $stagedAssets = Join-Path $stage 'assets'
+  New-Item -ItemType Directory -Path $stagedAssets | Out-Null
+  Get-ChildItem -LiteralPath $launcherAssets -Force |
+    Where-Object { $_.Name -ne 'shaders' -or $shaderPresetSource } |
+    ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $stagedAssets -Recurse }
 
   # Built-in packages are source-controlled catalog data. Stage that pristine
   # tree rather than build_release/mods, which may contain state.toml with an
