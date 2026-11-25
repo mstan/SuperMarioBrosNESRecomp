@@ -1,4 +1,5 @@
 [game]
+name = "Super Mario Bros."
 output_prefix = "super-mario-bros-cycle"
 cycle_accurate = true
 
