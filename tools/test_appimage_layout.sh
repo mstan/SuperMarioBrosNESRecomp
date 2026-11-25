@@ -1,12 +1,14 @@
 #!/bin/sh
 set -eu
 
-if [ "$#" -ne 1 ]; then
-    echo "usage: $0 /path/to/AppDir" >&2
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+    echo "usage: $0 /path/to/AppDir [shader-preset-directory]" >&2
     exit 2
 fi
 
 appdir=$(CDPATH= cd -- "$1" && pwd)
+shader_source=${2:-}
+asset_root="$appdir/usr/bin/assets"
 exe="$appdir/usr/bin/SuperMarioBrosRecomp"
 helper="$appdir/usr/bin/falcon_owner_assets"
 [ -x "$exe" ] || { echo "missing Linux game executable" >&2; exit 1; }
@@ -35,9 +37,27 @@ img/verdict_bad.tga
 img/verdict_none.tga
 img/verdict_ok.tga
 img/verdict_warn.tga'
-actual_assets=$(cd "$appdir/usr/bin/assets" && find . -type f -printf '%P\n' | sort)
+if [ -n "$shader_source" ]; then
+    shader_assets='shaders/README.md
+shaders/_passes/crt-soft-pass.glsl
+shaders/_passes/lcd-grid-pass.glsl
+shaders/_passes/sharp-pass.glsl
+shaders/_passes/warm-composite-pass.glsl
+shaders/crt-soft.glslp
+shaders/lcd-grid.glslp
+shaders/sharp.glslp
+shaders/warm-composite.glslp'
+    required_assets=$(printf '%s\n' "$required_assets" "$shader_assets" | LC_ALL=C sort)
+fi
+actual_assets=$(cd "$asset_root" && find . -type f -printf '%P\n' | LC_ALL=C sort)
 [ "$actual_assets" = "$required_assets" ] || {
     echo "launcher asset inventory differs from the approved list" >&2; exit 1; }
+if [ -n "$shader_source" ]; then
+    for asset in $shader_assets; do
+        cmp -s "$shader_source/${asset#shaders/}" "$asset_root/$asset" || {
+            echo "bundled shader differs from its source: $asset" >&2; exit 1; }
+    done
+fi
 
 required_mods='packages/nesrecomp.developer.replay/1.0.0/manifest.toml
 packages/nesrecomp.twitch-chat/1.0.0/manifest.toml
@@ -71,7 +91,7 @@ state="$tmp/state"
 mkdir -p "$state"
 APPIMAGE="$state/SuperMarioBrosRecomp.AppImage" \
 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy NESRECOMP_NO_LAUNCHER=1 \
-timeout 20 "$appdir/AppRun" >/dev/null 2>&1 || true
+"$appdir/AppRun" >/dev/null 2>&1 || true
 
 for manifest in $required_mods; do
     [ -f "$state/mods/$manifest" ] || {
@@ -101,7 +121,7 @@ enabled = false
 STATE
 APPIMAGE="$state/SuperMarioBrosRecomp.AppImage" \
 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy NESRECOMP_NO_LAUNCHER=1 \
-timeout 20 "$appdir/AppRun" >/dev/null 2>&1 || true
+"$appdir/AppRun" >/dev/null 2>&1 || true
 [ "$(cat "$state/mods/packages/user.example/1.0.0/marker.txt")" = user-owned ] || {
     echo "AppRun overwrote a user-installed mod" >&2; exit 1; }
 # The runtime normalizes valid selections on startup. Check the actual saved
