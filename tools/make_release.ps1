@@ -57,38 +57,6 @@ $engineSetting = [regex]::Match($cacheText, '(?m)^NESRECOMP_ROOT:[^=]+=(.*)\r?$'
 $uiSetting = [regex]::Match($cacheText, '(?m)^NESRECOMP_RECOMP_UI:[^=]+=(.*)\r?$')
 $engineRoot = if ($engineSetting.Success) { $engineSetting.Groups[1].Value.TrimEnd("`r") } else { Join-Path $root 'nesrecomp' }
 $uiRoot = if ($uiSetting.Success) { $uiSetting.Groups[1].Value.TrimEnd("`r") } else { Join-Path $root 'recomp-ui' }
-$releaseLicenses = @{
-  'Game-LICENSE.txt' = (Join-Path $root 'LICENSE')
-  'Game-PERMISSIONS.md' = (Join-Path $root 'PERMISSIONS.md')
-  'NESRecomp-LICENSE.txt' = (Join-Path $engineRoot 'LICENSE')
-  'SDL2-COPYING.txt' = (Join-Path $engineRoot 'runner/external/SDL2/COPYING.txt')
-  'ImGui-LICENSE.txt' = (Join-Path $uiRoot 'src/third_party/imgui/LICENSE.txt')
-  'RecompUI-LICENSE.txt' = (Join-Path $uiRoot 'LICENSE')
-  'RecompNet-LICENSE.txt' = (Join-Path $engineRoot 'lib/recomp-net/LICENSE')
-  'RBEngine-LICENSE.txt' = (Join-Path $engineRoot 'lib/retcomm-rbengine/LICENSE')
-  'LatoLatin-OFL.txt' = (Join-Path $root 'tools/release-licenses/LatoLatin-OFL.txt')
-  'NotoSansSymbols2-OFL.txt' = (Join-Path $root 'tools/release-licenses/NotoSansSymbols2-OFL.txt')
-  'OpenMoji-LICENSE.txt' = (Join-Path $root 'tools/release-licenses/OpenMoji-LICENSE.txt')
-}
-foreach ($dependency in @(
-  @{ Cache = 'recomp_net_SOURCE_DIR'; Notice = 'RecompNet-LICENSE.txt' },
-  @{ Cache = 'retcomm_rbengine_SOURCE_DIR'; Notice = 'RBEngine-LICENSE.txt' }
-)) {
-  $configured = [regex]::Match($cacheText, '(?m)^'+[regex]::Escape($dependency.Cache)+':[^=]+=(.+)\r?$')
-  if ($configured.Success) { $releaseLicenses[$dependency.Notice] = Join-Path ($configured.Groups[1].Value.TrimEnd("`r")) 'LICENSE' }
-}
-# Match the notices to the compiler runtime actually staged by a GNU build.
-if ($hasMingwRuntimes) {
-  $compilerSetting = [regex]::Match($cacheText, '(?m)^CMAKE_CXX_COMPILER:[^=]+=(.*)\r?$')
-  if (-not $compilerSetting.Success) { throw 'missing C++ compiler identity for runtime notices' }
-  $compilerPrefix = Split-Path -Parent (Split-Path -Parent $compilerSetting.Groups[1].Value.TrimEnd("`r"))
-  foreach ($name in 'COPYING.LIB', 'COPYING.RUNTIME', 'COPYING3', 'README') {
-    $releaseLicenses["GCC-$name.txt"] = Join-Path $compilerPrefix "share/licenses/gcc-libs/$name"
-  }
-  $releaseLicenses['libwinpthread-COPYING.txt'] = Join-Path $compilerPrefix 'share/licenses/libwinpthread/COPYING'
-  $releaseLicenses['SDL2-runtime-LICENSE.txt'] = Join-Path $compilerPrefix 'share/licenses/SDL2/LICENSE.txt'
-}
-
 $readmeCommon = @'
 Super Mario Bros. - Static Recompilation
 =========================================
@@ -153,11 +121,7 @@ view. Fixed pipe rooms and scripted transitions keep their original bounds.
 Updates preserve an explicit saved Off choice. Whole-world coverage is incomplete.
 '@
 
-function Get-StageRelativePath([string]$stage, [string]$path) {
-  return $path.Substring($stage.Length).TrimStart('\', '/').Replace('\', '/')
-}
-
-function Assert-ReleaseStage([string]$stage, [string]$sourceMods) {
+function Assert-ReleaseStage([string]$stage, [string]$sourceMods, [string[]]$DependencyNotices) {
   $files = @(Get-ChildItem $stage -Recurse -File)
   $relativeFiles = @($files | ForEach-Object { Get-StageRelativePath $stage $_.FullName })
 
@@ -168,13 +132,14 @@ function Assert-ReleaseStage([string]$stage, [string]$sourceMods) {
     'SDL2.dll',
     'README.txt',
     'licenses/Game-LICENSE.txt',
+    'licenses/Game-PERMISSIONS.md',
     'licenses/NESRecomp-LICENSE.txt',
     'licenses/SDL2-COPYING.txt',
     'licenses/ImGui-LICENSE.txt',
     'THIRD-PARTY-LICENSES/README.md',
     'third_party/ymfm/LICENSE'
   )
-  $required += @($releaseLicenses.Keys | ForEach-Object { "licenses/$_" })
+  $required += @($DependencyNotices | ForEach-Object { "licenses/$_" })
   $missing = @($required | Where-Object { $_ -notin $relativeFiles })
   if ($missing.Count -ne 0) {
     throw "release staging is missing required payload: $($missing -join ', ')"
@@ -222,6 +187,7 @@ function Assert-ReleaseStage([string]$stage, [string]$sourceMods) {
     if ($_ -in $required) { return $false }
     if ($_ -in $requiredAssets) { return $false }
     if ($_ -in $mingwRuntimeFiles) { return $false }
+    if ($_ -in @('msvcp140.dll','vcruntime140.dll','vcruntime140_1.dll','msvcp140_1.dll','msvcp140_2.dll','concrt140.dll','vccorlib140.dll','msvcp140_atomic_wait.dll','msvcp140_codecvt_ids.dll')) { return $false }
     if ($_ -match '^mods/packages/[^/]+/[^/]+/manifest\.toml$') { return $false }
     return $true
   })
@@ -278,204 +244,13 @@ function Assert-ReleaseStage([string]$stage, [string]$sourceMods) {
   }
 }
 
-function Assert-ReleaseArchive([string]$zip, [string]$stage) {
-  Add-Type -AssemblyName System.IO.Compression.FileSystem
-  $expected = @{}
-  foreach ($file in Get-ChildItem $stage -Recurse -File) {
-    $relative = Get-StageRelativePath $stage $file.FullName
-    $expected[$relative] = $file.FullName
-  }
 
-  $archive = [System.IO.Compression.ZipFile]::OpenRead($zip)
-  try {
-    $seen = @{}
-    foreach ($entry in $archive.Entries) {
-      if ($entry.FullName.Contains('\')) {
-        throw "release archive contains a non-portable Windows path: $($entry.FullName)"
-      }
-      $relative = $entry.FullName
-      if ([string]::IsNullOrEmpty($entry.Name)) { continue }
-      if ($relative.StartsWith('/') -or $relative -match '(^|/)\.\.(/|$)') {
-        throw "release archive contains unsafe path: $relative"
-      }
-      if ($seen.ContainsKey($relative)) {
-        throw "release archive contains duplicate path: $relative"
-      }
-      $seen[$relative] = $true
-      if (-not $expected.ContainsKey($relative)) {
-        throw "release archive contains unstaged payload: $relative"
-      }
-
-      $sha = [System.Security.Cryptography.SHA256]::Create()
-      $stream = $entry.Open()
-      try {
-        $archiveHash = [BitConverter]::ToString($sha.ComputeHash($stream)).Replace('-', '')
-      } finally {
-        $stream.Dispose()
-        $sha.Dispose()
-      }
-      $stageHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $expected[$relative]).Hash
-      if ($archiveHash -ne $stageHash) {
-        throw "release archive content differs from staging: $relative"
-      }
-    }
-    $missing = @($expected.Keys | Where-Object { -not $seen.ContainsKey($_) })
-    if ($missing.Count -ne 0) {
-      throw "release archive is missing staged payload: $($missing -join ', ')"
-    }
-  } finally {
-    $archive.Dispose()
-  }
+$extra = @{
+    'falcon_owner_assets.exe' = (Join-Path $bin 'falcon_owner_assets.exe')
+    'smb_hdpack_importer.exe' = (Join-Path $bin 'smb_hdpack_importer.exe')
+    'THIRD-PARTY-LICENSES/README.md' = (Join-Path $root 'THIRD-PARTY-LICENSES/README.md')
+    'third_party/ymfm/LICENSE' = (Join-Path $root 'third_party/ymfm/LICENSE')
+    'licenses/Game-PERMISSIONS.md' = (Join-Path $root 'PERMISSIONS.md')
 }
-
-function Remove-ReleaseStage([string]$stage) {
-  $full = [IO.Path]::GetFullPath($stage)
-  $allowed = @('stage_standard', 'stage_widescreen') | ForEach-Object {
-    [IO.Path]::GetFullPath((Join-Path $out $_))
-  }
-  if ($full -notin $allowed) { throw "refusing to remove an unexpected release stage: $full" }
-  foreach ($ancestor in @($root, $out)) {
-    if ([IO.File]::GetAttributes($ancestor) -band [IO.FileAttributes]::ReparsePoint) {
-      throw "refusing release cleanup through a reparse point: $ancestor"
-    }
-  }
-  try { $attributes = [IO.File]::GetAttributes($full) }
-  catch [IO.FileNotFoundException] { return }
-  catch [IO.DirectoryNotFoundException] { return }
-  if (($attributes -band [IO.FileAttributes]::ReparsePoint) -or
-      -not ($attributes -band [IO.FileAttributes]::Directory)) {
-    throw "refusing release cleanup of a reparse point or non-directory: $full"
-  }
-  $pending = New-Object 'System.Collections.Generic.Stack[string]'
-  $pending.Push($full)
-  while ($pending.Count) {
-    $directory = $pending.Pop()
-    if ([IO.File]::Exists((Join-Path $directory 'HEAD')) -and
-        [IO.Directory]::Exists((Join-Path $directory 'objects'))) {
-      throw "refusing release cleanup of a nested repository: $directory"
-    }
-    foreach ($entry in [IO.Directory]::EnumerateFileSystemEntries($directory)) {
-      if ([IO.Path]::GetFileName($entry) -ieq '.git') {
-        throw "refusing release cleanup of a nested repository: $entry"
-      }
-      $attributes = [IO.File]::GetAttributes($entry)
-      if ($attributes -band [IO.FileAttributes]::ReparsePoint) {
-        throw "refusing release cleanup of a reparse point: $entry"
-      }
-      if ($attributes -band [IO.FileAttributes]::Directory) { $pending.Push($entry) }
-    }
-  }
-  Remove-Item -LiteralPath $full -Recurse -ErrorAction Stop
-  if (Test-Path -LiteralPath $full) { throw "release stage was not removed: $full" }
-}
-
-function New-ReleaseZip {
-  $stage = Join-Path $out "stage_standard"
-  Remove-ReleaseStage $stage
-  New-Item -ItemType Directory -Force $stage | Out-Null
-
-  Copy-Item $exe $stage
-  foreach ($extra in 'SDL2.dll', 'falcon_owner_assets.exe', 'smb_hdpack_importer.exe') {
-    $p = Join-Path $bin $extra
-    if (-not (Test-Path $p -PathType Leaf)) {
-      $p = Join-Path $buildRoot $extra
-    }
-    if ($extra -eq 'keybinds.ini' -and -not (Test-Path $p -PathType Leaf)) {
-      $p = Join-Path $root 'recomp-ui\keybinds.ini'
-    }
-    if (-not (Test-Path $p -PathType Leaf)) { throw "missing required runtime file at $p" }
-    Copy-Item $p $stage
-  }
-  foreach ($runtime in $mingwRuntimeFiles) {
-    $runtimePath = Join-Path $bin $runtime
-    if (-not (Test-Path -LiteralPath $runtimePath -PathType Leaf)) {
-      $runtimePath = Join-Path $buildRoot $runtime
-    }
-    if ($hasMingwRuntimes) {
-      $runtimePath = Join-Path $compilerRuntimeDir $runtime
-      if (-not (Test-Path -LiteralPath $runtimePath -PathType Leaf)) {
-        throw "missing configured compiler runtime at $runtimePath"
-      }
-    }
-    if (Test-Path -LiteralPath $runtimePath -PathType Leaf) {
-      Copy-Item -LiteralPath $runtimePath -Destination $stage
-    }
-  }
-
-  # The launcher resolves its fonts/images beside the executable. Copy the
-  # build-staged, console-filtered asset tree; never reach into a user cache.
-  $launcherAssets = Join-Path $bin 'assets'
-  if (-not (Test-Path $launcherAssets)) {
-    throw "missing launcher assets at $launcherAssets"
-  }
-  $stagedAssets = Join-Path $stage 'assets'
-  New-Item -ItemType Directory -Path $stagedAssets | Out-Null
-  Get-ChildItem -LiteralPath $launcherAssets -Force |
-    Where-Object { $_.Name -ne 'shaders' -or $shaderPresetSource } |
-    ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $stagedAssets -Recurse }
-
-  # Built-in packages are source-controlled catalog data. Stage that pristine
-  # tree rather than build_release/mods, which may contain state.toml with an
-  # owner ROM path or other machine-local selections after a smoke test.
-  $preloadedMods = Join-Path $root 'mods\preloaded'
-  if (-not (Test-Path $preloadedMods)) {
-    throw "missing preloaded mod catalog at $preloadedMods"
-  }
-  Copy-Item $preloadedMods (Join-Path $stage 'mods') -Recurse
-  foreach ($packageId in 'nesrecomp.developer.replay', 'nesrecomp.twitch-chat') {
-    $generated = Join-Path $bin "mods/packages/$packageId/1.0.0/manifest.toml"
-    if (-not (Test-Path -LiteralPath $generated -PathType Leaf)) { throw "Missing generated framework manifest: $packageId" }
-    $destination = Join-Path $stage "mods/packages/$packageId/1.0.0"
-    New-Item -ItemType Directory -Path $destination | Out-Null
-    Copy-Item -LiteralPath $generated -Destination $destination
-  }
-
-  $readmeCommon | Out-File -Encoding ascii (Join-Path $stage 'README.txt')
-  $zip = Join-Path $out 'SuperMarioBrosRecomp-windows-x64.zip'
-
-  New-Item -ItemType Directory -Path (Join-Path $stage 'licenses') | Out-Null
-  foreach ($name in $releaseLicenses.Keys) {
-    if (-not (Test-Path -LiteralPath $releaseLicenses[$name] -PathType Leaf)) {
-      throw "missing required license: $($releaseLicenses[$name])"
-    }
-    Copy-Item -LiteralPath $releaseLicenses[$name] -Destination (Join-Path $stage "licenses/$name")
-  }
-  # Preserve attribution and the license for the bundled Sonic audio library.
-  New-Item -ItemType Directory -Force (Join-Path $stage 'THIRD-PARTY-LICENSES') | Out-Null
-  New-Item -ItemType Directory -Force (Join-Path $stage 'third_party/ymfm') | Out-Null
-  Copy-Item -LiteralPath (Join-Path $root 'THIRD-PARTY-LICENSES/README.md') -Destination (Join-Path $stage 'THIRD-PARTY-LICENSES/README.md')
-  Copy-Item -LiteralPath (Join-Path $root 'third_party/ymfm/LICENSE') -Destination (Join-Path $stage 'third_party/ymfm/LICENSE')
-  Assert-ReleaseStage $stage $preloadedMods
-
-  if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip }
-  Add-Type -AssemblyName System.IO.Compression
-  Add-Type -AssemblyName System.IO.Compression.FileSystem
-  $stageFull = [IO.Path]::GetFullPath($stage).TrimEnd('\') + '\'
-  $archive = [IO.Compression.ZipFile]::Open(
-    [IO.Path]::GetFullPath($zip), [IO.Compression.ZipArchiveMode]::Create)
-  try {
-    foreach ($file in Get-ChildItem -LiteralPath $stage -Recurse -File | Sort-Object FullName) {
-      $fileFull = [IO.Path]::GetFullPath($file.FullName)
-      if (-not $fileFull.StartsWith($stageFull, [StringComparison]::OrdinalIgnoreCase)) {
-        throw "refusing to archive a file outside the release stage: $fileFull"
-      }
-      $entryName = $fileFull.Substring($stageFull.Length).Replace('\', '/')
-      if ($entryName.StartsWith('/') -or $entryName -match '(^|/)\.\.(/|$)') {
-        throw "unsafe ZIP entry name: $entryName"
-      }
-      [IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
-        $archive, $fileFull, $entryName,
-        [IO.Compression.CompressionLevel]::Optimal) | Out-Null
-    }
-  } finally {
-    $archive.Dispose()
-  }
-  Assert-ReleaseArchive $zip $stage
-  Remove-ReleaseStage $stage
-  Write-Host "staged $zip"
-}
-
-if ($Variant -ne 'standard') {
-  Write-Warning 'Variant is deprecated; emitting the single Windows ZIP with catalog defaults.'
-}
-New-ReleaseZip
+$check = { param($stage,$notices) Assert-ReleaseStage $stage (Join-Path $root 'mods/preloaded') $notices }
+& (Join-Path $engineRoot 'tools/package_cycle_windows.ps1') -ProjectRoot $root -Target SuperMarioBrosRecomp -Title 'Super Mario Bros.' -BuildDir $buildRoot -SkipBuild -ArchiveName 'SuperMarioBrosRecomp-windows-x64.zip' -ReadmeText $readmeCommon -AdditionalFiles $extra -ValidateStage $check
